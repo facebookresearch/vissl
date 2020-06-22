@@ -23,7 +23,7 @@ def setup_logging(name, output_dir=None, rank=0):
             log_filename = f"{log_filename}.rank{rank}"
 
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # create formatter
     FORMAT = "%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s"
@@ -36,7 +36,7 @@ def setup_logging(name, output_dir=None, rank=0):
 
     # setup the console handler
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
