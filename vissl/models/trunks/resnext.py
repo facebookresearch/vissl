@@ -87,7 +87,8 @@ class ResNeXt(nn.Module):
             bias=False,
         )
         model_bn1 = self._norm_layer(model.inplanes)
-        conv1 = nn.Sequential(model_conv1, model_bn1, model.relu)
+        model_relu1 = model.relu
+        model_maxpool = model.maxpool
         model_layer1 = model._make_layer(Bottleneck, dim_inner, n1)
         model_layer2 = model._make_layer(Bottleneck, dim_inner * 2, n2, stride=2)
         model_layer3 = model._make_layer(Bottleneck, dim_inner * 4, n3, stride=2)
@@ -100,49 +101,66 @@ class ResNeXt(nn.Module):
         else:
             assert self.trunk_config.LAYER4_STRIDE == 2, "Layer4 stride must be 2"
             model_layer4 = model._make_layer(Bottleneck, dim_inner * 8, n4, stride=2)
+
+        model_avgpool = model.avgpool
+
         # we mapped the layers of resnet model into feature blocks to facilitate
         # feature extraction at various layers of the model. The layers for which
         # to extract features is controlled by out_feat_keys argument in the
         # forward() call.
-        self._feature_blocks = nn.ModuleList(
+        self._feature_blocks = nn.ModuleDict(
             [
-                conv1,
-                model.maxpool,
-                model_layer1,
-                model_layer2,
-                model_layer3,
-                model_layer4,
-                model.avgpool,
-                Flatten(1),
+                ("conv1", model_conv1),
+                ("bn1", model_bn1),
+                ("conv1_relu", model_relu1),
+                ("maxpool", model_maxpool),
+                ("layer1", model_layer1),
+                ("layer2", model_layer2),
+                ("layer3", model_layer3),
+                ("layer4", model_layer4),
+                ("avgpool", model_avgpool),
+                ("flatten", Flatten(1)),
             ]
         )
-
-        self.all_feat_names = [
-            "conv1",
-            "res1",
-            "res2",
-            "res3",
-            "res4",
-            "res5",
-            "res5avg",
-            "flatten",
-        ]
+        # give a name mapping to the layers so we can use a common terminology
+        # across models for feature evaluation purposes.
+        self.feat_eval_mapping = {
+            "conv1": "conv1_relu",
+            "res1": "maxpool",
+            "res2": "layer1",
+            "res3": "layer2",
+            "res4": "layer3",
+            "res5": "layer4",
+            "res5avg": "avgpool",
+            "flatten": "flatten",
+        }
 
     def forward(self, x, out_feat_keys=None):
-        out_feat_keys, max_out_feat = parse_out_keys_arg(
-            out_feat_keys, self.all_feat_names
+        mapped_out_feat_keys = []
+        if out_feat_keys is not None and len(out_feat_keys) > 0:
+            for feat_key in out_feat_keys:
+                mapped_out_feat_keys.append(self.feat_eval_mapping[feat_key])
+
+        mapped_out_feat_keys, max_out_feat = parse_out_keys_arg(
+            mapped_out_feat_keys, list(self._feature_blocks.keys())
         )
-        out_feats = [None] * len(out_feat_keys)
+        out_feats = [None] * len(mapped_out_feat_keys)
 
         feat = x
         # In case of LAB image, we take only "L" channel as input. Split the data
         # along the channel dimension into [L, AB] and keep only L channel.
         if self.model_config.INPUT_TYPE == "lab":
             feat = torch.split(feat, [1, 2], dim=1)[0]
-        for f in range(max_out_feat + 1):
-            feat = self._feature_blocks[f](feat)
-            key = self.all_feat_names[f]
-            if key in out_feat_keys:
-                out_feats[out_feat_keys.index(key)] = feat
 
+        # Go through the blocks, and save the features as we go
+        for i, (feature_name, feature_block) in enumerate(self._feature_blocks.items()):
+            feat = feature_block(feat)
+
+            # This feature is requested, store
+            if feature_name in mapped_out_feat_keys:
+                out_feats[mapped_out_feat_keys.index(feature_name)] = feat
+
+            # Early exit if all the features have been collected
+            if i == max_out_feat:
+                break
         return out_feats

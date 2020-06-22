@@ -74,7 +74,7 @@ def print_cfg(cfg):
 
 def assert_hydra_conf(cfg):
     # some inference for the Info NCE loss.
-    if cfg.CRITERION.name == "simclr_info_nce_loss":
+    if "simclr_info_nce_loss" in cfg.CRITERION.name:
         cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE = (
             cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         )

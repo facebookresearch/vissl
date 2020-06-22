@@ -209,7 +209,6 @@ def init_model_from_weights(
         state_dict = append_module_suffix(state_dict, append_suffix)
     all_layers = model.state_dict()
     init_layers = {layername: False for layername in all_layers}
-
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
     not_found, not_init = [], []
     for layername in all_layers.keys():

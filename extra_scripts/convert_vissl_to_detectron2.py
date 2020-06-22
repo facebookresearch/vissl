@@ -31,12 +31,12 @@ _SKIP_LAYERS = ["num_batches_tracked", "fc1", "fc2"]
 def convert_to_detectron2_names(layer_keys):
     output_keys = []
     for k in layer_keys:
-        k = k.replace("_feature_blocks.0.0.", "backbone.stem.conv1.")
-        k = k.replace("_feature_blocks.0.1.", "backbone.stem.conv1.norm.")
-        k = k.replace("_feature_blocks.2.", "backbone.res2.")
-        k = k.replace("_feature_blocks.3.", "backbone.res3.")
-        k = k.replace("_feature_blocks.4.", "backbone.res4.")
-        k = k.replace("_feature_blocks.5.", "roi_heads.res5.")
+        k = k.replace("_feature_blocks.conv1.", "backbone.stem.conv1.")
+        k = k.replace("_feature_blocks.bn1.", "backbone.stem.conv1.norm.")
+        k = k.replace("_feature_blocks.layer1.", "backbone.res2.")
+        k = k.replace("_feature_blocks.layer2.", "backbone.res3.")
+        k = k.replace("_feature_blocks.layer3.", "backbone.res4.")
+        k = k.replace("_feature_blocks.layer4.", "roi_heads.res5.")
 
         k = k.replace(".downsample.0.", ".shortcut.")
         k = k.replace(".downsample.1.", ".shortcut.norm.")
