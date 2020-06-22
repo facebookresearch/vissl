@@ -109,6 +109,16 @@ class SelfSupervisionTask(ClassificationTask):
         self.amp_args = amp_args
         logging.info(f"Setting amp args: {self.amp_args}")
 
+    def set_checkpoint(self, checkpoint):
+        assert (
+            checkpoint is None or "classy_state_dict" in checkpoint
+        ), "Checkpoint does not contain classy_state_dict"
+        self.checkpoint = checkpoint
+
+    def set_iteration(self, iteration):
+        assert iteration >= 0, "Iteration number must be positive"
+        self.iteration = iteration
+
     @classmethod
     def from_config(cls, config):
         test_only = config.TEST_ONLY
@@ -215,28 +225,22 @@ class SelfSupervisionTask(ClassificationTask):
         if os.path.exists(init_weights_path):
             weights = torch.load(init_weights_path, map_location=torch.device("cpu"))
             skip_layers = params_from_file.get("SKIP_LAYERS", None)
-            replace_suffix = params_from_file.get("REMOVE_SUFFIX", None)
-            append_suffix = params_from_file.get("APPEND_SUFFIX", None)
+            replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
+            append_prefix = params_from_file.get("APPEND_PREFIX", None)
             state_dict_key_name = params_from_file.get("STATE_DICT_KEY_NAME", None)
 
             # we initialize the weights from this checkpoint. However, we
             # don't care about the other metadata like iteration number etc.
-            # So the method only reads the model_state_dict
-            if params_from_file["LOAD_TRUNK_AND_HEADS"]:
-                state_dict = weights[state_dict_key_name]
-                if state_dict_key_name == "classy_state_dict":
-                    state_dict = state_dict["base_model"]
-                model.set_classy_state(state_dict)
-            else:
-                init_model_from_weights(
-                    model,
-                    weights,
-                    state_dict_key_name=state_dict_key_name,
-                    skip_layers=skip_layers,
-                    print_init_layers=True,
-                    replace_suffix=replace_suffix,
-                    append_suffix=append_suffix,
-                )
+            # So the method only reads the state_dict
+            init_model_from_weights(
+                self.config,
+                model,
+                weights,
+                state_dict_key_name=state_dict_key_name,
+                skip_layers=skip_layers,
+                replace_prefix=replace_prefix,
+                append_prefix=append_prefix,
+            )
         return model
 
     def _build_model(self):
@@ -356,16 +360,7 @@ class SelfSupervisionTask(ClassificationTask):
                 broadcast_buffers_mode=broadcast_buffers_enum_mode
             )  # NOQA
 
-    def set_checkpoint(self, checkpoint):
-        assert (
-            checkpoint is None or "classy_state_dict" in checkpoint
-        ), "Checkpoint does not contain classy_state_dict"
-        self.checkpoint = checkpoint
-
-    def set_iteration(self, iteration):
-        assert iteration >= 0, "Iteration number must be positive"
-        self.iteration = iteration
-
+    # override the ClassyTask run_hook function
     def run_hooks(self, hook_function_name):
         for hook in self.hooks:
             getattr(hook, hook_function_name)(self)

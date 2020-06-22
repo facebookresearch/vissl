@@ -30,7 +30,9 @@ def get_checkpoint_folder(config):
     if config.CHECKPOINT.DIR:
         odir = os.path.abspath(config.CHECKPOINT.DIR)
     else:
-        raise Exception("No config.CHECKPOINT.DIR specified.")
+        raise Exception(
+            "Please specify config.CHECKPOINT.DIR parameter. It should not be None."
+        )
     if config.DISTRIBUTED.NUM_NODES > 1 and config.CHECKPOINT.APPEND_DISTR_RUN_ID:
         odir = os.path.join(odir, config.DISTRIBUTED.RUN_ID)
     makedir(odir)
@@ -147,90 +149,159 @@ def get_resume_checkpoint(cfg, checkpoint_folder):
     return checkpoint
 
 
-def _print_state_dict_shapes(state_dict):
+def print_state_dict_shapes(state_dict):
     logging.info("Model state_dict:")
     for param_tensor in state_dict.keys():
         logging.info(f"{param_tensor}:\t{state_dict[param_tensor].size()}")
 
 
-def replace_module_suffix(state_dict, suffix, replace_with=""):
+def print_loaded_dict_info(model_state_dict, state_dict, skip_layers=None):
     """
-    Replace suffixes in a state_dict
+    Print what layers were loaded, what layers were ignored/skipped/not found
+    when initializing a model from a specified model params file.
+    """
+    extra_layers = []
+    max_len_model = max(len(key) for key in model_state_dict.keys())
+    # go through the model layers and print what layer is loaded/not loaded/skipped
+    for layername in model_state_dict.keys():
+        if skip_layers and len(skip_layers) > 0 and layername.find(skip_layers) >= 0:
+            logging.info(f"Ignored layer:\t{layername}")
+            continue
+        if layername in state_dict:
+            logging.info(
+                f"Loaded: {layername: <{max_len_model}} of "
+                f"shape: {model_state_dict[layername].size()} from checkpoint"
+            )
+        else:
+            logging.info(f"Not found:\t\t{layername}, not initialized")
+
+    # go through the checkpoint state_dict and print what extra layers exist in checkpoint
+    for layername in state_dict.keys():
+        if layername not in model_state_dict:
+            extra_layers.append(layername)
+    logging.info(f"Extra layers not loaded from checkpoint: {extra_layers}")
+
+
+def replace_module_prefix(state_dict, prefix, replace_with=""):
+    """
+    Replace prefixes in a state_dict
     Needed when loading DDP or classy vision models
     """
     state_dict = {
-        (key.replace(suffix, replace_with, 1) if key.startswith(suffix) else key): val
+        (key.replace(prefix, replace_with, 1) if key.startswith(prefix) else key): val
         for (key, val) in state_dict.items()
     }
     return state_dict
 
 
-def append_module_suffix(state_dict, suffix):
+def append_module_prefix(state_dict, prefix):
     """
-    Append suffixes in a state_dict
+    Append prefixes in a state_dict
     Needed when loading DDP or classy vision models
     """
-    state_dict = {f"{suffix}{key}": val for (key, val) in state_dict.items()}
+    state_dict = {f"{prefix}{key}": val for (key, val) in state_dict.items()}
+    return state_dict
+
+
+def check_model_compatibilty(config, state_dict):
+    trunk_append_prefix, heads_append_prefix = "trunk._feature_blocks.", "heads."
+    if config.MODEL.FEATURE_EVAL_MODE:
+        trunk_append_prefix = "trunk.base_model._feature_blocks."
+
+    is_compatible = True
+    for layername in state_dict.keys():
+        if not (
+            layername.startswith(trunk_append_prefix)
+            or layername.startswith(heads_append_prefix)
+        ):
+            is_compatible = False
+            break
+    if not is_compatible:
+        raise Exception(
+            "Model provided in config.MODEL.PARAMS_FILE.PATH is not compatible with VISSL. "
+            "Please set config.MODEL.PARAMS_FILE.APPEND_PREFIX and "
+            "config.MODEL.PARAMS_FILE.REMOVE_PREFIX for making model compatible. "
+            f"Expected trunk prefix: {trunk_append_prefix}"
+        )
+
+
+def get_checkpoint_model_state_dict(config, state_dict):
+    """
+    Given a specified pre-trained VISSL model (composed of head and trunk),
+    we get the state_dict that can be loaded by appending prefixes to model and trunk.
+    """
+    classy_state_dict = state_dict["base_model"]["model"]
+    trunk_append_prefix, heads_append_prefix = "trunk.", "heads."
+    if config.MODEL.FEATURE_EVAL_MODE:
+        trunk_append_prefix = "trunk.base_model."
+
+    trunk_state_dict = append_module_prefix(
+        classy_state_dict["trunk"], trunk_append_prefix
+    )
+    heads_state_dict = append_module_prefix(
+        classy_state_dict["heads"], heads_append_prefix
+    )
+    state_dict = {}
+    state_dict.update(trunk_state_dict)
+    state_dict.update(heads_state_dict)
     return state_dict
 
 
 def init_model_from_weights(
+    config,
     model,
     state_dict,
     state_dict_key_name,
     skip_layers=None,
-    print_init_layers=True,
-    replace_suffix=None,
-    append_suffix="trunk.base_model.",
+    replace_prefix=None,
+    append_prefix=None,
 ):
     """
     Initialize the model from any given params file. This is particularly useful
-    during the finetuning process or when we want to evaluate a model on a range
-    of tasks.
-    skip_layers:     string : layer names with this key are not copied
-    replace_suffix: string : remove these suffixes from the layer names
-    print_init_layers:   print whether layer was init or ignored
-                    indicates whether the layername was copied or not
+    during the feature evaluation process or when we want to evaluate a model on
+    a range of tasks.
+    config:                AttrDict: config file
+    model:                 object: instance of base_ssl_model
+    state_dict:            Dict: torch.load() of user provided params file path.
+    state_dict_key_name:   string: key name containing the model state dict
+    skip_layers:           string : layer names with this key are not copied
+    replace_prefix:        string : remove these prefixes from the layer names (executed first)
+    append_prefix:         string : append the prefix to the layer names (executed after replace_prefix)
     """
-    # whether it's a model from somewhere else or a model from this codebase
+    # whether it's a model from somewhere else or a model from this codebase, load the
+    # state_dict
     if state_dict_key_name and len(state_dict_key_name) > 0:
         assert (
             state_dict_key_name in state_dict.keys()
         ), f"Unknown state dict key: {state_dict_key_name}"
         state_dict = state_dict[state_dict_key_name]
+
     if state_dict_key_name == "classy_state_dict":
-        classy_state_dict = state_dict["base_model"]["model"]
-        state_dict = {}
-        state_dict.update(classy_state_dict["trunk"])
-        state_dict.update(classy_state_dict["heads"])
-    if replace_suffix:
-        state_dict = replace_module_suffix(state_dict, replace_suffix)
-    if append_suffix:
-        state_dict = append_module_suffix(state_dict, append_suffix)
+        state_dict = get_checkpoint_model_state_dict(config, state_dict)
+    else:
+        # make any corrections to the layer names to load checkpoint successfully
+        if replace_prefix:
+            state_dict = replace_module_prefix(state_dict, replace_prefix)
+        if append_prefix:
+            state_dict = append_module_prefix(state_dict, append_prefix)
+        check_model_compatibilty(config, state_dict)
+
+    # load the checkpoint now
     all_layers = model.state_dict()
-    init_layers = {layername: False for layername in all_layers}
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
-    not_found, not_init = [], []
     for layername in all_layers.keys():
-        if (
-            skip_layers and len(skip_layers) > 0 and layername.find(skip_layers) >= 0
-        ) or layername.find("num_batches_tracked") >= 0:
-            if print_init_layers and (local_rank == 0):
-                not_init.append(layername)
-                logging.info(f"Ignored layer:\t{layername}")
+        if skip_layers and len(skip_layers) > 0 and layername.find(skip_layers) >= 0:
             continue
         if layername in state_dict:
             param = state_dict[layername]
             if not isinstance(param, torch.Tensor):
                 param = torch.from_numpy(param)
             all_layers[layername].copy_(param)
-            init_layers[layername] = True
-            if print_init_layers and (local_rank == 0):
-                logging.info(f"Init layer:\t{layername}")
-        else:
-            not_found.append(layername)
-            if print_init_layers and (local_rank == 0):
-                logging.info(f"Not found:\t{layername}")
+    if local_rank == 0:
+        print_loaded_dict_info(
+            model_state_dict=all_layers, state_dict=state_dict, skip_layers=skip_layers
+        )
+
     ####################### DEBUG ############################
-    # _print_state_dict_shapes(model.state_dict())
+    # print_state_dict_shapes(model.state_dict())
     return model

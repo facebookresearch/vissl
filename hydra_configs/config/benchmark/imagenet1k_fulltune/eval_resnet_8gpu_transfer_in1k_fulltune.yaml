@@ -61,7 +61,7 @@ config:
     PARAMS_FILE:
       PATH: "specify model weights"
       STATE_DICT_KEY_NAME: classy_state_dict
-      APPEND_SUFFIX: trunk.
+      APPEND_PREFIX: trunk.
   CRITERION:
       name: cross_entropy_multiple_output_single_target
       ignore_index: -1

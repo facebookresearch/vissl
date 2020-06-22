@@ -38,7 +38,7 @@ config:
     PARAMS_FILE:
       PATH: "specify weights to use for clustering."
       STATE_DICT_KEY_NAME: classy_state_dict
-      # REMOVE_SUFFIX: "trunk."
+      # REMOVE_PREFIX: "trunk."
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8

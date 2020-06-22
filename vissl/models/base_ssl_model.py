@@ -16,6 +16,10 @@ from classy_vision.models import ClassyModel, register_model
 from vissl.models.heads import HEADS as SUPPORTED_HEADS
 from vissl.models.trunks import TRUNKS as SUPPORTED_TRUNKS
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
+from vissl.utils.checkpoint import (  # noqa
+    print_loaded_dict_info,
+    print_state_dict_shapes,
+)
 from vissl.utils.misc import is_apex_available
 
 
@@ -307,44 +311,8 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         head_module = SUPPORTED_HEADS[head_name](self.config, **head_kwargs)
         return head_module
 
-    def _print_state_dict_shapes(self, state_dict):
-        logging.info("Model state_dict:")
-        for param_tensor in state_dict.keys():
-            logging.info(f"{param_tensor}:\t{state_dict[param_tensor].size()}")
-
-    def _print_loaded_dict_info(self, state):
-        # get the model state dict original
-        model_state_dict = {}
-        trunk_state_dict, heads_state_dict = (
-            self.trunk.state_dict(),
-            self.heads.state_dict(),
-        )
-        model_state_dict.update(trunk_state_dict)
-        model_state_dict.update(heads_state_dict)
-
-        # get the checkpoint state dict
-        checkpoint_state_dict = {}
-        checkpoint_state_dict.update(state["trunk"])
-        checkpoint_state_dict.update(state["heads"])
-
-        # now we compare the state dict and print information
-        not_found, extra_layers = [], []
-        max_len_model = max(len(key) for key in model_state_dict.keys())
-        for layername in model_state_dict.keys():
-            if layername in checkpoint_state_dict:
-                logging.info(
-                    f"Loaded: {layername: <{max_len_model}} of "
-                    f"shape: {model_state_dict[layername].size()} from checkpoint"
-                )
-            else:
-                not_found.append(layername)
-                logging.info(f"Not found:\t\t{layername}, not initialized")
-        for layername in checkpoint_state_dict.keys():
-            if layername not in model_state_dict:
-                extra_layers.append(layername)
-        logging.info(f"Extra layers not loaded from checkpoint:\n {extra_layers}")
-
     # we call this on the state.base_model which is not wrapped with DDP.
+    # get the model state_dict to checkpoint
     def get_classy_state(self, deep_copy=False):
         trunk_state_dict = self.trunk.state_dict()
         heads_state_dict = self.heads.state_dict()
@@ -353,19 +321,37 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         }
         if deep_copy:
             model_state_dict = copy.deepcopy(model_state_dict)
-        # self._print_state_dict_shapes(trunk_state_dict)   # DEBUG
-        # self._print_state_dict_shapes_shapes(heads_state_dict)   # DEBUG
+        # print_state_dict_shapes(trunk_state_dict)   # DEBUG
+        # print_state_dict_shapes_shapes(heads_state_dict)   # DEBUG
         return model_state_dict
 
+    # we call this on the state.base_model which is not wrapped with DDP.
+    # load the model from checkpoint
     def set_classy_state(self, state):
         logging.info("Loading Trunk state dict....")
         self.trunk.load_state_dict(state["model"]["trunk"])
         logging.info("Loading Heads state dict....")
+
         # sometimes, we want to load the partial head only, so strict=False
         self.heads.load_state_dict(state["model"]["heads"], strict=False)
-        if self.local_rank == 0:
-            self._print_loaded_dict_info(state["model"])
         logging.info("Model state dict loaded!")
+
+        # print debug information about layers loaded
+        if self.local_rank == 0:
+            # get the model state dict original
+            model_state_dict = {}
+            trunk_state_dict, heads_state_dict = (
+                self.trunk.state_dict(),
+                self.heads.state_dict(),
+            )
+            model_state_dict.update(trunk_state_dict)
+            model_state_dict.update(heads_state_dict)
+
+            # get the checkpoint state dict
+            checkpoint_state_dict = {}
+            checkpoint_state_dict.update(state["model"]["trunk"])
+            checkpoint_state_dict.update(state["model"]["heads"])
+            print_loaded_dict_info(model_state_dict, checkpoint_state_dict)
 
     def _get_bn_optimizer_params(
         self, module, regularized_params, unregularized_params
@@ -437,6 +423,11 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             "unregularized_params": unregularized_params,
         }
 
+    @staticmethod
+    def _filter_trainable(param_list: List[Any]) -> List[Any]:
+        # Keep only the trainable params
+        return list(filter(lambda x: x.requires_grad, param_list))
+
     @property
     def num_classes(self):
         raise NotImplementedError
@@ -455,8 +446,3 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
     def validate(self, dataset_output_shape):
         raise NotImplementedError
-
-    @staticmethod
-    def _filter_trainable(param_list: List[Any]) -> List[Any]:
-        # Keep only the trainable params
-        return list(filter(lambda x: x.requires_grad, param_list))

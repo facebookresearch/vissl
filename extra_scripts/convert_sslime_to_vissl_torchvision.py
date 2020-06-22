@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
-def convert_and_save_model(args, append_suffix):
+def convert_and_save_model(args, append_prefix):
     assert os.path.exists(args.output_dir), "Output directory does NOT exist"
 
     # load the model
@@ -56,22 +56,22 @@ def convert_and_save_model(args, append_suffix):
 
     # convert the trunk
     converted_model = replace_module_suffix(
-        model_trunk, f"{append_suffix}5.", f"{append_suffix}layer4."
+        model_trunk, f"{append_prefix}5.", f"{append_prefix}layer4."
     )
     converted_model = replace_module_suffix(
-        converted_model, f"{append_suffix}4.", f"{append_suffix}layer3."
+        converted_model, f"{append_prefix}4.", f"{append_prefix}layer3."
     )
     converted_model = replace_module_suffix(
-        converted_model, f"{append_suffix}3.", f"{append_suffix}layer2."
+        converted_model, f"{append_prefix}3.", f"{append_prefix}layer2."
     )
     converted_model = replace_module_suffix(
-        converted_model, f"{append_suffix}2.", f"{append_suffix}layer1."
+        converted_model, f"{append_prefix}2.", f"{append_prefix}layer1."
     )
     converted_model = replace_module_suffix(
-        converted_model, f"{append_suffix}0.1.", f"{append_suffix}bn1."
+        converted_model, f"{append_prefix}0.1.", f"{append_prefix}bn1."
     )
     converted_model = replace_module_suffix(
-        converted_model, f"{append_suffix}0.0.", f"{append_suffix}conv1."
+        converted_model, f"{append_prefix}0.0.", f"{append_prefix}conv1."
     )
 
     # get the output state to save
@@ -112,7 +112,7 @@ def main():
         "--output_name", type=str, default=None, required=True, help="output model name"
     )
     args = parser.parse_args()
-    convert_and_save_model(args, append_suffix="_feature_blocks.")
+    convert_and_save_model(args, append_prefix="_feature_blocks.")
 
 
 if __name__ == "__main__":

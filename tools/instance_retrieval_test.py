@@ -54,24 +54,19 @@ def build_retrieval_model(cfg):
         logging.info(f"Initializing model from: {init_weights_path}")
         weights = torch.load(init_weights_path, map_location=torch.device("cuda"))
         skip_layers = cfg.MODEL.PARAMS_FILE.get("SKIP_LAYERS", None)
-        replace_suffix = cfg.MODEL.PARAMS_FILE.get("REMOVE_SUFFIX", None)
-        append_suffix = cfg.MODEL.PARAMS_FILE.get("APPEND_SUFFIX", None)
+        replace_prefix = cfg.MODEL.PARAMS_FILE.get("REMOVE_PREFIX", None)
+        append_prefix = cfg.MODEL.PARAMS_FILE.get("APPEND_PREFIX", None)
         state_dict_key_name = cfg.MODEL.PARAMS_FILE.get("STATE_DICT_KEY_NAME", None)
-        if cfg.IMG_RETRIEVAL.LOAD_AND_FREEZE_HEADS:
-            state_dict = weights[state_dict_key_name]
-            if state_dict_key_name == "classy_state_dict":
-                state_dict = state_dict["base_model"]
-            model.set_classy_state(state_dict)
-        else:
-            init_model_from_weights(
-                model,
-                weights,
-                state_dict_key_name=state_dict_key_name,
-                skip_layers=skip_layers,
-                print_init_layers=True,
-                replace_suffix=replace_suffix,
-                append_suffix=append_suffix,
-            )
+
+        init_model_from_weights(
+            cfg,
+            model,
+            weights,
+            state_dict_key_name=state_dict_key_name,
+            skip_layers=skip_layers,
+            replace_prefix=replace_prefix,
+            append_prefix=append_prefix,
+        )
     else:
         # We only throw the warning if not weights file is provided. We want to
         # benchmark the random initialization model too and hence support that.
@@ -392,8 +387,7 @@ def instance_retrieval_test(args, cfg):
 
     logging.info("Freezing the model.....")
     model.eval()
-    if cfg.IMG_RETRIEVAL.LOAD_AND_FREEZE_HEADS:
-        model.freeze_head_and_trunk()
+    model.freeze_head_and_trunk()
 
     ############################################################################
     # Step 2: Extract the features for the train dataset, calculate PCA or

@@ -51,7 +51,6 @@ config:
     PARAMS_FILE:
       PATH: ""
       STATE_DICT_KEY_NAME: classy_state_dict
-      LOAD_TRUNK_AND_HEADS: True
   DISTRIBUTED:
     NUM_NODES: 1
     # NUM_PROC_PER_NODE: 2
