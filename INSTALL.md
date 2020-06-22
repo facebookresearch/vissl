@@ -34,8 +34,8 @@ This command should print the path of your conda bin. If it doesn't, make sure c
 Now, let's create a conda environment which we will work in.
 
 ```bash
-conda create --name ssl_framework python=3.6
-source activate ssl_framework
+conda create --name vissl python=3.6
+source activate vissl
 ```
 
 ## Step 3: Install Pytorch

@@ -34,8 +34,8 @@ This command should print the path of your conda bin. If it doesn't, make sure c
 Now, let's create a conda environment which we will work in.
 
 ```bash
-conda create --name ssl_framework_fast --file /private/home/prigoyal/mathilde_env.txt
-source activate ssl_framework_fast
+conda create --name vissl --file /private/home/prigoyal/mathilde_env.txt
+source activate vissl
 ```
 
 ## Step 3: Install Apex
