@@ -1,0 +1,6 @@
+{
+  "allowBotCommands": false,
+  "__comment": "Configures a tool that adds Phabricator import options to the Github UI vis-a-vis a browser extension to move commits on Github internally.",
+  "allowDirectMerges": false,
+  "internalRepository": "fbsource"
+}
