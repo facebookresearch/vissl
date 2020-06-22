@@ -1,0 +1,79 @@
+# @package _global_
+extract_features: True
+train_svm: True
+config:
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [disk]
+      LABEL_SOURCES: [disk]
+      DATASET_NAMES: [voc2007]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: Resize
+          size: [224, 224]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/voc2007/
+    TEST:
+      DATA_SOURCES: [disk]
+      LABEL_SOURCES: [disk]
+      DATASET_NAMES: [voc2007]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: Resize
+          size: [224, 224]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/voc2007/
+  MODEL:
+    PARAMS_FILE:
+      PATH: "specify path"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      # STATE_DICT_KEY_NAME: model_state_dict
+    FEATURE_EVAL_MODE: True
+    EXTRACT_FEATURES_ONLY: True
+    EVAL_FEATURES: ["conv1", "res2", "res3", "res4", "res5"]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [2048, 4]}]]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+      SHOULD_FLATTEN: True
+      LINEAR_FEAT_POOL_OPS: [
+          ["AvgPool2d", [[10, 10], 10, 4]],
+          ["AvgPool2d", [[16, 16], 8, 0]],
+          ["AvgPool2d", [[13, 13], 5, 0]],
+          ["AvgPool2d", [[8, 8], 3, 0]],
+          ["AvgPool2d", [[6, 6], 1, 0]],
+      ]
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+  MACHINE:
+    NUM_DATALOADER_WORKERS: 5
+    DEVICE: gpu
+  SVM:
+    OUTPUT_DIR: .
+    costs:
+      costs_list: [0.01, 0.1, 1.0, 2, 5, 10, 15, 20, 50, 100, 1000]
+    normalize: True
+    loss: squared_hinge
+    penalty: l2
+    dual: True
+    max_iter: 2000
+    cross_val_folds: 3
+    force_retrain: False

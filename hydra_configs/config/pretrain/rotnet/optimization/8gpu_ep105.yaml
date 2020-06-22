@@ -1,0 +1,11 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    num_epochs: 105
+    param_schedulers:
+      lr:
+        base_value: 0.1
+        name: multistep
+        values: [0.1, 0.01, 0.001, 0.0001, 0.00001]
+        milestones: [30, 60, 90, 100]
+        update_interval: epoch

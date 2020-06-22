@@ -1,0 +1,75 @@
+# @package _global_
+extract_features: True
+train_svm: True
+config:
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [disk]
+      LABEL_SOURCES: [disk]
+      DATASET_NAMES: [voc2007]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: Resize
+          size: [224, 224]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/voc2007/
+    TEST:
+      DATA_SOURCES: [disk]
+      LABEL_SOURCES: [disk]
+      DATASET_NAMES: [voc2007]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: Resize
+          size: [224, 224]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/voc2007/
+  MODEL:
+    FEATURE_EVAL_MODE: True
+    EXTRACT_FEATURES_ONLY: True
+    EVAL_FEATURES: ["conv1", "conv2", "conv3", "conv4", "conv5"]
+    TRUNK:
+      NAME: alexnet_deepcluster
+      SHOULD_FLATTEN: True
+      LINEAR_FEAT_POOL_OPS: [
+          ["AvgPool2d", [[19, 19], 4, 0]],
+          ["AvgPool2d", [[12, 12], 3, 0]],
+          ["AvgPool2d", [[9, 9], 1, 0]],
+          ["AvgPool2d", [[9, 9], 1, 0]],
+          ["AvgPool2d", [[8, 8], 1, 0]],
+      ]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [9216, 20]}]]
+    PARAMS_FILE:
+      PATH: "specify path"
+      STATE_DICT_KEY_NAME: model_state_dict
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+  MACHINE:
+    NUM_DATALOADER_WORKERS: 5
+    DEVICE: gpu
+  SVM:
+    OUTPUT_DIR: .
+    costs:
+      costs_list: [0.01, 0.1, 1.0, 2, 5, 10, 15, 20, 50, 100, 1000]
+    normalize: True
+    loss: squared_hinge
+    penalty: l2
+    dual: True
+    max_iter: 2000
+    cross_val_folds: 3
+    force_retrain: False

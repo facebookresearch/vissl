@@ -1,0 +1,56 @@
+# @package _global_
+config:
+  # must set the TEST_MODEL to false if we don't want to extract features on TEST
+  TEST_MODEL: False
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [disk]
+      LABEL_SOURCES: [disk]
+      DATASET_NAMES: [imagenet1k]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  MODEL:
+    FEATURE_EVAL_MODE: True
+    EXTRACT_FEATURES_ONLY: True
+    EVAL_FEATURES: ["res5"]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+      SHOULD_FLATTEN: True
+      LINEAR_FEAT_POOL_OPS: [
+          ["AvgPool2d", [[7, 7], 1, 0]],
+      ]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [2048, 1000]}]]
+    PARAMS_FILE:
+      PATH: "specify weights to use for clustering."
+      STATE_DICT_KEY_NAME: classy_state_dict
+      # REMOVE_SUFFIX: "trunk."
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+  MACHINE:
+    NUM_DATALOADER_WORKERS: 5
+    DEVICE: gpu
+  CLUSTERFIT:
+    OUTPUT_DIR: .
+    NUM_CLUSTERS: 16000
+    CLUSTER_BACKEND: faiss
+    N_ITER: 50
+    FEATURES:
+      DATA_PARTITION: TRAIN
+      DATASET_NAME: imagenet1k
+      LAYER_NAME: res5

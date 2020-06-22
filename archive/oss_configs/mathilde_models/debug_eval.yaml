@@ -1,0 +1,126 @@
+TEST_EVERY_NUM_EPOCH: 1                      
+VERBOSE: True
+LOG_FREQUENCY: 200
+TEST_MODEL: True
+SEED_VALUE: 1
+MULTI_PROCESSING_METHOD: forkserver   
+MONITOR_PERF_STATS: False
+DATA:
+  TRAIN:
+    DATA_SOURCES: [disk]
+    LABEL_SOURCES: [disk]
+    DATASET_NAMES: [imagenet1k]
+    DATA_PATHS: ['/datasets01/imagenet_full_size/061417/val']
+    LABEL_PATHS:
+    - /checkpoint/imisra/datasets/in1k_disk/val_labels_imgfolder.npy
+    BATCHSIZE_PER_REPLICA: 32
+    TRANSFORMS:
+      - name: RandomResizedCrop
+        size: 224
+      - name: RandomHorizontalFlip
+      - name: ToTensor
+      - name: Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+    MMAP_MODE: True
+    COPY_TO_LOCAL_DISK: True
+    COPY_DESTINATION_DIR: /scratch/slurm_tmpdir/
+  TEST:
+    DATA_SOURCES: [disk]
+    LABEL_SOURCES: [disk]
+    DATASET_NAMES: [imagenet1k]
+    DATA_PATHS: ['/datasets01/imagenet_full_size/061417/val']
+    LABEL_PATHS:
+    - /checkpoint/imisra/datasets/in1k_disk/val_labels_imgfolder.npy
+    BATCHSIZE_PER_REPLICA: 32
+    TRANSFORMS:
+      - name: Resize
+        size: 256
+      - name: CenterCrop
+        size: 224
+      - name: ToTensor
+      - name: Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+    MMAP_MODE: True
+    COPY_TO_LOCAL_DISK: True
+    COPY_DESTINATION_DIR: /scratch/slurm_tmpdir/
+METERS:
+  accuracy_list:
+    num_list: 1
+    topk: [1, 5]
+TRAINER:
+  TRAIN_STEP_NAME: standard
+MODEL:
+  FEATURE_EVAL_MODE: True
+  EVAL_FEATURES: ["res5"]
+  PARAMS_FILE:
+    APPEND_SUFFIX: 'trunk.base_model.'
+    LOAD_AND_FREEZE_HEADS: False
+    LOAD_TRUNK_AND_HEADS: False
+    PATH: /checkpoint/bojanowski/projects/unsup-2020/fb_cluster_checkpoints/2020_05_15_18_19_IG_config_push_epoch_1_bn_apex.yaml_model_final_checkpoint_phase0.torch
+    STATE_DICT_KEY_NAME: 'classy_state_dict'
+  TRUNK:
+    NAME: resnet50
+    # NAME: resnet50_w2
+    LINEAR_FEAT_POOL_OPS: [
+            #["AvgPool2d", [[10, 10], 10, 4]],
+            #["AvgPool2d", [[16, 16], 8, 0]],
+            #["AvgPool2d", [[13, 13], 5, 0]],
+            #["AvgPool2d", [[8, 8], 3, 0]],
+        ["AvgPool2d", [[6, 6], 1, 0]],
+        ########## res50-w2 #############
+        # ["AvgPool2d", [[20, 20], 13, 4]],
+        # ["AvgPool2d", [[32, 32], 8, 0]],
+        # ["AvgPool2d", [[13, 13], 7, 0]],
+        # ["AvgPool2d", [[8, 8], 6, 0]],
+        # ["AdaptiveAvgPool2d", [[2, 1]]],
+    ]
+  HEAD:
+    PARAMS: [
+            #["eval_mlp", {"in_channels": 64, "dims": [9216, 1000]}],
+            #["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
+            #["eval_mlp", {"in_channels": 512, "dims": [8192, 1000]}],
+            #["eval_mlp", {"in_channels": 1024, "dims": [9216, 1000]}],
+      ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+      ########## res50-w2 #############
+      # ["eval_mlp", {"in_channels": 128, "dims": [8192, 1000]}],
+      # ["eval_mlp", {"in_channels": 512, "dims": [8192, 1000]}],
+      # ["eval_mlp", {"in_channels": 1024, "dims": [9216, 1000]}],
+      # ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+      # ["eval_mlp", {"in_channels": 4096, "dims": [8192, 1000]}],
+    ]
+  SYNC_BN_CONFIG:
+    CONVERT_BN_TO_SYNC_BN: True
+    SYNC_BN_TYPE: apex
+    GROUP_SIZE: 0
+CRITERION:
+    name: cross_entropy_multiple_output_single_target
+    ignore_index: -1
+OPTIMIZER:
+    name: sgd
+    # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
+    weight_decay: 0.0001
+    momentum: 0.9
+    num_epochs: 28
+    nesterov: True
+    regularize_bn: True
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        base_value: 0.01
+        name: multistep
+        values: [0.01, 0.001, 0.0001, 0.00001]
+        milestones: [8, 16, 24]
+        update_interval: epoch
+DISTRIBUTED:
+  DISTR_ON: True
+  BACKEND: nccl
+  NUM_NODES: 1
+  NUM_PROC_PER_NODE: 1
+  INIT_METHOD: env
+MACHINE:
+  NUM_DATALOADER_WORKERS: 10
+  DEVICE: gpu
+CHECKPOINT:
+  DIR: "/checkpoint/mathilde/scratch"

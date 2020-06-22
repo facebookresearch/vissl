@@ -1,0 +1,508 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+################## some command line options to decide workflow ###############
+node_id: 0
+extract_features: false
+train_svm: false
+nearest_neighbor_test: false
+config:
+  # ----------------------------------------------------------------------------------- #
+  # GLOBAL DEFAULTS
+  # ----------------------------------------------------------------------------------- #
+  VERBOSE: false
+  LOG_FREQUENCY: 10
+  TEST_ONLY: false
+  TEST_EVERY_NUM_EPOCH: 1
+  SEED_VALUE: 0
+  TEST_MODEL: true
+  # Use the forkserver or spawn
+  # https://github.com/pytorch/pytorch/blob/master/torch/nn/parallel/distributed.py#L142
+  MULTI_PROCESSING_METHOD: "forkserver"
+  MONITOR_PERF_STATS: false
+  # we print perf stats (if enabled) after every phase. If we want to print every few
+  # batches, set the frequency here.
+  PERF_STAT_FREQUENCY: -1
+  # if we want to print the rolling avg. batch time, set the value below to number of
+  # batches over which we want to print average
+  ROLLING_BTIME_FREQ: -1
+
+  # ----------------------------------------------------------------------------------- #
+  # DATA
+  # ----------------------------------------------------------------------------------- #
+  DATA:
+    # Training Data Options
+    TRAIN:
+      # if we want to resume the data sampler as well from a previous iteration
+      USE_STATEFUL_DISTRIBUTED_SAMPLER: false
+      # whether to drop the last incomplete batch per process
+      DROP_LAST: false
+      # Sources for reading data.
+      # Currently supports: disk
+      # Parallel aligned with DATA_PATHS argument.
+      DATA_SOURCES: []
+      DATA_PATHS: []
+      LABEL_SOURCES: []
+      LABEL_PATHS: []
+      MMAP_MODE: true
+      DEFAULT_GRAY_IMG_SIZE: 224
+      BATCHSIZE_PER_REPLICA: 256
+      TRANSFORMS: []
+      COLLATE_FUNCTION: "default"
+      DATA_LIMIT: -1
+      DATASET_NAMES: ["imagenet1k"]
+      COPY_TO_LOCAL_DISK: true
+      COPY_DESTINATION_DIR: ""
+      # either standard | sample_index
+      LABEL_TYPE: "standard"
+      # keys that specify what `keys' in a sample dictionary
+      # correspond to input and target
+      INPUT_KEY_NAMES: ["data"]
+      TARGET_KEY_NAMES: ["label"]
+      # set this to True if you want to handle the invalid images using QueueDataset.
+      # In case of an invalid image, by default a mean image is returned. But using
+      # QueueDataset, you can instead return a valid and previously seen image.
+      ENABLE_QUEUE_DATASET: False
+    TEST:
+      # if we want to resume the data sampler as well from a previous iteration
+      USE_STATEFUL_DISTRIBUTED_SAMPLER: false
+      DROP_LAST: false
+      DATA_SOURCES: []
+      DATA_PATHS: []
+      LABEL_SOURCES: []
+      LABEL_PATHS: []
+      MMAP_MODE: true
+      DEFAULT_GRAY_IMG_SIZE: 224
+      BATCHSIZE_PER_REPLICA: 256
+      TRANSFORMS: []
+      COLLATE_FUNCTION: "default"
+      DATA_LIMIT: -1
+      DATASET_NAMES: ["imagenet1k"]
+      COPY_TO_LOCAL_DISK: false
+      COPY_DESTINATION_DIR: ""
+      # either standard | sample_index
+      LABEL_TYPE: "standard"
+      # keys that specify what `keys' in a sample dictionary
+      # correspond to input and target
+      INPUT_KEY_NAMES: ["data"]
+      TARGET_KEY_NAMES: ["label"]
+      # set this to True if you want to handle the invalid images using QueueDataset.
+      # In case of an invalid image, by default a mean image is returned. But using
+      # QueueDataset, you can instead return a valid and previously seen image.
+      ENABLE_QUEUE_DATASET: False
+
+  # ----------------------------------------------------------------------------------- #
+  # METERS
+  # ----------------------------------------------------------------------------------- #
+  METERS:
+    accuracy_list:
+      num_list: 1
+      topk: [1]
+
+  # ----------------------------------------------------------------------------------- #
+  # MACHINE (cpu, gpu, data workers)
+  # ----------------------------------------------------------------------------------- #
+  MACHINE:
+    NUM_DATALOADER_WORKERS: 4
+    DEVICE: "gpu"
+    PIN_MEMORY: true
+
+  # ----------------------------------------------------------------------------------- #
+  # MODEL
+  # ----------------------------------------------------------------------------------- #
+  MODEL:
+    # the model parameter names that should not be trained
+    NON_TRAINABLE_PARAMS: []
+    TEMP_FROZEN_PARAMS_ITER_MAP: []
+    # Colorization models take lab input. Everything else takes rgb
+    INPUT_TYPE: "rgb"
+    # if you want to evaluate several feature layers of the pre-trained model on
+    # benchmark tasks like linear classification, set this to True
+    FEATURE_EVAL_MODE: false
+    # if you want to only extract features and not train linear cls, set this to true
+    EXTRACT_FEATURES_ONLY: false
+    # model features that should be evaluated. Consult the respective model python
+    # files for names of layers.
+    EVAL_FEATURES: []
+    # Multi-input model
+    # input keys in the sample dictionary and which head uses them
+    # for example, input contains "images" and "patches" and there
+    # is one separate head applied to images and another to patches
+    MULTI_INPUT_HEAD_MAPPING: []
+    # ----------------------------------------------------------------------------------- #
+    # MODEL TRUNK
+    # ----------------------------------------------------------------------------------- #
+    TRUNK:
+      NAME: "resnet"
+      # for any extra params that the model requires, pass them in the trunk_params
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+          WIDTH_MULTIPLIER: 1
+          NORM: BatchNorm    # BatchNorm | LayerNorm
+          GROUPS: 1
+          ZERO_INIT_RESIDUAL: False
+          WIDTH_PER_GROUP: 64
+          # Colorization model uses stride=1 for last layer to retain higher spatial resolution
+          # for the pixel-wise task. Torchvision default is stride=2 and all other models
+          # use this so we set the default as 2.
+          LAYER4_STRIDE: 2
+        EFFICIENT_NETS: {}  # follow classy vision for these
+        REGNETS: {}
+      SHOULD_FLATTEN: false
+      LINEAR_FEAT_POOL_OPS: [
+          ["AvgPool2d", [[10, 10], 10, 4]],
+          ["AvgPool2d", [[16, 16], 8, 0]],
+          ["AvgPool2d", [[13, 13], 5, 0]],
+          ["AvgPool2d", [[8, 8], 3, 0]],
+          ["AvgPool2d", [[6, 6], 1, 0]],
+      ]
+    # ----------------------------------------------------------------------------------- #
+    # MODEL HEAD
+    # ----------------------------------------------------------------------------------- #
+    HEAD:
+      # List of Pairs:
+      # Pair[0] = Type of Head.
+      # Pair[1] = kwargs passed to head constructor.
+      PARAMS: []
+      BATCHNORM_EPS: 1e-5
+      BATCHNORM_MOMENTUM: 0.1
+    # ----------------------------------------------------------------------------------- #
+    # Synchronized BatchNorm Setup
+    # ----------------------------------------------------------------------------------- #
+    # if we want to convert all the batch norm layers in the model to use SyncBN.
+    # There are two options: APEX syncBN and PyTorch SyncBN.
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: false
+      SYNC_BN_TYPE: "pytorch"  # apex | pytorch
+      # if group_size=-1, will set group_size=num_gpus
+      # if group_size>0, will set group_size=value set by user
+      # if group_size=0, will set process_group=None
+      GROUP_SIZE: -1
+    # ----------------------------------------------------------------------------------- #
+    # MIXED PRECISION SETUP
+    # ----------------------------------------------------------------------------------- #
+    AMP_PARAMS:
+      USE_AMP: false
+      # Use O1 as it is robust and stable than O3. If you want to use O3, we recommend
+      # the following setting:
+      # {"opt_level": "O3", "keep_batchnorm_fp32": true, "master_weights": true, "loss_scale": "dynamic"}
+      AMP_ARGS: {"opt_level": "O1"}
+    MODEL_COMPLEXITY:
+      # set this to True if you want to compute flops, params, activations in your model.
+      COMPUTE_COMPLEXITY: True
+      INPUT_SHAPE: [3, 224, 224]
+    # parameters for initializing a model from a pre-trained model
+    PARAMS_FILE:
+      LOAD_AND_FREEZE_HEADS: false
+      PATH: ""
+      STATE_DICT_KEY_NAME: "classy_state_dict"
+      SKIP_LAYERS: ""
+      REMOVE_SUFFIX: ""
+      APPEND_SUFFIX: "trunk.base_model."
+      # if we want to load the full model including the heads and trunk, set to true
+      LOAD_TRUNK_AND_HEADS: false
+
+  # ----------------------------------------------------------------------------------- #
+  # CRITERION
+  # ----------------------------------------------------------------------------------- #
+  CRITERION:
+    name: "CrossEntropyLoss"
+    ignore_index: -1
+    # generic flag to enable L2 normalization in a loss function. Currently supported
+    # for cross_entropy_multiple_output_single_target loss only.
+    normalize_output: false
+    # following parameters are auto-filled before the criterion is created. They are
+    # useful in cases like Memory bank which require allocating the buffer.
+    NUM_TRAIN_SAMPLES: -1    # @auto-filled
+    NUM_TEST_SAMPLES: -1     # @auto-filled
+
+    # ----------------------------------------------------------------------------------- #
+    # NCE LOSS (Noise Contrastive Estimator)
+    # ----------------------------------------------------------------------------------- #
+    NCE_LOSS:
+      # setting below to "cross_entropy" yields the InfoNCE loss
+      LOSS_TYPE: "nce"
+      NORM_EMBEDDING: true
+      TEMPERATURE: 0.07
+      # if the NCE loss is computed between multiple pairs, we can set a loss weight per term
+      # can be used to weight different pair contributions differently.
+      LOSS_WEIGHTS: [1.0]
+      NORM_CONSTANT: -1
+      UPDATE_MEM_WITH_EMB_INDEX: -100
+      NEGATIVE_SAMPLING_PARAMS:
+        NUM_NEGATIVES: 16000
+        TYPE: "random"
+      MEMORY_PARAMS:
+        MEMORY_SIZE: -1
+        EMBEDDING_DIM: 128
+        MOMENTUM: 0.5
+        NORM_INIT: true
+        UPDATE_MEM_ON_FORWARD: true
+
+    # ----------------------------------------------------------------------------------- #
+    # SimCLR InfoNCE LOSS (Specific to SimCLR https://arxiv.org/abs/2002.05709)
+    # ----------------------------------------------------------------------------------- #
+    SIMCLR_INFO_NCE_LOSS:
+      TEMPERATURE: 0.1
+      NUM_POSITIVES: 2
+      BUFFER_PARAMS:
+        WORLD_SIZE: 64
+        EMBEDDING_DIM: 128
+        EFFECTIVE_BATCH_SIZE: 4096
+
+    # ----------------------------------------------------------------------------------- #
+    # SwAV LOSS (Specific to SwAV)
+    # ----------------------------------------------------------------------------------- #
+    SWAV_LOSS:
+      EMBEDDING_DIM: 128
+      TEMPERATURE: 0.1
+      USE_DOUBLE_PRECISION: false
+      NORMALIZE_LAST_LAYER: true
+      NMB_ITERS: 3
+      EPSILON: 0.05
+      NMB_CROPS: 2
+      CROPS_FOR_ASSIGN: [0, 1]
+      NMB_PROTOTYPES: [3000]
+      QUEUE:
+        QUEUE_LENGTH: 0
+        START_ITER: 0
+        LOCAL_QUEUE_LENGTH: 0
+
+    # -----------------------------------------------------------------------------------#
+    # DeepCluster V2 LOSS (Non-Parametric DeepCluster)
+    # -----------------------------------------------------------------------------------#
+    DEEPCLUSTERV2_LOSS:
+      DROP_LAST: true
+      BATCHSIZE_PER_REPLICA: 256
+      NMB_CROPS: 2
+      TEMPERATURE: 0.1
+      NMB_CLUSTERS: [3000, 3000, 3000]
+      KMEANS_ITERS: 10
+      MEMORY_PARAMS:
+        CROPS_FOR_MB: [0]
+        EMBEDDING_DIM: 128
+
+  # ----------------------------------------------------------------------------------- #
+  # OPTIMIZER
+  # ----------------------------------------------------------------------------------- #
+  OPTIMIZER:
+    name: "sgd"
+    use_larc: false  # supported for SGD only for now
+    larc_config:
+      clip: false
+      eps: 1e-08
+      trust_coefficient: 0.001
+    weight_decay: 0.0001
+    momentum: 0.9
+    nesterov: false
+    num_epochs: 90
+    regularize_bn: false
+    regularize_bias: true
+    param_schedulers:
+      lr:
+        base_value: 0.1
+        name: "multistep"
+        update_interval: "epoch"
+        values: [0.1, 0.01, 0.001]
+        milestones: [30, 60]
+        # The below parameters are valid for lr.name = "composite". Various schedulers
+        # can then be composed together for the training. For example: linear warmup +
+        # multistep schedule after warmup.
+        schedulers: []
+        interval_scaling: []
+        lengths: []
+        # =====cosine learning rate specific =======
+        start_value: 0.1
+        end_value: 0.0
+
+  # ----------------------------------------------------------------------------------- #
+  # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
+  # ----------------------------------------------------------------------------------- #
+  CLUSTERFIT:
+    OUTPUT_DIR: ""
+    NUM_CLUSTERS: 16000
+    CLUSTER_BACKEND: "faiss"
+    # how many iterations to use for faiss
+    N_ITER: 50
+    FEATURES:
+      DATA_PARTITION: "TRAIN"
+      DATASET_NAME: ""
+      LAYER_NAME: ""
+
+  # ----------------------------------------------------------------------------------- #
+  # TRAINER (define your train step)
+  # ----------------------------------------------------------------------------------- #
+  TRAINER:
+    TRAIN_STEP_NAME: "standard"
+
+  # ----------------------------------------------------------------------------------- #
+  # CHECKPOINT
+  # ----------------------------------------------------------------------------------- #
+  CHECKPOINT:
+    DIR: "."
+    # for the checkpoinint, we can append the RUN_ID if we want
+    APPEND_DISTR_RUN_ID: false
+    BACKEND: "disk"
+    # In case of distributed multi-node training, simply use the same RUN_ID and DIR
+    AUTO_RESUME: true
+    CHECKPOINT_FREQUENCY: 1
+    # if we want to checkpoint model at various iterations as well and not just phase
+    CHECKPOINT_ITER_FREQUENCY: -1
+    # if we want to restart a training even if it has already succeeded on this machine
+    OVERWRITE_EXISTING: false
+
+  # ----------------------------------------------------------------------------------- #
+  # DISTRIBUTED TRAINING (1-gpu, multi-gpu, multi-node)
+  # ----------------------------------------------------------------------------------- #
+  DISTRIBUTED:
+    # backend for communication across gpus. Use nccl by default. For cpu training, set
+    # gloo as the backend.
+    BACKEND: "nccl"
+    NCCL_DEBUG: false
+    # whether model buffers are BN buffers are broadcast in every forward pass
+    BROADCAST_BUFFERS: true
+    # number of machines to use in training
+    NUM_NODES: 1
+    # set this to the number of gpus per machine. This ensrures that each gpu of the
+    # node has a process attached to it.
+    NUM_PROC_PER_NODE: 8
+    # this could be: tcp | env | file or any other pytorch supported methods
+    INIT_METHOD: "tcp"
+    # every training run should have a unique id. Following are the options:
+    #   1. If using INIT_METHOD=env, RUN_ID="" is fine.
+    #   2. If using INIT_METHOD=tcp,
+    #      - if you use > 1 machine, set port yourself. RUN_ID="127.0.0.1:{port}".
+    #      - If using 1 machine, set RUN_ID=auto and a free port will be automatically selected
+    #   3. IF using INIT_METHOD=file, RUN_ID={file_path}
+    RUN_ID: ""
+
+  # ----------------------------------------------------------------------------------- #
+  # SVM (benchmark)
+  # ----------------------------------------------------------------------------------- #
+  SVM:
+    OUTPUT_DIR: "."
+    normalize: true
+    cls_list: []
+    loss: "squared_hinge"
+    penalty: "l2"
+    dual: true
+    max_iter: 2000
+    cross_val_folds: 3
+    costs:
+      costs_list: [0.1, 0.01]
+      base: -1.0
+      power_range: [4, 20]
+    force_retrain: false
+    low_shot:
+      dataset_name: "voc"
+      sample_inds: [1, 2, 3, 4, 5]
+      k_values: [1, 2, 4, 8, 16, 32, 64, 96]
+
+  # ----------------------------------------------------------------------------------- #
+  # INSTANCE RETRIEVAL (benchmark)
+  # ----------------------------------------------------------------------------------- #
+  IMG_RETRIEVAL:
+    # Resize larger side of image to RESIZE_IMG pixels (e.g. 800)
+    RESIZE_IMG: 1024
+    # Use spatial levels (e.g. 3)
+    SPATIAL_LEVELS: 3
+    # output dimension of PCA
+    N_PCA: 512
+    # Data path and names of train/eval data: Oxford | Paris | whitening
+    DATASET_PATH: ""
+    TRAIN_DATASET_NAME: "Oxford"
+    EVAL_DATASET_NAME: "Paris"
+    # Path to the compute_ap binary to evaluate Oxford / Paris
+    EVAL_BINARY_PATH: ""
+    # Path to a temporary directory to store features and scores
+    TEMP_DIR: "/tmp/instance_retrieval/"
+    # Initialize the full model including head
+    LOAD_AND_FREEZE_HEADS: false
+    # Whether to apply PCA/whitening or not
+    SHOULD_TRAIN_PCA_OR_WHITENING: true
+    # gem | rmac | l2_norm
+    FEATS_PROCESSING_TYPE: ""
+    # valid only for GeM pooling of features
+    GEM_POOL_POWER: 4.0
+    # valid only if we are training whitening on the whitening dataset
+    WHITEN_IMG_LIST: ""
+
+  # ----------------------------------------------------------------------------------- #
+  # K-NEAREST NEIGHBOR (benchmark)
+  # ----------------------------------------------------------------------------------- #
+  NEAREST_NEIGHBOR:
+    OUTPUT_DIR: ""
+    # temperature value to use
+    SIGMA: 0.1
+    TOPK: 200
+    # if the features should be l2 normalized, set this to true
+    L2_NORM_FEATS: false
+
+  # ----------------------------------------------------------------------------------- #
+  # TENSORBOARD (visualization)
+  # ----------------------------------------------------------------------------------- #
+  TENSORBOARD_SETUP:
+    USE_TENSORBOARD: false
+    LOG_DIR: "."
+    EXPERIMENT_LOG_DIR: ""
+    LOG_ACTIVATIONS: True
+    # flush logs every n minutes
+    FLUSH_EVERY_N_MIN: 5
+
+
+# If you create sub-folders in configs to override, you must follow one of the
+# two options:
+#
+# 1. you can add your defaults here to the list, if you want and run like this:
+#    python tools/distributed_train.py \
+#        config=integration_test/quick_simclr \
+#        config/pretrain/simple_clr/optimization=bs32_16nodes
+#
+# 2. at runtime, add a "+" sign to the input. So run like this:
+#    python tools/distributed_train.py \
+#        config=integration_test/quick_simclr \
+#        +config/pretrain/simple_clr/models=resnext101
+#
+# If you want to override single values in the config, you can achieve that with:
+#    python tools/distributed_train.py \
+#        config=integration_test/quick_simclr \
+#        +config/pretrain/simple_clr/my_sub_folder=my_file_name \
+#        config.MODEL.PARAMS_FILE.PATH=<weights_path.torch>
+#
+# TODO: (prigoyal) figure out whether we should support these defaults or not
+defaults:
+  # you must specify the base config you want to run
+  - config: ???
+  ####### some pre=traning related paths
+  - config/pretrain/datasets: null
+  # simple_clr
+  - config/pretrain/simple_clr/models: null
+  - config/pretrain/simple_clr/optimization: null
+  # SwAV
+  - config/pretrain/swav/models: null
+  - config/pretrain/swav/optimization: null
+  # Jigsaw
+  - config/pretrain/jigsaw/optimization: null
+  - config/pretrain/jigsaw/permutations: null
+  # NPID
+  - config/pretrain/npid/models: null
+  - config/pretrain/npid/optimization: null
+  # RotNet
+  - config/pretrain/rotnet/optimization: null
+  ######### some benchmark related paths
+  - config/benchmark/imagenet1k_fulltune/models: null
+  - config/benchmark/linear_image_classification/imagenet1k: null
+  - config/benchmark/linear_image_classification/imagenet1k/models: null
+  - config/benchmark/linear_image_classification/inaturalist18: null
+  - config/benchmark/linear_image_classification/inaturalist18/models: null
+  - config/benchmark/linear_image_classification/places205: null
+  - config/benchmark/linear_image_classification/places205/models: null
+  - config/benchmark/linear_image_classification/voc07: null
+  - config/benchmark/linear_image_classification/voc07/models: null
+  - config/benchmark/nearest_neighbor/models: null
+  - config/benchmark/semi_supervised/dataset: null
+  - config/benchmark/semi_supervised/models: null

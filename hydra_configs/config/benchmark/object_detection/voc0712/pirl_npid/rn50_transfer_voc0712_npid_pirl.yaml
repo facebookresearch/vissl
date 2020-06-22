@@ -1,0 +1,4 @@
+_BASE_: "../iccv19/rn50_transfer_voc0712_detectron2_e2e.yaml"
+SOLVER:
+  WARMUP_ITERS: 1000
+  BASE_LR: 0.002

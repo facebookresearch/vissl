@@ -1,0 +1,5 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATASET_NAMES: ["google-imagenet1k-per01"]

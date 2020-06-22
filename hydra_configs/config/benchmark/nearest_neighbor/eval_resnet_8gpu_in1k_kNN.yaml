@@ -1,0 +1,65 @@
+# @package _global_
+extract_features: True
+nearest_neighbor_test: True
+config:
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [disk]
+      LABEL_SOURCES: [disk]
+      DATASET_NAMES: [imagenet1k]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+    TEST:
+      DATA_SOURCES: [disk]
+      LABEL_SOURCES: [disk]
+      DATASET_NAMES: [imagenet1k]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 128]}],
+      ]
+    PARAMS_FILE:
+      PATH: "specify the model weights"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      LOAD_TRUNK_AND_HEADS: True
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+  MACHINE:
+    NUM_DATALOADER_WORKERS: 5
+    DEVICE: gpu
+  NEAREST_NEIGHBOR:
+    OUTPUT_DIR: .
+    SIGMA: 0.1
+    TOPK: 200
+    L2_NORM_FEATS: False

@@ -1,0 +1,12 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [everstore]
+      DATASET_NAMES: [instagram_100M]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/instagram_100M/
+      DROP_LAST: True
+  MACHINE:
+    NUM_DATALOADER_WORKERS: 8

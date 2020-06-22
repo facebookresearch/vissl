@@ -1,0 +1,15 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: alexnet_deepcluster
+      SHOULD_FLATTEN: True
+      LINEAR_FEAT_POOL_OPS: [
+          ["AvgPool2d", [[19, 19], 4, 0]],
+          ["AvgPool2d", [[12, 12], 3, 0]],
+          ["AvgPool2d", [[9, 9], 1, 0]],
+          ["AvgPool2d", [[9, 9], 1, 0]],
+          ["AvgPool2d", [[8, 8], 1, 0]],
+      ]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [9216, 20]}]]

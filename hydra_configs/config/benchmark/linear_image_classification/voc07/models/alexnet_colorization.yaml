@@ -1,0 +1,32 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomCrop
+          size: 227
+        - name: RandomHorizontalFlip
+        - name: ImgPil2LabTensor
+    TEST:
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 227
+        - name: ImgPil2LabTensor
+  MODEL:
+    INPUT_TYPE: lab
+    TRUNK:
+      NAME: alexnet_deepcluster
+      SHOULD_FLATTEN: True
+      LINEAR_FEAT_POOL_OPS: [
+          ["AvgPool2d", [[19, 19], 4, 0]],
+          ["AvgPool2d", [[12, 12], 3, 0]],
+          ["AvgPool2d", [[9, 9], 1, 0]],
+          ["AvgPool2d", [[9, 9], 1, 0]],
+          ["AvgPool2d", [[8, 8], 1, 0]],
+      ]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [9216, 20]}]]

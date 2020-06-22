@@ -1,0 +1,28 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+          ######## resnext50-32x4d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 4
+          ######## resnext50-32x8d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 8
+          ######## resnext50-32x16d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 16
+          ######## resnext50-32x32d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 32
+          ######## resnext50-32x48d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 48
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 128]}],
+      ]

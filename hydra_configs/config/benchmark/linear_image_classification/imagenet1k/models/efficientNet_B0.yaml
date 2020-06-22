@@ -1,0 +1,26 @@
+# @package _global_
+config:
+  METERS:
+    accuracy_list:
+      num_list: 1
+      topk: [1, 5]
+  MODEL:
+    EVAL_FEATURES: ["conv_final"]
+    TRUNK:
+      NAME: efficientnet
+      TRUNK_PARAMS:
+        EFFICIENT_NETS:
+          model_version: B0
+          bn_momentum: 0.01
+          bn_epsilon: 0.001
+          drop_connect_rate: 0.2
+          width_divisor: 8
+          min_width: null
+          use_se: True
+      LINEAR_FEAT_POOL_OPS: [
+          ["AvgPool2d", [[5, 5], 1, 0]],
+      ]
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 1280, "dims": [11520, 1000]}],
+      ]

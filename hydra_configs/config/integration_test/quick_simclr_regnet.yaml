@@ -1,0 +1,140 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 2
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [disk]
+      DATASET_NAMES: [imagenet1k]
+      BATCHSIZE_PER_REPLICA: 32
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          kernel: 23
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: flatten_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DATA_LIMIT: 500
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard
+  METERS: null
+  MODEL:
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: False
+      INPUT_SHAPE: [3, 224, 224]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:   # These params are for RegNetY 400Mflops
+        REGNETS:
+          BN:
+            EPSILON: 1.0e-5
+            MOMENTUM: 0.1
+            NUM_SAMPLES_PRECISE: 1024
+            USE_PRECISE_STATS: false
+          MEM:
+            RELU_INPLACE: true
+          MODEL:
+            TYPE: "uninet"
+            NUM_CLASSES: 1000
+          UNINET:
+            ACT_FUN: "relu"
+            ANYNET_NEW_HPS: []
+            B31_RELU_A: true
+            B31_RELU_B: true
+            B3N_1X1: true
+            B3N_N: 1
+            BLOCK_TYPE: "res_cut_gw"
+            BOT_MULS: [1.0, 1.0, 1.0, 1.0]
+            BW_DIV8: false
+            BW_WRT_OW: true
+            DEPTHS: [2, 4, 9, 7]
+            DWISE_3X3: false
+            GROUP_WS: [32, 32, 32, 32]
+            HARD_SWISH_CAP: true
+            HARD_SWISH_DIVIDE: true
+            HARD_SWISH_SHIFT: true
+            LIN_PROJ: false
+            NUM_GS: []
+            REGNET_DM: 1.0
+            REGNET_NEW_HPS: []
+            REGNET_WM: 1.0
+            RELU_3X3: true
+            SE_ENABLED: true
+            SE_POSITION: 2
+            SE_RATIO: 0.25
+            STEM_TYPE: "simple_stem_in"
+            STEM_W: 32
+            STRIDES: [2, 2, 2, 2]
+            TRANS_TYPE: "bottleneck_transform"
+            WIDTHS: [32, 64, 128, 288]
+            WS_QUANTIZATION: 8
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [288, 288], "use_relu": True}],
+        ["mlp", {"dims": [288, 128]}]
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+  CRITERION:
+      name: simclr_info_nce_loss
+      SIMCLR_INFO_NCE_LOSS:
+        TEMPERATURE: 0.1
+        NUM_POSITIVES: 2
+        BUFFER_PARAMS:
+          EMBEDDING_DIM: 128
+  OPTIMIZER:
+      name: sgd
+      use_larc: True
+      larc_config:
+        clip: False
+        trust_coefficient: 0.001
+        eps: 0.00000001
+      weight_decay: 0.000001
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 2
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          name: cosine
+          start_value: 0.15   # LR for batch size 256
+          end_value: 0.0000
+          update_interval: step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    # NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 1
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    NUM_DATALOADER_WORKERS: 5
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 5

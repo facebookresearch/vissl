@@ -1,0 +1,14 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: alexnet_rotnet
+      LINEAR_FEAT_POOL_OPS: [
+          ["AdaptiveMaxPool2d", [12]],
+          ["AdaptiveMaxPool2d", [7]],
+          ["AdaptiveMaxPool2d", [5]],
+          ["AdaptiveMaxPool2d", [6]],
+          ["AdaptiveMaxPool2d", [6]],
+      ]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [9216, 20]}]]

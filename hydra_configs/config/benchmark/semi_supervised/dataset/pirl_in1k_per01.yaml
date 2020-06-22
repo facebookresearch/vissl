@@ -1,0 +1,10 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATASET_NAMES: ["imagenet1k-per01"]
+  OPTIMIZER:
+    param_schedulers:
+      lr:
+        base_value: 0.01
+        values: [0.01, 0.001]

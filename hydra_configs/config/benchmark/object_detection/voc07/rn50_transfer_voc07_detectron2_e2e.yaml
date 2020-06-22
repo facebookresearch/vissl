@@ -1,0 +1,34 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  PIXEL_MEAN: [123.675, 116.280, 103.530]
+  PIXEL_STD: [58.395, 57.120, 57.375]
+  MASK_ON: False
+  RPN:
+    PRE_NMS_TOPK_TEST: 6000
+    POST_NMS_TOPK_TEST: 1000
+  WEIGHTS: "specify weights"
+  ROI_HEADS:
+    NAME: "Res5ROIHeadsExtraNorm"
+    NUM_CLASSES: 20
+  BACKBONE:
+    FREEZE_AT: 0
+  RESNETS:
+    DEPTH: 50
+    NORM: "SyncBN"
+    STRIDE_IN_1X1: False
+INPUT:
+  MIN_SIZE_TRAIN: (480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800)
+  MIN_SIZE_TEST: 800
+  FORMAT: "RGB" # torchvision models take RGB input
+DATASETS:
+  TRAIN: ('voc_2007_trainval',)
+  TEST: ('voc_2007_test',)
+TEST:
+  PRECISE_BN:
+    ENABLED: True
+SOLVER:
+  STEPS: (9500,)
+  MAX_ITER: 12500
+  WARMUP_ITERS: 100
+  IMS_PER_BATCH: 16
+  BASE_LR: 0.02

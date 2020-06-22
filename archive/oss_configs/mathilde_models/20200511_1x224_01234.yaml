@@ -1,0 +1,135 @@
+VERBOSE: False
+LOG_FREQUENCY: 10
+TEST_ONLY: False
+TEST_MODEL: False
+SEED_VALUE: 0
+MULTI_PROCESSING_METHOD: forkserver
+MONITOR_PERF_STATS: True
+DATA:
+  TRAIN:
+    DATA_SOURCES: [disk]
+    DATASET_NAMES: [imagenet1k]
+    DATA_PATHS: ['/datasets01/imagenet_full_size/061417/train']
+    BATCHSIZE_PER_REPLICA: 64
+    LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+    TRANSFORMS:
+      - name: ImgPilToMultiResCrops
+        nmb_duplicates: 5
+        size_crops: [224, 96, 96, 96, 96]
+        type_crops: [0, 1, 1, 1, 1]
+        nmb_crops: [1, 1, 1, 1, 1]
+        crop_scales: [[0.08, 1], [0.6, 1], [0.6, 1], [0.6, 1], [0.6, 1]]
+        crop_size_typePIRL: 255
+      - name: RandomHorizontalFlip
+        p: 0.5
+      - name: ImgPilColorDistortion
+        strength: 1.0
+      - name: ImgPilGaussianBlur
+        kernel: 23
+        p: 0.5
+        radius_min: 0.1
+        radius_max: 2.0
+      - name: ToTensor
+      - name: Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+    COLLATE_FUNCTION: multires_collator
+    MMAP_MODE: True
+    COPY_TO_LOCAL_DISK: True
+    COPY_DESTINATION_DIR: /scratch/slurm_tmpdir/
+    DROP_LAST: True
+TRAINER:
+  TRAIN_STEP_NAME: standard
+METERS: {}
+MODEL:
+  TRUNK:
+    NAME: resnet50
+  HEAD:
+    PARAMS: [
+    ["oto_head", {"dims": [2048, 2048, 128], "use_bn": True, "nmb_clusters": [3000]}],
+    ]
+  TEMP_FROZEN_PARAMS_ITER_MAP: [
+    ['module.heads.0.prototypes0.weight', 313],
+  ]
+  SYNC_BN_CONFIG:
+    CONVERT_BN_TO_SYNC_BN: True
+    # SYNC_BN_TYPE: pytorch
+    SYNC_BN_TYPE: apex
+  AMP_PARAMS:
+    USE_AMP: True
+    AMP_ARGS: {"opt_level": "O1"}
+CRITERION:
+    name: oto_loss
+    MUL_TARGET_DATA_VALID: True
+    SINKHORN_KNOPP_LOSS:
+      NORMALIZE_LAST_LAYER: True
+      USE_DOUBLE_PRECISION: False
+      FILTER_INVALID_IMAGES: False
+      TEMPERATURE: 0.1
+      LAMBDA: 10
+      MAX_ITERS: 3
+      DUPLICATES_FOR_ASSIGN: [0, 1, 2, 3, 4]
+      EPSILON: 0.000001
+      QUEUE:
+        QUEUE_LENGTH: 0
+        #QUEUE_TYPE: 'scores'
+        QUEUE_TYPE: 'embeddings'
+        START_ITER: 0
+OPTIMIZER:
+    name: sgd
+    use_larc: True
+    larc_config:
+      clip: False
+      trust_coefficient: 0.001
+      eps: 0.00000001
+    weight_decay: 0.000001
+    momentum: 0.9
+    nesterov: False
+    # num_epochs: 100
+    # num_epochs: 200
+    num_epochs: 400
+    # num_epochs: 500
+    # num_epochs: 600
+    # num_epochs: 800
+    # num_epochs: 1000
+    regularize_bn: True
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        base_value: 4.8
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.3
+            end_value: 4.8
+          - name: cosine
+            start_value: 4.8
+            end_value: 0.0000
+        update_interval: step
+        interval_scaling: [rescaled, fixed]
+        # lengths: [0.1, 0.9]               # 100ep
+        # lengths: [0.05, 0.95]             # 200ep
+        lengths: [0.025, 0.975]           # 400ep
+        # lengths: [0.02, 0.98]             # 500ep
+        # lengths: [0.0166667, 0.9833333]   # 600ep
+        # lengths: [0.0125, 0.9875]         # 800ep
+        # lengths: [0.01, 0.99]         # 1000ep
+DISTRIBUTED:
+  DISTR_ON: True
+  BACKEND: nccl
+  NUM_NODES: 8    # gives batch size of 20
+  NUM_PROC_PER_NODE: 8
+  RUN_ID: t9ui75tf8y6foyv8yf867ftciyu     # 100ep new version of loss p100
+  INIT_METHOD: tcp
+  NCCL_DEBUG: True
+MACHINE:
+  NUM_DATALOADER_WORKERS: 8
+  DEVICE: gpu
+CHECKPOINT:
+  DIR: "."
+  AUTO_RESUME: True
+  CHECKPOINT_FREQUENCY: 5
+
+
+
+

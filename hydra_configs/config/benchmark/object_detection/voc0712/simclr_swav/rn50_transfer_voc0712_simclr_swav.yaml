@@ -1,0 +1,5 @@
+_BASE_: "../mocoV2/rn50_transfer_voc07_detectron2_e2e.yaml"
+SOLVER:
+  WARMUP_ITERS: 1000
+  WARMUP_FACTOR: 0.3333
+  BASE_LR: 0.10
