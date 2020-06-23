@@ -5,8 +5,25 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
+import os
 
 from setuptools import find_namespace_packages, find_packages, setup
+
+
+def fetch_requirements():
+    with open("requirements.txt") as f:
+        reqs = f.read().strip().split("\n")
+    return reqs
+
+
+def get_version():
+    init_py_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "vissl", "__init__.py"
+    )
+    init_py = open(init_py_path, "r").readlines()
+    version_line = [l.strip() for l in init_py if l.startswith("__version__")][0]
+    version = version_line.split("=")[-1].strip().strip("'\"")
+    return version
 
 
 packages = find_packages(exclude=("tests",)) + find_namespace_packages(
@@ -14,9 +31,27 @@ packages = find_packages(exclude=("tests",)) + find_namespace_packages(
 )
 
 setup(
-    name="ssl_framework",
-    version="0.1.2",
-    description="A toolkit for Self-Supervised Learning Research",
+    name="vissl",
+    version=get_version(),
+    author="Facebook AI Research",
+    url="https://github.com/facebookresearch/vissl",
+    description="VISSL is an extensible, modular and scalable library for "
+    "SOTA Self-Supervised Learning with images.",
     packages=packages,
+    install_requires=fetch_requirements(),
     include_package_data=True,
+    python_requires=">=3.6",
+    extras_require={
+        "dev": [
+            "black==19.3b0",
+            "sphinx",
+            "isort",
+            "flake8==3.8.1",
+            "isort",
+            "flake8-bugbear",
+            "flake8-comprehensions",
+            "pre-commit",
+            "nbconvert",
+        ]
+    },
 )

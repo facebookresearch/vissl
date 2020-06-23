@@ -65,7 +65,8 @@ class ResNeXt(nn.Module):
         (n1, n2, n3, n4) = BLOCK_CONFIG[self.depth]
         logging.info(
             f"Building model: ResNeXt"
-            f"{self.depth}-{self.groups}x{self.width_per_group}d-w{self.width_multiplier}-{self._norm_layer.__name__}"
+            f"{self.depth}-{self.groups}x{self.width_per_group}d-"
+            f"w{self.width_multiplier}-{self._norm_layer.__name__}"
         )
 
         model = models.resnet.ResNet(

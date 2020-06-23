@@ -9,7 +9,7 @@
 This script can be used to extract the ImageNet-1K and Places205 dataset files
 [data, labels] from the given data source path. The files can be prepared for
 both data splits train/val.
-Credits: https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/extra_scripts/create_imagenet_data_files.py
+Credits: https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/extra_scripts/create_imagenet_data_files.py  # noqa
 """
 
 import argparse

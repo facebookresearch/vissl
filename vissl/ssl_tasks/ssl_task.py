@@ -45,7 +45,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.set_amp_args()
         # total number of parameter updates applied to the model by optimizer
         self.num_updates = 0
-        # for measuring the time of several components in training (data, forward, backward etc..)
+        # measure time of several training components (data, forward, backward etc..)
         self.perf_stats = None
         # total number of phases including test + train
         self.num_phases = -1  # set by the trainer
