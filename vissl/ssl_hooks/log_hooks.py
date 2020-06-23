@@ -6,6 +6,10 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+"""
+All the hooks involved in human-readable logging
+"""
+
 import datetime
 import logging
 import os
@@ -18,14 +22,10 @@ from classy_vision.generic.distributed_util import get_rank, is_master
 from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.utils.checkpoint import get_checkpoint_folder, is_checkpoint_phase
+from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
-
-
-"""
-All the hooks involved in human-readable logging
-"""
 
 
 class LogGpuStatsHook(ClassyHook):
@@ -221,7 +221,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
 
     def _print_and_save_meters(self, task, train_phase_idx):
         phase_type = "train" if task.train else "test"
-        rank = int(os.environ["LOCAL_RANK"])
+        rank, _ = get_machine_local_and_dist_rank()
         checkpoint_folder = get_checkpoint_folder(task.config)
         save_metrics = {}
         save_metrics["iteration"] = task.iteration

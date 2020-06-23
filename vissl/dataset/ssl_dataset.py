@@ -6,13 +6,13 @@
 # LICENSE file in the root directory of this source tree.
 #
 import logging
-import os
 
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
 from torch.utils.data import Dataset
 from vissl.dataset import dataset_catalog
 from vissl.dataset.ssl_transforms import get_transform
+from vissl.utils.env import get_machine_local_and_dist_rank
 
 
 class GenericSSLDataset(Dataset):
@@ -47,7 +47,7 @@ class GenericSSLDataset(Dataset):
             )
 
     def _get_data_files(self, split):
-        local_rank = int(os.environ.get("LOCAL_RANK", 0))
+        local_rank, _ = get_machine_local_and_dist_rank()
         self.data_paths, self.label_paths = dataset_catalog.get_data_files(
             split, dataset_config=self.cfg["DATA"]
         )

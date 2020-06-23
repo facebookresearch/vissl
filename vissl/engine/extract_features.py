@@ -14,7 +14,7 @@ from torch.utils.collect_env import get_pretty_env_info
 from vissl.ssl_tasks import build_task
 from vissl.ssl_trainer import DistributedSelfSupervisionTrainer
 from vissl.utils.checkpoint import get_absolute_path
-from vissl.utils.env import set_env_vars
+from vissl.utils.env import get_machine_local_and_dist_rank, set_env_vars
 from vissl.utils.hydra_config import print_cfg
 from vissl.utils.logger import setup_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
@@ -35,7 +35,7 @@ def extract_main(args, cfg, dist_run_id, local_rank=0, node_id=0):
     set_seeds(cfg)
 
     # print the training settings and system settings
-    local_rank = int(os.environ["LOCAL_RANK"])
+    local_rank, _ = get_machine_local_and_dist_rank()
     if local_rank == 0:
         print_cfg(cfg)
         logging.info("System config:\n{}".format(get_pretty_env_info()))

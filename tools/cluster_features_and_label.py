@@ -21,6 +21,7 @@ from omegaconf import DictConfig
 from torch.utils.collect_env import get_pretty_env_info
 from vissl.dataset import build_dataset
 from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging
@@ -111,7 +112,7 @@ def main(args, cfg):
     set_seeds(cfg)
 
     # print the training settings and system settings
-    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    local_rank, _ = get_machine_local_and_dist_rank()
     if local_rank == 0:
         print_cfg(cfg)
         logging.info("System config:\n{}".format(get_pretty_env_info()))

@@ -13,6 +13,7 @@ from shutil import copy2, move
 
 import torch
 from classy_vision.generic.util import load_checkpoint
+from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import makedir
 
 
@@ -288,7 +289,7 @@ def init_model_from_weights(
 
     # load the checkpoint now
     all_layers = model.state_dict()
-    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    local_rank, _ = get_machine_local_and_dist_rank()
     for layername in all_layers.keys():
         if skip_layers and len(skip_layers) > 0 and layername.find(skip_layers) >= 0:
             continue

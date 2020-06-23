@@ -25,6 +25,7 @@ from classy_vision.trainer import ClassyTrainer
 from vissl.dataset import print_sampler_config
 from vissl.ssl_hooks import SSLClassyHookFunctions
 from vissl.ssl_trainer.train_steps import get_train_step
+from vissl.utils.env import get_machine_local_and_dist_rank
 
 
 class DistributedSelfSupervisionTrainer(ClassyTrainer):
@@ -67,12 +68,8 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         else:
             set_cpu_device()
 
-    # classy vision uses advance task and a bunch of other calls in trainer
-    # that are dependent on the dataloaders in classy vision. Once example
-    # include _set_model_train_mode().
     def train(self, cfg, task: ClassyTask):
-        self.distributed_rank = int(os.environ["RANK"])
-        self.local_rank = int(os.environ["LOCAL_RANK"])
+        self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
 
         self._setup_distributed(cfg, task.use_gpu)
 
@@ -214,12 +211,11 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         # and used to calculate the proper LR to use
         if task.train and task.train_phase_idx >= 0:
             task.optimizer.update_schedule_on_epoch(task.where)
-
-        logging.info(f"Phase advanced. Rank: {int(os.environ['LOCAL_RANK'])}")
+        local_rank, _ = get_machine_local_and_dist_rank()
+        logging.info(f"Phase advanced. Rank: {local_rank}")
 
     def extract(self, cfg, task: ClassyTask):
-        self.distributed_rank = int(os.environ["RANK"])
-        self.local_rank = int(os.environ["LOCAL_RANK"])
+        self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
 
         self._setup_distributed(cfg, task.use_gpu)
 

@@ -7,7 +7,6 @@
 #
 import copy
 import logging
-import os
 from typing import Any, List
 
 import torch
@@ -20,6 +19,7 @@ from vissl.utils.checkpoint import (  # noqa
     print_loaded_dict_info,
     print_state_dict_shapes,
 )
+from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.misc import is_apex_available
 
 
@@ -72,7 +72,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         self.optimizer_config = optimizer_config
         super().__init__()
         self.eval_mode = None  # this is just informational
-        self.local_rank = int(os.environ.get("LOCAL_RANK", 0))
+        self.local_rank, _ = get_machine_local_and_dist_rank()
         self.trunk = self._get_trunk()
         self.heads = nn.ModuleList()
         self.head_names = []

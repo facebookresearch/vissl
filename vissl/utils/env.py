@@ -25,3 +25,9 @@ def print_system_env_info(current_env):
     keys.sort()
     for key in keys:
         logging.info("{}:\t{}".format(key, current_env[key]))
+
+
+def get_machine_local_and_dist_rank():
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    distributed_rank = int(os.environ.get("RANK", 0))
+    return local_rank, distributed_rank

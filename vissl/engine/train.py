@@ -21,7 +21,11 @@ from vissl.utils.checkpoint import (
     get_resume_checkpoint,
     is_training_finished,
 )
-from vissl.utils.env import print_system_env_info, set_env_vars
+from vissl.utils.env import (
+    get_machine_local_and_dist_rank,
+    print_system_env_info,
+    set_env_vars,
+)
 from vissl.utils.hydra_config import print_cfg
 from vissl.utils.logger import setup_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
@@ -60,7 +64,7 @@ def train_main(
     # We set the CUDA device here as well as a safe solution for all downstream
     # `torch.cuda.current_device()` calls to return correct device.
     if cfg.MACHINE.DEVICE == "gpu" and torch.cuda.is_available():
-        local_rank = int(os.environ["LOCAL_RANK"])
+        local_rank, _ = get_machine_local_and_dist_rank()
         torch.cuda.set_device(local_rank)
 
     # print the training settings and system settings
