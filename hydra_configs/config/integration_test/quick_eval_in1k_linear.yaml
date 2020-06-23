@@ -101,3 +101,4 @@ config:
     DIR: "."
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 2
+    OVERWRITE_EXISTING: true

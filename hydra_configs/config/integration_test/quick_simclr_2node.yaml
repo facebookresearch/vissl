@@ -106,3 +106,4 @@ config:
     DIR: "."
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5
+    OVERWRITE_EXISTING: true
