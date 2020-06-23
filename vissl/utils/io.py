@@ -5,6 +5,8 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
+
+import json
 import logging
 import os
 import pickle
@@ -23,6 +25,10 @@ def save_file(data, filename):
             pickle.dump(data, fopen, pickle.HIGHEST_PROTOCOL)
     elif file_ext == ".npy":
         np.save(filename, data)
+    elif file_ext == ".json":
+        with open(filename, "a") as fopen:
+            fopen.write(json.dumps(data, sort_keys=True) + "\n")
+            fopen.flush()
     else:
         raise Exception(f"Saving {file_ext} is not supported yet")
     logging.info(f"Saved data to file: {filename}")

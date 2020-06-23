@@ -18,6 +18,7 @@ from classy_vision.generic.distributed_util import get_rank, is_master
 from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.utils.checkpoint import get_checkpoint_folder, is_checkpoint_phase
+from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
 
@@ -221,12 +222,20 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     def _print_and_save_meters(self, task, train_phase_idx):
         phase_type = "train" if task.train else "test"
         rank = int(os.environ["LOCAL_RANK"])
+        checkpoint_folder = get_checkpoint_folder(task.config)
+        save_metrics = {}
+        save_metrics["iteration"] = task.iteration
+        save_metrics["phase_idx"] = task.phase_idx
+        save_metrics["train_phase_idx"] = train_phase_idx
         for meter in task.meters:
             metric_key = f"{phase_type}_{meter.name}"
             if metric_key not in task.metrics:
                 task.metrics[metric_key] = []
             task.metrics[metric_key].append(meter.value)
+            save_metrics[metric_key] = meter.value
             logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter.value}")
+        meter_file = os.path.join(checkpoint_folder, "metrics.json")
+        save_file(save_metrics, meter_file)
 
 
 class LogPerfTimeMetricsHook(ClassyHook):

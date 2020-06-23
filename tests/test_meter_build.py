@@ -11,7 +11,7 @@ import unittest
 
 from parameterized import parameterized
 from utils import ROOT_CONFIGS, SSLHydraConfig
-from vissl.tasks import build_task
+from vissl.ssl_tasks import build_task
 from vissl.utils.hydra_config import convert_to_attrdict
 
 

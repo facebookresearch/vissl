@@ -12,7 +12,7 @@ import vissl.meters  # NOQA
 import vissl.models  # NOQA
 import vissl.ssl_criterions  # NOQA
 import vissl.ssl_hooks  # NOQA
-from vissl.tasks.ssl_task import SelfSupervisionTask
+from vissl.ssl_tasks.ssl_task import SelfSupervisionTask
 
 
 def build_task(config):

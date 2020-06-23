@@ -11,8 +11,8 @@ import os
 
 import numpy as np
 from torch.utils.collect_env import get_pretty_env_info
+from vissl.ssl_tasks import build_task
 from vissl.ssl_trainer import DistributedSelfSupervisionTrainer
-from vissl.tasks import build_task
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import print_cfg

@@ -14,8 +14,8 @@ import torch
 from classy_vision.hooks.classy_hook import ClassyHook
 from torch.utils.collect_env import get_pretty_env_info
 from vissl.ssl_hooks import default_hook_generator
+from vissl.ssl_tasks import build_task
 from vissl.ssl_trainer import DistributedSelfSupervisionTrainer
-from vissl.tasks import build_task
 from vissl.utils.checkpoint import (
     get_checkpoint_folder,
     get_resume_checkpoint,
