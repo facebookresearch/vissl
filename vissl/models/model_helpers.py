@@ -6,8 +6,8 @@
 # LICENSE file in the root directory of this source tree.abs
 
 import logging
-import os
-from enum import Enum, auto
+from enum import Enum
+from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
@@ -16,6 +16,20 @@ from vissl.utils.misc import is_apex_available
 
 if is_apex_available():
     import apex
+
+
+class Wrap(nn.Module):
+    """ Wrap a free function into a nn.Module
+    Can be useful to build a model block, and include activations or
+    light tensor alterations
+    """
+
+    def __init__(self, function):
+        super().__init__()
+        self.function = function
+
+    def forward(self, x):
+        return self.function(x)
 
 
 class SyncBNTypes(str, Enum):
@@ -121,19 +135,20 @@ class LayerNorm2d(nn.GroupNorm):
 
 
 class RESNET_NORM_LAYER(str, Enum):
-    BatchNorm = auto()
-    LayerNorm = auto()
+    BatchNorm = "BatchNorm"
+    LayerNorm = "LayerNorm"
 
 
 def _get_norm(layer_name):
-    if RESNET_NORM_LAYER[layer_name] == RESNET_NORM_LAYER.BatchNorm:
-        norm_layer = nn.BatchNorm2d
-    elif RESNET_NORM_LAYER[layer_name].name == RESNET_NORM_LAYER.LayerNorm:
-        norm_layer = LayerNorm2d
-    return norm_layer
+    return {
+        RESNET_NORM_LAYER.BatchNorm: nn.BatchNorm2d,
+        RESNET_NORM_LAYER.LayerNorm: LayerNorm2d,
+    }[layer_name]
 
 
-def parse_out_keys_arg(out_feat_keys, all_feat_names):
+def parse_out_keys_arg(
+    out_feat_keys: List[str], all_feat_names: List[str]
+) -> Tuple[List[str], int]:
     """
     Checks if all out_feature_keys are mapped to a layer in the model.
     Returns the last layer to forward pass through for efficiency.
@@ -160,7 +175,12 @@ def parse_out_keys_arg(out_feat_keys, all_feat_names):
     return out_feat_keys, max_out_feat
 
 
-def get_trunk_forward_outputs(feat, out_feat_keys, feature_blocks, all_feat_names):
+def get_trunk_forward_outputs(
+    feat: torch.Tensor,
+    out_feat_keys: List[str],
+    feature_blocks: nn.ModuleDict,
+    feature_mapping: Dict[str, str] = None,
+) -> List[torch.Tensor]:
     """
     Args:
         feat: model input.
@@ -168,19 +188,34 @@ def get_trunk_forward_outputs(feat, out_feat_keys, feature_blocks, all_feat_name
             the function should return. By default the last feature of the network
             is returned.
         feature_blocks: list of feature blocks in the model
-        all_feat_names: list of different feature layers in the model
+        feature_mapping: an optional correspondence table in between the requested
+            feature names and the model's.
 
     Return:
-        out_feats: If multiple output features were asked then `out_feats` is a
-        list with the asked output features placed in the same order as in
-        `out_feat_keys`. If a single output feature was asked then `out_feats`
-        is that output feature (and not a list).
+        out_feats: a list with the asked output features placed in the same order as in
+        `out_feat_keys`.
     """
-    out_feat_keys, max_out_feat = parse_out_keys_arg(out_feat_keys, all_feat_names)
+
+    # Sanitize inputs
+    if feature_mapping is not None:
+        out_feat_keys = [feature_mapping[f] for f in out_feat_keys]
+
+    out_feat_keys, max_out_feat = parse_out_keys_arg(
+        out_feat_keys, list(feature_blocks.keys())
+    )
+
     out_feats = [None] * len(out_feat_keys)
-    for f in range(max_out_feat + 1):
-        feat = feature_blocks[f](feat)
-        key = all_feat_names[f]
-        if key in out_feat_keys:
-            out_feats[out_feat_keys.index(key)] = feat
+
+    # Go through the blocks, and save the features as we go
+    for i, (feature_name, feature_block) in enumerate(feature_blocks.items()):
+        feat = feature_block(feat)
+
+        # This feature is requested, store
+        if feature_name in out_feat_keys:
+            out_feats[out_feat_keys.index(feature_name)] = feat
+
+        # Early exit if all the features have been collected
+        if i == max_out_feat:
+            break
+
     return out_feats

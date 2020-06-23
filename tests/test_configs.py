@@ -71,8 +71,8 @@ class TestConfigsFailComposition(unittest.TestCase):
                 ]
             )
             self.fail(
-                f"We should fail for invalid composition. "
-                f"+ is not necessary as the group already exists in defaults"
+                "We should fail for invalid composition. "
+                "+ is not necessary as the group already exists in defaults"
             )
         except HydraException:
             pass

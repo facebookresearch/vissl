@@ -6,14 +6,15 @@
 # LICENSE file in the root directory of this source tree.
 #
 import logging
-from collections import OrderedDict
+from typing import List
 
+import torch
 import torch.nn as nn
 from classy_vision.models.efficientnet import (
     MODEL_PARAMS,
     EfficientNet as ClassyEfficientNet,
 )
-from vissl.models.model_helpers import Flatten, parse_out_keys_arg
+from vissl.models.model_helpers import Flatten, Wrap, parse_out_keys_arg
 
 
 class EfficientNet(nn.Module):
@@ -29,10 +30,8 @@ class EfficientNet(nn.Module):
         trunk_config = model_config.TRUNK.TRUNK_PARAMS.EFFICIENT_NETS
         assert "model_version" in trunk_config, "Please specify EfficientNet version"
         model_version = trunk_config["model_version"]
-        assert (
-            model_version in MODEL_PARAMS.keys()
-        ), f"EfficientNet {model_version} not found"
         model_params = MODEL_PARAMS[model_version]
+
         trunk_config["model_params"] = model_params
         trunk_config.pop("model_version")
         # we don't use the FC constructed with num_classes. This param is required
@@ -43,78 +42,76 @@ class EfficientNet(nn.Module):
 
         self.drop_connect_rate = model.drop_connect_rate
         self.num_blocks = len(model.blocks)
-        self.relu_fn = model.relu_fn
         self.dropout = model.dropout
+        self.activation = Wrap(model.relu_fn)  # using swish, not relu actually
 
-        # we mapped the layers of model into feature blocks to facilitate
+        # We map the layers of model into feature blocks to facilitate
         # feature extraction at various layers of the model. The layers for which
         # to extract features is controlled by out_feat_keys argument in the
         # forward() call.
-        conv1 = nn.Sequential(model.conv_stem, model.bn0)
-        feature_blocks = [conv1]
-
-        # since the number of blocks scales with different configuration of
-        # model, we look at the names of the children and count the blocks
-        all_blocks = model.blocks.named_children()
-        block_names = [blk[0].strip().split("-")[0] for blk in all_blocks]
-        block_counts = OrderedDict()
-        for item in block_names:
-            if item in block_counts:
-                block_counts[item] += 1
-            else:
-                block_counts[item] = 1
-        count = 0
-        for _, num in block_counts.items():
-            seq_block = model.blocks[count : (count + num)]
-            feature_blocks.append(seq_block)
-            count += num
-
-        feature_blocks.append(nn.Sequential(model.conv_head, model.bn1))
-        feature_blocks.append(model.avg_pooling)
-        feature_blocks.append(Flatten(1))
-        if model.dropout:
-            feature_blocks.append(model.dropout)
-
-        self._feature_blocks = nn.ModuleList(feature_blocks)
-        self.all_feat_names = [
-            "conv1",
-            "block0",
-            "block1",
-            "block2",
-            "block3",
-            "block4",
-            "block5",
-            "block6",
-            "conv_final",
-            "avgpool",
-            "flatten",
+        # - Stem
+        feature_blocks = [
+            ["conv1", nn.Sequential(model.conv_stem, model.bn0, self.activation)]
         ]
-        if model.dropout:
-            self.all_feat_names.append("dropout")
 
-    def forward(self, x, out_feat_keys=None):
+        # - Mobile Inverted Residual Bottleneck blocks
+        feature_blocks.extend(
+            [[f"block{i}", v] for i, v in enumerate(model.blocks.children())]
+        )
+
+        # - Conv Head + Pooling
+        feature_blocks.extend(
+            [
+                [
+                    "conv_final",
+                    nn.Sequential(model.conv_head, model.bn1, self.activation),
+                ],
+                ["avgpool", model.avg_pooling],
+                ["flatten", Flatten(1)],
+            ]
+        )
+
+        if model.dropout:
+            feature_blocks.append(["dropout", model.dropout])
+
+        # Consolidate into one indexable trunk
+        self._feature_blocks = nn.ModuleDict(feature_blocks)
+        self.all_feat_names = list(self._feature_blocks.keys())
+
+    def forward(self, x: torch.Tensor, out_feat_keys: List[str] = None):
         out_feat_keys, max_out_feat = parse_out_keys_arg(
             out_feat_keys, self.all_feat_names
         )
         out_feats = [None] * len(out_feat_keys)
-
         feat = x
-        block_num = 0
-        for f in range(max_out_feat + 1):
-            key = self.all_feat_names[f]
-            if "block" in key:
-                for idx in range(len(self._feature_blocks[f])):
-                    drop_connect_rate = self.drop_connect_rate
-                    if self.drop_connect_rate:
-                        drop_connect_rate *= float(block_num) / self.num_blocks
-                    feat = self._feature_blocks[f][idx](
-                        feat, drop_connect_rate=drop_connect_rate
-                    )
-                    block_num += 1
-            elif "conv" in key:
-                feat = self.relu_fn(self._feature_blocks[f](feat))
+
+        # Walk through the EfficientNet, block by block
+        blocks = iter(self._feature_blocks.named_children())
+
+        # - First block is always the stem
+        stem_name, stem_block = next(blocks)
+        feat = stem_block(feat)
+        if stem_name in out_feat_keys:
+            out_feats[out_feat_keys.index(stem_name)] = feat
+
+        # - Next go through all the MIRB, then the eventual conv and pooling
+        for i, (feature_name, feature_block) in enumerate(blocks):
+            if "block" in feature_name:
+                # -- MIRB blocks (needs ad-hoc drop connect rate)
+                drop_connect_rate = self.drop_connect_rate
+                if self.drop_connect_rate:
+                    drop_connect_rate *= float(i) / self.num_blocks
+                feat = feature_block(feat, drop_connect_rate=drop_connect_rate)
             else:
-                feat = self._feature_blocks[f](feat)
-            if key in out_feat_keys:
-                out_feats[out_feat_keys.index(key)] = feat
+                # -- Conv, Pooling (simple forward)
+                feat = feature_block(feat)
+
+            # If requested, store the feature
+            if feature_name in out_feat_keys:
+                out_feats[out_feat_keys.index(feature_name)] = feat
+
+            # Early exit if all the features have been collected
+            if i == max_out_feat:
+                break
+
         return out_feats
