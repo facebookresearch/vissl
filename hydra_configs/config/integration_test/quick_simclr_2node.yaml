@@ -56,7 +56,7 @@ config:
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
+      SYNC_BN_TYPE: pytorch
     AMP_PARAMS:
       USE_AMP: False
       AMP_ARGS: {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
