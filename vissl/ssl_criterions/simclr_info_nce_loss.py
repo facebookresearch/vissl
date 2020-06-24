@@ -54,7 +54,7 @@ class DistributedSimclrInfoNCELoss(ClassyLoss):
 
 
 class SimclrInfoNCECriterion(nn.Module):
-    def __init__(self, buffer_params, temperature, num_pos):
+    def __init__(self, buffer_params, temperature: float, num_pos: int):
         super(SimclrInfoNCECriterion, self).__init__()
 
         self.use_gpu = get_cuda_device_index() > -1

@@ -8,11 +8,13 @@
 
 import math
 import pprint
+from typing import List
 
 import numpy as np
 import torch
 from classy_vision.generic.distributed_util import (
     all_reduce_sum,
+    get_cuda_device_index,
     get_rank,
     get_world_size,
 )
@@ -71,17 +73,19 @@ class SwAVLoss(ClassyLoss):
 class SwAVCriterion(nn.Module):
     def __init__(
         self,
-        temperature,
-        crops_for_assign,
-        nmb_crops,
-        nmb_iters,
-        epsilon,
-        use_double_prec,
-        nmb_prototypes,
-        local_queue_length,
-        embedding_dim,
+        temperature: float,
+        crops_for_assign: List[int],
+        nmb_crops: int,
+        nmb_iters: int,
+        epsilon: float,
+        use_double_prec: bool,
+        nmb_prototypes: List[int],
+        local_queue_length: int,
+        embedding_dim: int,
     ):
         super(SwAVCriterion, self).__init__()
+
+        self.use_gpu = get_cuda_device_index() > -1
 
         self.temperature = temperature
         self.crops_for_assign = crops_for_assign
@@ -113,11 +117,16 @@ class SwAVCriterion(nn.Module):
 
             # we follow the u, r, c and Q notations from
             # https://arxiv.org/abs/1911.05371
-            u = torch.zeros(k).cuda(non_blocking=True)
-            r = torch.ones(k).cuda(non_blocking=True) / k
-            c = torch.ones(n).cuda(non_blocking=True) / N
+            u = torch.zeros(k)
+            r = torch.ones(k) / k
+            c = torch.ones(n) / N
             if self.use_double_prec:
                 u, r, c = u.double(), r.double(), c.double()
+
+            if self.use_gpu:
+                u = torch.cuda(non_blocking=True)
+                r = torch.cuda(non_blocking=True)
+                c = torch.cuda(non_blocking=True)
 
             curr_sum = torch.sum(Q, dim=1)
             all_reduce_sum(curr_sum)
@@ -130,7 +139,7 @@ class SwAVCriterion(nn.Module):
                 all_reduce_sum(curr_sum)
             return (Q / torch.sum(Q, dim=0, keepdim=True)).t().float()
 
-    def forward(self, scores, head_id):
+    def forward(self, scores: torch.Tensor, head_id: int):
         assert scores.shape[0] % self.nmb_crops == 0
         bs = scores.shape[0] // self.nmb_crops
 
