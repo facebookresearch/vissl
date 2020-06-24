@@ -267,7 +267,8 @@ def init_model_from_weights(
     state_dict_key_name:   string: key name containing the model state dict
     skip_layers:           string : layer names with this key are not copied
     replace_prefix:        string : remove these prefixes from the layer names (executed first)
-    append_prefix:         string : append the prefix to the layer names (executed after replace_prefix)
+    append_prefix:         string : append the prefix to the layer names
+                                    (executed after replace_prefix)
     """
     # whether it's a model from somewhere else or a model from this codebase, load the
     # state_dict
