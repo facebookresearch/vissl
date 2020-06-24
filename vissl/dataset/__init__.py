@@ -13,11 +13,12 @@ from vissl.dataset.collators import get_collator
 from vissl.dataset.data_helper import StatefulDistributedSampler
 from vissl.dataset.disk_dataset import DiskImageDataset
 from vissl.dataset.ssl_dataset import GenericSSLDataset
+from vissl.dataset.synthetic_dataset import SyntheticImageDataset
 
 
 __all__ = ["GenericSSLDataset", "get_data_files"]
 
-DATASET_SOURCE_MAP = {"disk": DiskImageDataset}
+DATASET_SOURCE_MAP = {"disk": DiskImageDataset, "synthetic": SyntheticImageDataset}
 
 
 def build_dataset(cfg, split):

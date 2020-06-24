@@ -54,14 +54,22 @@ def check_data_exists(data_files):
 
 
 def get_data_files(split, dataset_config):
-    assert len(dataset_config[split].DATA_SOURCES) == len(
-        dataset_config[split].DATA_PATHS
-    ), "Mismatch between length of data_sources and data paths provided"
     data_files = dataset_config[split].DATA_PATHS
-    label_files = []
+    data_sources = dataset_config[split].DATA_SOURCES
+    label_files, output_data_files = [], []
+    # if there are synthetic data sources, we set the filepaths as none
+    for idx in range(len(data_sources)):
+        if data_sources[idx] == "synthetic":
+            output_data_files.append("")
+        else:
+            output_data_files.append(data_files[idx])
+
+    assert len(data_sources) == len(
+        output_data_files
+    ), "Mismatch between length of data_sources and data paths provided"
     if check_data_exists(dataset_config[split].LABEL_PATHS):
         label_files = dataset_config[split].LABEL_PATHS
-    output = [data_files, label_files]
+    output = [output_data_files, label_files]
     if dataset_config[split].COPY_TO_LOCAL_DISK:
         dest_dir = dataset_config[split]["COPY_DESTINATION_DIR"]
         local_data_files = get_local_output_filepaths(data_files, dest_dir)
