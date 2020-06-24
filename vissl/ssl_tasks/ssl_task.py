@@ -100,11 +100,10 @@ class SelfSupervisionTask(ClassificationTask):
         precision training, pass amp_args={"opt_level": "O1"} here.
         See https://nvidia.github.io/apex/amp.html for more info.
         """
-        if not is_apex_available():
-            raise RuntimeError("Apex is not available. Can't use mixed precision")
-
         amp_args = None
         if self.config.MODEL.AMP_PARAMS.USE_AMP:
+            if not is_apex_available():
+                raise RuntimeError("Apex is not available. Can't use mixed precision")
             amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
         self.amp_args = amp_args
         logging.info(f"Setting amp args: {self.amp_args}")

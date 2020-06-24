@@ -6,14 +6,19 @@
 # LICENSE file in the root directory of this source tree.
 #
 import os
+import pathlib
 
+import pkg_resources
 from setuptools import find_namespace_packages, find_packages, setup
 
 
 def fetch_requirements():
-    with open("requirements.txt") as f:
-        reqs = f.read().strip().split("\n")
-    return reqs
+    with pathlib.Path("requirements.txt").open() as requirements_txt:
+        install_requires = [
+            str(requirement)
+            for requirement in pkg_resources.parse_requirements(requirements_txt)
+        ]
+    return install_requires
 
 
 def get_version():
