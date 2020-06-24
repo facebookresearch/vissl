@@ -94,4 +94,3 @@ pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cud
 cd $HOME/vissl
 python -c 'import apex'   # should run and return nothing
 ```
-

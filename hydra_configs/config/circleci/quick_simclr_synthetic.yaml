@@ -12,10 +12,8 @@ config:
   DATA:
     TRAIN:
       DATA_SOURCES:
-        - disk
-      DATASET_NAMES:
-        - imagenet1k
-      BATCHSIZE_PER_REPLICA: 16
+        - synthetic
+      BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgReplicatePil
@@ -40,7 +38,6 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: 500
       DROP_LAST: True
-      COPY_DESTINATION_DIR: "/tmp/imagenet1k"
   TRAINER:
     TRAIN_STEP_NAME: standard
   METERS: null
@@ -56,7 +53,7 @@ config:
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: pytorch
+      SYNC_BN_TYPE: apex
     AMP_PARAMS:
       USE_AMP: False
       AMP_ARGS: {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
@@ -82,23 +79,17 @@ config:
       regularize_bias: True
       param_schedulers:
         lr:
-          base_value: 0.6
-          name: composite
-          schedulers:
-            - name: linear
-              start_value: 0.3
-              end_value: 0.6
-            - name: cosine
-              start_value: 0.6
-              end_value: 0.0000
+          name: cosine
+          start_value: 0.15   # LR for batch size 256
+          end_value: 0.0000
           update_interval: step
-          interval_scaling: [rescaled, fixed]
-          lengths: [0.1, 0.9]
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 2
-    NUM_PROC_PER_NODE: 8
+    NUM_NODES: 1
+    # NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
+    RUN_ID: auto
   MACHINE:
     NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
@@ -106,4 +97,3 @@ config:
     DIR: "."
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5
-    OVERWRITE_EXISTING: true

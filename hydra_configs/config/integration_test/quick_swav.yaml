@@ -57,7 +57,7 @@ config:
     ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
+      SYNC_BN_TYPE: pytorch
   CRITERION:
       name: swav_loss
       SWAV_LOSS:

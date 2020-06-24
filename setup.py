@@ -33,6 +33,22 @@ def get_version():
     return version
 
 
+def fetch_requirements():
+    with open("requirements.txt") as f:
+        reqs = f.read().strip().split("\n")
+    return reqs
+
+
+def get_version():
+    init_py_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "vissl", "__init__.py"
+    )
+    init_py = open(init_py_path, "r").readlines()
+    version_line = [l.strip() for l in init_py if l.startswith("__version__")][0]
+    version = version_line.split("=")[-1].strip().strip("'\"")
+    return version
+
+
 packages = find_packages(exclude=("tests",)) + find_namespace_packages(
     include=["hydra_plugins.*"]
 )
