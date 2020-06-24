@@ -12,20 +12,12 @@ import pkg_resources
 from setuptools import find_namespace_packages, find_packages, setup
 
 
-#def fetch_requirements():
-#    with open("requirements.txt") as f:
-#        reqs = f.read().strip().split("\n")
-#    print(reqs)
-#    return reqs
-
-
 def fetch_requirements():
     with pathlib.Path("requirements.txt").open() as requirements_txt:
         install_requires = [
             str(requirement)
             for requirement in pkg_resources.parse_requirements(requirements_txt)
         ]
-    print(install_requires)
     return install_requires
 
 
