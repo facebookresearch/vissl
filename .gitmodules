@@ -1,6 +1,0 @@
-[submodule "third-party/ClassyVision"]
-	path = third-party/ClassyVision
-	url = https://github.com/facebookresearch/ClassyVision
-[submodule "third-party/apex"]
-	path = third-party/apex
-	url = https://github.com/NVIDIA/apex
