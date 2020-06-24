@@ -8,9 +8,13 @@
 import os
 import pathlib
 import pkg_resources
+import sys
 
 from setuptools import find_namespace_packages, find_packages, setup
 
+WITH_APEX=os.getenv("WITH_APEX", "0")
+
+print(f'######## USE_APEX: {WITH_APEX}')
 
 def fetch_requirements():
     with pathlib.Path("requirements.txt").open() as requirements_txt:
@@ -18,6 +22,9 @@ def fetch_requirements():
             str(requirement)
             for requirement in pkg_resources.parse_requirements(requirements_txt)
         ]
+    if WITH_APEX == "1":
+      install_requires.append('apex@https://github.com/NVIDIA/apex/tarball/1f2aa9156547377a023932a1512752c392d9bbdf')
+      print("APEX PASSED")
     return install_requires
 
 
