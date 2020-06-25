@@ -18,6 +18,7 @@ from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 class ImgPil2LabTensor(ClassyTransform):
     """
     Convert a PIL image to LAB tensor of shape C x H x W
+    This transform was proposed in Colorization - https://arxiv.org/abs/1603.08511
     """
 
     def __init__(self, indices):
@@ -55,7 +56,7 @@ class ImgPil2LabTensor(ClassyTransform):
         # img_lab_RGB /= np.max(img_lab_RGB) + np.finfo(np.float64).eps
         # plt.imshow(img_lab_RGB)
         # n = np.random.randint(0, 1000)
-        # np.save(f"/home/prigoyal/local/lab{n}.npy", img_lab_bgr)
+        # np.save(f"/tmp/lab{n}.npy", img_lab_bgr)
         # print("SAVED!!")
         ######################### debugging over ##################################
         return img_lab

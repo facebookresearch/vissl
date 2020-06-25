@@ -17,9 +17,20 @@ class ImgReplicatePil(ClassyTransform):
     """
     Adds the same image multiple times to the batch K times so that the batch.
     Size is now N*K. Use the flatten_collator to convert into batches.
+
+    This transform is useful when generating multiple copies of the same image,
+    for example, when training contrastive methods.
     """
 
-    def __init__(self, num_times):
+    def __init__(self, num_times: int = 2):
+        """
+        Inputs
+        -
+        """
+        assert isinstance(
+            num_times, int
+        ), f"num_times must be an integer. Found {type(num_times)}"
+        assert num_times > 0, f"num_times {num_times} must be greater than zero."
         self.num_times = num_times
 
     def __call__(self, image):
@@ -31,6 +42,5 @@ class ImgReplicatePil(ClassyTransform):
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgReplicatePil":
         num_times = config.get("num_times", 2)
-        assert num_times > 0, "num_times should be positive"
         logging.info(f"ImgReplicatePil | Using num_times: {num_times}")
         return cls(num_times=num_times)

@@ -25,6 +25,8 @@ class ImgPilToPatchesAndImage(ClassyTransform):
     - list containing N+1 elements
       + zeroth element: a RandomResizedCrop of the image
       + remainder: N patches extracted uniformly from a RandomResizedCrop
+
+    This transform was proposed in PIRL - https://arxiv.org/abs/1912.01991
     """
 
     def __init__(

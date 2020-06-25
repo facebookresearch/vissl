@@ -15,7 +15,19 @@ from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 
 @register_transform("ImgPilColorDistortion")
 class ImgPilColorDistortion(ClassyTransform):
+    """
+    Apply Random color distortions to the input image.
+    There are multiple different ways of applying these distortions.
+    This implementation follows SimCLR - https://arxiv.org/abs/2002.05709
+    It randomly distorts the hue, saturation, brightness of an image and can
+    randomly convert the image to grayscale.
+    """
+
     def __init__(self, strength):
+        """
+        Inputs
+        - strength (float): A number used to quantify the strength of the color distortion.
+        """
         self.strength = strength
         self.color_jitter = pth_transforms.ColorJitter(
             0.8 * self.strength,

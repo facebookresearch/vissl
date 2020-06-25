@@ -16,7 +16,21 @@ from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 
 @register_transform("ImgRotatePil")
 class ImgRotatePil(ClassyTransform):
+    """
+    Apply rotation to a PIL Image. Samples rotation angle from a set of
+    predefined rotation angles.
+    This transform was used in RotNet - https://arxiv.org/abs/1803.07728
+    """
+
     def __init__(self, num_angles=4, num_rotations_per_img=1):
+        """
+        Predefined rotation angles are sampled at
+        equal intervals in the [0, 360) angle space where the number of angles
+        is specified by `num_angles`.
+        Inputs
+        - num_angles (int): Number of angles in the [0, 360) space
+        - num_rotations_per_img (int): Number of rotations to apply to each image.
+        """
         self.num_angles = num_angles
         self.num_rotations_per_img = num_rotations_per_img
         # the last angle is 360 and 1st angle is 0, both give the original image.

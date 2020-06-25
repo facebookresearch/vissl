@@ -19,6 +19,8 @@ class ImgPilGaussianBlur(ClassyTransform):
     """
     Apply Gaussian Blur to the PIL image. Take the radius, kernel size and
     probability of application as the parameter.
+
+    This transform was used in SimCLR - https://arxiv.org/abs/2002.05709
     """
 
     def __init__(self, kernel, p, radius_min, radius_max):

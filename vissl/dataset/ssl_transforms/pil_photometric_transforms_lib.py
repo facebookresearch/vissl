@@ -11,7 +11,9 @@ import PIL
 
 
 """
-Generic Image Enhancements using PIL
+Generic Image Enhancements using PIL.
+These image enhancements only modify the photometric properties
+and do not alter the geometric properties of the image.
 """
 
 

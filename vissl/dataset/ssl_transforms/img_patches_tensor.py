@@ -17,7 +17,8 @@ from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 @register_transform("ImgPatchesFromTensor")
 class ImgPatchesFromTensor(ClassyTransform):
     """
-    Create image patches from a torch Tensor or numpy array
+    Create image patches from a torch Tensor or numpy array.
+    This transform was proposed in Jigsaw - https://arxiv.org/abs/1603.09246
     """
 
     def __init__(self, num_patches=9, patch_jitter=21):
