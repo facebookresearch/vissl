@@ -12,12 +12,11 @@ import sys
 from typing import Any, List
 
 import pkg_resources
-from hydra._internal.hydra import Hydra
-from hydra.experimental import compose
+from hydra.experimental import compose, initialize_with_module
 from omegaconf import OmegaConf
 
 
-logger = logging.getLogger("ssl_framework")
+logger = logging.getLogger("vissl")
 
 
 # List all the config files, used to generate the unit tests on the fly
@@ -60,7 +59,7 @@ PRETRAIN_CONFIGS = create_valid_input(
     list_config_files("config/pretrain", exclude_folders=None)
 )
 INTEGRATION_TEST_CONFIGS = create_valid_input(
-    list_config_files("config/integration_test", exclude_folders=None)
+    list_config_files("config/test/integration_test", exclude_folders=None)
 )
 ROOT_CONFIGS = create_valid_input(
     list_config_files(
@@ -68,12 +67,10 @@ ROOT_CONFIGS = create_valid_input(
     )
 )
 UNIT_TEST_CONFIGS = create_valid_input(
-    list_config_files("config/unit_test", exclude_folders=None)
+    list_config_files("config/test/cpu_test", exclude_folders=None)
 )
 
-Hydra.create_main_hydra_file_or_module(
-    calling_file=None, calling_module="vissl", config_dir="hydra_configs", strict=False
-)
+initialize_with_module("", config_path="hydra_configs")
 
 
 class SSLHydraConfig(object):
@@ -81,7 +78,7 @@ class SSLHydraConfig(object):
         self.overrides = []
         if overrides is not None and len(overrides) > 0:
             self.overrides.extend(overrides)
-        cfg = compose("defaults", overrides=self.overrides)
+        cfg = compose(config_name="defaults", overrides=self.overrides)
         self.default_cfg = cfg
 
     @classmethod

@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+# Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+#
+
+"""
+Minimal testing of the losses: ensure that a forward pass with believable dimensions succeeds.
+This does not make them correct per say.
+"""
 
 import unittest
 from collections import namedtuple
@@ -17,11 +28,6 @@ BUFFER_PARAMS_STRUCT = namedtuple(
     "BUFFER_PARAMS_STRUCT", ["EFFECTIVE_BATCH_SIZE", "WORLD_SIZE", "EMBEDDING_DIM"]
 )
 BUFFER_PARAMS = BUFFER_PARAMS_STRUCT(BATCH_SIZE, 1, EMBEDDING_DIM)
-
-"""
-Minimal testing of the losses: ensure that a forward pass with believable dimensions succeeds.
-This does not make them correct per say.
-"""
 
 
 class TaskTest(unittest.TestCase):

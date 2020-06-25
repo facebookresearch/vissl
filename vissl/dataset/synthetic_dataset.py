@@ -5,6 +5,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
+import logging
 
 from torch.utils.data import Dataset
 from vissl.dataset.data_helper import get_mean_image
@@ -30,8 +31,10 @@ class SyntheticImageDataset(Dataset):
         self.cfg = cfg
         self.split = split
         self.data_source = data_source
+        self._num_samples = 500
         # by default, pretend dataset size is 500 images. OR user specified limit
-        self._num_samples = max(500, cfg.DATA[split].DATA_LIMIT)
+        if cfg.DATA[split].DATA_LIMIT > 0:
+            self._num_samples = cfg.DATA[split].DATA_LIMIT
 
     def num_samples(self):
         return self._num_samples

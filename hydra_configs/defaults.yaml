@@ -516,13 +516,9 @@ defaults:
   - config/pretrain/rotnet/optimization: null
   ######### some benchmark related paths
   - config/benchmark/imagenet1k_fulltune/models: null
-  - config/benchmark/linear_image_classification/imagenet1k: null
   - config/benchmark/linear_image_classification/imagenet1k/models: null
-  - config/benchmark/linear_image_classification/inaturalist18: null
   - config/benchmark/linear_image_classification/inaturalist18/models: null
-  - config/benchmark/linear_image_classification/places205: null
   - config/benchmark/linear_image_classification/places205/models: null
-  - config/benchmark/linear_image_classification/voc07: null
   - config/benchmark/linear_image_classification/voc07/models: null
   - config/benchmark/nearest_neighbor/models: null
   - config/benchmark/semi_supervised/dataset: null
