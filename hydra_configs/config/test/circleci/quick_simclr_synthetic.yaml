@@ -7,10 +7,12 @@ config:
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: True
+  PERF_STAT_FREQUENCY: 10
+  ROLLING_BTIME_FREQ: 5
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
-      DATASET_NAMES: [imagenet1k]
+      DATA_SOURCES:
+        - synthetic
       BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
@@ -34,70 +36,27 @@ config:
       COLLATE_FUNCTION: flatten_collator
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DATA_LIMIT: 500
       DROP_LAST: True
   TRAINER:
     TRAIN_STEP_NAME: standard
   METERS: null
   MODEL:
-    MODEL_COMPLEXITY:
-      COMPUTE_COMPLEXITY: False
-      INPUT_SHAPE: [3, 224, 224]
     TRUNK:
-      NAME: regnet
-      TRUNK_PARAMS:   # These params are for RegNetY 400Mflops
-        REGNETS:
-          BN:
-            EPSILON: 1.0e-5
-            MOMENTUM: 0.1
-            NUM_SAMPLES_PRECISE: 1024
-            USE_PRECISE_STATS: false
-          MEM:
-            RELU_INPLACE: true
-          MODEL:
-            TYPE: "uninet"
-            NUM_CLASSES: 1000
-          UNINET:
-            ACT_FUN: "relu"
-            ANYNET_NEW_HPS: []
-            B31_RELU_A: true
-            B31_RELU_B: true
-            B3N_1X1: true
-            B3N_N: 1
-            BLOCK_TYPE: "res_cut_gw"
-            BOT_MULS: [1.0, 1.0, 1.0, 1.0]
-            BW_DIV8: false
-            BW_WRT_OW: true
-            DEPTHS: [2, 4, 9, 7]
-            DWISE_3X3: false
-            GROUP_WS: [32, 32, 32, 32]
-            HARD_SWISH_CAP: true
-            HARD_SWISH_DIVIDE: true
-            HARD_SWISH_SHIFT: true
-            LIN_PROJ: false
-            NUM_GS: []
-            REGNET_DM: 1.0
-            REGNET_NEW_HPS: []
-            REGNET_WM: 1.0
-            RELU_3X3: true
-            SE_ENABLED: true
-            SE_POSITION: 2
-            SE_RATIO: 0.25
-            STEM_TYPE: "simple_stem_in"
-            STEM_W: 32
-            STRIDES: [2, 2, 2, 2]
-            TRANS_TYPE: "bottleneck_transform"
-            WIDTHS: [32, 64, 128, 288]
-            WS_QUANTIZATION: 8
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [288, 288], "use_relu": True}],
-        ["mlp", {"dims": [288, 128]}]
+        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 128]}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
+    AMP_PARAMS:
+      USE_AMP: False
+      AMP_ARGS: {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
   CRITERION:
       name: simclr_info_nce_loss
       SIMCLR_INFO_NCE_LOSS:
@@ -138,4 +97,3 @@ config:
     DIR: "."
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5
-    OVERWRITE_EXISTING: true

@@ -10,7 +10,7 @@ At a high level, project requires following dependencies. All these are installa
 - Python>=3.6
 - PyTorch 1.4 or 1.5
 - torchvision (matching PyTorch install)
-- CUDA at least 10.1
+- CUDA at least 10.1 (optional)
 - Hydra 1.0
 - Tensoraboard 1.14 (optional)
 - Apex (optional)
@@ -27,9 +27,8 @@ python3 -m venv ~/venv
 . ~/venv/bin/activate
 ```
 
-### Step 2: Install dependencies (pip)
+### Step 2: Install PyTorch (pip)
 ```bash
-pip install scipy cython opencv-python scikit-learn
 pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
@@ -60,12 +59,10 @@ conda create --name vissl python=3.6
 source activate vissl
 ```
 
-## Step 2: Install Dependencies
+## Step 2: Install PyTorch (conda)
 
 ```bash
 conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
-conda install -yq opencv scipy scikit-learn
-pip install tensorboard==1.14.0 hydra-core==1.0.0rc1
 ```
 
 ## Step 3: Install VISSL
@@ -73,7 +70,7 @@ Follow step3 from the PIP installation.
 
 That's it! You are now ready to use this code.
 
-## Optional Dependency: Install Apex
+## Optional Dependency: Install Apex (common for both pip and conda)
 
 Apex installation has 2 requirements:
 1. NVCC compiler: Pytorch doesn't provide us NVCC compiler but only the cuda toolkit. So install the nvcc which is required to build Apex cuda code.

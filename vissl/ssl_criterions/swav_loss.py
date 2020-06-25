@@ -124,9 +124,9 @@ class SwAVCriterion(nn.Module):
                 u, r, c = u.double(), r.double(), c.double()
 
             if self.use_gpu:
-                u = torch.cuda(non_blocking=True)
-                r = torch.cuda(non_blocking=True)
-                c = torch.cuda(non_blocking=True)
+                u = u.cuda(non_blocking=True)
+                r = r.cuda(non_blocking=True)
+                c = c.cuda(non_blocking=True)
 
             curr_sum = torch.sum(Q, dim=1)
             all_reduce_sum(curr_sum)

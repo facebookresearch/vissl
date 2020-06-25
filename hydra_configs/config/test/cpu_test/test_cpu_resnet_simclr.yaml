@@ -9,8 +9,7 @@ config:
   MONITOR_PERF_STATS: True
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
-      DATASET_NAMES: [test_data]
+      DATA_SOURCES: [synthetic]
       BATCHSIZE_PER_REPLICA: 2
       LABEL_TYPE: sample_index
       TRANSFORMS:
@@ -41,61 +40,19 @@ config:
   METERS: null
   MODEL:
     TRUNK:
-      NAME: regnet
+      NAME: resnet
       TRUNK_PARAMS:
-        REGNETS:
-          # RegNetY 200Mflops
-          BN:
-            EPSILON: 1.0e-5
-            MOMENTUM: 0.1
-            NUM_SAMPLES_PRECISE: 1024
-            USE_PRECISE_STATS: false
-          MEM:
-            RELU_INPLACE: true
-          MODEL:
-            TYPE: "uninet"
-            NUM_CLASSES: 1000
-          UNINET:
-            ACT_FUN: "relu"
-            ANYNET_NEW_HPS: []
-            B31_RELU_A: true
-            B31_RELU_B: true
-            B3N_1X1: true
-            B3N_N: 1
-            BLOCK_TYPE: "res_cut_gw"
-            BOT_MULS: [1.0, 1.0, 1.0, 1.0]
-            BW_DIV8: false
-            BW_WRT_OW: true
-            DEPTHS: [1, 1, 4, 7]
-            DWISE_3X3: false
-            GROUP_WS: [8, 8, 8, 8]
-            HARD_SWISH_CAP: true
-            HARD_SWISH_DIVIDE: true
-            HARD_SWISH_SHIFT: true
-            LIN_PROJ: false
-            NUM_GS: []
-            REGNET_DM: 1.0
-            REGNET_NEW_HPS: []
-            REGNET_WM: 1.0
-            RELU_3X3: true
-            SE_ENABLED: true
-            SE_POSITION: 2
-            SE_RATIO: 0.25
-            STEM_TYPE: "simple_stem_in"
-            STEM_W: 32
-            STRIDES: [2, 2, 2, 2]
-            TRANS_TYPE: "bottleneck_transform"
-            WIDTHS: [24, 56, 152, 368]
-            WS_QUANTIZATION: 8
+        RESNETS:
+          DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [368, 368], "use_relu": True}],
-        ["mlp", {"dims": [368, 128]}]
+        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 128]}]
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
-      GROUP_SIZE: 2
+      GROUP_SIZE: 1
   CRITERION:
       name: simclr_info_nce_loss
       SIMCLR_INFO_NCE_LOSS:

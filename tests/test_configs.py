@@ -38,7 +38,7 @@ class TestConfigsPass(unittest.TestCase):
     def test_load_cfg_success(self):
         # simply load from the config and this should pass
         self.assertTrue(
-            SSLHydraConfig.from_configs(["config=integration_test/quick_simclr"]),
+            SSLHydraConfig.from_configs(["config=test/integration_test/quick_simclr"]),
             "config must be loaded successfully",
         )
 
@@ -48,7 +48,7 @@ class TestConfigsComposition(unittest.TestCase):
         # compose the configs and check that the model is changed
         cfg = SSLHydraConfig.from_configs(
             [
-                "config=integration_test/quick_simclr",
+                "config=test/integration_test/quick_simclr",
                 "config/pretrain/simple_clr/models=resnext101",
             ]
         )
@@ -66,7 +66,7 @@ class TestConfigsFailComposition(unittest.TestCase):
         try:
             SSLHydraConfig.from_configs(
                 [
-                    "config=integration_test/quick_simclr",
+                    "config=test/integration_test/quick_simclr",
                     "+config/pretrain/simple_clr/models=resnext101",
                 ]
             )
@@ -83,7 +83,7 @@ class TestConfigsCliComposition(unittest.TestCase):
         # compose the configs and check that the model is changed
         cfg = SSLHydraConfig.from_configs(
             [
-                "config=integration_test/quick_simclr",
+                "config=test/integration_test/quick_simclr",
                 "config/pretrain/simple_clr/models=resnext101",
                 "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.GROUPS=32",
                 "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_PER_GROUP=16",
@@ -107,13 +107,13 @@ class TestConfigsKeyAddition(unittest.TestCase):
         # compose the configs and check that the new key is inserted
         cfg = SSLHydraConfig.from_configs(
             [
-                "config=integration_test/quick_simclr",
-                "+config/fb/pretrain/pq_simclr=pq_simclr_info_nce",
+                "config=test/integration_test/quick_simclr",
+                "+config.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.MY_TEST_KEY=dummy",
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertTrue(
-            "PQ_INDEX_FILE" in config.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS,
+            "MY_TEST_KEY" in config.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS,
             "something went wrong, new key not added. Fail.",
         )
 
