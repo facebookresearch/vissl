@@ -20,7 +20,7 @@ echo "Running isort..."
 isort -y -sp "${DIR}"
 
 echo "Running black..."
-black --exclude third-party/ "${DIR}"
+black "${DIR}"
 
-echo "Running flake..."
-flake8 "${DIR}"
+echo "Running flake8..."
+flake8 --max-line-length 88 --ignore E501,E203,E266,W503,E741 "${DIR}"
