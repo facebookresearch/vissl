@@ -1,3 +1,6 @@
+# Running code on slurm
+Please see the script `dev/launch_slurm.sh` for running the code on slurm cluster for training purposes.
+
 # Practices for coding quality
 
 Run "./dev/linter.sh" at the project root before you commit. An explanation of what happens under the hood:
@@ -26,4 +29,3 @@ We format the code using black8
 ## flake8
 
 We enforce coding style per file with defined flake8 rules. flake8 is a checker only and doesn't format code.
-

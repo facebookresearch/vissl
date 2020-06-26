@@ -3,6 +3,7 @@ hydra-core==1.0.0rc1
 classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
 faiss==1.5.3
 cython
-opencv-python
 scikit-learn
 parameterized==0.7.4
+opencv-python==3.4.2.17
+numpy==1.14.5
