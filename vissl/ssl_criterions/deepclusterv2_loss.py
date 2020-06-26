@@ -110,8 +110,8 @@ class DeepClusterV2Loss(ClassyLoss):
                     ] = embeddings
                 start_idx += nmb_unique_idx
         logging.info(
-            f"Rank: {get_rank()}, Memory banks initialized:",
-            "full first forward pass done",
+            f"Rank: {get_rank()}, Memory banks initialized: "
+            "full first forward pass done"
         )
 
     def update_memory_bank(self, emb, idx):

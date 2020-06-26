@@ -45,6 +45,8 @@ config:
     TRAIN_STEP_NAME: standard
   METERS: null
   MODEL:
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: False
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:

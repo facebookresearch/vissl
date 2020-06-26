@@ -13,7 +13,7 @@ config:
     TRAIN:
       DATA_SOURCES: [disk]
       DATASET_NAMES: [imagenet1k]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 16
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgPilToMultiCrop
@@ -38,7 +38,7 @@ config:
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
-      DATA_LIMIT: 500
+      DATA_LIMIT: 250
       DROP_LAST: True
   TRAINER:
     TRAIN_STEP_NAME: standard
