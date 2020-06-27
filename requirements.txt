@@ -1,5 +1,5 @@
 tensorboard==1.14.0
-hydra-core==1.0.0rc1
+hydra-core@https://github.com/facebookresearch/hydra/tarball/1.0_branch
 classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
 faiss==1.5.3
 cython

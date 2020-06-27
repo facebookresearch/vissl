@@ -44,6 +44,6 @@ CMD ["bash"]
 
 ######## run gpu test
 # python tools/distributed_train.py \
-#     --config_path=/vissl/hydra_configs/ \
+#     --config-path=/vissl/hydra_configs/ \
 #     config=test/circleci/quick_simclr_synthetic \
 #     hydra.verbose=true config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
