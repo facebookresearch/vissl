@@ -12,7 +12,7 @@ import sys
 from typing import Any, List
 
 import pkg_resources
-from hydra.experimental import compose, initialize_with_module
+from hydra.experimental import compose, initialize_config_module
 from omegaconf import OmegaConf
 
 
@@ -55,22 +55,26 @@ def create_valid_input(input_list):
 BENCHMARK_CONFIGS = create_valid_input(
     list_config_files("config/benchmark", exclude_folders=["object_detection"])
 )
+
 PRETRAIN_CONFIGS = create_valid_input(
     list_config_files("config/pretrain", exclude_folders=None)
 )
+
 INTEGRATION_TEST_CONFIGS = create_valid_input(
     list_config_files("config/test/integration_test", exclude_folders=None)
 )
+
 ROOT_CONFIGS = create_valid_input(
     list_config_files(
         "config", exclude_folders=["models", "optimization", "object_detection"]
     )
 )
+
 UNIT_TEST_CONFIGS = create_valid_input(
     list_config_files("config/test/cpu_test", exclude_folders=None)
 )
 
-initialize_with_module("", config_path="hydra_configs")
+initialize_config_module(config_module="hydra_configs")
 
 
 class SSLHydraConfig(object):
