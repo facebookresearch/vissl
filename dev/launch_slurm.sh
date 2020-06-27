@@ -83,7 +83,7 @@ cp "$HEADER" "$SCRIPT_PATH"
 echo "export PYTHONPATH="$EXP_ROOT_DIR/$GITHUB_REPO/:$PYTHONPATH"
 dist_run_id+=":$dist_port"
 echo \$dist_run_id
-srun --label python -u $RUN_SCRIPT --config_path="$EXP_ROOT_DIR"/"$GITHUB_REPO"/hydra_configs \
+srun --label python -u $RUN_SCRIPT --config-path="$EXP_ROOT_DIR"/"$GITHUB_REPO"/hydra_configs \
   hydra.run.dir=$CHECKPOINT_DIR \
   hydra.verbose=true \
   ${CFG[*]} \
