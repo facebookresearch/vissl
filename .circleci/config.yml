@@ -183,24 +183,8 @@ jobs:
       - <<: *install_vissl
 
       - run:
-          name: Run Simclr GPU test
-          command: python tools/distributed_train.py --config-path=$HOME/vissl/hydra_configs/ config=test/integration_test/quick_simclr config.DATA.TRAIN.DATA_SOURCES=[synthetic] hydra.verbose=true config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
-
-      - run:
-          name: Run PIRL GPU test
-          command: python tools/distributed_train.py --config-path=$HOME/vissl/hydra_configs/ config=test/integration_test/quick_pirl config.DATA.TRAIN.DATA_SOURCES=[synthetic] hydra.verbose=true
-
-      - run:
-          name: Run SimCLR EfficientNet GPU test
-          command: python tools/distributed_train.py --config-path=$HOME/vissl/hydra_configs/ config=test/integration_test/quick_simclr_efficientnet config.DATA.TRAIN.DATA_SOURCES=[synthetic]
-
-      - run:
-          name: Run SwAV GPU test
-          command: python tools/distributed_train.py --config-path=$HOME/vissl/hydra_configs/ config=test/integration_test/quick_swav config.DATA.TRAIN.DATA_SOURCES=[synthetic]
-
-      - run:
-          name: Run DeepClusterV2 GPU test
-          command: python tools/distributed_train.py --config-path=$HOME/vissl/hydra_configs/ config=test/integration_test/quick_deepcluster_v2 config.DATA.TRAIN.DATA_SOURCES=[synthetic]
+          name: Run GPU tests
+          command: bash ./dev/run_quick_tests.sh
 
 # -------------------------------------------------------------------------------------
 # Workflows
