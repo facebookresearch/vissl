@@ -4,8 +4,8 @@ train_svm: True
 config:
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
-      LABEL_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [voc2007]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
@@ -21,8 +21,8 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/voc2007/
     TEST:
-      DATA_SOURCES: [disk]
-      LABEL_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [voc2007]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:

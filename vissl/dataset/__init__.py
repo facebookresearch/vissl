@@ -18,7 +18,11 @@ from vissl.dataset.synthetic_dataset import SyntheticImageDataset
 
 __all__ = ["GenericSSLDataset", "get_data_files"]
 
-DATASET_SOURCE_MAP = {"disk": DiskImageDataset, "synthetic": SyntheticImageDataset}
+DATASET_SOURCE_MAP = {
+    "disk_filelist": DiskImageDataset,
+    "disk_folder": DiskImageDataset,
+    "synthetic": SyntheticImageDataset,
+}
 
 
 def build_dataset(cfg, split):

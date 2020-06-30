@@ -3,9 +3,9 @@ config:
   DATA:
     TRAIN:
       DATA_SOURCES:
-        - disk
+        - disk_filelist
       LABEL_SOURCES:
-        - disk
+        - disk_filelist
       DATASET_NAMES:
         - imagenet1k
       MMAP_MODE: True
@@ -13,9 +13,9 @@ config:
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
       DATA_SOURCES:
-        - disk
+        - disk_filelist
       LABEL_SOURCES:
-        - disk
+        - disk_filelist
       DATASET_NAMES:
         - imagenet1k
       MMAP_MODE: True

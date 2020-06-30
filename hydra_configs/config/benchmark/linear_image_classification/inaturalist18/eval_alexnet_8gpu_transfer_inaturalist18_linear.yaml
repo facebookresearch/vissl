@@ -10,7 +10,7 @@ config:
   DATA:
     TRAIN:
       DATA_SOURCES: [everstore]
-      LABEL_SOURCES: [disk]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [inaturalist2018]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
@@ -28,7 +28,7 @@ config:
       COPY_DESTINATION_DIR: /tmp/inaturalist2018/
     TEST:
       DATA_SOURCES: [everstore]
-      LABEL_SOURCES: [disk]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [inaturalist2018]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:

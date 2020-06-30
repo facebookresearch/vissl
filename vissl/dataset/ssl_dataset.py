@@ -6,6 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 import logging
+import os
 
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
@@ -16,7 +17,10 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 
 
 class GenericSSLDataset(Dataset):
-    """Base Self Supervised Learning Dataset Class."""
+    """
+    Base Self Supervised Learning Dataset Class.
+    TODO:: Documentation
+    """
 
     def __init__(self, cfg, split, dataset_source_map):
         self.split = split
@@ -33,6 +37,12 @@ class GenericSSLDataset(Dataset):
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
         self._labels_init = False
         self._get_data_files(split)
+
+        if len(self.label_sources) > 0 and len(self.label_paths) > 0:
+            assert len(self.label_sources) == len(self.label_paths), (
+                f"len(label_sources) != len(label paths) "
+                f"{len(self.label_sources)} vs. {len(self.label_paths)}"
+            )
 
         for idx in range(len(self.data_sources)):
             datasource_cls = dataset_source_map[self.data_sources[idx]]
@@ -56,22 +66,38 @@ class GenericSSLDataset(Dataset):
         logging.info(f"Rank: {local_rank} Label files:\n{self.label_paths}")
 
     def _load_labels(self):
-        assert len(self.label_sources) == len(
-            self.label_paths
-        ), "len(label_sources) != len(label paths)"
-        for source, path in zip(self.label_sources, self.label_paths):
-            # For now, only disk source is supported for labels.
-            assert source == "disk", "Other label sources not supported yet."
-            assert path.endswith("npy"), "Please specify a numpy file for labels"
-            if self.cfg["DATA"][self.split].MMAP_MODE:
-                labels = np.load(path, mmap_mode="r")
+        for idx, (label_source, path) in enumerate(
+            zip(self.label_sources, self.label_paths)
+        ):
+            if label_source == "disk_filelist":
+                # Labels are stored in a file
+                assert os.path.isfile(path), f"Path to labels {path} is not a file"
+
+                assert path.endswith("npy"), "Please specify a numpy file for labels"
+                if self.cfg["DATA"][self.split].MMAP_MODE:
+                    # Memory map the labels if the file is too large.
+                    # This is useful to save RAM.
+                    labels = np.load(path, mmap_mode="r")
+                else:
+                    labels = np.load(path)
+                # if the labels are int32, we convert them to int64 since pytorch
+                # needs a long (int64) type for labels to index. See
+                # https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
+                if labels.dtype == np.int32:
+                    labels = labels.astype(np.int64)
+            elif label_source == "disk_folder":
+                # In this case we use the labels inferred from the directory structure
+                # We enforce that the data source also be a disk folder in this case
+                assert self.data_sources[idx] == self.label_sources[idx]
+
+                logging.info(f"Using disk_folder labels from {self.data_paths[idx]}")
+
+                # Use the ImageFolder object created when loading images.
+                # We do not create it again since it can be an expensive operation.
+                labels = [x[1] for x in self.data_objs[idx].image_dataset.samples]
+                labels = np.array(labels).astype(np.int64)
             else:
-                labels = np.load(path)
-            # if the labels are int32, we convert them to in64 since pytorch
-            # needs a long (int64) type for labels to index. See
-            # https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
-            if labels.dtype == np.int32:
-                labels = labels.astype(np.int64)
+                raise ValueError(f"unknown label source: {label_source}")
             self.label_objs.append(labels)
 
     def __getitem__(self, idx):
@@ -100,7 +126,6 @@ class GenericSSLDataset(Dataset):
                 item["label"].append(idx)
         else:
             raise ValueError(f"Unknown label type: {self.label_type}")
-
         if self.transform:
             item = self.transform(item)
         return item

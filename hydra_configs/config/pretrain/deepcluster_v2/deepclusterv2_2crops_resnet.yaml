@@ -11,7 +11,7 @@ config:
   DATA:
     TRAIN:
       DATA_SOURCES:
-        - disk
+        - disk_filelist
       DATASET_NAMES:
         - imagenet1k
       BATCHSIZE_PER_REPLICA: 64

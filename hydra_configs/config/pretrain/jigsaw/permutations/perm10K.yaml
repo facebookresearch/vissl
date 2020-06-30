@@ -2,7 +2,7 @@
 config:
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:

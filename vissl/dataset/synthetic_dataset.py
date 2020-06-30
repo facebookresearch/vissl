@@ -5,7 +5,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
-
 from torch.utils.data import Dataset
 from vissl.dataset.data_helper import get_mean_image
 

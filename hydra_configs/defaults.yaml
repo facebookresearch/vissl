@@ -41,12 +41,16 @@ config:
       # whether to drop the last incomplete batch per process
       DROP_LAST: false
       # Sources for reading data.
-      # Currently supports: disk
+      # Currently supports: disk_folder and disk_filelist
       # Parallel aligned with DATA_PATHS argument.
       DATA_SOURCES: []
       DATA_PATHS: []
       LABEL_SOURCES: []
       LABEL_PATHS: []
+      # a `root_dir` that is prepended to all the image paths
+      # this allows us to use relative paths in
+      # meta-data files containing image paths
+      ROOT_DIR: ""
       MMAP_MODE: true
       DEFAULT_GRAY_IMG_SIZE: 224
       BATCHSIZE_PER_REPLICA: 256
@@ -80,6 +84,10 @@ config:
       TRANSFORMS: []
       COLLATE_FUNCTION: "default"
       DATA_LIMIT: -1
+      # a `root_dir` that is prepended to all the image paths
+      # this allows us to use relative paths in
+      # meta-data files containing image paths
+      ROOT_DIR: ""
       DATASET_NAMES: ["imagenet1k"]
       COPY_TO_LOCAL_DISK: false
       COPY_DESTINATION_DIR: ""
