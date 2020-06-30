@@ -1,7 +1,7 @@
 # @package _global_
 config:
   VERBOSE: False
-  LOG_FREQUENCY: 2
+  LOG_FREQUENCY: 10
   TEST_ONLY: False
   TEST_MODEL: False
   SEED_VALUE: 0
@@ -9,10 +9,9 @@ config:
   MONITOR_PERF_STATS: True
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
-      DATASET_NAMES: [imagenet1k]
-      BATCHSIZE_PER_REPLICA: 16
-      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      DATA_SOURCES: [synthetic]
+      BATCHSIZE_PER_REPLICA: 2
+      LABEL_TYPE: sample_index
       TRANSFORMS:
         - name: ImgReplicatePil
           num_times: 2
@@ -33,10 +32,9 @@ config:
           std: [0.229, 0.224, 0.225]
       COLLATE_FUNCTION: flatten_collator
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
-      DATA_LIMIT: 250
+      DATA_LIMIT: 4
       DROP_LAST: True
+      COPY_TO_LOCAL_DISK: False
   TRAINER:
     TRAIN_STEP_NAME: standard
   METERS: null
@@ -64,6 +62,7 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 2
   CRITERION:
       name: simclr_info_nce_loss
       SIMCLR_INFO_NCE_LOSS:
@@ -81,24 +80,32 @@ config:
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 2
+      num_epochs: 1
       regularize_bn: False
       regularize_bias: True
       param_schedulers:
         lr:
-          name: cosine
-          start_value: 0.15   # LR for batch size 256
-          end_value: 0.0000
+          base_value: 2.4
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.6
+              end_value: 1.2
+            - name: cosine
+              start_value: 1.2
+              end_value: 0.0000
           update_interval: step
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.1, 0.9]             # 100ep
   DISTRIBUTED:
-    BACKEND: nccl
+    BACKEND: gloo
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
-    DEVICE: gpu
+    NUM_DATALOADER_WORKERS: 0
+    DEVICE: cpu
   CHECKPOINT:
     DIR: "."
     AUTO_RESUME: True
