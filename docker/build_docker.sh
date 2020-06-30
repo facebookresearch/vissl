@@ -13,11 +13,11 @@ if [ -z "${image}" ]; then
   exit 1
 fi
 
-CUDA_VERSION="$(echo "${image}" | perl -n -e'/cu(\d+(?:\.\d+)?)/ && print $1')"
+CUDA_VER="$(echo "${image}" | perl -n -e'/cu(\d+(?:\.\d+)?)/ && print $1')"
 CONDA_ENV=0
 USER_ID=${USER_ID-1000}
 DOCKERFILE="./Dockerfile"
-CUDA_SUFFIX="cu${CUDA_VERSION}"
+CUDA_SUFFIX="cu${CUDA_VER}"
 IMAGE_TAG="vissl:1.0-${CUDA_SUFFIX}"
 
 # Get setting whether to use conda or not
@@ -29,25 +29,17 @@ fi
 
 
 # cuda versions
-case "$CUDA_VERSION" in
-  92)
-    CUDA_VERSION=9.2
-    TORCH_CUDA_ARCH_LIST="3.5;3.7;5.0;5.2;6.0+PTX;6.1+PTX;7.0+PTX"
-    ;;
-  100)
-    CUDA_VERSION=10.0
-    TORCH_CUDA_ARCH_LIST="3.5;3.7;5.0;5.2;6.0+PTX;6.1+PTX;7.0+PTX;7.5+PTX"
-    ;;
+case "$CUDA_VER" in
   101)
-    CUDA_VERSION=10.1
+    CUDA_VER=10.1
     TORCH_CUDA_ARCH_LIST="3.5;3.7;5.0;5.2;6.0+PTX;6.1+PTX;7.0+PTX;7.5+PTX"
     ;;
   102)
-    CUDA_VERSION=10.2
+    CUDA_VER=10.2
     TORCH_CUDA_ARCH_LIST="3.5;3.7;5.0;5.2;6.0+PTX;6.1+PTX;7.0+PTX;7.5+PTX"
     ;;
   *)
-    echo "Unrecognized CUDA_VERSION=$CUDA_VERSION"
+    echo "Unrecognized CUDA_VER=$CUDA_VER"
     exit 1
     ;;
 esac
@@ -56,7 +48,7 @@ esac
 echo "============Printing summary============="
 echo "image: ${image}"
 echo "CUDA_SUFFIX: ${CUDA_SUFFIX}"
-echo "CUDA_VERSION: ${CUDA_VERSION}"
+echo "CUDA_VER: ${CUDA_VER}"
 echo "PYTORCH_VERSION: ${PYTORCH_VERSION}"
 echo "CONDA_ENV: ${CONDA_ENV}"
 echo "USER_ID: ${USER_ID}"
@@ -70,7 +62,7 @@ docker build \
        --build-arg "BUILD_ENVIRONMENT=${image}" \
        --build-arg "TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}" \
        --build-arg "CUDA_SUFFIX=${CUDA_SUFFIX}" \
-       --build-arg "CUDA_VERSION=${CUDA_VERSION}" \
+       --build-arg "CUDA_VER=${CUDA_VER}" \
        --build-arg "USER_ID=${USER_ID}" \
        -t ${IMAGE_TAG} \
        -f ${DOCKERFILE} \

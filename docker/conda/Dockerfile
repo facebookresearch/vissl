@@ -1,13 +1,13 @@
-ARG CUDA_VERSION
+ARG CUDA_VER
 ARG CUDA_SUFFIX
 
 # we always use cudnn version 7
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn7-devel
+FROM nvidia/cuda:${CUDA_VER}-cudnn7-devel
 
 ENV DEBIAN_FRONTEND noninteractive
 
 # cuda paths
-ENV PATH /usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:$PATH
+ENV PATH /usr/local/cuda-${CUDA_VER}/bin:/usr/local/bin:$PATH
 
 # Install common dependencies
 RUN apt-get update
@@ -24,8 +24,8 @@ RUN ./install_conda.sh && rm install_conda.sh
 ENV PATH="/opt/conda/bin:${PATH}"
 
 # install PyTorch.
-ARG CUDA_VERSION
-RUN conda install pytorch torchvision cudatoolkit=${CUDA_VERSION} -c pytorch
+ARG CUDA_VER
+RUN conda install pytorch torchvision cudatoolkit=${CUDA_VER} -c pytorch
 
 # install apex
 ARG TORCH_CUDA_ARCH_LIST

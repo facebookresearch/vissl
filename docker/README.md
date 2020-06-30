@@ -53,6 +53,5 @@ run `docker images` and get the `IMAGE_ID` for the image we just built.
 
 ```bash
 docker run --gpus all -it \
-	--shm-size=8gb --env="DISPLAY" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--name=vissl ${IMAGE_ID}
+	--shm-size=8gb --env="DISPLAY" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" ${IMAGE_ID}
 ```

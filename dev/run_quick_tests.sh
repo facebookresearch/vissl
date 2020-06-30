@@ -1,8 +1,10 @@
 #!/bin/bash -e
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-BINARY="python tools/distributed_train.py"
-CONFIG_PATH="$HOME/vissl/hydra_configs/"
+SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SRC_DIR=$(dirname "${SRC_DIR}")
+BINARY="python ${SRC_DIR}/tools/distributed_train.py"
+CONFIG_PATH="${SRC_DIR}/hydra_configs/"
 
 CFG_LIST=(
     "test/integration_test/quick_simclr"
