@@ -18,9 +18,9 @@ import faiss
 import hydra
 import numpy as np
 from omegaconf import DictConfig
-from torch.utils.collect_env import get_pretty_env_info
 from vissl.dataset import build_dataset
 from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.io import save_file
@@ -115,7 +115,7 @@ def main(args, cfg):
     local_rank, _ = get_machine_local_and_dist_rank()
     if local_rank == 0:
         print_cfg(cfg)
-        logging.info("System config:\n{}".format(get_pretty_env_info()))
+        logging.info("System config:\n{}".format(collect_env_info()))
     cluster_features_and_label(args, cfg)
 
 

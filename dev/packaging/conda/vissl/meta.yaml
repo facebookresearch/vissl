@@ -23,6 +23,7 @@ requirements:
     - fvcore
     - importlib_resources
     - omegaconf
+    - tabulate
     {{ environ.get('CONDA_PYTORCH_VERSION') }}
     {{ environ.get('CONDA_CUDATOOLKIT_VERSION') }}
 
@@ -39,6 +40,7 @@ requirements:
     - fvcore
     - importlib_resources
     - omegaconf
+    - tabulate
     {{ environ.get('CONDA_PYTORCH_VERSION') }}
     {{ environ.get('CONDA_CUDATOOLKIT_VERSION') }}
 

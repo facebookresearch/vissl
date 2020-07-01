@@ -10,10 +10,10 @@ import logging
 import os
 
 import numpy as np
-from torch.utils.collect_env import get_pretty_env_info
 from vissl.ssl_tasks import build_task
 from vissl.ssl_trainer import DistributedSelfSupervisionTrainer
 from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import get_machine_local_and_dist_rank, set_env_vars
 from vissl.utils.hydra_config import print_cfg
 from vissl.utils.logger import setup_logging
@@ -38,7 +38,7 @@ def extract_main(args, cfg, dist_run_id, local_rank=0, node_id=0):
     local_rank, _ = get_machine_local_and_dist_rank()
     if local_rank == 0:
         print_cfg(cfg)
-        logging.info("System config:\n{}".format(get_pretty_env_info()))
+        logging.info("System config:\n{}".format(collect_env_info()))
 
     ssl_task = build_task(cfg)
     trainer = DistributedSelfSupervisionTrainer(dist_run_id)
