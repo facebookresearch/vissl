@@ -6,6 +6,7 @@ CONFIG_PATH="$HOME/vissl/hydra_configs/"
 
 CFG_LIST=(
     "test/integration_test/quick_simclr"
+    "test/integration_test/quick_simclr_multicrop"
     "test/integration_test/quick_pirl"
     "test/integration_test/quick_simclr_efficientnet"
     "test/integration_test/quick_swav"
