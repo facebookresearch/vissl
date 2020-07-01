@@ -1,4 +1,4 @@
-Code of Conduct
+# Code of Conduct
 
 Facebook has adopted a Code of Conduct that we expect project participants to adhere to.
 Please read the [full text](https://code.fb.com/codeofconduct/)
