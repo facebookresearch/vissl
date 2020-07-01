@@ -58,7 +58,7 @@ config:
       COLLATE_FUNCTION: "default"
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k"]
-      COPY_TO_LOCAL_DISK: true
+      COPY_TO_LOCAL_DISK: false
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index
       LABEL_TYPE: "standard"

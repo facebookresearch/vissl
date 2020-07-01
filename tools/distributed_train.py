@@ -144,5 +144,12 @@ def hydra_main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
+    """
+    You can run this script as
+    - `python tools/distributed_train.py cfg=<path to config>`
+    For example,
+    - `python tools/distributed_train.py \
+        config=pretrain/supervised/supervised_2gpu_resnet_example`
+    """
     assert is_hydra_available(), "Make sure to install hydra"
     hydra_main()

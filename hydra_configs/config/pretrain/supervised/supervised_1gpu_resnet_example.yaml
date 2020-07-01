@@ -10,7 +10,7 @@ config:
       DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k]
-      BATCHSIZE_PER_REPLICA: 32 # 32 images per GPU on 8 GPUs. Effective batch size of 32*8 = 256
+      BATCHSIZE_PER_REPLICA: 64
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -29,7 +29,7 @@ config:
       DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 64
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -62,12 +62,12 @@ config:
       regularize_bias: True
       param_schedulers:
         lr:
-          base_value: 0.1 # this learning rate is for an effective batch size of 256
+          base_value: 0.025 # this learning rate is for an effective batch size of 64
           name: multistep
           # We want the learning rate to drop by 1/10
           # at epochs [30, 60, 90, 100]
           milestones: [30, 60, 90, 100] # epochs at which to drop the learning rate (N vals)
-          values: [0.1, 0.01, 0.001, 0.0001, 0.00001] # the exact values of learning rate (N+1 vals)
+          values: [0.025, 0.0025, 0.00025, 0.000025, 0.0000025] # the exact values of learning rate (N+1 vals)
           update_interval: epoch
   METERS:
     accuracy_list:
@@ -78,7 +78,7 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 8 # 8 GPUs
+    NUM_PROC_PER_NODE: 1 # 1 GPU
     RUN_ID: auto
   MACHINE:
     NUM_DATALOADER_WORKERS: 5
