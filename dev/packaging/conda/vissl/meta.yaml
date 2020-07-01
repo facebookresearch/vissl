@@ -1,0 +1,78 @@
+package:
+  name: vissl
+  version: "{{ environ.get('BUILD_VERSION') }}"
+
+source:
+  path: "{{ environ.get('VISSL_SOURCE_DIR') }}"
+
+requirements:
+  build:
+    - {{ compiler('c') }} # [win]
+
+  host:
+    - python
+    - setuptools
+    - torchvision >=0.5
+    - tensorboard>=1.14
+    - opencv
+    - scipy
+    - scikit-learn
+    - parameterized
+    - numpy >=1.11
+    - faiss
+    - fvcore
+    - importlib_resources
+    - omegaconf
+    {{ environ.get('CONDA_PYTORCH_VERSION') }}
+    {{ environ.get('CONDA_CUDATOOLKIT_VERSION') }}
+
+  run:
+    - python
+    - torchvision >=0.5
+    - tensorboard>=1.14
+    - opencv
+    - scipy
+    - scikit-learn
+    - parameterized
+    - numpy >=1.11
+    - faiss
+    - fvcore
+    - importlib_resources
+    - omegaconf
+    {{ environ.get('CONDA_PYTORCH_VERSION') }}
+    {{ environ.get('CONDA_CUDATOOLKIT_VERSION') }}
+
+build:
+  number: {{ environ.get('BUILD_NUMBER') }}
+  string: py{{py}}_{{ environ['CUDA_SUFFIX'] }}_pytorch{{ environ['PYTORCH_VERSION_NODOT']}}
+  skip: True   # [win]
+  script_env:
+    - CUDA_VER
+    - CUDA_SUFFIX
+
+test:
+  imports:
+    - torch
+    - torch.cuda
+    - vissl
+    - classy_vision
+    - apex
+    - tensorboard
+    - hydra
+  source_files:
+    - tests
+    - tools
+    - dev/run_quick_tests.sh
+    - hydra_configs
+  requires:
+    - ca-certificates
+  commands:
+    - python -m unittest discover -v -s tests
+    - ./dev/run_quick_tests.sh
+
+
+about:
+  home: https://github.com/facebookresearch/vissl
+  license: CC-BY-NC 4.0 (Attr Non-Commercial Inter.)
+  license_file: LICENSE
+  summary: 'Self-Supervised Learning on Images'

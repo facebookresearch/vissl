@@ -37,6 +37,8 @@ setup(
     name="vissl",
     version=get_version(),
     author="Facebook AI Research",
+    author_email="vissl@fb.com",
+    license="CC-BY-NC 4.0 (Attr Non-Commercial Inter.)",
     url="https://github.com/facebookresearch/vissl",
     description="VISSL is an extensible, modular and scalable library for "
     "SOTA Self-Supervised Learning with images.",
