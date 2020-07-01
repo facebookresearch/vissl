@@ -39,6 +39,8 @@ config:
     TRAIN_STEP_NAME: standard
   METERS: null
   MODEL:
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: False
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
@@ -46,11 +48,10 @@ config:
           DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
         ["mlp", {"dims": [2048, 128]}]
       ]
     SYNC_BN_CONFIG:
-      CONVERT_BN_TO_SYNC_BN: True
+      CONVERT_BN_TO_SYNC_BN: False
       SYNC_BN_TYPE: pytorch
       GROUP_SIZE: 1
   CRITERION:
