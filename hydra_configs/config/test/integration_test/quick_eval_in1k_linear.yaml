@@ -10,8 +10,8 @@ config:
   MONITOR_PERF_STATS: True
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
-      LABEL_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k]
       BATCHSIZE_PER_REPLICA: 25
       TRANSFORMS:
@@ -26,8 +26,8 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: 50
     TEST:
-      DATA_SOURCES: [disk]
-      LABEL_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k]
       BATCHSIZE_PER_REPLICA: 25
       TRANSFORMS:

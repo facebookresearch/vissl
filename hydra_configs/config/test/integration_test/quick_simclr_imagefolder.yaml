@@ -7,20 +7,22 @@ config:
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: True
-  PERF_STAT_FREQUENCY: 40
+  PERF_STAT_FREQUENCY: 10
   ROLLING_BTIME_FREQ: 5
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k]
-      BATCHSIZE_PER_REPLICA: 16
+      DATA_SOURCES:
+        - disk_folder
+      DATASET_NAMES:
+        - imagenet1k
+      DATA_PATHS: ["/data/local/packages/ai-group.imagenet-full-size/prod/imagenet_full_size/train/"]
+      BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
-        - name: ImgPilToMultiCrop
-          total_nmb_crops: 2
-          size_crops: [224]
-          nmb_crops: [2]
-          crop_scales: [[0.14, 1]]
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
@@ -34,12 +36,12 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-      COLLATE_FUNCTION: multires_collator
+      COLLATE_FUNCTION: flatten_collator
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
-      DATA_LIMIT: 250
+      DATA_LIMIT: 500
       DROP_LAST: True
+      COPY_DESTINATION_DIR: "/tmp/imagenet1k"
   TRAINER:
     TRAIN_STEP_NAME: standard
   METERS: null
@@ -53,22 +55,19 @@ config:
         ["mlp", {"dims": [2048, 2048], "use_relu": True}],
         ["mlp", {"dims": [2048, 128]}],
       ]
-    TEMP_FROZEN_PARAMS_ITER_MAP: []
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
+    AMP_PARAMS:
+      USE_AMP: False
+      AMP_ARGS: {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
   CRITERION:
-    name: deepclusterv2_loss
-    NUM_TRAIN_SAMPLES: 500
-    DEEPCLUSTERV2_LOSS:
-      BATCHSIZE_PER_REPLICA: 64
-      NMB_CROPS: 2
-      TEMPERATURE: 0.1
-      NMB_CLUSTERS: [10, 10, 10]
-      KMEANS_ITERS: 10
-      MEMORY_PARAMS:
-        CROPS_FOR_MB: [0, 1]
-        EMBEDDING_DIM: 128
+      name: simclr_info_nce_loss
+      SIMCLR_INFO_NCE_LOSS:
+        TEMPERATURE: 0.1
+        NUM_POSITIVES: 2
+        BUFFER_PARAMS:
+          EMBEDDING_DIM: 128
   OPTIMIZER:
       name: sgd
       use_larc: True
@@ -79,8 +78,8 @@ config:
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 1
-      regularize_bn: True
+      num_epochs: 2
+      regularize_bn: False
       regularize_bias: True
       param_schedulers:
         lr:
@@ -89,10 +88,10 @@ config:
           end_value: 0.0000
           update_interval: step
   DISTRIBUTED:
-    DISTR_ON: True
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 2
+    # NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:

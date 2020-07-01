@@ -10,8 +10,8 @@ config:
   MONITOR_PERF_STATS: False
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
-      LABEL_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [google-imagenet1k-per01]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
@@ -26,8 +26,8 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
-      DATA_SOURCES: [disk]
-      LABEL_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:

@@ -8,7 +8,7 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k]
       BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index

@@ -10,7 +10,7 @@ config:
   DATA:
     TRAIN:
       DATA_SOURCES: [everstore]
-      LABEL_SOURCES: [disk]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [places205-everstore]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
@@ -28,7 +28,7 @@ config:
       COPY_DESTINATION_DIR: /tmp/places205_everstore/
     TEST:
       DATA_SOURCES: [everstore]
-      LABEL_SOURCES: [disk]
+      LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [places205-everstore]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:

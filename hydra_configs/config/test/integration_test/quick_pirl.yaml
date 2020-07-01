@@ -11,7 +11,7 @@ config:
   ROLLING_BTIME_FREQ: 5
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk]
+      DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k]
       BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index
