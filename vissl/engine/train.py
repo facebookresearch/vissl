@@ -12,7 +12,6 @@ from typing import Any, Callable, List
 
 import torch
 from classy_vision.hooks.classy_hook import ClassyHook
-from torch.utils.collect_env import get_pretty_env_info
 from vissl.ssl_hooks import default_hook_generator
 from vissl.ssl_tasks import build_task
 from vissl.ssl_trainer import DistributedSelfSupervisionTrainer
@@ -21,6 +20,7 @@ from vissl.utils.checkpoint import (
     get_resume_checkpoint,
     is_training_finished,
 )
+from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import (
     get_machine_local_and_dist_rank,
     print_system_env_info,
@@ -70,7 +70,7 @@ def train_main(
     # print the training settings and system settings
     if local_rank == 0:
         print_cfg(cfg)
-        logging.info("System config:\n{}".format(get_pretty_env_info()))
+        logging.info("System config:\n{}".format(collect_env_info()))
 
     # given the checkpoint folder, we check that there's not already a final checkpoint
     if is_training_finished(cfg, checkpoint_folder=output_dir):
