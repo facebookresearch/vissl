@@ -284,9 +284,11 @@ config:
         WORLD_SIZE: 64
         EMBEDDING_DIM: 128
         EFFECTIVE_BATCH_SIZE: 4096
+      MULTI_CROP_PARAMS: # (as proposed in SwAV https://arxiv.org/abs/2006.09882)
+        NMB_CROPS: 2
 
     # ----------------------------------------------------------------------------------- #
-    # SwAV LOSS (Specific to SwAV)
+    # SwAV LOSS (Specific to SwAV https://arxiv.org/abs/2006.09882)
     # ----------------------------------------------------------------------------------- #
     SWAV_LOSS:
       EMBEDDING_DIM: 128
@@ -304,7 +306,7 @@ config:
         LOCAL_QUEUE_LENGTH: 0
 
     # -----------------------------------------------------------------------------------#
-    # DeepCluster V2 LOSS (Non-Parametric DeepCluster)
+    # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#
     DEEPCLUSTERV2_LOSS:
       DROP_LAST: true
@@ -510,6 +512,7 @@ defaults:
   - config/pretrain/datasets: null
   # simple_clr
   - config/pretrain/simple_clr/models: null
+  - config/pretrain/simple_clr/transforms: null
   - config/pretrain/simple_clr/optimization: null
   # SwAV
   - config/pretrain/swav/models: null

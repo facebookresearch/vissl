@@ -16,14 +16,18 @@ from collections import namedtuple
 
 import torch
 from classy_vision.generic.distributed_util import set_cpu_device
+from vissl.ssl_criterions.multicrop_simclr_info_nce_loss import (
+    MultiCropSimclrInfoNCECriterion,
+)
 from vissl.ssl_criterions.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.ssl_criterions.swav_loss import SwAVCriterion
 
 
 set_cpu_device()
 
-BATCH_SIZE = 4096
+BATCH_SIZE = 2048
 EMBEDDING_DIM = 128
+NMB_CROPS = 2
 BUFFER_PARAMS_STRUCT = namedtuple(
     "BUFFER_PARAMS_STRUCT", ["EFFECTIVE_BATCH_SIZE", "WORLD_SIZE", "EMBEDDING_DIM"]
 )
@@ -40,6 +44,13 @@ class TaskTest(unittest.TestCase):
             buffer_params=BUFFER_PARAMS, temperature=0.1, num_pos=1
         )
         _ = loss_layer(self._get_embedding())
+
+    def test_multicrop_simclr_info_nce_loss(self):
+        loss_layer = MultiCropSimclrInfoNCECriterion(
+            buffer_params=BUFFER_PARAMS, temperature=0.1, num_pos=1, nmb_crops=NMB_CROPS
+        )
+        embedding = torch.ones([BATCH_SIZE * NMB_CROPS, EMBEDDING_DIM])
+        _ = loss_layer(embedding)
 
     def test_swav_loss(self):
         loss_layer = SwAVCriterion(

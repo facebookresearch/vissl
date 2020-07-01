@@ -85,6 +85,17 @@ def assert_hydra_conf(cfg):
             cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.NUM_POSITIVES * batch_size * world_size
         )
 
+    # multicrop version of simclr loss
+    if "multicrop_simclr_info_nce_loss" in cfg.CRITERION.name:
+        world_size = cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        total_nmb_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_nmb_crops"]
+        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
+            batch_size * world_size
+        )
+        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.MULTI_CROP_PARAMS.NMB_CROPS = total_nmb_crops
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multires_collator"
+
     # some inference for the DeepCluster-v2 loss.
     if cfg.CRITERION.name == "deepclusterv2_loss":
         cfg.CRITERION.DEEPCLUSTERV2_LOSS.DROP_LAST = cfg.DATA.TRAIN.DROP_LAST
