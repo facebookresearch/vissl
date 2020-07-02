@@ -119,12 +119,10 @@ def standard_train_step(task, use_gpu):  # NOQA
         if len(task.meters) > 0:
             with PerfTimer("meters_update", perf_stats):
                 if isinstance(model_output, list):
-                    if use_gpu:
-                        model_output_cpu = [x.cpu() for x in model_output]
-                    else:
-                        model_output_cpu = model_output
+                    model_output_cpu = [x.cpu() for x in model_output]
                 else:
-                    model_output_cpu = model_output.cpu() if use_gpu else model_output
+                    model_output_cpu = model_output.cpu()
+
                 for meter in task.meters:
                     meter.update(model_output_cpu, target.detach().cpu())
 
