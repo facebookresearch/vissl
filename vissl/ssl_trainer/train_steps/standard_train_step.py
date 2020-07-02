@@ -31,7 +31,7 @@ class LastBatchInfo(NamedTuple):
     sample: Dict[str, Any]
 
 
-def construct_sample_for_model(batch_data, task):
+def construct_sample_for_model(batch_data, task, use_gpu: bool):
     sample_key_names = task.data_and_label_keys
     inp_key, target_key = sample_key_names["input"], sample_key_names["target"]
     all_keys = inp_key + target_key
@@ -55,6 +55,7 @@ def construct_sample_for_model(batch_data, task):
             "target": batch_data[target_key[0]][0],
             "data_valid": batch_data["data_valid"][0],
         }
+
     # multi-input case (example in PIRL, we pass image and patches both).
     # we nest all these under the sample["input"]
     elif len(sample_key_names["input"]) > 1:
@@ -68,6 +69,12 @@ def construct_sample_for_model(batch_data, task):
         else:
             sample["target"] = batch_data[target_key[0]][0]
         sample["data_valid"] = batch_data["data_valid"][0]
+
+    # copy sample to GPU recursively
+    if use_gpu:
+        for key, value in sample.items():
+            sample[key] = recursive_copy_to_gpu(value, non_blocking=True)
+
     return sample
 
 
@@ -86,12 +93,7 @@ def standard_train_step(task, use_gpu):  # NOQA
     # Process next sample
     with PerfTimer("read_sample", perf_stats):
         sample = next(task.data_iterator)
-    sample = construct_sample_for_model(sample, task)
-
-    # copy sample to GPU recursively
-    if use_gpu:
-        for key, value in sample.items():
-            sample[key] = recursive_copy_to_gpu(value, non_blocking=True)
+    sample = construct_sample_for_model(sample, task, use_gpu=use_gpu)
 
     # Only need gradients during training
     context = torch.enable_grad() if task.train else torch.no_grad()
