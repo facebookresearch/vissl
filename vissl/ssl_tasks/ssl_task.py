@@ -386,7 +386,9 @@ class SelfSupervisionTask(ClassificationTask):
 
         # initialize the pytorch optimizer now since the model has been moved to
         # the appropriate device
-        self.optimizer.init_pytorch_optimizer(self.base_model)
+        self.prepare_optimizer(
+            optimizer=self.optimizer, model=self.base_model, loss=self.loss
+        )
         if self.amp_args is not None and is_apex_available():
             # Allow Amp to perform casts as specified by the amp_args.
             # This updates the model and the PyTorch optimizer (which is wrapped
