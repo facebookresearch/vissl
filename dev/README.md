@@ -1,11 +1,11 @@
-# Running quick tests `run_quick_tests.sh`
+## Running quick tests `run_quick_tests.sh`
 
 To run trainings (SimCLR, SwAV, PIRL etc.) for a few iterations, we provide `run_quick_tests.sh`. This requires 1 or 2 gpus.
 
-# Running code on slurm with `dev/launch_slurm.sh`
+## Running code on slurm with `dev/launch_slurm.sh`
 Please see the script `dev/launch_slurm.sh` for running the code on slurm cluster for training purposes.
 
-# Practices for coding quality
+## Practices for coding quality
 
 For every PR, we run/mandate a few checks before code is ready for review. The checks are:
 1. **flake8**: We enforce coding style per file with defined flake8 rules. flake8 is a checker only and doesn't format code.
@@ -14,11 +14,11 @@ For every PR, we run/mandate a few checks before code is ready for review. The c
 
 In order to format code before code review, there are 2 options:
 
-## Option 1: use `dev/linter.sh`
+### Option 1: use `dev/linter.sh`
 
 Run "./dev/linter.sh" at the project root before you commit. This will run isort, black and flake8 formatting.
 
-## Option 2: use `.pre-commit-config`
+### Option 2: use `.pre-commit-config`
 
 We provide pre-commit hooks so as you build and commit (locally or github), the code formatting will be automatically run.
 You need to run `pre-commit install` once to enable this.

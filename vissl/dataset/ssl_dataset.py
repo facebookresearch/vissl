@@ -36,6 +36,7 @@ class GenericSSLDataset(Dataset):
         self.label_type = self.cfg["DATA"][split].LABEL_TYPE
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
         self._labels_init = False
+        self._verify_data_sources(split, dataset_source_map)
         self._get_data_files(split)
 
         if len(self.label_sources) > 0 and len(self.label_paths) > 0:
@@ -54,6 +55,13 @@ class GenericSSLDataset(Dataset):
                     dataset_name=self.dataset_names[idx],
                     data_source=self.data_sources[idx],
                 )
+            )
+
+    def _verify_data_sources(self, split, dataset_source_map):
+        for idx in range(len(self.data_sources)):
+            assert self.data_sources[idx] in dataset_source_map, (
+                f"Unknown data source: {self.data_sources[idx]}, supported: "
+                f"{list(dataset_source_map.keys())}"
             )
 
     def _get_data_files(self, split):
