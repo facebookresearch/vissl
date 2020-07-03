@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 ######################### INPUT PARAMS ##################################
 NODES=${NODES-1}    # number of machines to distribute training on

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+
 set -ex
 
 # cu$CU_VERSIONpyt$PYTORCH_VERSION

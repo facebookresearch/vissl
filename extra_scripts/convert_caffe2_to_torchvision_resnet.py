@@ -1,10 +1,5 @@
-#!/usr/bin/env python3
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+
 """
 Convert the ResNet-50 models from ICCV'19 paper https://arxiv.org/abs/1905.01235
 to PyTorch TorchVision compatible models. We can directly use these models

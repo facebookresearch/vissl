@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 # Run this script at project root by "./dev/linter.sh" before you commit
 

@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-#
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 from torch.utils.data.dataloader import default_collate
 from vissl.dataset.collators.flatten_collator import flatten_collator
