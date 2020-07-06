@@ -23,9 +23,8 @@ class DistributedSimclrInfoNCELoss(ClassyLoss):
         # loss constants
         self.temperature = self.loss_config.TEMPERATURE
         self.buffer_params = self.loss_config.BUFFER_PARAMS
-        self.num_pos = self.loss_config.NUM_POSITIVES
         self.info_criterion = SimclrInfoNCECriterion(
-            self.buffer_params, self.temperature, self.num_pos
+            self.buffer_params, self.temperature
         )
 
     @classmethod
@@ -49,12 +48,12 @@ class DistributedSimclrInfoNCELoss(ClassyLoss):
 
 
 class SimclrInfoNCECriterion(nn.Module):
-    def __init__(self, buffer_params, temperature: float, num_pos: int):
+    def __init__(self, buffer_params, temperature: float):
         super(SimclrInfoNCECriterion, self).__init__()
 
         self.use_gpu = get_cuda_device_index() > -1
         self.temperature = temperature
-        self.num_pos = num_pos
+        self.num_pos = 2
         self.buffer_params = buffer_params
         self.criterion = nn.CrossEntropyLoss()
         self.dist_rank = get_rank()

@@ -20,12 +20,11 @@ class DistributedMultiCropSimclrInfoNCELoss(DistributedSimclrInfoNCELoss):
         self.loss_config = config.SIMCLR_INFO_NCE_LOSS
         # loss constants
         self.temperature = self.loss_config.TEMPERATURE
-        self.num_pos = self.loss_config.NUM_POSITIVES
         self.buffer_params = self.loss_config.BUFFER_PARAMS
         self.multi_crop_params = self.loss_config.MULTI_CROP_PARAMS
         self.nmb_crops = self.multi_crop_params.NMB_CROPS
         self.info_criterion = MultiCropSimclrInfoNCECriterion(
-            self.buffer_params, self.temperature, self.num_pos, self.nmb_crops
+            self.buffer_params, self.temperature, self.nmb_crops
         )
 
     def __repr__(self):
@@ -38,11 +37,11 @@ class DistributedMultiCropSimclrInfoNCELoss(DistributedSimclrInfoNCELoss):
 
 
 class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
-    def __init__(self, buffer_params, temperature: float, num_pos: int, nmb_crops: int):
+    def __init__(self, buffer_params, temperature: float, nmb_crops: int):
 
         self.nmb_crops = nmb_crops
         super(MultiCropSimclrInfoNCECriterion, self).__init__(
-            buffer_params, temperature, num_pos
+            buffer_params, temperature
         )
         logging.info(f"Setting multicrop nmb_crops: {nmb_crops}")
 

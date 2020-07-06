@@ -35,13 +35,13 @@ class TaskTest(unittest.TestCase):
 
     def test_simclr_info_nce_loss(self):
         loss_layer = SimclrInfoNCECriterion(
-            buffer_params=BUFFER_PARAMS, temperature=0.1, num_pos=1
+            buffer_params=BUFFER_PARAMS, temperature=0.1
         )
         _ = loss_layer(self._get_embedding())
 
     def test_multicrop_simclr_info_nce_loss(self):
         loss_layer = MultiCropSimclrInfoNCECriterion(
-            buffer_params=BUFFER_PARAMS, temperature=0.1, num_pos=1, nmb_crops=NMB_CROPS
+            buffer_params=BUFFER_PARAMS, temperature=0.1, nmb_crops=NMB_CROPS
         )
         embedding = torch.ones([BATCH_SIZE * NMB_CROPS, EMBEDDING_DIM])
         _ = loss_layer(embedding)

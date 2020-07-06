@@ -61,7 +61,6 @@ config:
       name: simclr_info_nce_loss
       SIMCLR_INFO_NCE_LOSS:
         TEMPERATURE: 0.1
-        NUM_POSITIVES: 2
         BUFFER_PARAMS:
           EMBEDDING_DIM: 128
   OPTIMIZER:

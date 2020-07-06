@@ -75,8 +75,9 @@ def assert_hydra_conf(cfg):
 
         world_size = cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        num_positives = 2  # simclr uses 2 copies per image
         cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
-            cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.NUM_POSITIVES * batch_size * world_size
+            num_positives * batch_size * world_size
         )
 
     # multicrop version of simclr loss
