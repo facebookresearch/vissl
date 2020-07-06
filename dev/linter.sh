@@ -17,7 +17,7 @@ DIR=$(dirname "${DIR}")
 echo "$DIR"
 
 echo "Running isort..."
-isort -y -sp "${DIR}"
+isort -c -sp "${DIR}"
 
 echo "Running black..."
 black "${DIR}"

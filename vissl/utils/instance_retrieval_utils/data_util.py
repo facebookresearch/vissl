@@ -8,8 +8,6 @@ import subprocess
 from collections import OrderedDict
 
 import numpy as np
-
-# for INSTRE (it is in matlab)
 import scipy.io
 import torch
 import torchvision.transforms.functional as TF

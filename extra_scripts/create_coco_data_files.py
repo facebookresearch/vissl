@@ -13,8 +13,6 @@ import os
 import sys
 
 import numpy as np
-
-# COCO API
 from pycocotools.coco import COCO
 
 
