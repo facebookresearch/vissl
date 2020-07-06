@@ -36,7 +36,7 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-      COLLATE_FUNCTION: flatten_collator
+      COLLATE_FUNCTION: simclr_collator
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: 500

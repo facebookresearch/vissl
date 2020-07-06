@@ -11,7 +11,7 @@ from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 class ImgReplicatePil(ClassyTransform):
     """
     Adds the same image multiple times to the batch K times so that the batch.
-    Size is now N*K. Use the flatten_collator to convert into batches.
+    Size is now N*K. Use the simclr_collator to convert into batches.
 
     This transform is useful when generating multiple copies of the same image,
     for example, when training contrastive methods.

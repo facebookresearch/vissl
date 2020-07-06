@@ -3,7 +3,7 @@
 import torch
 
 
-def flatten_collator(batch):
+def simclr_collator(batch):
     """
     The collators collates the batch for the following input:
     input: [[img1_0, ..., img1_k], [img2_0, ..., img2_k], ..., [imgN_0, ..., imgN_k]]
