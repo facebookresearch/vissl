@@ -21,7 +21,7 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-      COLLATE_FUNCTION: multires_collator
+      COLLATE_FUNCTION: multicrop_collator
   CRITERION:
       name: multicrop_simclr_info_nce_loss
       SIMCLR_INFO_NCE_LOSS:

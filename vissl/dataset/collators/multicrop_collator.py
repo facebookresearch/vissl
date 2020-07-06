@@ -3,7 +3,7 @@
 import torch
 
 
-def multires_collator(batch):
+def multicrop_collator(batch):
     """
     """
     assert "data" in batch[0], "data not found in sample"

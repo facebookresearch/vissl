@@ -89,7 +89,7 @@ def assert_hydra_conf(cfg):
             batch_size * world_size
         )
         cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.MULTI_CROP_PARAMS.NMB_CROPS = total_nmb_crops
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multires_collator"
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the DeepCluster-v2 loss.
     if cfg.CRITERION.name == "deepclusterv2_loss":
@@ -100,7 +100,7 @@ def assert_hydra_conf(cfg):
         cfg.CRITERION.DEEPCLUSTERV2_LOSS.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
             "total_nmb_crops"
         ]
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multires_collator"
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the SwAV loss.
     if cfg.CRITERION.name == "swav_loss":
@@ -113,7 +113,7 @@ def assert_hydra_conf(cfg):
         cfg.CRITERION.SWAV_LOSS.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
             "total_nmb_crops"
         ]
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multires_collator"
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         batch_size *= world_size

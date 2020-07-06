@@ -2,7 +2,7 @@
 
 from torch.utils.data.dataloader import default_collate
 from vissl.dataset.collators.flatten_collator import flatten_collator
-from vissl.dataset.collators.multires_collator import multires_collator
+from vissl.dataset.collators.multicrop_collator import multicrop_collator
 from vissl.dataset.collators.patch_and_image_collator import patch_and_image_collator
 from vissl.dataset.collators.siamese_collator import siamese_collator
 
@@ -12,7 +12,7 @@ COLLATORS_MAP = {
     "flatten_collator": flatten_collator,
     "siamese_collator": siamese_collator,
     "patch_and_image_collator": patch_and_image_collator,
-    "multires_collator": multires_collator,
+    "multicrop_collator": multicrop_collator,
 }
 
 
