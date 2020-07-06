@@ -2,7 +2,6 @@
 
 import copy
 import logging
-from typing import Any, List
 
 import torch
 import torch.nn as nn
@@ -15,22 +14,6 @@ from vissl.utils.checkpoint import (  # noqa
     print_state_dict_shapes,
 )
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.misc import is_apex_available
-
-
-_CONV_TYPES = (nn.Conv1d, nn.Conv2d, nn.Conv3d)
-
-_BN_TYPES = (
-    nn.BatchNorm1d,
-    nn.BatchNorm2d,
-    nn.BatchNorm3d,
-    nn.SyncBatchNorm,  # pytorch SyncBN
-)
-
-if is_apex_available():
-    import apex
-
-    _BN_TYPES += (apex.parallel.SyncBatchNorm,)
 
 
 @register_model("multi_input_output_model")
@@ -347,81 +330,6 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             checkpoint_state_dict.update(state["model"]["trunk"])
             checkpoint_state_dict.update(state["model"]["heads"])
             print_loaded_dict_info(model_state_dict, checkpoint_state_dict)
-
-    def _get_bn_optimizer_params(
-        self, module, regularized_params, unregularized_params
-    ):
-        # this is called by get_optimizer_params for BN specific layer only
-        if module.weight is not None:
-            if self.optimizer_config["regularize_bn"]:
-                regularized_params.append(module.weight)
-            else:
-                unregularized_params.append(module.weight)
-        if module.bias is not None:
-            if (
-                self.optimizer_config["regularize_bn"]
-                and self.optimizer_config["regularize_bias"]
-            ):
-                regularized_params.append(module.bias)
-            else:
-                unregularized_params.append(module.bias)
-        return regularized_params, unregularized_params
-
-    def get_optimizer_params(self):
-        """
-        Go through all the layers, sort out which parameters should be regularized
-
-        Returns:
-            Dict -- Regularized and un-regularized params
-        """
-        regularized_params, unregularized_params = [], []
-        for module in self.modules():
-            if isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES):
-                regularized_params.append(module.weight)
-                if module.bias is not None:
-                    if self.optimizer_config["regularize_bias"]:
-                        regularized_params.append(module.bias)
-                    else:
-                        unregularized_params.append(module.bias)
-            elif isinstance(module, _BN_TYPES):
-                (
-                    regularized_params,
-                    unregularized_params,
-                ) = self._get_bn_optimizer_params(
-                    module, regularized_params, unregularized_params
-                )
-            elif len(list(module.children())) >= 0:
-                # for any other layers not bn_types, conv_types or nn.Linear, if
-                # the layers are the leaf nodes and have parameters, we regularize
-                # them. Similarly, if non-leaf nodes but have parameters, regularize
-                # them (set recurse=False)
-                for params in module.parameters(recurse=False):
-                    regularized_params.append(params)
-
-        non_trainable_params = []
-        for name, param in self.named_parameters():
-            if name in self.config.NON_TRAINABLE_PARAMS:
-                param.requires_grad = False
-                non_trainable_params.append(param)
-
-        trainable_params = self._filter_trainable(self.parameters())
-        regularized_params = self._filter_trainable(regularized_params)
-        unregularized_params = self._filter_trainable(unregularized_params)
-        logging.info(
-            f"Traininable params: {len(trainable_params)}, "
-            f"Non-Traininable params: {len(non_trainable_params)}, "
-            f"Regularized Parameters: {len(regularized_params)}, "
-            f"Unregularized Parameters {len(unregularized_params)}"
-        )
-        return {
-            "regularized_params": regularized_params,
-            "unregularized_params": unregularized_params,
-        }
-
-    @staticmethod
-    def _filter_trainable(param_list: List[Any]) -> List[Any]:
-        # Keep only the trainable params
-        return list(filter(lambda x: x.requires_grad, param_list))
 
     @property
     def num_classes(self):

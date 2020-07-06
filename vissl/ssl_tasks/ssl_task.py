@@ -13,6 +13,7 @@ from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
 from vissl.dataset import build_dataset, get_loader
 from vissl.models import build_model, convert_sync_bn
+from vissl.ssl_optimizers import get_optimizer_regularized_params
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.misc import is_apex_available
 
@@ -359,6 +360,28 @@ class SelfSupervisionTask(ClassificationTask):
         for hook in self.hooks:
             getattr(hook, hook_function_name)(self)
 
+    def prepare_optimizer(self):
+        optim_params = get_optimizer_regularized_params(
+            model=self.base_model,
+            model_config=self.config["MODEL"],
+            optimizer_config=self.config["OPTIMIZER"],
+        )
+        param_groups, frozen_param_groups = [], None
+        # regularized params. Users can append other options here
+        # like different LR for the params
+        if len(optim_params["regularized_params"]) != 0:
+            param_groups.append({"params": optim_params["regularized_params"]})
+
+        # params which are not regularized i.e have weight_decay=0. common for BN
+        if len(optim_params["unregularized_params"]) != 0:
+            frozen_param_groups = {
+                "params": optim_params["unregularized_params"],
+                "weight_decay": 0.0,
+            }
+        self.optimizer.set_param_groups(
+            param_groups=param_groups, frozen_param_groups=frozen_param_groups
+        )
+
     def prepare(self, device: str, pin_memory: bool = False):
         """
         Prepares the task.
@@ -380,10 +403,8 @@ class SelfSupervisionTask(ClassificationTask):
             self.base_model = copy_model_to_gpu(self.base_model)
 
         # initialize the pytorch optimizer now since the model has been moved to
-        # the appropriate device
-        self.prepare_optimizer(
-            optimizer=self.optimizer, model=self.base_model, loss=self.loss
-        )
+        # the appropriate device.
+        self.prepare_optimizer()
         if self.amp_args is not None and is_apex_available():
             # Allow Amp to perform casts as specified by the amp_args.
             # This updates the model and the PyTorch optimizer (which is wrapped
