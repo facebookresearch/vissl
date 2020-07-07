@@ -129,6 +129,6 @@ def merge_features(output_dir, split, layer, cfg):
 
 def get_json_data_catalog_file():
     json_catalog_path = pkg_resources.resource_filename(
-        "hydra_configs", "config/dataset_catalog.json"
+        "configs", "config/dataset_catalog.json"
     )
     return json_catalog_path

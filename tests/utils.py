@@ -15,7 +15,7 @@ logger = logging.getLogger("vissl")
 
 # List all the config files, used to generate the unit tests on the fly
 def list_config_files(dir_path, exclude_folders):
-    resource_name = "hydra_configs"
+    resource_name = "configs"
     assert pkg_resources.resource_isdir(resource_name, dir_path)
     all_items = pkg_resources.resource_listdir(resource_name, dir_path)
     config_files = []

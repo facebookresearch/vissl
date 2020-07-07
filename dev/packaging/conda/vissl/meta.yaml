@@ -67,7 +67,7 @@ test:
     - tests
     - tools
     - dev/run_quick_tests.sh
-    - hydra_configs
+    - configs
   requires:
     - ca-certificates
   commands:

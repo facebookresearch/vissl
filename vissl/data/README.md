@@ -70,7 +70,7 @@ by just using the strings in the config.
 
 ### Creating a custon Dataset catalog `dataset_catalog.json`
 
-Users can edit the template `vissl/hydra_configs/config/dataset_catalog.json` file to specify their datasets. The json file can be fully decided by user and can have any number of supported datasets (one or more). User can give the string names to dataset as per their choice.
+Users can edit the template `vissl/configs/config/dataset_catalog.json` file to specify their datasets. The json file can be fully decided by user and can have any number of supported datasets (one or more). User can give the string names to dataset as per their choice.
 
 #### Template for a dataset entry in `dataset_catalog.json`
 

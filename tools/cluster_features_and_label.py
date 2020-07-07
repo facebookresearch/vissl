@@ -7,11 +7,11 @@ using FAISS and assigning the hard labels to the dataset.
 
 import logging
 import os
+import sys
 
 import faiss
-import hydra
 import numpy as np
-from omegaconf import DictConfig
+from hydra.experimental import compose, initialize_config_module
 from vissl.data import build_dataset
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.collect_env import collect_env_info
@@ -113,12 +113,14 @@ def main(args, cfg):
     cluster_features_and_label(args, cfg)
 
 
-@hydra.main(config_path="hydra_configs", config_name="defaults")
-def hydra_main(cfg: DictConfig):
+def hydra_main(overrides):
+    with initialize_config_module(config_module="vissl.config"):
+        cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)
     main(args, config)
 
 
 if __name__ == "__main__":
+    overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
-    hydra_main()
+    hydra_main(overrides=overrides)

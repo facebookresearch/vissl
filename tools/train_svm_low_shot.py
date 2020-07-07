@@ -2,11 +2,11 @@
 
 import logging
 import os
+import sys
 
-import hydra
 import numpy as np
 from extra_scripts.create_voc07_low_shot_samples import generate_voc07_low_shot_samples
-from omegaconf import DictConfig
+from hydra.experimental import compose, initialize_config_module
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.logger import setup_logging
@@ -61,12 +61,14 @@ def main(args, cfg):
     train_svm_low_shot(args, cfg)
 
 
-@hydra.main(config_path="hydra_configs", config_name="defaults")
-def hydra_main(cfg: DictConfig):
+def hydra_main(overrides):
+    with initialize_config_module(config_module="vissl.config"):
+        cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)
     main(args, config)
 
 
 if __name__ == "__main__":
+    overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
-    hydra_main()
+    hydra_main(overrides=overrides)

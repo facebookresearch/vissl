@@ -4,7 +4,6 @@
 SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SRC_DIR=$(dirname "${SRC_DIR}")
 BINARY="python ${SRC_DIR}/tools/distributed_train.py"
-CONFIG_PATH="${SRC_DIR}/hydra_configs/"
 
 CFG_LIST=(
     "test/integration_test/quick_simclr"
@@ -26,7 +25,7 @@ for cfg in "${CFG_LIST[@]}"; do
     echo "========================================================================"
     # shellcheck disable=SC2102
     # shellcheck disable=SC2086
-    $BINARY --config-path=$CONFIG_PATH config=$cfg \
+    $BINARY config=$cfg \
         config.DATA.TRAIN.DATA_SOURCES=[synthetic] \
         hydra.verbose=true \
         config.TENSORBOARD_SETUP.USE_TENSORBOARD=true

@@ -2,15 +2,15 @@
 
 import logging
 import os
+import sys
 import uuid
 
-import hydra
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision
 from classy_vision.generic.util import copy_model_to_gpu
-from omegaconf import DictConfig
+from hydra.experimental import compose, initialize_config_module
 from vissl.models import build_model
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
@@ -465,12 +465,14 @@ def main(args, config):
     instance_retrieval_test(args, config)
 
 
-@hydra.main(config_path="hydra_configs", config_name="defaults")
-def hydra_main(cfg: DictConfig):
+def hydra_main(overrides):
+    with initialize_config_module(config_module="vissl.config"):
+        cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)
     main(args, config)
 
 
 if __name__ == "__main__":
+    overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
-    hydra_main()
+    hydra_main(overrides=overrides)

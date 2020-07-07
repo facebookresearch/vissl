@@ -1,11 +1,11 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
+import sys
 
-import hydra
 import torch
 from distributed_train import launch_distributed
-from omegaconf import DictConfig
+from hydra.experimental import compose, initialize_config_module
 from torch import nn
 from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
@@ -97,12 +97,14 @@ def main(args, config):
     logging.info(f"Top1: {top1}, Top5: {top5}")
 
 
-@hydra.main(config_path="hydra_configs", config_name="defaults")
-def hydra_main(cfg: DictConfig):
+def hydra_main(overrides):
+    with initialize_config_module(config_module="vissl.config"):
+        cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)
     main(args, config)
 
 
 if __name__ == "__main__":
+    overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
-    hydra_main()
+    hydra_main(overrides=overrides)
