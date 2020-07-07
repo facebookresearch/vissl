@@ -73,7 +73,26 @@ def construct_sample_for_model(batch_data, task, use_gpu: bool):
     return sample
 
 
-def standard_train_step(task, use_gpu):  # NOQA
+def backward_and_optim_step(task: ClassyTask, local_loss: torch.Tensor):
+    with PerfTimer("backward", task.perf_stats):
+        task.optimizer.zero_grad()
+        if task.amp_args is not None and is_apex_available():
+            with apex.amp.scale_loss(
+                local_loss, task.optimizer.optimizer
+            ) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            local_loss.backward()
+
+    task.optimizer.update_schedule_on_step(task.where)
+    task.run_hooks(SSLClassyHookFunctions.on_backward.name)
+    with PerfTimer("optimizer_step", task.perf_stats):
+        task.optimizer.step()
+    task.run_hooks(SSLClassyHookFunctions.on_update.name)
+    task.num_updates += task.get_global_batchsize()
+
+
+def standard_train_step(task: ClassyTask, use_gpu: bool):  # NOQA
     assert isinstance(task, ClassyTask), "task is not instance of ClassyTask"
 
     # reset the last batch info at every step
@@ -133,22 +152,7 @@ def standard_train_step(task, use_gpu):  # NOQA
 
     # run backward now and update the optimizer
     if task.train:
-        with PerfTimer("backward", perf_stats):
-            task.optimizer.zero_grad()
-            if task.amp_args is not None and is_apex_available():
-                with apex.amp.scale_loss(
-                    local_loss, task.optimizer.optimizer
-                ) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                local_loss.backward()
-
-        task.optimizer.update_schedule_on_step(task.where)
-        task.run_hooks(SSLClassyHookFunctions.on_backward.name)
-        with PerfTimer("optimizer_step", perf_stats):
-            task.optimizer.step()
-        task.run_hooks(SSLClassyHookFunctions.on_update.name)
-        task.num_updates += task.get_global_batchsize()
+        backward_and_optim_step(task, local_loss)
 
     timer_train_step.stop()
     timer_train_step.record()

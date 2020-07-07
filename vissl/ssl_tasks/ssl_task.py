@@ -81,6 +81,11 @@ class SelfSupervisionTask(ClassificationTask):
         # loss curve. Reset at start of each phase/epoch by SetDataSamplerEpochHook hook.
         self.losses = []  # set by the hook at start of each epoch or phase
 
+        # Momentum-encoder style training
+        self.moco_encoder = None
+        self.moco_queue = None
+        self.moco_queue_ptr = None
+
     def set_available_splits(self):
         # self.available_splits = list(self.config["DATA"].keys())
         if self.config.TEST_MODEL:

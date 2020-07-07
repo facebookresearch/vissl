@@ -4,10 +4,11 @@
 Here we create all the custom train steps required for SSL model trainings.
 """
 
+from vissl.ssl_trainer.train_steps.moco_train_step import moco_train_step
 from vissl.ssl_trainer.train_steps.standard_train_step import standard_train_step
 
 
-TRAIN_STEPS = {"standard": standard_train_step}
+TRAIN_STEPS = {"standard": standard_train_step, "moco": moco_train_step}
 
 
 def get_train_step(train_step_name):

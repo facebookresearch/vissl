@@ -37,7 +37,7 @@ class DistributedSimclrInfoNCELoss(ClassyLoss):
         ), "Model output should be a list of tensors. Got Type {}".format(type(output))
 
         loss = 0
-        for (_, l_output) in enumerate(output):
+        for l_output in output:
             normalized_output = nn.functional.normalize(l_output, dim=1, p=2)
             loss += self.info_criterion(normalized_output)
         return loss
