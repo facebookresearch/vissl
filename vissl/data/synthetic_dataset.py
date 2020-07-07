@@ -1,7 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 from torch.utils.data import Dataset
-from vissl.dataset.data_helper import get_mean_image
+from vissl.data.data_helper import get_mean_image
 
 
 class SyntheticImageDataset(Dataset):

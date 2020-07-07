@@ -17,7 +17,7 @@ from classy_vision.generic.distributed_util import (
 )
 from classy_vision.tasks import ClassyTask
 from classy_vision.trainer import ClassyTrainer
-from vissl.dataset import print_sampler_config
+from vissl.data import print_sampler_config
 from vissl.ssl_hooks import SSLClassyHookFunctions
 from vissl.ssl_trainer.train_steps import get_train_step
 from vissl.utils.env import get_machine_local_and_dist_rank

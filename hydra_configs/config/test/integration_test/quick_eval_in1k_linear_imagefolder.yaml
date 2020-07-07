@@ -12,9 +12,7 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
-      DATA_PATHS: ["/data/local/packages/ai-group.imagenet-full-size/prod/imagenet_full_size/train/"]
-      LABEL_PATHS: ["/data/local/packages/ai-group.imagenet-full-size/prod/imagenet_full_size/train/"]
-      DATASET_NAMES: [imagenet1k]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 25
       TRANSFORMS:
         - name: RandomResizedCrop
@@ -30,9 +28,7 @@ config:
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
-      DATA_PATHS: ["/data/local/packages/ai-group.imagenet-full-size/prod/imagenet_full_size/val/"]
-      LABEL_PATHS: ["/data/local/packages/ai-group.imagenet-full-size/prod/imagenet_full_size/val/"]
-      DATASET_NAMES: [imagenet1k]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 25
       TRANSFORMS:
         - name: Resize

@@ -49,7 +49,7 @@ config:
       TRANSFORMS: []
       COLLATE_FUNCTION: "default"
       DATA_LIMIT: -1
-      DATASET_NAMES: ["imagenet1k"]
+      DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: true
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index
@@ -76,7 +76,7 @@ config:
       TRANSFORMS: []
       COLLATE_FUNCTION: "default"
       DATA_LIMIT: -1
-      DATASET_NAMES: ["imagenet1k"]
+      DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: false
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index

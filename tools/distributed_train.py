@@ -12,7 +12,7 @@ from typing import Any, Callable, List
 import hydra
 import torch
 from omegaconf import DictConfig
-from vissl.dataset.dataset_catalog import get_data_files
+from vissl.data.dataset_catalog import get_data_files
 from vissl.engine.extract_features import extract_main
 from vissl.engine.train import train_main
 from vissl.ssl_hooks import ClassyHook, default_hook_generator

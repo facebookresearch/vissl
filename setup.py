@@ -51,6 +51,7 @@ setup(
             "flake8-comprehensions",
             "pre-commit",
             "nbconvert",
+            "pycocotools>=2.0.1",
         ]
     },
 )

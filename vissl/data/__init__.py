@@ -4,14 +4,20 @@ import logging
 
 import torch
 from torch.utils.data import DataLoader
-from vissl.dataset.collators import get_collator
-from vissl.dataset.data_helper import StatefulDistributedSampler
-from vissl.dataset.disk_dataset import DiskImageDataset
-from vissl.dataset.ssl_dataset import GenericSSLDataset
-from vissl.dataset.synthetic_dataset import SyntheticImageDataset
+from vissl.data.collators import get_collator
+from vissl.data.data_helper import StatefulDistributedSampler
+from vissl.data.dataset_catalog import VisslDatasetCatalog, register_datasets
+from vissl.data.disk_dataset import DiskImageDataset
+from vissl.data.ssl_dataset import GenericSSLDataset
+from vissl.data.synthetic_dataset import SyntheticImageDataset
 
 
-__all__ = ["GenericSSLDataset", "get_data_files"]
+__all__ = [
+    "GenericSSLDataset",
+    "get_data_files",
+    "register_datasets",
+    "VisslDatasetCatalog",
+]
 
 DATASET_SOURCE_MAP = {
     "disk_filelist": DiskImageDataset,

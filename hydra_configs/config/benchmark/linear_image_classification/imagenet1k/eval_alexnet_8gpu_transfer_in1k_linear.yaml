@@ -9,9 +9,9 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk_filelist]
-      LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k]
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -27,9 +27,9 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
-      DATA_SOURCES: [disk_filelist]
-      LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k]
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize

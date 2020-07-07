@@ -6,7 +6,7 @@ import os
 import numpy as np
 from PIL import Image
 from torchvision.datasets import ImageFolder
-from vissl.dataset.data_helper import QueueDataset, get_mean_image
+from vissl.data.data_helper import QueueDataset, get_mean_image
 
 
 class DiskImageDataset(QueueDataset):

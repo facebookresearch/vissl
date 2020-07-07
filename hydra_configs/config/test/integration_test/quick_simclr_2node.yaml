@@ -11,10 +11,8 @@ config:
   ROLLING_BTIME_FREQ: 5
   DATA:
     TRAIN:
-      DATA_SOURCES:
-        - disk_filelist
-      DATASET_NAMES:
-        - imagenet1k
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
       BATCHSIZE_PER_REPLICA: 16
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:

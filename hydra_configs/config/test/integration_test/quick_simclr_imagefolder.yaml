@@ -11,11 +11,8 @@ config:
   ROLLING_BTIME_FREQ: 5
   DATA:
     TRAIN:
-      DATA_SOURCES:
-        - disk_folder
-      DATASET_NAMES:
-        - imagenet1k
-      DATA_PATHS: ["/data/local/packages/ai-group.imagenet-full-size/prod/imagenet_full_size/train/"]
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:

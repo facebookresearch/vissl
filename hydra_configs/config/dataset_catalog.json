@@ -1,0 +1,50 @@
+{
+    "imagenet1k_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "places205_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "places365_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "inaturalist2018_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "yfcc100m": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "voc2007_folder": {
+        "train": ["<root_folder>", "<root_folder>"],
+        "val": ["<root_folder>", "<root_folder>"]
+    },
+    "voc2012_folder": {
+        "train": ["<root_folder>", "<root_folder>"],
+        "val": ["<root_folder>", "<root_folder>"]
+    },
+    "coco_folder": {
+        "train": ["<root_folder>", "<root_folder>"],
+        "val": ["<root_folder>", "<root_folder>"]
+    },
+    "imagenet1k-per01": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "imagenet1k-per10": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "google-imagenet1k-per01": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "google-imagenet1k-per10": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    }
+}

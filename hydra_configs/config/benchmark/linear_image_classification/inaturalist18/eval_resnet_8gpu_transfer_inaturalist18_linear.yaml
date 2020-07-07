@@ -12,7 +12,7 @@ config:
     TRAIN:
       DATA_SOURCES: [everstore]
       LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [inaturalist2018]
+      DATASET_NAMES: [inaturalist2018_everstore]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop
@@ -28,7 +28,7 @@ config:
     TEST:
       DATA_SOURCES: [everstore]
       LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [inaturalist2018]
+      DATASET_NAMES: [inaturalist2018_everstore]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize

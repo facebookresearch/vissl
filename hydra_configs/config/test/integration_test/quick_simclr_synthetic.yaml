@@ -11,8 +11,7 @@ config:
   ROLLING_BTIME_FREQ: 5
   DATA:
     TRAIN:
-      DATA_SOURCES:
-        - synthetic
+      DATA_SOURCES: [synthetic]
       BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:

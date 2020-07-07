@@ -11,7 +11,7 @@ from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
-from vissl.dataset import build_dataset, get_loader
+from vissl.data import build_dataset, get_loader
 from vissl.models import build_model, convert_sync_bn
 from vissl.ssl_optimizers import get_optimizer_regularized_params
 from vissl.utils.checkpoint import init_model_from_weights

@@ -5,6 +5,7 @@ import os
 import random
 
 import numpy as np
+import pkg_resources
 import torch
 import torch.multiprocessing as mp
 from scipy.sparse import csr_matrix
@@ -124,3 +125,10 @@ def merge_features(output_dir, split, layer, cfg):
     logging.info(f"Targets: {output['targets'].shape}")
     logging.info(f"Indices: {output['inds'].shape}")
     return output
+
+
+def get_json_data_catalog_file():
+    json_catalog_path = pkg_resources.resource_filename(
+        "hydra_configs", "config/dataset_catalog.json"
+    )
+    return json_catalog_path

@@ -1,10 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 from torch.utils.data.dataloader import default_collate
-from vissl.dataset.collators.simclr_collator import simclr_collator
-from vissl.dataset.collators.multicrop_collator import multicrop_collator
-from vissl.dataset.collators.patch_and_image_collator import patch_and_image_collator
-from vissl.dataset.collators.siamese_collator import siamese_collator
+from vissl.data.collators.multicrop_collator import multicrop_collator
+from vissl.data.collators.patch_and_image_collator import patch_and_image_collator
+from vissl.data.collators.siamese_collator import siamese_collator
+from vissl.data.collators.simclr_collator import simclr_collator
 
 
 COLLATORS_MAP = {

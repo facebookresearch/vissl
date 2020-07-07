@@ -12,7 +12,7 @@ import faiss
 import hydra
 import numpy as np
 from omegaconf import DictConfig
-from vissl.dataset import build_dataset
+from vissl.data import build_dataset
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import get_machine_local_and_dist_rank

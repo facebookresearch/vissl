@@ -74,6 +74,6 @@ def get_transform(input_transforms_list):
 
 
 FILE_ROOT = Path(__file__).parent
-import_all_modules(FILE_ROOT, "vissl.dataset.ssl_transforms")
+import_all_modules(FILE_ROOT, "vissl.data.ssl_transforms")
 
 __all__ = ["SSLTransformsWrapper", "get_transform"]
