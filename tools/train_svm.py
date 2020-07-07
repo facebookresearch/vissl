@@ -6,8 +6,9 @@ import os
 
 import hydra
 import numpy as np
-from distributed_train import get_hook_generator, launch_distributed
+from distributed_train import launch_distributed
 from omegaconf import DictConfig
+from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.logger import setup_logging
@@ -41,8 +42,7 @@ def main(args, config):
     print_cfg(config)
 
     # extract the features
-    hook_generator = get_hook_generator(config)
-    launch_distributed(config, args, hook_generator=hook_generator)
+    launch_distributed(config, args, hook_generator=default_hook_generator)
 
     # get the layers for which we will train svm
     layers = config.MODEL.EVAL_FEATURES

@@ -4,7 +4,7 @@
 Wrapper to call torch.distributed.launch to run multi-gpu trainings.
 Supports two engines: train and extract_features
 """
-import functools
+
 import logging
 from argparse import Namespace
 from typing import Any, Callable, List
@@ -21,19 +21,10 @@ from vissl.utils.io import cleanup_dir, copy_data_to_local
 from vissl.utils.logger import setup_logging
 from vissl.utils.misc import get_dist_run_id
 from vissl.utils.slurm import get_node_id
-from vissl.utils.tensorboard import append_tensorboard_hook, is_tensorboard_available
 
 
 def get_available_splits(cfg):
     return [key for key in cfg.DATA if key.lower() in ["train", "test"]]
-
-
-def get_hook_generator(cfg):
-    hook_generator = default_hook_generator
-    if cfg.TENSORBOARD_SETUP.USE_TENSORBOARD:
-        assert is_tensorboard_available(), "Tensorboard must be installed to use it."
-        hook_generator = functools.partial(append_tensorboard_hook)
-    return hook_generator
 
 
 def copy_to_local(cfg):
@@ -134,8 +125,7 @@ def _distributed_worker(
 def hydra_main(cfg: DictConfig):
     setup_logging(__name__)
     args, config = convert_to_attrdict(cfg)
-    hook_generator = get_hook_generator(config)
-    launch_distributed(config, args, hook_generator=hook_generator)
+    launch_distributed(config, args, hook_generator=default_hook_generator)
 
 
 if __name__ == "__main__":

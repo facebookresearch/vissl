@@ -31,17 +31,15 @@ def get_tensorboard_dir(cfg):
     return tensorboard_dir
 
 
-def append_tensorboard_hook(cfg):
-    from vissl.ssl_hooks import default_hook_generator, SSLTensorboardHook
+def get_tensorboard_hook(cfg):
+    from vissl.ssl_hooks import SSLTensorboardHook
     from torch.utils.tensorboard import SummaryWriter
 
     # get the tensorboard directory and check tensorboard is installed
     tensorboard_dir = get_tensorboard_dir(cfg)
     flush_secs = cfg.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
     log_activations = cfg.TENSORBOARD_SETUP.LOG_ACTIVATIONS
-    return default_hook_generator(cfg) + [
-        SSLTensorboardHook(
-            tb_writer=SummaryWriter(log_dir=tensorboard_dir, flush_secs=flush_secs),
-            log_activations=log_activations,
-        )
-    ]
+    return SSLTensorboardHook(
+        tb_writer=SummaryWriter(log_dir=tensorboard_dir, flush_secs=flush_secs),
+        log_activations=log_activations,
+    )

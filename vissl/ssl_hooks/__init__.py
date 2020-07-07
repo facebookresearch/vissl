@@ -28,6 +28,7 @@ from vissl.ssl_hooks.swav_hooks import NormalizePrototypesHook  # noqa
 from vissl.ssl_hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
 from vissl.ssl_hooks.tensorboard_hook import SSLTensorboardHook  # noqa
 from vissl.utils.hydra_config import AttrDict
+from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
 
 
 class SSLClassyHookFunctions(Enum):
@@ -61,6 +62,10 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         hooks.extend([InitMemoryHook(), ClusterMemoryHook()])
     if cfg.MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
+    if cfg.TENSORBOARD_SETUP.USE_TENSORBOARD:
+        assert is_tensorboard_available(), "Tensorboard must be installed to use it."
+        tb_hook = get_tensorboard_hook(cfg)
+        hooks.extend([tb_hook])
 
     # hooks that are used irrespective of workflow type
     rolling_btime_freq = cfg.ROLLING_BTIME_FREQ if cfg.ROLLING_BTIME_FREQ > 0 else None
