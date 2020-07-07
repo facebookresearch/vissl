@@ -6,12 +6,12 @@ Supports two engines: train and extract_features
 """
 
 import logging
+import sys
 from argparse import Namespace
 from typing import Any, Callable, List
 
-import hydra
 import torch
-from omegaconf import DictConfig
+from hydra.experimental import compose, initialize_config_module
 from vissl.data.dataset_catalog import get_data_files
 from vissl.engine.extract_features import extract_main
 from vissl.engine.train import train_main
@@ -121,13 +121,17 @@ def _distributed_worker(
     process_main(args, cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
 
 
-@hydra.main(config_path="hydra_configs", config_name="defaults")
-def hydra_main(cfg: DictConfig):
+def hydra_main(overrides):
+    overrides.append("hydra.verbose=true")
+    print(f"####### overrides: {overrides}")
+    with initialize_config_module(config_module="vissl.config"):
+        cfg = compose("defaults", overrides=overrides)
     setup_logging(__name__)
     args, config = convert_to_attrdict(cfg)
     launch_distributed(config, args, hook_generator=default_hook_generator)
 
 
 if __name__ == "__main__":
+    overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
-    hydra_main()
+    hydra_main(overrides=overrides)

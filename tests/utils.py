@@ -68,7 +68,7 @@ UNIT_TEST_CONFIGS = create_valid_input(
     list_config_files("config/test/cpu_test", exclude_folders=None)
 )
 
-initialize_config_module(config_module="hydra_configs")
+initialize_config_module(config_module="vissl.config")
 
 
 class SSLHydraConfig(object):
