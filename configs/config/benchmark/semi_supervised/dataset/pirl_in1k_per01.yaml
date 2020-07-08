@@ -6,5 +6,8 @@ config:
   OPTIMIZER:
     param_schedulers:
       lr:
-        base_value: 0.01
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
         values: [0.01, 0.001]

@@ -3,19 +3,6 @@ config:
   DATA:
     TRAIN:
       BATCHSIZE_PER_REPLICA: 64
-  OPTIMIZER:
-    param_schedulers:
-      lr:
-        base_value: 38.4
-        name: composite
-        schedulers:
-          - name: linear
-            start_value: 0.6
-            end_value: 38.4
-          - name: cosine
-            start_value: 38.4
-            end_value: 0.0000
-        update_interval: step
   DISTRIBUTED:
     NUM_NODES: 64
     NUM_PROC_PER_NODE: 8

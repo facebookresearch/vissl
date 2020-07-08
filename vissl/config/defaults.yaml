@@ -324,7 +324,10 @@ config:
     regularize_bias: true
     param_schedulers:
       lr:
-        base_value: 0.1
+        auto_lr_scaling:
+          auto_scale: false
+          base_value: 0.1
+          base_lr_batch_size: 256
         name: "multistep"
         update_interval: "epoch"
         values: [0.1, 0.01, 0.001]
@@ -338,7 +341,8 @@ config:
         # =====cosine learning rate specific =======
         start_value: 0.1
         end_value: 0.0
-
+        # =====constant learning rate specific =======
+        value: 0.1
   # ----------------------------------------------------------------------------------- #
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #
@@ -509,7 +513,7 @@ defaults:
   - config/pretrain/jigsaw/permutations: null
   # NPID
   - config/pretrain/npid/models: null
-  - config/pretrain/npid/optimization: null
+  - config/pretrain/npid/optimizations: null
   # RotNet
   - config/pretrain/rotnet/optimization: null
   ######### some benchmark related paths

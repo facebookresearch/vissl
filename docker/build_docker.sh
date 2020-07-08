@@ -59,6 +59,8 @@ echo "============Summary Ended================"
 
 
 # Build image
+# shellcheck disable=SC2102
+# shellcheck disable=SC2086
 docker build \
        --build-arg "BUILD_ENVIRONMENT=${image}" \
        --build-arg "TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}" \

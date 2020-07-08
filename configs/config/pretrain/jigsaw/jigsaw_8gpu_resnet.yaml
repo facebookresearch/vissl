@@ -66,7 +66,10 @@ config:
       regularize_bias: True
       param_schedulers:
         lr:
-          base_value: 0.1
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.1
+            base_lr_batch_size: 256
           name: composite
           schedulers:
             - name: linear

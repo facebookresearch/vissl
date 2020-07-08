@@ -6,6 +6,7 @@ set -ex
 # cu$CU_VERSIONpyt$PYTORCH_VERSION
 # Examples:
 #   -> cu101-pyt1.5 ./package_vissl.sh
+
 image=${image}
 if [ -z "${image}" ]; then
   echo "Usage: $0 IMAGE"
@@ -63,6 +64,8 @@ conda install -yq conda-build
 
 echo "Packaging VISSL ==> BUILD_VERSION: ${BUILD_VERSION} BUILD_NUMBER: ${BUILD_NUMBER}"
 # Loop through all Python versions to build a package for each
+# shellcheck disable=SC2102
+# shellcheck disable=SC2086
 for py_ver in "${PYTHON_VERSIONS[@]}"; do
     # for cuda 9.2 and python 3.6, we only support pytorch1.4
     if [[ "$CUDA_VER" = "9.2" &&  "$py_ver" = "3.6" && "$PYTORCH_VERSION" = "1.5" ]]; then

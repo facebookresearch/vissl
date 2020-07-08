@@ -16,6 +16,8 @@ echo "========================================================================"
 
 
 echo "Starting...."
+# shellcheck disable=SC2102
+# shellcheck disable=SC2086
 $BINARY ${CFG[*]} \
     config.MACHINE.NUM_DATALOADER_WORKERS=0 \
     config.MACHINE.DEVICE=gpu \
