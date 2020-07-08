@@ -23,10 +23,13 @@ for cfg in "${CFG_LIST[@]}"; do
     echo "========================================================================"
     echo "Running $cfg ..."
     echo "========================================================================"
+    CHECKPOINT_DIR=$(mktemp -d)
     # shellcheck disable=SC2102
     # shellcheck disable=SC2086
     $BINARY config=$cfg \
         config.DATA.TRAIN.DATA_SOURCES=[synthetic] \
         hydra.verbose=true \
-        config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
+        config.TENSORBOARD_SETUP.USE_TENSORBOARD=true \
+        config.CHECKPOINT.DIR="$CHECKPOINT_DIR"
+    rm -rf $CHECKPOINT_DIR
 done
