@@ -26,9 +26,8 @@ def get_version():
     return version
 
 
-packages = (
-    find_packages(exclude=("tests",))
-    + find_namespace_packages(include=["hydra_plugins.*"]),
+packages = find_packages(exclude=("tests",)) + find_namespace_packages(
+    include=["hydra_plugins.*"]
 )
 
 

@@ -122,7 +122,6 @@ def _distributed_worker(
 
 
 def hydra_main(overrides):
-    overrides.append("hydra.verbose=true")
     print(f"####### overrides: {overrides}")
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
@@ -134,4 +133,5 @@ def hydra_main(overrides):
 if __name__ == "__main__":
     overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
+    overrides.append("hydra.verbose=true")
     hydra_main(overrides=overrides)

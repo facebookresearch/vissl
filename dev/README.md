@@ -1,3 +1,12 @@
+## Run everything on 1 gpu `low_resource_1gpu_train_wrapper.sh`
+
+If you have a configuration file (any vissl compatible file) that you want to run on 1-gpu only (for example: train SimCLR on 1 gpu, etc), you don't need to modify the config file. You can simple achieve this by using the `low_resource_1gpu_train_wrapper.sh` script. An example usage:
+
+```bash
+cd $HOME/vissl
+./dev/low_resource_1gpu_train_wrapper.sh config=test/integration_test/quick_swav
+```
+
 ## Running quick tests `run_quick_tests.sh`
 
 To run trainings (SimCLR, SwAV, PIRL etc.) for a few iterations, we provide `run_quick_tests.sh`. This requires 1 or 2 gpus.
