@@ -12,7 +12,6 @@ config:
       regularize_bias: True
       param_schedulers:
         lr:
-          base_value: 0.12   # LR for batch size 256
           name: multistep
           ########## 200ep ##############
           values: [0.12, 0.012, 0.0012]

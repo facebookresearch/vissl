@@ -1,6 +1,6 @@
 ## Run everything on 1 gpu `low_resource_1gpu_train_wrapper.sh`
 
-If you have a configuration file (any vissl compatible file) that you want to run on 1-gpu only (for example: train SimCLR on 1 gpu, etc), you don't need to modify the config file. You can simple achieve this by using the `low_resource_1gpu_train_wrapper.sh` script. An example usage:
+If you have a configuration file (any vissl compatible file) that you want to run on 1-gpu only (for example: train SimCLR on 1 gpu, etc), you don't need to modify the config file. VISSL also takes care of auto-scaling the Learning rate for various schedules (cosine, multistep, step etc.) if you have enabled the auto_scaling (see `config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling`). You can simply achieve this by using the `low_resource_1gpu_train_wrapper.sh` script. An example usage:
 
 ```bash
 cd $HOME/vissl

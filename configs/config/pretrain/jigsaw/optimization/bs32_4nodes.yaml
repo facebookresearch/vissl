@@ -4,7 +4,6 @@ config:
     num_epochs: 105
     param_schedulers:
       lr:
-        base_value: 0.4
         name: composite
         schedulers:
           - name: linear

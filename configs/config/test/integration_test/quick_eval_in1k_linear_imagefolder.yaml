@@ -83,7 +83,6 @@ config:
       regularize_bias: True
       param_schedulers:
         lr:
-          base_value: 0.01
           name: multistep
           values: [0.01, 0.001]
           milestones: [1]

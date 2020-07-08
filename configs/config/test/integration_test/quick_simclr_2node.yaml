@@ -79,7 +79,6 @@ config:
       regularize_bias: True
       param_schedulers:
         lr:
-          base_value: 0.6
           name: composite
           schedulers:
             - name: linear
