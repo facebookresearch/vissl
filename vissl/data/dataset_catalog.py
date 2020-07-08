@@ -159,23 +159,29 @@ def register_pascal_voc():
     for voc_data in voc_datasets:
         data_info = VisslDatasetCatalog.get(voc_data)
         data_folder = data_info["train"][0]
-        train_data_info = get_voc_images_labels_info("train", data_folder)
-        test_data_info = get_voc_images_labels_info("val", data_folder)
-        data_info["train"] = train_data_info
-        data_info["val"] = test_data_info
-        VisslDatasetCatalog.remove(voc_data)
-        VisslDatasetCatalog.register_data(voc_data, data_info)
+        if os.path.exists(data_folder):
+            train_data_info = get_voc_images_labels_info("train", data_folder)
+            test_data_info = get_voc_images_labels_info("val", data_folder)
+            data_info["train"] = train_data_info
+            data_info["val"] = test_data_info
+            VisslDatasetCatalog.remove(voc_data)
+            VisslDatasetCatalog.register_data(voc_data, data_info)
+        else:
+            VisslDatasetCatalog.remove(voc_data)
 
 
 def register_coco():
     data_info = VisslDatasetCatalog.get("coco2014_folder")
     data_folder = data_info["train"][0]
-    train_data_info = get_coco_imgs_labels_info("train", data_folder)
-    test_data_info = get_coco_imgs_labels_info("val", data_folder)
-    data_info["train"] = train_data_info
-    data_info["val"] = test_data_info
-    VisslDatasetCatalog.remove("coco2014_folder")
-    VisslDatasetCatalog.register_data("coco2014_folder", data_info)
+    if os.path.exists(data_folder):
+        train_data_info = get_coco_imgs_labels_info("train", data_folder)
+        test_data_info = get_coco_imgs_labels_info("val", data_folder)
+        data_info["train"] = train_data_info
+        data_info["val"] = test_data_info
+        VisslDatasetCatalog.remove("coco2014_folder")
+        VisslDatasetCatalog.register_data("coco2014_folder", data_info)
+    else:
+        VisslDatasetCatalog.remove("coco2014_folder")
 
 
 def register_datasets(json_catalog_path):

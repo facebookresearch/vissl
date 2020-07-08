@@ -8,3 +8,4 @@ parameterized==0.7.4
 opencv-python==3.4.2.17
 numpy==1.14.5
 tabulate
+pycocotools>=2.0.1
