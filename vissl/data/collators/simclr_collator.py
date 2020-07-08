@@ -26,9 +26,10 @@ def simclr_collator(batch):
             output_data_valid.append(data_valid[idx][pos])
             output_data_idx.append(data_idx[idx][pos])
 
-    output_batch = {}
-    output_batch["data"] = [torch.stack(output_data)]
-    output_batch["label"] = [torch.stack(output_label)]
-    output_batch["data_valid"] = [torch.stack(output_data_valid)]
-    output_batch["data_idx"] = [torch.stack(output_data_idx)]
+    output_batch = {
+        "data": [torch.stack(output_data)],
+        "label": [torch.stack(output_label)],
+        "data_valid": [torch.stack(output_data_valid)],
+        "data_idx": [torch.stack(output_data_idx)],
+    }
     return output_batch
