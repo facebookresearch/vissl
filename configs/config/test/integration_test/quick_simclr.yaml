@@ -25,7 +25,6 @@ config:
         - name: ImgPilColorDistortion
           strength: 1.0
         - name: ImgPilGaussianBlur
-          kernel: 23
           p: 0.5
           radius_min: 0.1
           radius_max: 2.0

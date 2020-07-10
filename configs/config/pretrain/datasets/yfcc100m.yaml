@@ -2,7 +2,7 @@
 config:
   DATA:
     TRAIN:
-      DATA_SOURCES: [everstore]
+      DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [yfcc100m]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: True

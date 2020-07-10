@@ -12,10 +12,10 @@ from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 class ImgPilToMultiCrop(ClassyTransform):
     """
     Convert a PIL image to Multi-resolution Crops
-    Input
-    - PIL Image
-    Returns
-    - list containing crops
+    Input:
+        - PIL Image
+    Returns:
+        - list containing crops
     This transform was proposed in SwAV - https://arxiv.org/abs/2006.09882
     """
 

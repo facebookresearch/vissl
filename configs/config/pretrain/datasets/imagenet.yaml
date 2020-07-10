@@ -2,22 +2,16 @@
 config:
   DATA:
     TRAIN:
-      DATA_SOURCES:
-        - disk_filelist
-      LABEL_SOURCES:
-        - disk_filelist
-      DATASET_NAMES:
-        - imagenet1k
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_folder]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
-      DATA_SOURCES:
-        - disk_filelist
-      LABEL_SOURCES:
-        - disk_filelist
-      DATASET_NAMES:
-        - imagenet1k
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_folder]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/imagenet1k/

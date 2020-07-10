@@ -33,7 +33,7 @@ def get_data_features_and_images(cfg):
 
     logging.info("Getting the image paths...")
     # get the list of image Ids
-    dataset = build_dataset(split)
+    dataset = build_dataset(cfg, split)
     feature_image_paths = dataset.get_image_paths()
     # due to multi-modality, we get image_paths as a nested list, one for each
     # dataset. Check it's a list and extract images.

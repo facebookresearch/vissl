@@ -16,16 +16,15 @@ config:
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_nmb_crops: 6
+          total_nmb_crops: 8
           size_crops: [224, 96]
-          nmb_crops: [2, 4]
+          nmb_crops: [2, 6]
           crop_scales: [[0.14, 1], [0.05, 0.14]]
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
           strength: 1.0
         - name: ImgPilGaussianBlur
-          kernel: 23
           p: 0.5
           radius_min: 0.1
           radius_max: 2.0
@@ -35,7 +34,7 @@ config:
           std: [0.229, 0.224, 0.225]
       COLLATE_FUNCTION: multicrop_collator
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DROP_LAST: True
   TRAINER:
