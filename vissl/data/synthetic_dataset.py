@@ -24,7 +24,7 @@ class SyntheticImageDataset(Dataset):
         self.cfg = cfg
         self.split = split
         self.data_source = data_source
-        self._num_samples = 500
+        self._num_samples = 50000
         # by default, pretend dataset size is 500 images. OR user specified limit
         if cfg.DATA[split].DATA_LIMIT > 0:
             self._num_samples = cfg.DATA[split].DATA_LIMIT

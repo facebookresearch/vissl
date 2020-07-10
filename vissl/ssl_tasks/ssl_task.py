@@ -174,6 +174,7 @@ class SelfSupervisionTask(ClassificationTask):
                 dataset_config=self.config["DATA"][split],
                 num_dataloader_workers=self.config.MACHINE.NUM_DATALOADER_WORKERS,
                 pin_memory=pin_memory,
+                multi_processing_method=self.config.MULTI_PROCESSING_METHOD,
             )
             loaders[split.lower()] = loader
         return loaders

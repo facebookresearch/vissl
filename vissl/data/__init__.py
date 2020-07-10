@@ -10,6 +10,7 @@ from vissl.data.dataset_catalog import VisslDatasetCatalog, register_datasets
 from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
 from vissl.data.synthetic_dataset import SyntheticImageDataset
+from vissl.utils.misc import setup_multiprocessing_method
 
 
 __all__ = [
@@ -47,10 +48,13 @@ def print_sampler_config(data_sampler):
     logging.info("Distributed Sampler config:\n{}".format(sampler_cfg))
 
 
-def get_loader(dataset, dataset_config, num_dataloader_workers, pin_memory):
+def get_loader(
+    dataset, dataset_config, num_dataloader_workers, pin_memory, multi_processing_method
+):
+    # pytorch dataloader requires setting the multiprocessing type.
+    setup_multiprocessing_method(multi_processing_method)
     # we don't need to set the rank, replicas as the Sampler already does so in
     # it's init function
-    assert torch.distributed.is_initialized(), "Torch distributed isn't initalized"
     data_sampler = None
     if torch.distributed.is_available() and torch.distributed.is_initialized():
         if dataset_config["USE_STATEFUL_DISTRIBUTED_SAMPLER"]:
