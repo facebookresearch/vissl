@@ -26,7 +26,7 @@ class LastBatchInfo(NamedTuple):
     sample: Dict[str, Any]
 
 
-def construct_sample_for_model(batch_data, task, use_gpu: bool):
+def construct_sample_for_model(batch_data, task):
     sample_key_names = task.data_and_label_keys
     inp_key, target_key = sample_key_names["input"], sample_key_names["target"]
     all_keys = inp_key + target_key
@@ -66,14 +66,14 @@ def construct_sample_for_model(batch_data, task, use_gpu: bool):
         sample["data_valid"] = batch_data["data_valid"][0]
 
     # copy sample to GPU recursively
-    if use_gpu:
+    if task.use_gpu:
         for key, value in sample.items():
             sample[key] = recursive_copy_to_gpu(value, non_blocking=True)
 
     return sample
 
 
-def standard_train_step(task, use_gpu):  # NOQA
+def standard_train_step(task):  # NOQA
     assert isinstance(task, ClassyTask), "task is not instance of ClassyTask"
 
     # reset the last batch info at every step
@@ -88,7 +88,7 @@ def standard_train_step(task, use_gpu):  # NOQA
     # Process next sample
     with PerfTimer("read_sample", perf_stats):
         sample = next(task.data_iterator)
-    sample = construct_sample_for_model(sample, task, use_gpu=use_gpu)
+    sample = construct_sample_for_model(sample, task)
 
     # Only need gradients during training
     context = torch.enable_grad() if task.train else torch.no_grad()

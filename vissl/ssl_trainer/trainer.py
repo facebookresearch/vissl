@@ -92,7 +92,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
             task.run_hooks(SSLClassyHookFunctions.on_phase_start.name)
             while True:
                 try:
-                    task = train_step_fn(task, task.use_gpu)
+                    task = train_step_fn(task)
                     iteration_num += 1
                     task.local_iteration_num = iteration_num
                     task.run_hooks(SSLClassyHookFunctions.on_step.name)
