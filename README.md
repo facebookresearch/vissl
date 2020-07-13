@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/facebookresearch/vissl/master/.github/logo/Logo_Color_Light_BG.png" width="900"/>
+<img src=".github/logo/Logo_Color_Light_BG.png" width="900"/>
 
 [![CircleCI](https://circleci.com/gh/facebookresearch/vissl.svg?style=svg)](https://circleci.com/gh/facebookresearch/vissl)
 
@@ -28,11 +28,11 @@ Get started with VISSL by trying one of the tutorial notebooks.
 Learn more about the API by reading the VISSL [documentation](TODO: prigoyal).
 
 ## Model Zoo and Baselines
-We provide a large set of baseline results and trained models available for download in the [VISSL Model Zoo](MODEL_ZOO.md).
+We provide a large set of baseline results and trained models available for download in the [`VISSL Model Zoo`](MODEL_ZOO.md).
 
 ## Development
 
-We welcome new contributions to VISSL and we will be actively maintaining this library! Please refer to [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for full instructions on how to run the code, tests and linter, and submit your pull requests.
+We welcome new contributions to VISSL and we will be actively maintaining this library! Please refer to [`CONTRIBUTING.md`](./.github/CONTRIBUTING.md) for full instructions on how to run the code, tests and linter, and submit your pull requests.
 
 ## Contributors
 
@@ -45,7 +45,7 @@ If you find VISSL useful in your research, please cite:
 ```bibtex
 @misc{goyal2020vissl,
   author =       {Priya Goyal and ... and Armand Joulin},
-  title =        {VISSK},
+  title =        {VISSL},
   howpublished = {\url{https://github.com/facebookresearch/vissl}},
   year =         {2020}
 }
