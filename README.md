@@ -1,17 +1,11 @@
-# VISSL
+<img src="https://raw.githubusercontent.com/facebookresearch/vissl/master/.github/logo/Logo_Color_Light_BG.png" width="900"/>
+
+[![CircleCI](https://circleci.com/gh/facebookresearch/vissl.svg?style=svg)](https://circleci.com/gh/facebookresearch/vissl)
 
 ## Introduction
-We present Self-Supervised Learning Integrated Multi-modal Environment (SSLIME), a toolkit based on PyTorch that aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations. The toolkit treats multiple data modalities (images, videos, audio, text) as first class citizens. The toolkit aims to provide reference implementations of several self-supervised pretext tasks and also provides an extensive benchmark suite for evaluating self-supervised representations. The toolkit is designed to be easily reusable, extensible and enable reproducible research. The toolkit also aims to support efficient distributed training across multiple nodes to facilitate research on Facebook scale data.
+VISSL is a computer VIsion library for state-of-the-art Self-Supervised Learning research with [PyTorch](https://pytorch.org). VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations
 
-<p align="center">
-  <img src=".github/framework_components.png" alt="Framework Components" title="Framework Components"/>
-</p>
-
-<p align="center">
-  <img src=".github/framework_features.png" alt="Framework Features" title="Framework Features"/>
-</p>
-
-Currently, the toolkit supports the Rotation [1] Pretext task and evaluation of features from different layers. Support for Jigsaw, Colorization and DeepCluster pretext tasks will be added in the coming months.
+Within Facebook AI, VISSL has been used to power research projects such as [SwAV](https://arxiv.org/abs/1906.02739).
 
 ## Installation
 
@@ -23,4 +17,36 @@ After installation, please see [`GETTING_STARTED.md`](GETTING_STARTED.md) for ho
 
 ## License
 
-VISSL is CC-NC 4.0 International licensed, as found in the LICENSE file.
+VISSL is released under [CC-NC 4.0 International license](LICENSE).
+
+## Tutorials
+
+Get started with VISSL by trying one of the tutorial notebooks.
+
+## Documentation
+
+Learn more about the API by reading the VISSL [documentation](TODO: prigoyal).
+
+## Model Zoo and Baselines
+We provide a large set of baseline results and trained models available for download in the [VISSL Model Zoo](MODEL_ZOO.md).
+
+## Development
+
+We welcome new contributions to VISSL and we will be actively maintaining this library! Please refer to [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for full instructions on how to run the code, tests and linter, and submit your pull requests.
+
+## Contributors
+
+VISSL is written and maintained by the Facebook AI Research Computer Vision Team.
+
+## Citation
+
+If you find VISSL useful in your research, please cite:
+
+```bibtex
+@misc{goyal2020vissl,
+  author =       {Priya Goyal and ... and Armand Joulin},
+  title =        {VISSK},
+  howpublished = {\url{https://github.com/facebookresearch/vissl}},
+  year =         {2020}
+}
+```
