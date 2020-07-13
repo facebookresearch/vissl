@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/facebookresearch/vissl.svg?style=svg&circle-token=f15ded7b718589ad3f150355e1c37f8e74516019)](https://circleci.com/gh/facebookresearch/vissl)[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/facebookresearch/vissl/blob/master/.github/CONTRIBUTING.md)
 
 ## Introduction
-VISSL is a computer VIsion library for state-of-the-art Self-Supervised Learning research with [PyTorch](https://pytorch.org). VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations
+VISSL is a computer **VI**sion library for state-of-the-art **S**elf-**S**upervised **L**earning research with [PyTorch](https://pytorch.org). VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations.
 
 Within Facebook AI, VISSL has been used to power research projects such as [SwAV](https://arxiv.org/abs/1906.02739).
 
@@ -21,7 +21,7 @@ VISSL is released under [CC-NC 4.0 International license](LICENSE).
 
 ## Tutorials
 
-Get started with VISSL by trying one of the tutorial notebooks.
+Get started with VISSL by trying one of the [tutorial notebooks][tutorials/].
 
 ## Documentation
 
