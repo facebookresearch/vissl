@@ -224,6 +224,14 @@ texinfo_documents = [
 
 
 def setup(app):
+    # Add symlink to Contributing
+    if DEPLOY:
+        import subprocess
+
+        subprocess.call(
+            ["ln", "-s", "../../.github/CONTRIBUTING.md", "contributing.md"]
+        )
+
     from recommonmark.transform import AutoStructify
 
     app.add_config_value(
