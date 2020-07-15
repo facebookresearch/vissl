@@ -189,7 +189,7 @@ config:
       AMP_ARGS: {"opt_level": "O1"}
     MODEL_COMPLEXITY:
       # set this to True if you want to compute flops, params, activations in your model.
-      COMPUTE_COMPLEXITY: True
+      COMPUTE_COMPLEXITY: False
       INPUT_SHAPE: [3, 224, 224]
     # parameters for initializing a model from a pre-trained model file
     PARAMS_FILE:
