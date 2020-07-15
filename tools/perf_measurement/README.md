@@ -9,7 +9,7 @@ To benchmark any dataset, simply run the `benchmark_data.py` on any config of yo
 ```bash
 cd $HOME/vissl
 python tools/perf_measurement/benchmark_data.py config=pretrain/swav/swav_node_resnet config.DATA.TRAIN.DATA_SOURCES=[disk_
-folder] config.DATA.TRAIN.DATASET_NAMES=[imagenet1k_folder] config.DATA.TRAIN.DATA_LIMIT=-1 config.MACHINE.NUM_DATALOADER_WORKERS=10 config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=64
+folder] config.DATA.TRAIN.DATASET_NAMES=[imagenet1k_folder] config.DATA.TRAIN.DATA_LIMIT=-1 config.DATA.NUM_DATALOADER_WORKERS=10 config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=64
 ```
 
 This will output the images/sec, sec/image.

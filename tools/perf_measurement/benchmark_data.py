@@ -24,7 +24,7 @@ def benchmark_data(cfg, split="train"):
     dataloader = get_loader(
         dataset=dataset,
         dataset_config=cfg["DATA"][split],
-        num_dataloader_workers=cfg.MACHINE.NUM_DATALOADER_WORKERS,
+        num_dataloader_workers=cfg.DATA.NUM_DATALOADER_WORKERS,
         pin_memory=False,
         multi_processing_method=cfg.MULTI_PROCESSING_METHOD,
     )

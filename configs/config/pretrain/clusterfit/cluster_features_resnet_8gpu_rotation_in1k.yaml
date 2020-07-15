@@ -3,6 +3,7 @@ config:
   # must set the TEST_MODEL to false if we don't want to extract features on TEST
   TEST_MODEL: False
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
@@ -43,7 +44,6 @@ config:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CLUSTERFIT:
     OUTPUT_DIR: .

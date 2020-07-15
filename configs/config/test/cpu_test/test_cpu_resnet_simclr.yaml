@@ -8,6 +8,7 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: True
   DATA:
+    NUM_DATALOADER_WORKERS: 0
     TRAIN:
       DATA_SOURCES: [synthetic]
       BATCHSIZE_PER_REPLICA: 2
@@ -96,7 +97,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 0
     DEVICE: cpu
   CHECKPOINT:
     DIR: "."

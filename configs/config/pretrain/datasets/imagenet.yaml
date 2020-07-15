@@ -1,6 +1,7 @@
 # @package _global_
 config:
   DATA:
+    NUM_DATALOADER_WORKERS: 4
     TRAIN:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
@@ -16,4 +17,3 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
   MACHINE:
-    NUM_DATALOADER_WORKERS: 4
