@@ -10,6 +10,7 @@ config:
   PERF_STAT_FREQUENCY: 10
   ROLLING_BTIME_FREQ: 5
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
@@ -94,7 +95,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

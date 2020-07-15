@@ -9,6 +9,7 @@ config:
   MONITOR_PERF_STATS: True
   ROLLING_BTIME_FREQ: 313
   DATA:
+    NUM_DATALOADER_WORKERS: 8
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
@@ -120,7 +121,6 @@ config:
     INIT_METHOD: tcp
     NCCL_DEBUG: True
   MACHINE:
-    NUM_DATALOADER_WORKERS: 8
     DEVICE: gpu
   CHECKPOINT:
     DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/

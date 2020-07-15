@@ -69,10 +69,9 @@ class GenericSSLDataset(Dataset):
         logging.info(f"Rank: {local_rank} Label files:\n{self.label_paths}")
 
     def _load_labels(self):
-        for idx, (label_source, path) in enumerate(
-            zip(self.label_sources, self.label_paths)
-        ):
+        for idx, label_source in enumerate(self.label_sources):
             if label_source == "disk_filelist":
+                path = self.label_paths[idx]
                 # Labels are stored in a file
                 assert os.path.isfile(path), f"Path to labels {path} is not a file"
 
@@ -93,7 +92,7 @@ class GenericSSLDataset(Dataset):
                 # We enforce that the data source also be a disk folder in this case
                 assert self.data_sources[idx] == self.label_sources[idx]
 
-                logging.info(f"Using disk_folder labels from {self.data_paths[idx]}")
+                logging.info(f"Using {label_source} labels from {self.data_paths[idx]}")
 
                 # Use the ImageFolder object created when loading images.
                 # We do not create it again since it can be an expensive operation.
@@ -104,9 +103,7 @@ class GenericSSLDataset(Dataset):
             self.label_objs.append(labels)
 
     def __getitem__(self, idx):
-        if not self._labels_init and (
-            len(self.label_sources) > 0 and len(self.label_paths) > 0
-        ):
+        if not self._labels_init and len(self.label_sources) > 0:
             self._load_labels()
             self._labels_init = True
 

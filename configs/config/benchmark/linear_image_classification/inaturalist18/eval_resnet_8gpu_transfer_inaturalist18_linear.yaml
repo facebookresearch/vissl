@@ -9,6 +9,7 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: True
   DATA:
+    NUM_DATALOADER_WORKERS: 8
     TRAIN:
       DATA_SOURCES: [everstore]
       LABEL_SOURCES: [disk_filelist]
@@ -108,7 +109,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 8
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

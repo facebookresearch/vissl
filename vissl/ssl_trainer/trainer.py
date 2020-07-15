@@ -69,7 +69,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         self._setup_distributed(cfg, task.use_gpu)
 
         train_step_fn = get_train_step(cfg["TRAINER"]["TRAIN_STEP_NAME"])
-        task.prepare(device=cfg.MACHINE.DEVICE, pin_memory=cfg.MACHINE.PIN_MEMORY)
+        task.prepare(device=cfg.MACHINE.DEVICE, pin_memory=cfg.DATA.PIN_MEMORY)
         task.init_distributed_data_parallel_model()
 
         # Find what phase, train_phase_idx, local_iteration_num we are starting from.
@@ -218,7 +218,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         assert task.use_gpu, "Set MACHINE.DEVICE = gpu"
         task.prepare_extraction(
             device=cfg.MACHINE.DEVICE,
-            pin_memory=cfg.MACHINE.PIN_MEMORY,
+            pin_memory=cfg.DATA.PIN_MEMORY,
             use_gpu=task.use_gpu,
         )
 
