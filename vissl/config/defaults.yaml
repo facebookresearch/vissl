@@ -482,17 +482,17 @@ config:
 # 1. you can add your defaults here to the list, if you want and run like this:
 #    python tools/distributed_train.py \
 #        config=integration_test/quick_simclr \
-#        config/pretrain/simple_clr/optimization=bs32_16nodes
+#        config/pretrain/simclr/optimization=bs32_16nodes
 #
 # 2. at runtime, add a "+" sign to the input. So run like this:
 #    python tools/distributed_train.py \
 #        config=integration_test/quick_simclr \
-#        +config/pretrain/simple_clr/models=resnext101
+#        +config/pretrain/simclr/models=resnext101
 #
 # If you want to override single values in the config, you can achieve that with:
 #    python tools/distributed_train.py \
 #        config=integration_test/quick_simclr \
-#        +config/pretrain/simple_clr/my_sub_folder=my_file_name \
+#        +config/pretrain/simclr/my_sub_folder=my_file_name \
 #        config.MODEL.PARAMS_FILE.PATH=<weights_path.torch>
 #
 # TODO: (prigoyal) figure out whether we should support these defaults or not
@@ -501,10 +501,10 @@ defaults:
   - config: ???
   ####### some pre=traning related paths
   - config/pretrain/datasets: null
-  # simple_clr
-  - config/pretrain/simple_clr/models: null
-  - config/pretrain/simple_clr/transforms: null
-  - config/pretrain/simple_clr/optimization: null
+  # simclr
+  - config/pretrain/simclr/models: null
+  - config/pretrain/simclr/transforms: null
+  - config/pretrain/simclr/optimization: null
   # SwAV
   - config/pretrain/swav/models: null
   - config/pretrain/swav/optimization: null
