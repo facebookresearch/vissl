@@ -2,6 +2,7 @@
 extract_features: True
 config:
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
@@ -59,7 +60,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   SVM:
     OUTPUT_DIR: .

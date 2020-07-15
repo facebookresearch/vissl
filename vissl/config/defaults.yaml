@@ -30,6 +30,9 @@ config:
   # DATA
   # ----------------------------------------------------------------------------------- #
   DATA:
+    # Common data options
+    NUM_DATALOADER_WORKERS: 4 # Set this depending on the number of CPUs you have
+    PIN_MEMORY: true # Makes CPU->GPU copy of the data faster
     # Training Data Options
     TRAIN:
       # if we want to resume the data sampler as well from a previous iteration
@@ -50,7 +53,7 @@ config:
       COLLATE_FUNCTION: "default"
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
-      COPY_TO_LOCAL_DISK: true
+      COPY_TO_LOCAL_DISK: false
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index
       LABEL_TYPE: "standard"
@@ -102,9 +105,7 @@ config:
   # MACHINE (cpu, gpu, data workers)
   # ----------------------------------------------------------------------------------- #
   MACHINE:
-    NUM_DATALOADER_WORKERS: 4
     DEVICE: "gpu"
-    PIN_MEMORY: true
 
   # ----------------------------------------------------------------------------------- #
   # MODEL

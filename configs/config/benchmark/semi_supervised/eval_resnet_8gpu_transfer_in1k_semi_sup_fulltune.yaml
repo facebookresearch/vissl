@@ -9,6 +9,7 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: False
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
@@ -91,7 +92,6 @@ config:
     RUN_ID: auto
     BROADCAST_BUFFERS: False
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

@@ -7,6 +7,7 @@ config:
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
   DATA:
+    NUM_DATALOADER_WORKERS: 8
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
@@ -111,7 +112,6 @@ config:
     NCCL_DEBUG: True
     BROADCAST_BUFFERS: True
   MACHINE:
-    NUM_DATALOADER_WORKERS: 8
     DEVICE: gpu
   CHECKPOINT:
     DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/

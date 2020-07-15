@@ -3,6 +3,7 @@ extract_features: True
 train_svm: True
 config:
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
@@ -60,7 +61,6 @@ config:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   SVM:
     OUTPUT_DIR: .
