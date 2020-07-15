@@ -3,6 +3,7 @@
 import logging
 import os
 import random
+import tempfile
 
 import numpy as np
 import pkg_resources
@@ -46,10 +47,15 @@ def get_dist_run_id(cfg, num_nodes):
         ), "cfg.DISTRIBUTED.RUN_ID=auto is allowed for 1 machine only."
         port = find_free_tcp_port()
         run_id = f"127.0.0.1:{port}"
-    elif init_method == "file" and num_nodes > 1:
-        logging.warning(
-            "file is not recommended to use for distributed training on > 1 node"
-        )
+    elif init_method == "file":
+        if num_nodes > 1:
+            logging.warning(
+                "file is not recommended to use for distributed training on > 1 node"
+            )
+        # Find a unique tempfile if needed.
+        if not run_id or run_id == "auto":
+            unused_fno, run_id = tempfile.mkstemp()
+        assert os.path.exists(run_id), f"file {run_id} doesn't exist"
     elif init_method == "tcp" and cfg.DISTRIBUTED.NUM_NODES > 1:
         assert cfg.DISTRIBUTED.RUN_ID, "please specify RUN_ID for tcp"
     elif init_method == "env":
