@@ -46,7 +46,7 @@ vissl.ssl_hooks.deepclusterv2_hooks module
 vissl.ssl_hooks.tensorboard_hooks module
 ------------------------------------------------------
 
-.. automodule:: vissl.ssl_hooks.tensorboard_hooks
+.. automodule:: vissl.ssl_hooks.tensorboard_hook
     :members:
     :undoc-members:
     :show-inheritance:
