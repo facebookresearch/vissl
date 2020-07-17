@@ -69,6 +69,7 @@ class VisslDatasetCatalog(object):
     def get(name):
         """
         Get the registered dict and return it.
+
         Args:
             name (str): the name that identifies a dataset, e.g. "imagenet1k".
         Returns:
@@ -88,6 +89,7 @@ class VisslDatasetCatalog(object):
     def list() -> List[str]:
         """
         List all registered datasets.
+
         Returns:
             list[str]
         """

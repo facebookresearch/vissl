@@ -12,3 +12,5 @@ HEADS = {
     "siamese_concat_view": SiameseConcatView,
     "swav_head": SwAVPrototypesHead,
 }
+
+__all__ = [k for k in globals().keys() if not k.startswith("_")]

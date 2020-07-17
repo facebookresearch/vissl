@@ -8,4 +8,4 @@ def build_model(model_config, optimizer_config):
     return BaseSSLMultiInputOutputModel(model_config, optimizer_config)
 
 
-__all__ = ["BaseSSLMultiInputOutputModel", "build_model", "convert_sync_bn"]
+__all__ = [k for k in globals().keys() if not k.startswith("_")]

@@ -9,7 +9,7 @@ class SyntheticImageDataset(Dataset):
     Synthetic dataset class. Mean image is returned always. This dataset
     is used/recommended to use for testing purposes only.
 
-    Args
+    Args:
         path (string): can be "" [not used]
         split (string): specify split for the dataset.
             Usually train/val/test. Used to read images if

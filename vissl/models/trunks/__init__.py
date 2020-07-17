@@ -20,4 +20,4 @@ TRUNKS = {
 }
 
 
-__all__ = ["TRUNKS"]
+__all__ = [k for k in globals().keys() if not k.startswith("_")]

@@ -225,6 +225,14 @@ def get_checkpoint_model_state_dict(config, state_dict):
     """
     Given a specified pre-trained VISSL model (composed of head and trunk),
     we get the state_dict that can be loaded by appending prefixes to model and trunk.
+
+    Args:
+        config (AttrDict): full config file
+        state_dict (Dict): raw state_dict loaded from the checkpoint or weights file
+
+    Returns:
+        state_dict (Dict): vissl state_dict with layer names matching compatible with
+                           vissl model. Hence this state_dict can be loaded directly.
     """
     classy_state_dict = state_dict["base_model"]["model"]
     trunk_append_prefix, heads_append_prefix = "trunk.", "heads."
@@ -256,14 +264,19 @@ def init_model_from_weights(
     Initialize the model from any given params file. This is particularly useful
     during the feature evaluation process or when we want to evaluate a model on
     a range of tasks.
-    config:                AttrDict: config file
-    model:                 object: instance of base_ssl_model
-    state_dict:            Dict: torch.load() of user provided params file path.
-    state_dict_key_name:   string: key name containing the model state dict
-    skip_layers:           string : layer names with this key are not copied
-    replace_prefix:        string : remove these prefixes from the layer names (executed first)
-    append_prefix:         string : append the prefix to the layer names
-                                    (executed after replace_prefix)
+
+    Args:
+        config (AttrDict): config file
+        model (object): instance of base_ssl_model
+        state_dict (Dict): torch.load() of user provided params file path.
+        state_dict_key_name (string): key name containing the model state dict
+        skip_layers (string): layer names with this key are not copied
+        replace_prefix (string): remove these prefixes from the layer names (executed first)
+        append_prefix (string): append the prefix to the layer names
+                                (executed after replace_prefix)
+
+    Returns:
+        model (object): the model initialized from the weights file
     """
     # whether it's a model from somewhere else or a model from this codebase, load the
     # state_dict
@@ -274,6 +287,8 @@ def init_model_from_weights(
         state_dict = state_dict[state_dict_key_name]
 
     if state_dict_key_name == "classy_state_dict":
+        # get the appropriate model_state_dict so that the model can load. We automatically
+        # take care of appending prefixes, suffixes etc to match the layer names.
         state_dict = get_checkpoint_model_state_dict(config, state_dict)
     else:
         # make any corrections to the layer names to load checkpoint successfully

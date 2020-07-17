@@ -3,4 +3,4 @@
 from vissl.ssl_trainer.trainer import DistributedSelfSupervisionTrainer
 
 
-__all__ = ["DistributedSelfSupervisionTrainer"]
+__all__ = [k for k in globals().keys() if not k.startswith("_")]
