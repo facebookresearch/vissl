@@ -6,12 +6,13 @@ SRC_DIR=$(dirname "${SRC_DIR}")
 BINARY="python ${SRC_DIR}/tools/distributed_train.py"
 
 CFG_LIST=(
-    "test/integration_test/quick_simclr"
-    "test/integration_test/quick_simclr_multicrop"
-    "test/integration_test/quick_pirl"
-    "test/integration_test/quick_simclr_efficientnet"
-    "test/integration_test/quick_swav"
     "test/integration_test/quick_deepcluster_v2"
+    "test/integration_test/quick_pirl"
+    "test/integration_test/quick_simclr"
+    "test/integration_test/quick_simclr_efficientnet"
+    "test/integration_test/quick_simclr_multicrop"
+    "test/integration_test/quick_simclr_regnet"
+    "test/integration_test/quick_swav"
 )
 
 echo "========================================================================"

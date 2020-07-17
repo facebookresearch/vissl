@@ -6,6 +6,7 @@ from vissl.models.trunks.alexnet_deepcluster import AlexNetDeepCluster
 from vissl.models.trunks.alexnet_jigsaw import AlexNetJigsaw
 from vissl.models.trunks.alexnet_rotnet import AlexNetRotNet
 from vissl.models.trunks.efficientnet import EfficientNet
+from vissl.models.trunks.regnet import RegNet
 from vissl.models.trunks.resnext import ResNeXt
 
 
@@ -15,8 +16,9 @@ TRUNKS = {
     "alexnet_deepcluster": AlexNetDeepCluster,
     "alexnet_jigsaw": AlexNetJigsaw,
     "alexnet_rotnet": AlexNetRotNet,
-    "resnet": ResNeXt,
     "efficientnet": EfficientNet,
+    "regnet": RegNet,
+    "resnet": ResNeXt,
 }
 
 

@@ -1,0 +1,13 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_8gf
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2016, 2016], "use_relu": True}],
+        ["mlp", {"dims": [2016, 128], "use_relu": False}],
+      ]
