@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          # Other model names can be found inside regnet.py within
+          # the classy_vision project sub-directory. Please remember
+          # to change HEAD.PARAMS dimension accordingly if you change
+          # to a different model.
+          name: regnet_y_400mf
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [440, 440], "use_relu": True}],
+        ["mlp", {"dims": [440, 128]}]
+      ]

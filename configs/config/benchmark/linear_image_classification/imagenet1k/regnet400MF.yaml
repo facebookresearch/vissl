@@ -1,0 +1,23 @@
+# @package _global_
+config:
+  METERS:
+    accuracy_list:
+      num_list: 1
+      topk: [1, 5]
+  MODEL:
+    EVAL_FEATURES: ["res5"]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          # Other regnet model names can be found in regnet.py inside
+          # classy_vision directory. Remember to change the
+          # dimensions in HEAD.PARAMS below accordingly.
+          name: regnet_y_400mf
+      LINEAR_FEAT_POOL_OPS: [
+          ["AdaptiveAvgPool2d", [[6, 5]]],
+      ]
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 440, "dims": [8640, 1000]}],
+      ]
