@@ -31,6 +31,66 @@ vissl.data.ssl_transforms module
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: vissl.data.ssl_transforms.img_patches_tensor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_color_distortion
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_gaussian_blur
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_random_photometric
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_to_lab_tensor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_to_multicrop
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_to_patches_and_image
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_to_raw_tensor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_replicate_pil
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_rotate_pil
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.pil_photometric_transforms_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.shuffle_img_patches
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 vissl.data.data\_helper module
 ---------------------------------------

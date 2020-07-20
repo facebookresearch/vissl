@@ -47,7 +47,7 @@ def build_retrieval_model(cfg):
         init_weights_path = cfg.MODEL.PARAMS_FILE.PATH
         logging.info(f"Initializing model from: {init_weights_path}")
         weights = torch.load(init_weights_path, map_location=torch.device("cuda"))
-        skip_layers = cfg.MODEL.PARAMS_FILE.get("SKIP_LAYERS", None)
+        skip_layers = cfg.MODEL.PARAMS_FILE.get("SKIP_LAYERS", [])
         replace_prefix = cfg.MODEL.PARAMS_FILE.get("REMOVE_PREFIX", None)
         append_prefix = cfg.MODEL.PARAMS_FILE.get("APPEND_PREFIX", None)
         state_dict_key_name = cfg.MODEL.PARAMS_FILE.get("STATE_DICT_KEY_NAME", None)

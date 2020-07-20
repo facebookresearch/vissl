@@ -220,7 +220,7 @@ class SelfSupervisionTask(ClassificationTask):
 
         if os.path.exists(init_weights_path):
             weights = torch.load(init_weights_path, map_location=torch.device("cpu"))
-            skip_layers = params_from_file.get("SKIP_LAYERS", None)
+            skip_layers = params_from_file.get("SKIP_LAYERS", [])
             replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
             append_prefix = params_from_file.get("APPEND_PREFIX", None)
             state_dict_key_name = params_from_file.get("STATE_DICT_KEY_NAME", None)

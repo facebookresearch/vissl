@@ -329,7 +329,11 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             checkpoint_state_dict = {}
             checkpoint_state_dict.update(state["model"]["trunk"])
             checkpoint_state_dict.update(state["model"]["heads"])
-            print_loaded_dict_info(model_state_dict, checkpoint_state_dict)
+            params_from_file = self.config["PARAMS_FILE"]
+            skip_layers = params_from_file.get("SKIP_LAYERS", [])
+            print_loaded_dict_info(
+                model_state_dict, checkpoint_state_dict, skip_layers=skip_layers
+            )
 
     @property
     def num_classes(self):

@@ -1,12 +1,25 @@
 #!/bin/bash -e
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-CFG=( "$@" )
+# ----------------------------------- USAGE ----------------------------------------------------- #
+# TYPE=engine ./dev/low_resource_1gpu_train_wrapper.sh config=pretrain/swav/swav_8node_resnet
+# ----------------------------------------------------------------------------------------------- #
 
 SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SRC_DIR=$(dirname "${SRC_DIR}")
-BINARY="python ${SRC_DIR}/tools/distributed_train.py"
 CHECKPOINT_DIR=$(mktemp -d)
+TYPE=${TYPE-engine}   # engine | svm | cluster
+CFG=( "$@" )
+
+########################## Select the binary ##################################
+if [ "$TYPE" = "engine" ]; then
+  BNAME=distributed_train
+elif [ "$TYPE" = "cluster" ]; then
+  BNAME=cluster_features_and_label
+else
+  BNAME=train_svm
+fi
+BINARY="python ${SRC_DIR}/tools/${BNAME}.py"
 
 echo "========================================================================"
 echo "SRC_DIR: $SRC_DIR"

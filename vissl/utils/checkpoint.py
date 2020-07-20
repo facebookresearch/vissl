@@ -13,8 +13,7 @@ from vissl.utils.io import makedir
 
 
 def is_training_finished(cfg, checkpoint_folder):
-    # given the checkpoint folder,
-    # - we check that there's not already a final checkpoint
+    # given the checkpoint folder, we check that there's not already a final checkpoint
     if not cfg["CHECKPOINT"]["OVERWRITE_EXISTING"] and has_final_checkpoint(
         checkpoint_folder
     ):
@@ -151,7 +150,7 @@ def print_state_dict_shapes(state_dict):
         logging.info(f"{param_tensor}:\t{state_dict[param_tensor].size()}")
 
 
-def print_loaded_dict_info(model_state_dict, state_dict, skip_layers=None):
+def print_loaded_dict_info(model_state_dict, state_dict, skip_layers):
     """
     Print what layers were loaded, what layers were ignored/skipped/not found
     when initializing a model from a specified model params file.
@@ -160,7 +159,7 @@ def print_loaded_dict_info(model_state_dict, state_dict, skip_layers=None):
     max_len_model = max(len(key) for key in model_state_dict.keys())
     # go through the model layers and print what layer is loaded/not loaded/skipped
     for layername in model_state_dict.keys():
-        if skip_layers and len(skip_layers) > 0 and layername.find(skip_layers) >= 0:
+        if len(skip_layers) > 0 and any(item in layername for item in skip_layers):
             logging.info(f"Ignored layer:\t{layername}")
             continue
         if layername in state_dict:
@@ -256,7 +255,7 @@ def init_model_from_weights(
     model,
     state_dict,
     state_dict_key_name,
-    skip_layers=None,
+    skip_layers,
     replace_prefix=None,
     append_prefix=None,
 ):
@@ -270,7 +269,7 @@ def init_model_from_weights(
         model (object): instance of base_ssl_model
         state_dict (Dict): torch.load() of user provided params file path.
         state_dict_key_name (string): key name containing the model state dict
-        skip_layers (string): layer names with this key are not copied
+        skip_layers (List(string)): layer names with this key are not copied
         replace_prefix (string): remove these prefixes from the layer names (executed first)
         append_prefix (string): append the prefix to the layer names
                                 (executed after replace_prefix)
@@ -297,12 +296,11 @@ def init_model_from_weights(
         if append_prefix:
             state_dict = append_module_prefix(state_dict, append_prefix)
         check_model_compatibilty(config, state_dict)
-
     # load the checkpoint now
     all_layers = model.state_dict()
     local_rank, _ = get_machine_local_and_dist_rank()
     for layername in all_layers.keys():
-        if skip_layers and len(skip_layers) > 0 and layername.find(skip_layers) >= 0:
+        if len(skip_layers) > 0 and any(item in layername for item in skip_layers):
             continue
         if layername in state_dict:
             param = state_dict[layername]

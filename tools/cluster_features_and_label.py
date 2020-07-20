@@ -11,12 +11,12 @@ import sys
 
 import faiss
 import numpy as np
+from distributed_train import launch_distributed
 from hydra.experimental import compose, initialize_config_module
 from vissl.data import build_dataset
+from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
-from vissl.utils.collect_env import collect_env_info
-from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
+from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging
 from vissl.utils.misc import merge_features, set_seeds
@@ -103,13 +103,13 @@ def main(args, cfg):
 
     # set seeds
     logging.info("Setting seed....")
-    set_seeds(cfg)
+    set_seeds(cfg, args.node_id)
 
-    # print the training settings and system settings
-    local_rank, _ = get_machine_local_and_dist_rank()
-    if local_rank == 0:
-        print_cfg(cfg)
-        logging.info("System config:\n{}".format(collect_env_info()))
+    # extract the features. We enable the feature extraction as well.
+    args.extract_features = True
+    launch_distributed(cfg, args, hook_generator=default_hook_generator)
+
+    # cluster the extracted features
     cluster_features_and_label(args, cfg)
 
 
@@ -121,6 +121,12 @@ def hydra_main(overrides):
 
 
 if __name__ == "__main__":
+    """
+    Example usage:
+
+    `python tools/cluster_features_and_label.py \
+        config=pretrain/clusterfit/cluster_features_resnet_8gpu_rotation_in1k`
+    """
     overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
     hydra_main(overrides=overrides)

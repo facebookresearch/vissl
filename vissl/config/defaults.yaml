@@ -206,7 +206,7 @@ config:
       STATE_DICT_KEY_NAME: "classy_state_dict"
       # specify what layer should not be loaded. Layer names with this key are not copied
       # By default, set to BatchNorm stats "num_batches_tracked" to be skipped.
-      SKIP_LAYERS: "num_batches_tracked"
+      SKIP_LAYERS: ["num_batches_tracked"]
       ####### If loading a non-VISSL trained model, set the following two args carefully #########
       # to make the checkpoint compatible with VISSL, if you need to remove some names
       # from the checkpoint keys, specify the name
@@ -350,6 +350,7 @@ config:
   CLUSTERFIT:
     OUTPUT_DIR: ""
     NUM_CLUSTERS: 16000
+    # currently we only support faiss backend for clustering.
     CLUSTER_BACKEND: "faiss"
     # how many iterations to use for faiss
     N_ITER: 50

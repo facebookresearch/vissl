@@ -19,8 +19,7 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_TO_LOCAL_DISK: False
   MODEL:
     FEATURE_EVAL_MODE: True
     EXTRACT_FEATURES_ONLY: True
@@ -39,6 +38,7 @@ config:
     PARAMS_FILE:
       PATH: "specify weights to use for clustering."
       STATE_DICT_KEY_NAME: classy_state_dict
+      SKIP_LAYERS: ["num_batches_tracked", "heads"]
       # REMOVE_PREFIX: "trunk."
   DISTRIBUTED:
     NUM_NODES: 1

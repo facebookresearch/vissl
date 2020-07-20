@@ -42,6 +42,9 @@ def main(args, config):
     print_cfg(config)
 
     # extract the features
+    assert (
+        args.extract_features
+    ), "Please set extract_features=True to enable feature extraction"
     launch_distributed(config, args, hook_generator=default_hook_generator)
 
     # get the layers for which we will train svm
