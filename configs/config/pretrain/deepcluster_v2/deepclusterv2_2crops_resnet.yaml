@@ -60,10 +60,10 @@ config:
     AMP_PARAMS:
       USE_AMP: True
       AMP_ARGS: {"opt_level": "O1"}
-  CRITERION:
+  LOSS:
     name: deepclusterv2_loss
-    NUM_TRAIN_SAMPLES: 1281167
-    DEEPCLUSTERV2_LOSS:
+    deepclusterv2_loss:
+      NUM_TRAIN_SAMPLES: 1281167
       BATCHSIZE_PER_REPLICA: 64
       NMB_CROPS: 2
       TEMPERATURE: 0.1

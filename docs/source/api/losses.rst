@@ -1,61 +1,61 @@
-vissl.ssl_criterions package
+vissl.ssl_losses package
 ===================================
 
-.. automodule:: vissl.ssl_criterions
+.. automodule:: vissl.ssl_losses
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_criterions.simclr_info_nce_loss
+vissl.ssl_losses.simclr_info_nce_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_criterions.simclr_info_nce_loss
+.. automodule:: vissl.ssl_losses.simclr_info_nce_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_criterions.multicrop_simclr_info_nce_loss
+vissl.ssl_losses.multicrop_simclr_info_nce_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_criterions.multicrop_simclr_info_nce_loss
+.. automodule:: vissl.ssl_losses.multicrop_simclr_info_nce_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_criterions.swav_loss
+vissl.ssl_losses.swav_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_criterions.swav_loss
+.. automodule:: vissl.ssl_losses.swav_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_criterions.nce_loss
+vissl.ssl_losses.nce_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_criterions.nce_loss
+.. automodule:: vissl.ssl_losses.nce_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_criterions.deepclusterv2_loss
+vissl.ssl_losses.deepclusterv2_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_criterions.deepclusterv2_loss
+.. automodule:: vissl.ssl_losses.deepclusterv2_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_criterions.cross_entropy_multiple_output_single_target
+vissl.ssl_losses.cross_entropy_multiple_output_single_target
 -------------------------------------------------------------------
 
-.. automodule:: vissl.ssl_criterions.cross_entropy_multiple_output_single_target
+.. automodule:: vissl.ssl_losses.cross_entropy_multiple_output_single_target
     :members:
     :undoc-members:
     :show-inheritance:

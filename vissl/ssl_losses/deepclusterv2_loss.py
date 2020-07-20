@@ -22,12 +22,13 @@ class DeepClusterV2Loss(ClassyLoss):
     """
     """
 
-    def __init__(self, config):
+    def __init__(self, loss_config):
         super().__init__()
 
-        size_dataset = config["NUM_TRAIN_SAMPLES"]
+        self.loss_config = loss_config
+        size_dataset = self.loss_config.NUM_TRAIN_SAMPLES
         size_memory_per_process = int(math.ceil(size_dataset * 1.0 / get_world_size()))
-        self.loss_config = config.DEEPCLUSTERV2_LOSS
+
         if self.loss_config.DROP_LAST:
             size_memory_per_process -= (
                 size_memory_per_process % self.loss_config.BATCHSIZE_PER_REPLICA
@@ -59,11 +60,11 @@ class DeepClusterV2Loss(ClassyLoss):
                 "centroids" + str(i), torch.rand(k, self.embedding_dim)
             )
 
-        self.criterion = nn.CrossEntropyLoss(ignore_index=-100)
+        self.cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=-100)
 
     @classmethod
-    def from_config(cls, config):
-        return cls(config)
+    def from_config(cls, loss_config):
+        return cls(loss_config)
 
     def forward(self, output, idx):
         assert len(output) == 1
@@ -76,7 +77,7 @@ class DeepClusterV2Loss(ClassyLoss):
                 torch.mm(output, getattr(self, "centroids" + str(i)).t())
                 / self.temperature
             )
-            loss += self.criterion(scores, self.assignments[i][idx])
+            loss += self.cross_entropy_loss(scores, self.assignments[i][idx])
         loss /= self.nmb_heads
 
         self.update_memory_bank(output, idx)

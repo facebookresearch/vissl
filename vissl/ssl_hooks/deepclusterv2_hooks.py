@@ -18,7 +18,7 @@ class InitMemoryHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_start(self, task) -> None:
-        if not task.config["CRITERION"]["name"] == "deepclusterv2_loss":
+        if not task.config["LOSS"]["name"] == "deepclusterv2_loss":
             return
         if task.train_phase_idx >= 0:
             return
@@ -40,6 +40,6 @@ class ClusterMemoryHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_phase_start(self, task) -> None:
-        if not task.config["CRITERION"]["name"] == "deepclusterv2_loss":
+        if not task.config["LOSS"]["name"] == "deepclusterv2_loss":
             return
         task.loss.cluster_memory()

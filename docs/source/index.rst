@@ -90,7 +90,7 @@ from designing a new self-supervised task to evaluating the learned representati
    vissl_modules/train
    vissl_modules/models
    vissl_modules/optimizer
-   vissl_modules/criterions
+   vissl_modules/losses
    vissl_modules/meters
    vissl_modules/hooks
    vissl_modules/data
@@ -103,7 +103,7 @@ from designing a new self-supervised task to evaluating the learned representati
    extend_modules/train_step
    extend_modules/hooks
    extend_modules/optimizer
-   extend_modules/criterions
+   extend_modules/losses
    extend_modules/meters
    extend_modules/models
    extend_modules/custom_datasets

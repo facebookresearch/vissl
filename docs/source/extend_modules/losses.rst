@@ -1,4 +1,4 @@
-Add new Criterions
+Add new Loss to VISSL
 ====================
 
 todo

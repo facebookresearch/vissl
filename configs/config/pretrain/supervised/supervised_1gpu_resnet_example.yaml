@@ -50,7 +50,7 @@ config:
       PARAMS: [
         ["mlp", {"dims": [2048, 1000]}],
       ]
-  CRITERION:
+  LOSS:
       name: cross_entropy_multiple_output_single_target
       ignore_index: -1
   OPTIMIZER:

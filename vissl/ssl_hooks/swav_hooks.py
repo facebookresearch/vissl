@@ -21,7 +21,7 @@ class SwAVUpdateQueueScoresHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_forward(self, task) -> None:
-        if not task.config["CRITERION"]["name"] == "swav_loss":
+        if not task.config["LOSS"]["name"] == "swav_loss":
             return
         if not task.loss.swav_criterion.use_queue:
             return
@@ -45,9 +45,9 @@ class NormalizePrototypesHook(ClassyHook):
         """
         Optionally normalize prototypes
         """
-        if not task.config["CRITERION"]["name"] == "swav_loss":
+        if not task.config["LOSS"]["name"] == "swav_loss":
             return
-        if not task.config.CRITERION.SWAV_LOSS.NORMALIZE_LAST_LAYER:
+        if not task.config.LOSS["swav_loss"].NORMALIZE_LAST_LAYER:
             return
         with torch.no_grad():
             try:

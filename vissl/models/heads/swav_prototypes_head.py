@@ -7,7 +7,7 @@ class SwAVPrototypesHead(nn.Module):
     """
     SwAV head used in https://arxiv.org/pdf/2006.09882.pdf paper.
 
-    The head is composed of 2 parts:
+    The head is composed of 2 parts
         1) projection of features to lower dimension like 128
         2) feature classification into clusters (also called prototypes)
 

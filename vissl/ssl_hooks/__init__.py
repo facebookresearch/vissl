@@ -56,9 +56,9 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             cfg.PERF_STAT_FREQUENCY if cfg.PERF_STAT_FREQUENCY > 0 else None
         )
         hooks.append(LogPerfTimeMetricsHook(perf_stat_freq))
-    if cfg.CRITERION.name == "swav_loss":
+    if cfg.LOSS.name == "swav_loss":
         hooks.extend([SwAVUpdateQueueScoresHook(), NormalizePrototypesHook()])
-    if cfg.CRITERION.name == "deepclusterv2_loss":
+    if cfg.LOSS.name == "deepclusterv2_loss":
         hooks.extend([InitMemoryHook(), ClusterMemoryHook()])
     if cfg.MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])

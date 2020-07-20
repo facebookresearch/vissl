@@ -74,8 +74,9 @@ config:
     PARAMS_FILE:
       PATH: "specify model paths here"
       STATE_DICT_KEY_NAME: model_state_dict
-  CRITERION:
-      name: cross_entropy_multiple_output_single_target
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
       name: sgd

@@ -190,16 +190,20 @@ class SelfSupervisionTask(ClassificationTask):
         # in some cases like memory bank, we need to store the size of data
         # as we use it to allocate memory. Hence we set that parameter here.
         logging.info("Building loss...")
-        for split in self.available_splits:
-            if split == "TRAIN":
-                self.config["CRITERION"]["NUM_TRAIN_SAMPLES"] = len(
-                    self.datasets["TRAIN"]
-                )
-            if split == "TEST":
-                self.config["CRITERION"]["NUM_TRAIN_SAMPLES"] = len(
-                    self.datasets["TEST"]
-                )
-        loss = build_loss(self.config["CRITERION"])
+        loss_name = self.config.LOSS["name"]
+        assert loss_name in list(self.config.LOSS.keys()), (
+            f"Loss {loss_name} params unknown. The loss name and the param dict "
+            f"key name should match. Known: {list(self.config.LOSS.keys())}"
+        )
+        loss_config = self.config.LOSS[loss_name]
+        if "NUM_TRAIN_SAMPLES" in loss_config.keys():
+            for split in self.available_splits:
+                if split == "TRAIN":
+                    loss_config["NUM_TRAIN_SAMPLES"] = len(self.datasets["TRAIN"])
+                if split == "TEST":
+                    loss_config["NUM_TRAIN_SAMPLES"] = len(self.datasets["TEST"])
+        loss_config["name"] = loss_name
+        loss = build_loss(loss_config)
         return loss
 
     def _build_meters(self):
@@ -421,9 +425,9 @@ class SelfSupervisionTask(ClassificationTask):
             self.iteration = self.checkpoint["iteration"]
             self.local_iteration_num = self.checkpoint["iteration_num"]
             vissl_state_dict = self.checkpoint.get("classy_state_dict")
-            if "criterion" in self.checkpoint:
-                self.loss.load_state_dict(self.checkpoint["criterion"])
-                logging.info("======Loaded criterion state from checkpoint======")
+            if "loss" in self.checkpoint:
+                self.loss.load_state_dict(self.checkpoint["loss"])
+                logging.info("======Loaded loss state from checkpoint======")
 
         return self._update_classy_state(device, vissl_state_dict)
 

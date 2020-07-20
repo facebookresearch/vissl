@@ -7,6 +7,7 @@ This is the train step that"s most commonly used in most of the model trainings.
 from typing import Any, Dict, NamedTuple
 
 import torch
+import torch.nn.modules.loss as torch_losses
 from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.generic.util import recursive_copy_to_gpu
 from classy_vision.tasks import ClassyTask
@@ -96,6 +97,9 @@ def standard_train_step(task):  # NOQA
         # Forward pass of the model
         with PerfTimer("forward", perf_stats):
             model_output = task.model(sample["input"])
+        # support for pytorch losses where the loss input is not a list.
+        if hasattr(torch_losses, task.config.LOSS.name) and len(model_output) == 1:
+            model_output = model_output[0]
         target = sample["target"]
 
         # run hooks on forward pass

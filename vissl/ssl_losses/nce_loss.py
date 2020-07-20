@@ -26,24 +26,25 @@ class NCELossWithMemory(ClassyLoss):
     This class supports training using both NCE and CrossEntropy (InfoNCE).
     """
 
-    def __init__(self, config):
+    def __init__(self, loss_config):
         super(NCELossWithMemory, self).__init__()
 
-        memory_params = config.NCE_LOSS.MEMORY_PARAMS
-        memory_params.MEMORY_SIZE = config["NUM_TRAIN_SAMPLES"]
+        self.loss_config = loss_config
+        memory_params = self.loss_config.MEMORY_PARAMS
+        memory_params.MEMORY_SIZE = self.loss_config.NUM_TRAIN_SAMPLES
         assert is_pos_int(
             memory_params.MEMORY_SIZE
         ), f"Memory size must be positive: {memory_params.MEMORY_SIZE}"
 
-        assert config.NCE_LOSS.LOSS_TYPE in [
+        assert self.loss_config.LOSS_TYPE in [
             "nce",
             "cross_entropy",
-        ], f"Supported types are nce/cross_entropy. Found {config.NCE_LOSS.LOSS_TYPE}"
+        ], f"Supported types are nce/cross_entropy. Found {self.loss_config.LOSS_TYPE}"
 
-        self.loss_type = config.NCE_LOSS.LOSS_TYPE
+        self.loss_type = self.loss_config.LOSS_TYPE
 
         self.update_memory_on_forward = memory_params.UPDATE_MEM_ON_FORWARD
-        self.update_memory_emb_index = config.NCE_LOSS.UPDATE_MEM_WITH_EMB_INDEX
+        self.update_memory_emb_index = self.loss_config.UPDATE_MEM_WITH_EMB_INDEX
         if self.update_memory_on_forward is False:
             # we have multiple embeddings used in NCE
             # but we update memory with only one of them
@@ -53,28 +54,28 @@ class NCELossWithMemory(ClassyLoss):
         # memory bank negatives
         self.nce_average = NCEAverage(
             memory_params=memory_params,
-            negative_sampling_params=config.NCE_LOSS.NEGATIVE_SAMPLING_PARAMS,
-            T=config.NCE_LOSS.TEMPERATURE,
-            Z=config.NCE_LOSS.NORM_CONSTANT,
+            negative_sampling_params=self.loss_config.NEGATIVE_SAMPLING_PARAMS,
+            T=self.loss_config.TEMPERATURE,
+            Z=self.loss_config.NORM_CONSTANT,
             loss_type=self.loss_type,
         )
 
         if self.loss_type == "nce":
-            # setup the actual NCE criterion
-            self.nce_criterion = NCECriterion(config["NUM_TRAIN_SAMPLES"])
+            # setup the actual NCE loss
+            self.nce_criterion = NCECriterion(self.loss_config.NUM_TRAIN_SAMPLES)
         elif self.loss_type == "cross_entropy":
             # cross-entropy loss. Also called InfoNCE
             self.xe_criterion = nn.CrossEntropyLoss()
 
         # other constants
-        self.normalize_embedding = config.NCE_LOSS.NORM_EMBEDDING
-        self.loss_weights = config.NCE_LOSS.LOSS_WEIGHTS
+        self.normalize_embedding = self.loss_config.NORM_EMBEDDING
+        self.loss_weights = self.loss_config.LOSS_WEIGHTS
         self.init_sync_memory = False
-        self.ignore_index = config.get("ignore_index", -1)
+        self.ignore_index = self.loss_config.get("ignore_index", -1)
 
     @classmethod
-    def from_config(cls, config):
-        return cls(config)
+    def from_config(cls, loss_config):
+        return cls(loss_config)
 
     def forward(self, output, target):
         assert isinstance(

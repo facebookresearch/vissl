@@ -6,18 +6,18 @@ import pprint
 import numpy as np
 import torch
 from classy_vision.losses import register_loss
-from vissl.ssl_criterions.simclr_info_nce_loss import (
-    DistributedSimclrInfoNCELoss,
+from vissl.ssl_losses.simclr_info_nce_loss import (
     SimclrInfoNCECriterion,
+    SimclrInfoNCELoss,
 )
 
 
 @register_loss("multicrop_simclr_info_nce_loss")
-class DistributedMultiCropSimclrInfoNCELoss(DistributedSimclrInfoNCELoss):
-    def __init__(self, config, device: str = "gpu"):
-        super(DistributedSimclrInfoNCELoss, self).__init__()
+class MultiCropSimclrInfoNCELoss(SimclrInfoNCELoss):
+    def __init__(self, loss_config, device: str = "gpu"):
+        super(SimclrInfoNCELoss, self).__init__()
 
-        self.loss_config = config.SIMCLR_INFO_NCE_LOSS
+        self.loss_config = loss_config
         # loss constants
         self.temperature = self.loss_config.TEMPERATURE
         self.buffer_params = self.loss_config.BUFFER_PARAMS

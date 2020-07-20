@@ -144,60 +144,58 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
 
 
 def assert_hydra_conf(cfg):
-    # some inference for the Info NCE loss.
-    if "simclr_info_nce_loss" in cfg.CRITERION.name:
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE = (
+    # some inference for the Info-NCE loss.
+    if "simclr_info_nce_loss" in cfg.LOSS.name:
+        cfg.LOSS[cfg.LOSS.name]["BUFFER_PARAMS"]["WORLD_SIZE"] = (
             cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         )
 
-        world_size = cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE
+        world_size = cfg.LOSS[cfg.LOSS.name]["BUFFER_PARAMS"]["WORLD_SIZE"]
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         num_positives = 2  # simclr uses 2 copies per image
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
+        cfg.LOSS[cfg.LOSS.name]["BUFFER_PARAMS"]["EFFECTIVE_BATCH_SIZE"] = (
             num_positives * batch_size * world_size
         )
 
     # multicrop version of simclr loss
-    if "multicrop_simclr_info_nce_loss" in cfg.CRITERION.name:
-        world_size = cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE
+    if cfg.LOSS.name == "multicrop_simclr_info_nce_loss":
+        world_size = cfg.LOSS.multicrop_simclr_info_nce_loss.BUFFER_PARAMS.WORLD_SIZE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         total_nmb_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_nmb_crops"]
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
+        cfg.LOSS.multicrop_simclr_info_nce_loss.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
             batch_size * world_size
         )
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.MULTI_CROP_PARAMS.NMB_CROPS = total_nmb_crops
+        cfg.LOSS.multicrop_simclr_info_nce_loss.MULTI_CROP_PARAMS.NMB_CROPS = (
+            total_nmb_crops
+        )
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the DeepCluster-v2 loss.
-    if cfg.CRITERION.name == "deepclusterv2_loss":
-        cfg.CRITERION.DEEPCLUSTERV2_LOSS.DROP_LAST = cfg.DATA.TRAIN.DROP_LAST
-        cfg.CRITERION.DEEPCLUSTERV2_LOSS.BATCHSIZE_PER_REPLICA = (
+    if cfg.LOSS.name == "deepclusterv2_loss":
+        cfg.LOSS.deepclusterv2_loss.DROP_LAST = cfg.DATA.TRAIN.DROP_LAST
+        cfg.LOSS.deepclusterv2_loss.BATCHSIZE_PER_REPLICA = (
             cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         )
-        cfg.CRITERION.DEEPCLUSTERV2_LOSS.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
+        cfg.LOSS.deepclusterv2_loss.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
             "total_nmb_crops"
         ]
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the SwAV loss.
-    if cfg.CRITERION.name == "swav_loss":
+    if cfg.LOSS.name == "swav_loss":
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
         assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
-        cfg.CRITERION.SWAV_LOSS.NMB_PROTOTYPES = cfg.MODEL.HEAD.PARAMS[0][1][
-            "nmb_clusters"
-        ]
-        cfg.CRITERION.SWAV_LOSS.EMBEDDING_DIM = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
-        cfg.CRITERION.SWAV_LOSS.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
-            "total_nmb_crops"
-        ]
+        cfg.LOSS.swav_loss.NMB_PROTOTYPES = cfg.MODEL.HEAD.PARAMS[0][1]["nmb_clusters"]
+        cfg.LOSS.swav_loss.EMBEDDING_DIM = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
+        cfg.LOSS.swav_loss.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0]["total_nmb_crops"]
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         batch_size *= world_size
-        queue_length = cfg.CRITERION.SWAV_LOSS.QUEUE.QUEUE_LENGTH
+        queue_length = cfg.LOSS.swav_loss.QUEUE.QUEUE_LENGTH
         queue_length -= queue_length % batch_size
-        cfg.CRITERION.SWAV_LOSS.QUEUE.QUEUE_LENGTH = queue_length
-        cfg.CRITERION.SWAV_LOSS.QUEUE.LOCAL_QUEUE_LENGTH = queue_length // world_size
+        cfg.LOSS.swav_loss.QUEUE.QUEUE_LENGTH = queue_length
+        cfg.LOSS.swav_loss.QUEUE.LOCAL_QUEUE_LENGTH = queue_length // world_size
 
     # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
     # to turn this automatic scaling off,

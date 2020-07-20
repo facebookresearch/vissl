@@ -64,12 +64,12 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
-  CRITERION:
-      name: simclr_info_nce_loss
-      SIMCLR_INFO_NCE_LOSS:
-        TEMPERATURE: 0.1
-        BUFFER_PARAMS:
-          EMBEDDING_DIM: 128
+  LOSS:
+    name: simclr_info_nce_loss
+    simclr_info_nce_loss:
+      TEMPERATURE: 0.1
+      BUFFER_PARAMS:
+        EMBEDDING_DIM: 128
   OPTIMIZER:
       name: sgd
       use_larc: True

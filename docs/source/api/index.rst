@@ -6,7 +6,7 @@ API Documentation
     engine
     meters
     models
-    criterions
+    losses
     hooks
     optimizers
     tasks

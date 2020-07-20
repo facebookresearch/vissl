@@ -195,7 +195,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             checkpoint_task = {
                 "phase_idx": phase_idx,
                 "iteration": task.iteration,
-                "criterion": task.loss.state_dict(),
+                "loss": task.loss.state_dict(),
                 "iteration_num": task.local_iteration_num,
                 "train_phase_idx": train_phase_idx,
                 "classy_state_dict": classy_state_dict,

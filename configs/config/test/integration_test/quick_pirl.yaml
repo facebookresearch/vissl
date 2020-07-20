@@ -72,24 +72,24 @@ config:
         ["patches", ["flatten"]], # feature layer to extract from second input "patches"
         ["images", ["flatten"]],  # feature layer to extract from first input "images"
     ]
-  CRITERION:
-      name: nce_loss_with_memory
+  LOSS:
+    name: nce_loss_with_memory
+    nce_loss_with_memory:
       ignore_index: -1
-      NCE_LOSS:
-        NORM_EMBEDDING: True
-        TEMPERATURE: 0.07
-        LOSS_WEIGHTS: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
-        NORM_CONSTANT: -1
-        NEGATIVE_SAMPLING_PARAMS:
-          NUM_NEGATIVES: 4096
-          TYPE: random
-        MEMORY_PARAMS:
-          MEMORY_SIZE: -1
-          EMBEDDING_DIM: 128
-          MOMENTUM: 0.5
-          NORM_INIT: True
-          UPDATE_MEM_ON_FORWARD: False
-        UPDATE_MEM_WITH_EMB_INDEX: 1
+      NORM_EMBEDDING: True
+      TEMPERATURE: 0.07
+      LOSS_WEIGHTS: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
+      NORM_CONSTANT: -1
+      NEGATIVE_SAMPLING_PARAMS:
+        NUM_NEGATIVES: 4096
+        TYPE: random
+      MEMORY_PARAMS:
+        MEMORY_SIZE: -1
+        EMBEDDING_DIM: 128
+        MOMENTUM: 0.5
+        NORM_INIT: True
+        UPDATE_MEM_ON_FORWARD: False
+      UPDATE_MEM_WITH_EMB_INDEX: 1
   OPTIMIZER:
       name: sgd
       weight_decay: 0.0001

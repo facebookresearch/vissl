@@ -61,18 +61,18 @@ config:
     AMP_PARAMS:
       USE_AMP: True
       AMP_ARGS: {"opt_level": "O1"}
-  CRITERION:
-      name: swav_loss
-      SWAV_LOSS:
-        TEMPERATURE: 0.1
-        USE_DOUBLE_PRECISION: False
-        NORMALIZE_LAST_LAYER: True
-        NMB_ITERS: 3
-        EPSILON: 0.05
-        CROPS_FOR_ASSIGN: [0, 1]
-        QUEUE:
-          QUEUE_LENGTH: 0
-          START_ITER: 0
+  LOSS:
+    name: swav_loss
+    swav_loss:
+      TEMPERATURE: 0.1
+      USE_DOUBLE_PRECISION: False
+      NORMALIZE_LAST_LAYER: True
+      NMB_ITERS: 3
+      EPSILON: 0.05
+      CROPS_FOR_ASSIGN: [0, 1]
+      QUEUE:
+        QUEUE_LENGTH: 0
+        START_ITER: 0
   OPTIMIZER:
       name: sgd
       use_larc: True

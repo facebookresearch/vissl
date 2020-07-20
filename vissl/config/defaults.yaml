@@ -102,7 +102,7 @@ config:
       topk: [1]
 
   # ----------------------------------------------------------------------------------- #
-  # MACHINE (cpu, gpu, data workers)
+  # MACHINE (cpu, gpu)
   # ----------------------------------------------------------------------------------- #
   MACHINE:
     DEVICE: "gpu"
@@ -227,23 +227,33 @@ config:
       APPEND_PREFIX: ""
 
   # ----------------------------------------------------------------------------------- #
-  # CRITERION
+  # LOSS
   # ----------------------------------------------------------------------------------- #
-  CRITERION:
+  LOSS:
     name: "CrossEntropyLoss"
-    ignore_index: -1
-    # generic flag to enable L2 normalization in a loss function. Currently supported
-    # for cross_entropy_multiple_output_single_target loss only.
-    normalize_output: false
-    # following parameters are auto-filled before the criterion is created. They are
-    # useful in cases like Memory bank which require allocating the buffer.
-    NUM_TRAIN_SAMPLES: -1    # @auto-filled
-    NUM_TEST_SAMPLES: -1     # @auto-filled
+
+    # ----------------------------------------------------------------------------------- #
+    # Standard PyTorch Cross-Entropy Loss
+    # pass any variables that the loss takes.
+    # ----------------------------------------------------------------------------------- #
+    CrossEntropyLoss:
+      ignore_index: -1
+
+    # ----------------------------------------------------------------------------------- #
+    # Cross-Entropy Loss for multiple input and same target
+    # ----------------------------------------------------------------------------------- #
+    cross_entropy_multiple_output_single_target:
+      weight: null
+      reduction: "mean"
+      ignore_index: -1
+      # generic flag to enable L2 normalization in a loss function. Currently supported
+      # for cross_entropy_multiple_output_single_target loss only.
+      normalize_output: false
 
     # ----------------------------------------------------------------------------------- #
     # NCE LOSS (Noise Contrastive Estimator)
     # ----------------------------------------------------------------------------------- #
-    NCE_LOSS:
+    nce_loss_with_memory:
       # setting below to "cross_entropy" yields the InfoNCE loss
       LOSS_TYPE: "nce"
       NORM_EMBEDDING: true
@@ -262,11 +272,24 @@ config:
         MOMENTUM: 0.5
         NORM_INIT: true
         UPDATE_MEM_ON_FORWARD: true
+      # following parameters are auto-filled before the loss is created.
+      NUM_TRAIN_SAMPLES: -1    # @auto-filled
 
     # ----------------------------------------------------------------------------------- #
     # SimCLR InfoNCE LOSS (Specific to SimCLR https://arxiv.org/abs/2002.05709)
     # ----------------------------------------------------------------------------------- #
-    SIMCLR_INFO_NCE_LOSS:
+    simclr_info_nce_loss:
+      TEMPERATURE: 0.1
+      BUFFER_PARAMS:
+        WORLD_SIZE: 64
+        EMBEDDING_DIM: 128
+        EFFECTIVE_BATCH_SIZE: 4096
+
+    # ----------------------------------------------------------------------------------- #
+    # Multi-crop version of SimCLR InfoNCE LOSS (supports multicrop augmentation proposed
+    # in https://arxiv.org/abs/2006.09882)
+    # ----------------------------------------------------------------------------------- #
+    multicrop_simclr_info_nce_loss:
       TEMPERATURE: 0.1
       BUFFER_PARAMS:
         WORLD_SIZE: 64
@@ -278,7 +301,7 @@ config:
     # ----------------------------------------------------------------------------------- #
     # SwAV LOSS (Specific to SwAV https://arxiv.org/abs/2006.09882)
     # ----------------------------------------------------------------------------------- #
-    SWAV_LOSS:
+    swav_loss:
       EMBEDDING_DIM: 128
       TEMPERATURE: 0.1
       USE_DOUBLE_PRECISION: false
@@ -296,7 +319,7 @@ config:
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#
-    DEEPCLUSTERV2_LOSS:
+    deepclusterv2_loss:
       DROP_LAST: true
       BATCHSIZE_PER_REPLICA: 256
       NMB_CROPS: 2
@@ -306,6 +329,8 @@ config:
       MEMORY_PARAMS:
         CROPS_FOR_MB: [0]
         EMBEDDING_DIM: 128
+      # following parameters are auto-filled before the loss is created.
+      NUM_TRAIN_SAMPLES: -1    # @auto-filled
 
   # ----------------------------------------------------------------------------------- #
   # OPTIMIZER

@@ -80,8 +80,9 @@ config:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: apex
       GROUP_SIZE: 8
-  CRITERION:
-      name: cross_entropy_multiple_output_single_target
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
       name: sgd

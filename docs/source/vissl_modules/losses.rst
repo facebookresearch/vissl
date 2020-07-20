@@ -1,4 +1,4 @@
-Using Criterions
+Using VISSL Loss
 ===============================
 
 

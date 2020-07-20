@@ -1,6 +1,14 @@
 vissl.utils package
 ===========================
 
+vissl.utils.svm_utils module
+---------------------------------------
+
+.. automodule:: vissl.utils.svm_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 vissl.utils.checkpoint module
 ---------------------------------------
 

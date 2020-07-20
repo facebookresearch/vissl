@@ -41,10 +41,10 @@ config:
           DEPTH: 50
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 128]}]]
-  CRITERION:
+  LOSS:
       name: nce_loss_with_memory
-      ignore_index: -1
-      NCE_LOSS:
+      nce_loss_with_memory:
+        ignore_index: -1
         NORM_EMBEDDING: True
         TEMPERATURE: 0.07
         NORM_CONSTANT: -1

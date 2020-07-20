@@ -59,9 +59,9 @@ config:
       USE_AMP: False
       # USE_AMP: True
       AMP_ARGS: {"opt_level": "O1"}
-  CRITERION:
+  LOSS:
       name: simclr_info_nce_loss
-      SIMCLR_INFO_NCE_LOSS:
+      simclr_info_nce_loss:
         TEMPERATURE: 0.1
         BUFFER_PARAMS:
           EMBEDDING_DIM: 128

@@ -57,10 +57,10 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
-  CRITERION:
+  LOSS:
     name: deepclusterv2_loss
-    NUM_TRAIN_SAMPLES: 500
-    DEEPCLUSTERV2_LOSS:
+    deepclusterv2_loss:
+      NUM_TRAIN_SAMPLES: 500
       BATCHSIZE_PER_REPLICA: 64
       NMB_CROPS: 2
       TEMPERATURE: 0.1

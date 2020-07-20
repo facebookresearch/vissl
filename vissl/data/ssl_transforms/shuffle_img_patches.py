@@ -27,11 +27,19 @@ class ShuffleImgPatches(ClassyTransform):
         """
 
         self.perm_file = perm_file
-        assert os.path.exists(perm_file), f"Permutation file NOT found: {perm_file}"
-        self.perms = np.load(perm_file)
+        self.perm_loaded = False
+        self.perms = None
+
+    def _load_perms(self):
+        assert os.path.exists(
+            self.perm_file
+        ), f"Permutation file NOT found: {self.perm_file}"
+        logging.info(f"Loading permutation: {self.perm_file}")
+        self.perms = np.load(self.perm_file)
         if np.min(self.perms) == 1:
             self.perms = self.perms - 1
         logging.info(f"Loaded perm: {self.perms.shape}")
+        self.perm_loaded = True
 
     def __call__(self, input_patches):
         """
@@ -41,7 +49,8 @@ class ShuffleImgPatches(ClassyTransform):
         Args:
             input_patches (List[torch.tensor]): list of torch tensors
         """
-
+        if not self.perm_loaded:
+            self._load_perms()
         perm_index = np.random.randint(self.perms.shape[0])
         shuffled_patches = [
             torch.FloatTensor(input_patches[i]) for i in self.perms[perm_index]

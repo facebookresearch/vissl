@@ -64,6 +64,12 @@ ROOT_CONFIGS = create_valid_input(
     )
 )
 
+ROOT_OSS_CONFIGS = create_valid_input(
+    list_config_files(
+        "config", exclude_folders=["models", "optimization", "object_detection", "fb"]
+    )
+)
+
 UNIT_TEST_CONFIGS = create_valid_input(
     list_config_files("config/test/cpu_test", exclude_folders=None)
 )

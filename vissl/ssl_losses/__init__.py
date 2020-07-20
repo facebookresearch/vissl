@@ -7,5 +7,5 @@ from classy_vision.generic.registry_utils import import_all_modules
 
 FILE_ROOT = Path(__file__).parent
 
-# automatically import any Python files in the transforms/ directory
-import_all_modules(FILE_ROOT, "vissl.ssl_criterions")
+# automatically import any Python files in the ssl_losses/ directory
+import_all_modules(FILE_ROOT, "vissl.ssl_losses")

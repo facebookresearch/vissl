@@ -18,10 +18,10 @@ from torch import nn
 
 @register_loss("swav_loss")
 class SwAVLoss(ClassyLoss):
-    def __init__(self, config):
+    def __init__(self, loss_config):
         super().__init__()
 
-        self.loss_config = config.SWAV_LOSS
+        self.loss_config = loss_config
         self.queue_start_iter = self.loss_config.QUEUE.START_ITER
         self.swav_criterion = SwAVCriterion(
             self.loss_config.TEMPERATURE,

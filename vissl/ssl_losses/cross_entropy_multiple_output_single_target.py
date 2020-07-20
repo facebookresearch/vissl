@@ -8,32 +8,33 @@ from torch import nn
 
 @register_loss("cross_entropy_multiple_output_single_target")
 class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
-    def __init__(self, config):
-        """Intializer for the sum cross-entropy loss. For a single
+    def __init__(self, loss_config):
+        """
+        Intializer for the sum cross-entropy loss. For a single
         tensor, this is equivalent to the cross-entropy loss. For a
         list of tensors, this computes the sum of the cross-entropy
         losses for each tensor in the list against the target.
 
         Config params:
-        "weight": weight of sample, optional
-        "ignore_index": sample should be ignored for loss, optional
-        "reduction": specifies reduction to apply to the output, optional
+            "weight": weight of sample, optional
+            "ignore_index": sample should be ignored for loss, optional
+            "reduction": specifies reduction to apply to the output, optional
         """
         super(CrossEntropyMultipleOutputSingleTargetLoss, self).__init__()
         self._weight = None
         self._ignore_index = -1
         self._losses = torch.nn.modules.ModuleList([])
         self._normalize_output = False
-        if "weight" in config:
-            self._weight = config["weight"]
-        if "ignore_index" in config:
-            self._ignore_index = config["ignore_index"]
-        if "normalize_output" in config:
-            self._normalize_output = config["normalize_output"]
+        if "weight" in loss_config:
+            self._weight = loss_config["weight"]
+        if "ignore_index" in loss_config:
+            self._ignore_index = loss_config["ignore_index"]
+        if "normalize_output" in loss_config:
+            self._normalize_output = loss_config["normalize_output"]
 
     @classmethod
-    def from_config(cls, config):
-        return cls(config)
+    def from_config(cls, loss_config):
+        return cls(loss_config)
 
     def _create_loss_function(self):
         copy_to_gpu = is_on_gpu(self._losses)

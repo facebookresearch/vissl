@@ -15,11 +15,11 @@ from torch import nn
 
 
 @register_loss("simclr_info_nce_loss")
-class DistributedSimclrInfoNCELoss(ClassyLoss):
-    def __init__(self, config, device: str = "gpu"):
-        super(DistributedSimclrInfoNCELoss, self).__init__()
+class SimclrInfoNCELoss(ClassyLoss):
+    def __init__(self, loss_config, device: str = "gpu"):
+        super(SimclrInfoNCELoss, self).__init__()
 
-        self.loss_config = config.SIMCLR_INFO_NCE_LOSS
+        self.loss_config = loss_config
         # loss constants
         self.temperature = self.loss_config.TEMPERATURE
         self.buffer_params = self.loss_config.BUFFER_PARAMS
@@ -28,8 +28,8 @@ class DistributedSimclrInfoNCELoss(ClassyLoss):
         )
 
     @classmethod
-    def from_config(cls, config):
-        return cls(config)
+    def from_config(cls, loss_config):
+        return cls(loss_config)
 
     def forward(self, output, target):
         assert isinstance(

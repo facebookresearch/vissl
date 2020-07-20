@@ -4,8 +4,8 @@
 import vissl.data.ssl_transforms  # NOQA
 import vissl.meters  # NOQA
 import vissl.models  # NOQA
-import vissl.ssl_criterions  # NOQA
 import vissl.ssl_hooks  # NOQA
+import vissl.ssl_losses  # NOQA
 from vissl.ssl_tasks.ssl_task import SelfSupervisionTask
 
 

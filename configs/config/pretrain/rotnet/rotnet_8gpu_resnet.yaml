@@ -55,7 +55,7 @@ config:
           DEPTH: 50
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 4]}]]
-  CRITERION:
+  LOSS:
       name: cross_entropy_multiple_output_single_target
       ignore_index: -1
   OPTIMIZER:

@@ -51,8 +51,9 @@ config:
         ["siamese_concat_view", {"num_towers": 9}],
         ["mlp", {"dims": [9000, 2000]}],    # perm 2K
       ]
-  CRITERION:
-      name: cross_entropy_multiple_output_single_target
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
       name: sgd
