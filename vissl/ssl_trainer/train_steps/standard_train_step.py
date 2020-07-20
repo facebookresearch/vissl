@@ -8,7 +8,7 @@ from typing import Any, Dict, NamedTuple
 
 import torch
 from classy_vision.generic.distributed_util import all_reduce_mean
-from classy_vision.generic.util import recursive_copy_to_gpu
+from classy_vision.generic.util import recursive_copy_to_device
 from classy_vision.tasks import ClassyTask
 from vissl.ssl_hooks import SSLClassyHookFunctions
 from vissl.utils.misc import is_apex_available
@@ -68,7 +68,7 @@ def construct_sample_for_model(batch_data, task):
     # copy sample to GPU recursively
     if task.use_gpu:
         for key, value in sample.items():
-            sample[key] = recursive_copy_to_gpu(value, non_blocking=True)
+            sample[key] = recursive_copy_to_device(value, non_blocking=True)
 
     return sample
 
