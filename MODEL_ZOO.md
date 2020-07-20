@@ -126,11 +126,8 @@ rn50 - in1k - 400ep
 rn50 - in1k - 800ep
 rn50 - in1k - 1000ep
 rn50w2 - in1k - 100ep
-rn50w2 - in1k - 400ep
 rn50w2 - in1k - 1000ep
-rn50w3 - in1k - 100ep
 rn50w3 - in1k - 1000ep
-rn50w4 - in1k - 100ep
 rn50w4 - in1k - 1000ep
 rn101 - in1k - 100ep
 rn101 - in1k - 1000ep
@@ -250,16 +247,14 @@ rn50 - ig1billion
 <!-- simclr -->
 rn50 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50_100ep_simclr_8node_resnet_16_07_20.8edb093e/model_final_checkpoint_phase99.torch
 rn50 - in1k - 200ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50_200ep_simclr_8node_resnet_16_07_20.a816c0ef/model_final_checkpoint_phase199.torch
-rn50 - in1k - 400ep
+rn50 - in1k - 400ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50_400ep_simclr_8node_resnet_16_07_20.36b338ef/model_final_checkpoint_phase399.torch
 rn50 - in1k - 800ep
 rn50 - in1k - 1000ep
 rn50w2 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50w2_100ep_simclr_8node_resnet_16_07_20.05b37ec3/model_final_checkpoint_phase99.torch
 rn50w2 - in1k - 1000ep
-rn50w3 - in1k - 100ep
 rn50w3 - in1k - 1000ep
-rn50w4 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn101_100ep_simclr_8node_resnet_16_07_20.1ff6cb4b/model_final_checkpoint_phase99.torch
 rn50w4 - in1k - 1000ep
-rn101 - in1k - 100ep
+rn101 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn101_100ep_simclr_8node_resnet_16_07_20.1ff6cb4b/model_final_checkpoint_phase99.torch
 rn101 - in1k - 1000ep
 
 <!-- swav -->

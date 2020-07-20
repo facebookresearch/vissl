@@ -30,12 +30,9 @@ config:
           patch_jitter: 21
         - name: ShuffleImgPatches
           perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/hamming_perms_2000_patches_9_max_avg.npy   # perm 2K
-          # perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/hamming_perms_10000_patches_9_max_avg.npy  # perm 10K
-          # perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/naroozi_perms_100_max.npy                  # perm 100
       COLLATE_FUNCTION: siamese_collator
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_TO_LOCAL_DISK: False
   METERS:
     accuracy_list:
       num_list: 1

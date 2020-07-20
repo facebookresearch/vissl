@@ -22,6 +22,7 @@ def siamese_collator(batch):
     batch_size = len(batch)
     data = [x["data"] for x in batch]
     labels = [x["label"] for x in batch]
+    data_valid = torch.BoolTensor([x["data_valid"][0] for x in batch])
 
     output_data, output_label = [], []
     for idx in range(num_data_sources):
@@ -43,6 +44,9 @@ def siamese_collator(batch):
             idx_labels = idx_labels.flatten()
         output_label.append(idx_labels)
 
-    output_batch = {"data": output_data, "label": output_label}
-
+    output_batch = {
+        "data": output_data,
+        "label": output_label,
+        "data_valid": [data_valid],
+    }
     return output_batch

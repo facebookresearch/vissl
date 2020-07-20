@@ -515,8 +515,6 @@ defaults:
   # NPID
   - config/pretrain/npid/models: null
   - config/pretrain/npid/optimizations: null
-  # RotNet
-  - config/pretrain/rotnet/optimization: null
   ######### some benchmark related paths
   - config/benchmark/imagenet1k_fulltune/models: null
   - config/benchmark/linear_image_classification/imagenet1k/models: null
