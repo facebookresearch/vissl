@@ -4,7 +4,7 @@ import logging
 import math
 from typing import Any, Dict
 
-import numpy as np
+import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 
@@ -26,10 +26,14 @@ class ImgPatchesFromTensor(ClassyTransform):
             f"patch_jitter: {patch_jitter}"
         )
 
-    def __call__(self, image):
+    def __call__(self, image: torch.Tensor):
         data = []
         grid_size = int(image.shape[1] / self.grid_side_len)
         patch_size = grid_size - self.patch_jitter
+        jitter = torch.randint(
+            0, self.patch_jitter, (2, self.grid_side_len, self.grid_side_len)
+        )
+
         for i in range(self.grid_side_len):
             for j in range(self.grid_side_len):
                 x_offset = i * grid_size
@@ -37,17 +41,18 @@ class ImgPatchesFromTensor(ClassyTransform):
                 grid_cell = image[
                     :, y_offset : y_offset + grid_size, x_offset : x_offset + grid_size
                 ]
-                y_jitter = np.random.randint(0, self.patch_jitter)
-                x_jitter = np.random.randint(0, self.patch_jitter)
+
                 patch = grid_cell[
                     :,
-                    y_jitter : y_jitter + patch_size,
-                    x_jitter : x_jitter + patch_size,
+                    jitter[1, i, j] : jitter[1, i, j] + patch_size,
+                    jitter[0, i, j] : jitter[0, i, i] + patch_size,
                 ]
                 assert patch.shape[1] == patch_size, "Image not cropped properly"
                 assert patch.shape[2] == patch_size, "Image not cropped properly"
-                # copy patch data so that all patches are different in underlying memory
-                data.append(np.copy(patch))
+
+                # Make sure that a new chunk of memory is created and that we don't rely on
+                # a tensor view
+                data.append(patch.clone())
         return data
 
     @classmethod

@@ -35,8 +35,7 @@ class ImgPilColorDistortion(ClassyTransform):
         self.transforms = pth_transforms.Compose([self.rnd_color_jitter, self.rnd_gray])
 
     def __call__(self, image):
-        transformed_image = self.transforms(image)
-        return transformed_image
+        return self.transforms(image)
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilColorDistortion":
