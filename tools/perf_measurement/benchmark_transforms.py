@@ -4,6 +4,7 @@ import time
 from typing import Callable
 
 import torch
+import torchvision.transforms as transforms
 from PIL import Image
 from vissl.data.ssl_transforms.img_pil_color_distortion import ImgPilColorDistortion
 from vissl.data.ssl_transforms.img_pil_gaussian_blur import ImgPilGaussianBlur
@@ -48,6 +49,11 @@ def testColorDistort():
     benchmark(transform, "Color distortion", requires_pil=True)
 
 
+def testToTensor():
+    transform = transforms.ToTensor()
+    benchmark(transform, "ToTensor", requires_pil=True)
+
+
 def testImgPatch():
     transform = ImgPilToPatchesAndImage()
     benchmark(transform, "Patches", requires_pil=True)
@@ -79,6 +85,7 @@ if __name__ == "__main__":
     print("\n")
     testBlur()
     testColorDistort()
+    testToTensor()
     testImPil2Lab()
     testImgPatch()
     testImgRotate()
