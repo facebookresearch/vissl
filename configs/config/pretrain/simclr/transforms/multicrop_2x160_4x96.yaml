@@ -4,9 +4,9 @@ config:
     TRAIN:
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_nmb_crops: 6
+          total_num_crops: 6
           size_crops: [160, 96]
-          nmb_crops: [2, 4]
+          num_crops: [2, 4]
           crop_scales: [[0.08, 1], [0.05, 0.14]]
         - name: RandomHorizontalFlip
           p: 0.5
@@ -24,8 +24,7 @@ config:
   LOSS:
       name: multicrop_simclr_info_nce_loss
       multicrop_simclr_info_nce_loss:
-        TEMPERATURE: 0.1
-        BUFFER_PARAMS:
-          EMBEDDING_DIM: 128
-        MULTI_CROP_PARAMS:
-          NMB_CROPS: 2
+        temperature: 0.1
+        buffer_params:
+          embedding_dim: 128
+        num_crops: 2

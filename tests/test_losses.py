@@ -24,9 +24,9 @@ set_cpu_device()
 
 BATCH_SIZE = 2048
 EMBEDDING_DIM = 128
-NMB_CROPS = 2
+NUM_CROPS = 2
 BUFFER_PARAMS_STRUCT = namedtuple(
-    "BUFFER_PARAMS_STRUCT", ["EFFECTIVE_BATCH_SIZE", "WORLD_SIZE", "EMBEDDING_DIM"]
+    "BUFFER_PARAMS_STRUCT", ["effective_batch_size", "world_size", "embedding_dim"]
 )
 BUFFER_PARAMS = BUFFER_PARAMS_STRUCT(BATCH_SIZE, 1, EMBEDDING_DIM)
 
@@ -49,20 +49,20 @@ class TestLossesForward(unittest.TestCase):
 
     def test_multicrop_simclr_info_nce_loss(self):
         loss_layer = MultiCropSimclrInfoNCECriterion(
-            buffer_params=BUFFER_PARAMS, temperature=0.1, nmb_crops=NMB_CROPS
+            buffer_params=BUFFER_PARAMS, temperature=0.1, num_crops=NUM_CROPS
         )
-        embedding = torch.ones([BATCH_SIZE * NMB_CROPS, EMBEDDING_DIM])
+        embedding = torch.ones([BATCH_SIZE * NUM_CROPS, EMBEDDING_DIM])
         _ = loss_layer(embedding)
 
     def test_swav_loss(self):
         loss_layer = SwAVCriterion(
             temperature=0.1,
             crops_for_assign=[0, 1],
-            nmb_crops=2,
-            nmb_iters=3,
+            num_crops=2,
+            num_iters=3,
             epsilon=0.05,
             use_double_prec=False,
-            nmb_prototypes=[3000],
+            num_prototypes=[3000],
             local_queue_length=0,
             embedding_dim=EMBEDDING_DIM,
         )

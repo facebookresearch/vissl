@@ -76,20 +76,20 @@ config:
     name: nce_loss_with_memory
     nce_loss_with_memory:
       ignore_index: -1
-      NORM_EMBEDDING: True
-      TEMPERATURE: 0.07
-      LOSS_WEIGHTS: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
-      NORM_CONSTANT: -1
-      NEGATIVE_SAMPLING_PARAMS:
-        NUM_NEGATIVES: 4096
+      norm_embedding: True
+      temperature: 0.07
+      loss_weights: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
+      norm_constant: -1
+      negative_sampling_params:
+        num_negatives: 4096
         TYPE: random
-      MEMORY_PARAMS:
-        MEMORY_SIZE: -1
-        EMBEDDING_DIM: 128
-        MOMENTUM: 0.5
-        NORM_INIT: True
-        UPDATE_MEM_ON_FORWARD: False
-      UPDATE_MEM_WITH_EMB_INDEX: 1
+      memory_params:
+        memory_size: -1
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: True
+        update_mem_on_forward: False
+      update_mem_with_emb_index: 1
   OPTIMIZER:
       name: sgd
       weight_decay: 0.0001

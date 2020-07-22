@@ -146,28 +146,26 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
 def assert_hydra_conf(cfg):
     # some inference for the Info-NCE loss.
     if "simclr_info_nce_loss" in cfg.LOSS.name:
-        cfg.LOSS[cfg.LOSS.name]["BUFFER_PARAMS"]["WORLD_SIZE"] = (
+        cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"] = (
             cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         )
 
-        world_size = cfg.LOSS[cfg.LOSS.name]["BUFFER_PARAMS"]["WORLD_SIZE"]
+        world_size = cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"]
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         num_positives = 2  # simclr uses 2 copies per image
-        cfg.LOSS[cfg.LOSS.name]["BUFFER_PARAMS"]["EFFECTIVE_BATCH_SIZE"] = (
+        cfg.LOSS[cfg.LOSS.name]["buffer_params"]["effective_batch_size"] = (
             num_positives * batch_size * world_size
         )
 
     # multicrop version of simclr loss
     if cfg.LOSS.name == "multicrop_simclr_info_nce_loss":
-        world_size = cfg.LOSS.multicrop_simclr_info_nce_loss.BUFFER_PARAMS.WORLD_SIZE
+        world_size = cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.world_size
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
-        total_nmb_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_nmb_crops"]
-        cfg.LOSS.multicrop_simclr_info_nce_loss.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
+        total_num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.effective_batch_size = (
             batch_size * world_size
         )
-        cfg.LOSS.multicrop_simclr_info_nce_loss.MULTI_CROP_PARAMS.NMB_CROPS = (
-            total_nmb_crops
-        )
+        cfg.LOSS.multicrop_simclr_info_nce_loss.num_crops = total_num_crops
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the DeepCluster-v2 loss.
@@ -176,8 +174,8 @@ def assert_hydra_conf(cfg):
         cfg.LOSS.deepclusterv2_loss.BATCHSIZE_PER_REPLICA = (
             cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         )
-        cfg.LOSS.deepclusterv2_loss.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
-            "total_nmb_crops"
+        cfg.LOSS.deepclusterv2_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0][
+            "total_num_crops"
         ]
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
@@ -185,17 +183,17 @@ def assert_hydra_conf(cfg):
     if cfg.LOSS.name == "swav_loss":
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
         assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
-        cfg.LOSS.swav_loss.NMB_PROTOTYPES = cfg.MODEL.HEAD.PARAMS[0][1]["nmb_clusters"]
-        cfg.LOSS.swav_loss.EMBEDDING_DIM = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
-        cfg.LOSS.swav_loss.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0]["total_nmb_crops"]
+        cfg.LOSS.swav_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"]
+        cfg.LOSS.swav_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
+        cfg.LOSS.swav_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         batch_size *= world_size
-        queue_length = cfg.LOSS.swav_loss.QUEUE.QUEUE_LENGTH
+        queue_length = cfg.LOSS.swav_loss.queue.queue_length
         queue_length -= queue_length % batch_size
-        cfg.LOSS.swav_loss.QUEUE.QUEUE_LENGTH = queue_length
-        cfg.LOSS.swav_loss.QUEUE.LOCAL_QUEUE_LENGTH = queue_length // world_size
+        cfg.LOSS.swav_loss.queue.queue_length = queue_length
+        cfg.LOSS.swav_loss.queue.local_queue_length = queue_length // world_size
 
     # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
     # to turn this automatic scaling off,

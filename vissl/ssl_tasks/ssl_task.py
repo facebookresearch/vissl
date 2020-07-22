@@ -196,12 +196,12 @@ class SelfSupervisionTask(ClassificationTask):
             f"key name should match. Known: {list(self.config.LOSS.keys())}"
         )
         loss_config = self.config.LOSS[loss_name]
-        if "NUM_TRAIN_SAMPLES" in loss_config.keys():
+        if "num_train_samples" in loss_config.keys():
             for split in self.available_splits:
                 if split == "TRAIN":
-                    loss_config["NUM_TRAIN_SAMPLES"] = len(self.datasets["TRAIN"])
+                    loss_config["num_train_samples"] = len(self.datasets["TRAIN"])
                 if split == "TEST":
-                    loss_config["NUM_TRAIN_SAMPLES"] = len(self.datasets["TEST"])
+                    loss_config["num_train_samples"] = len(self.datasets["TEST"])
         loss_config["name"] = loss_name
         loss = build_loss(loss_config)
         return loss

@@ -17,9 +17,9 @@ config:
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_nmb_crops: 2
+          total_num_crops: 2
           size_crops: [224]
-          nmb_crops: [2]
+          num_crops: [2]
           crop_scales: [[0.08, 1]]
         - name: RandomHorizontalFlip
           p: 0.5
@@ -63,15 +63,15 @@ config:
   LOSS:
     name: deepclusterv2_loss
     deepclusterv2_loss:
-      NUM_TRAIN_SAMPLES: 1281167
+      num_train_samples: 1281167
       BATCHSIZE_PER_REPLICA: 64
-      NMB_CROPS: 2
-      TEMPERATURE: 0.1
-      NMB_CLUSTERS: [3000, 3000, 3000]
-      KMEANS_ITERS: 10
-      MEMORY_PARAMS:
-        CROPS_FOR_MB: [0, 1]
-        EMBEDDING_DIM: 128
+      num_crops: 2
+      temperature: 0.1
+      num_clusters: [3000, 3000, 3000]
+      kmeans_iters: 10
+      memory_params:
+        crops_for_mb: [0, 1]
+        embedding_dim: 128
   OPTIMIZER:
       name: sgd
       use_larc: True

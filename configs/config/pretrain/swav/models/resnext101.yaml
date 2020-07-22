@@ -23,5 +23,5 @@ config:
           # WIDTH_PER_GROUP: 48
     HEAD:
       PARAMS: [
-        ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "nmb_clusters": [3000]}],
+        ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
       ]

@@ -4,9 +4,9 @@ config:
     TRAIN:
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_nmb_crops: 6
+          total_num_crops: 6
           size_crops: [240, 96]
-          nmb_crops: [2, 4]
+          num_crops: [2, 4]
           crop_scales: [[0.14, 1], [0.05, 0.14]]
         - name: RandomHorizontalFlip
           p: 0.5
@@ -37,5 +37,5 @@ config:
           use_se: True
     HEAD:
       PARAMS: [
-        ["swav_head", {"dims": [1280, 1280, 128], "use_bn": True, "nmb_clusters": [3000]}],
+        ["swav_head", {"dims": [1280, 1280, 128], "use_bn": True, "num_clusters": [3000]}],
       ]

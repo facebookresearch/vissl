@@ -60,8 +60,8 @@ def testImgRotate():
 
 def testImgPilToMulticrop():
     transform = ImgPilToMultiCrop(
-        total_nmb_crops=8,
-        nmb_crops=[2, 6],
+        total_num_crops=8,
+        num_crops=[2, 6],
         size_crops=[224, 96],
         crop_scales=[[0.14, 1], [0.05, 0.14]],
     )

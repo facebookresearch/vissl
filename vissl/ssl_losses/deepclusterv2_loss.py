@@ -26,7 +26,7 @@ class DeepClusterV2Loss(ClassyLoss):
         super().__init__()
 
         self.loss_config = loss_config
-        size_dataset = self.loss_config.NUM_TRAIN_SAMPLES
+        size_dataset = self.loss_config.num_train_samples
         size_memory_per_process = int(math.ceil(size_dataset * 1.0 / get_world_size()))
 
         if self.loss_config.DROP_LAST:
@@ -34,15 +34,15 @@ class DeepClusterV2Loss(ClassyLoss):
                 size_memory_per_process % self.loss_config.BATCHSIZE_PER_REPLICA
             )
 
-        self.nmb_mbs = len(self.loss_config.MEMORY_PARAMS.CROPS_FOR_MB)
-        self.nmb_heads = len(self.loss_config.NMB_CLUSTERS)
-        self.nmb_clusters = self.loss_config.NMB_CLUSTERS
-        self.embedding_dim = self.loss_config.MEMORY_PARAMS.EMBEDDING_DIM
-        self.crops_for_mb = self.loss_config.MEMORY_PARAMS.CROPS_FOR_MB
+        self.nmb_mbs = len(self.loss_config.memory_params.crops_for_mb)
+        self.nmb_heads = len(self.loss_config.num_clusters)
+        self.num_clusters = self.loss_config.num_clusters
+        self.embedding_dim = self.loss_config.memory_params.embedding_dim
+        self.crops_for_mb = self.loss_config.memory_params.crops_for_mb
         self.nmb_unique_idx = self.loss_config.BATCHSIZE_PER_REPLICA
-        self.nmb_crops = self.loss_config.NMB_CROPS
-        self.temperature = self.loss_config.TEMPERATURE
-        self.nmb_kmeans_iters = self.loss_config.KMEANS_ITERS
+        self.num_crops = self.loss_config.num_crops
+        self.temperature = self.loss_config.temperature
+        self.nmb_kmeans_iters = self.loss_config.kmeans_iters
         self.start_idx = 0
 
         self.register_buffer(
@@ -55,7 +55,7 @@ class DeepClusterV2Loss(ClassyLoss):
         self.register_buffer(
             "assignments", -100 * torch.ones(self.nmb_heads, size_dataset).long()
         )
-        for i, k in enumerate(self.loss_config.NMB_CLUSTERS):
+        for i, k in enumerate(self.loss_config.num_clusters):
             self.register_buffer(
                 "centroids" + str(i), torch.rand(k, self.embedding_dim)
             )
@@ -89,7 +89,7 @@ class DeepClusterV2Loss(ClassyLoss):
         start_idx = 0
         with torch.no_grad():
             for inputs in dataloader:
-                nmb_unique_idx = len(inputs["data_idx"][0]) // self.nmb_crops
+                nmb_unique_idx = len(inputs["data_idx"][0]) // self.num_crops
                 index = inputs["data_idx"][0][:nmb_unique_idx].cuda(non_blocking=True)
 
                 # get embeddings
@@ -111,7 +111,7 @@ class DeepClusterV2Loss(ClassyLoss):
         )
 
     def update_memory_bank(self, emb, idx):
-        nmb_unique_idx = len(idx) // self.nmb_crops
+        nmb_unique_idx = len(idx) // self.num_crops
         idx = idx[:nmb_unique_idx]
         self.local_memory_index[self.start_idx : self.start_idx + nmb_unique_idx] = idx
         for i, crop_idx in enumerate(self.crops_for_mb):
@@ -124,7 +124,7 @@ class DeepClusterV2Loss(ClassyLoss):
         self.start_idx = 0
         j = 0
         with torch.no_grad():
-            for i_K, K in enumerate(self.nmb_clusters):
+            for i_K, K in enumerate(self.num_clusters):
                 # run distributed k-means
 
                 # init centroids with elements from memory bank of rank 0

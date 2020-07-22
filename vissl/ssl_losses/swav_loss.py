@@ -22,17 +22,17 @@ class SwAVLoss(ClassyLoss):
         super().__init__()
 
         self.loss_config = loss_config
-        self.queue_start_iter = self.loss_config.QUEUE.START_ITER
+        self.queue_start_iter = self.loss_config.queue.start_iter
         self.swav_criterion = SwAVCriterion(
-            self.loss_config.TEMPERATURE,
-            self.loss_config.CROPS_FOR_ASSIGN,
-            self.loss_config.NMB_CROPS,
-            self.loss_config.NMB_ITERS,
-            self.loss_config.EPSILON,
-            self.loss_config.USE_DOUBLE_PRECISION,
-            self.loss_config.NMB_PROTOTYPES,
-            self.loss_config.QUEUE.LOCAL_QUEUE_LENGTH,
-            self.loss_config.EMBEDDING_DIM,
+            self.loss_config.temperature,
+            self.loss_config.crops_for_assign,
+            self.loss_config.num_crops,
+            self.loss_config.num_iters,
+            self.loss_config.epsilon,
+            self.loss_config.use_double_precision,
+            self.loss_config.num_prototypes,
+            self.loss_config.queue.local_queue_length,
+            self.loss_config.embedding_dim,
         )
 
     @classmethod
@@ -69,11 +69,11 @@ class SwAVCriterion(nn.Module):
         self,
         temperature: float,
         crops_for_assign: List[int],
-        nmb_crops: int,
-        nmb_iters: int,
+        num_crops: int,
+        num_iters: int,
         epsilon: float,
         use_double_prec: bool,
-        nmb_prototypes: List[int],
+        num_prototypes: List[int],
         local_queue_length: int,
         embedding_dim: int,
     ):
@@ -83,12 +83,12 @@ class SwAVCriterion(nn.Module):
 
         self.temperature = temperature
         self.crops_for_assign = crops_for_assign
-        self.nmb_crops = nmb_crops
-        self.nmb_sinkhornknopp_iters = nmb_iters
+        self.num_crops = num_crops
+        self.nmb_sinkhornknopp_iters = num_iters
         self.epsilon = epsilon
         self.use_double_prec = use_double_prec
-        self.nmb_prototypes = nmb_prototypes
-        self.nmb_heads = len(self.nmb_prototypes)
+        self.num_prototypes = num_prototypes
+        self.nmb_heads = len(self.num_prototypes)
         self.embedding_dim = embedding_dim
         self.local_queue_length = local_queue_length
         self.dist_rank = get_rank()
@@ -134,8 +134,8 @@ class SwAVCriterion(nn.Module):
             return (Q / torch.sum(Q, dim=0, keepdim=True)).t().float()
 
     def forward(self, scores: torch.Tensor, head_id: int):
-        assert scores.shape[0] % self.nmb_crops == 0
-        bs = scores.shape[0] // self.nmb_crops
+        assert scores.shape[0] % self.num_crops == 0
+        bs = scores.shape[0] // self.num_crops
 
         total_loss = 0
         n_term_loss = 0
@@ -149,7 +149,7 @@ class SwAVCriterion(nn.Module):
                 if self.use_double_prec:
                     assignments = assignments.double()
                 assignments = self.distributed_sinkhornknopp(assignments)[:bs]
-                idx_crop_pred = np.delete(np.arange(self.nmb_crops), crop_id)
+                idx_crop_pred = np.delete(np.arange(self.num_crops), crop_id)
             loss = 0
             for p in idx_crop_pred:
                 loss -= torch.mean(
@@ -171,7 +171,7 @@ class SwAVCriterion(nn.Module):
 
     def update_emb_queue(self, emb):
         with torch.no_grad():
-            bs = len(emb) // self.nmb_crops
+            bs = len(emb) // self.num_crops
             for i, crop_id in enumerate(self.crops_for_assign):
                 queue = self.local_emb_queue[i]
                 queue[bs:] = queue[:-bs].clone()
@@ -193,7 +193,7 @@ class SwAVCriterion(nn.Module):
                 torch.rand(
                     len(self.crops_for_assign),
                     self.local_queue_length,
-                    self.nmb_prototypes[i],
+                    self.num_prototypes[i],
                 )
                 * 2
                 - 1

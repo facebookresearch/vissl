@@ -21,8 +21,8 @@ class SimclrInfoNCELoss(ClassyLoss):
 
         self.loss_config = loss_config
         # loss constants
-        self.temperature = self.loss_config.TEMPERATURE
-        self.buffer_params = self.loss_config.BUFFER_PARAMS
+        self.temperature = self.loss_config.temperature
+        self.buffer_params = self.loss_config.buffer_params
         self.info_criterion = SimclrInfoNCECriterion(
             self.buffer_params, self.temperature
         )
@@ -64,8 +64,8 @@ class SimclrInfoNCECriterion(nn.Module):
 
     def precompute_pos_neg_mask(self):
         # computed once at the begining of training
-        total_images = self.buffer_params.EFFECTIVE_BATCH_SIZE
-        world_size = self.buffer_params.WORLD_SIZE
+        total_images = self.buffer_params.effective_batch_size
+        world_size = self.buffer_params.world_size
         batch_size = total_images // world_size
         orig_images = batch_size // self.num_pos
         rank = self.dist_rank
@@ -94,7 +94,7 @@ class SimclrInfoNCECriterion(nn.Module):
 
     def forward(self, embedding):
         assert embedding.ndim == 2
-        assert embedding.shape[1] == int(self.buffer_params.EMBEDDING_DIM)
+        assert embedding.shape[1] == int(self.buffer_params.embedding_dim)
 
         batch_size = embedding.shape[0]
         T = self.temperature
@@ -113,7 +113,7 @@ class SimclrInfoNCECriterion(nn.Module):
         return loss
 
     def __repr__(self):
-        num_negatives = self.buffer_params.EFFECTIVE_BATCH_SIZE - 2
+        num_negatives = self.buffer_params.effective_batch_size - 2
         T = self.temperature
         num_pos = self.num_pos
         repr_dict = {

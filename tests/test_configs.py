@@ -102,12 +102,12 @@ class TestConfigsKeyAddition(unittest.TestCase):
         cfg = SSLHydraConfig.from_configs(
             [
                 "config=test/integration_test/quick_simclr",
-                "+config.LOSS.simclr_info_nce_loss.BUFFER_PARAMS.MY_TEST_KEY=dummy",
+                "+config.LOSS.simclr_info_nce_loss.buffer_params.MY_TEST_KEY=dummy",
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertTrue(
-            "MY_TEST_KEY" in config.LOSS.simclr_info_nce_loss.BUFFER_PARAMS,
+            "MY_TEST_KEY" in config.LOSS.simclr_info_nce_loss.buffer_params,
             "something went wrong, new key not added. Fail.",
         )
 

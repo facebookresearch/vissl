@@ -19,42 +19,41 @@ class MultiCropSimclrInfoNCELoss(SimclrInfoNCELoss):
 
         self.loss_config = loss_config
         # loss constants
-        self.temperature = self.loss_config.TEMPERATURE
-        self.buffer_params = self.loss_config.BUFFER_PARAMS
-        self.multi_crop_params = self.loss_config.MULTI_CROP_PARAMS
-        self.nmb_crops = self.multi_crop_params.NMB_CROPS
+        self.temperature = self.loss_config.temperature
+        self.buffer_params = self.loss_config.buffer_params
+        self.num_crops = self.loss_config.num_crops
         self.info_criterion = MultiCropSimclrInfoNCECriterion(
-            self.buffer_params, self.temperature, self.nmb_crops
+            self.buffer_params, self.temperature, self.num_crops
         )
 
     def __repr__(self):
         repr_dict = {
             "name": self._get_name(),
             "info_average": self.info_criterion,
-            "multi_crop": self.multi_crop_params,
+            "num_crops": self.num_crops,
         }
         return pprint.pformat(repr_dict, indent=2)
 
 
 class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
-    def __init__(self, buffer_params, temperature: float, nmb_crops: int):
+    def __init__(self, buffer_params, temperature: float, num_crops: int):
 
-        self.nmb_crops = nmb_crops
+        self.num_crops = num_crops
         super(MultiCropSimclrInfoNCECriterion, self).__init__(
             buffer_params, temperature
         )
-        logging.info(f"Setting multicrop nmb_crops: {nmb_crops}")
+        logging.info(f"Setting multicrop num_crops: {num_crops}")
 
     def precompute_pos_neg_mask(self):
         # computed once at the beginning of training
-        total_images = self.buffer_params.EFFECTIVE_BATCH_SIZE
-        world_size = self.buffer_params.WORLD_SIZE
+        total_images = self.buffer_params.effective_batch_size
+        world_size = self.buffer_params.world_size
         local_orig_images = total_images // world_size
-        local_crops = local_orig_images * self.nmb_crops
+        local_crops = local_orig_images * self.num_crops
         rank = self.dist_rank
 
         pos_temps = []
-        for d in np.arange(self.nmb_crops):
+        for d in np.arange(self.num_crops):
             pos_temp, neg_temp = [], []
             for i in range(world_size):
                 if i == rank:
@@ -71,7 +70,7 @@ class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
             neg_temp = np.hstack(neg_temp)
 
         pos_mask = []
-        for i in range(self.nmb_crops - 1):
+        for i in range(self.num_crops - 1):
             pos_mask.append(torch.from_numpy(pos_temps[1 + i]))
         neg_mask = torch.from_numpy(neg_temp - sum(pos_temps))
 
@@ -84,13 +83,13 @@ class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
 
     def forward(self, embedding):
         assert embedding.ndim == 2
-        assert embedding.shape[1] == int(self.buffer_params.EMBEDDING_DIM)
+        assert embedding.shape[1] == int(self.buffer_params.embedding_dim)
 
         batch_size = embedding.shape[0]
-        T, nmb_crops = self.temperature, self.nmb_crops
+        T, num_crops = self.temperature, self.num_crops
         assert (
-            batch_size % nmb_crops == 0
-        ), "Batch size should be divisible by nmb_crops"
+            batch_size % num_crops == 0
+        ), "Batch size should be divisible by num_crops"
 
         # Step 1: gather all the embeddings. Shape example: 4096 x 128
         embeddings_buffer = self.gather_embeddings(embedding)

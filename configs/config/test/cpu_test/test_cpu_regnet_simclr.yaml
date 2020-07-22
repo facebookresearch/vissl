@@ -65,9 +65,9 @@ config:
   LOSS:
     name: simclr_info_nce_loss
     simclr_info_nce_loss:
-      TEMPERATURE: 0.1
-      BUFFER_PARAMS:
-        EMBEDDING_DIM: 128
+      temperature: 0.1
+      buffer_params:
+        embedding_dim: 128
   OPTIMIZER:
       name: sgd
       use_larc: True

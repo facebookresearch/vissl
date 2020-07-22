@@ -30,21 +30,21 @@ class NCELossWithMemory(ClassyLoss):
         super(NCELossWithMemory, self).__init__()
 
         self.loss_config = loss_config
-        memory_params = self.loss_config.MEMORY_PARAMS
-        memory_params.MEMORY_SIZE = self.loss_config.NUM_TRAIN_SAMPLES
+        memory_params = self.loss_config.memory_params
+        memory_params.memory_size = self.loss_config.num_train_samples
         assert is_pos_int(
-            memory_params.MEMORY_SIZE
-        ), f"Memory size must be positive: {memory_params.MEMORY_SIZE}"
+            memory_params.memory_size
+        ), f"Memory size must be positive: {memory_params.memory_size}"
 
-        assert self.loss_config.LOSS_TYPE in [
+        assert self.loss_config.loss_type in [
             "nce",
             "cross_entropy",
-        ], f"Supported types are nce/cross_entropy. Found {self.loss_config.LOSS_TYPE}"
+        ], f"Supported types are nce/cross_entropy. Found {self.loss_config.loss_type}"
 
-        self.loss_type = self.loss_config.LOSS_TYPE
+        self.loss_type = self.loss_config.loss_type
 
-        self.update_memory_on_forward = memory_params.UPDATE_MEM_ON_FORWARD
-        self.update_memory_emb_index = self.loss_config.UPDATE_MEM_WITH_EMB_INDEX
+        self.update_memory_on_forward = memory_params.update_mem_on_forward
+        self.update_memory_emb_index = self.loss_config.update_mem_with_emb_index
         if self.update_memory_on_forward is False:
             # we have multiple embeddings used in NCE
             # but we update memory with only one of them
@@ -54,22 +54,22 @@ class NCELossWithMemory(ClassyLoss):
         # memory bank negatives
         self.nce_average = NCEAverage(
             memory_params=memory_params,
-            negative_sampling_params=self.loss_config.NEGATIVE_SAMPLING_PARAMS,
-            T=self.loss_config.TEMPERATURE,
-            Z=self.loss_config.NORM_CONSTANT,
+            negative_sampling_params=self.loss_config.negative_sampling_params,
+            T=self.loss_config.temperature,
+            Z=self.loss_config.norm_constant,
             loss_type=self.loss_type,
         )
 
         if self.loss_type == "nce":
             # setup the actual NCE loss
-            self.nce_criterion = NCECriterion(self.loss_config.NUM_TRAIN_SAMPLES)
+            self.nce_criterion = NCECriterion(self.loss_config.num_train_samples)
         elif self.loss_type == "cross_entropy":
             # cross-entropy loss. Also called InfoNCE
             self.xe_criterion = nn.CrossEntropyLoss()
 
         # other constants
-        self.normalize_embedding = self.loss_config.NORM_EMBEDDING
-        self.loss_weights = self.loss_config.LOSS_WEIGHTS
+        self.normalize_embedding = self.loss_config.norm_embedding
+        self.loss_weights = self.loss_config.loss_weights
         self.init_sync_memory = False
         self.ignore_index = self.loss_config.get("ignore_index", -1)
 
@@ -167,7 +167,7 @@ class NCEAverage(nn.Module):
         self, memory_params, negative_sampling_params, T=0.07, Z=-1, loss_type="nce"
     ):
         super(NCEAverage, self).__init__()
-        self.nLem = memory_params.MEMORY_SIZE
+        self.nLem = memory_params.memory_size
         self.loss_type = loss_type
         self.setup_negative_sampling(negative_sampling_params)
         self.init_memory(memory_params)
@@ -175,10 +175,10 @@ class NCEAverage(nn.Module):
             "params",
             torch.tensor(
                 [
-                    self.negative_sampling_params.NUM_NEGATIVES,
+                    self.negative_sampling_params.num_negatives,
                     T,
                     Z,
-                    self.memory_params.MOMENTUM,
+                    self.memory_params.momentum,
                 ]
             ),
         )
@@ -238,7 +238,7 @@ class NCEAverage(nn.Module):
 
     def do_negative_sampling(self, embedding, y, num_negatives):
         with torch.no_grad():
-            if self.negative_sampling_params.TYPE in ["random", "debug"]:
+            if self.negative_sampling_params.type in ["random", "debug"]:
                 batchSize = embedding.shape[0]
                 idx = self.multinomial.draw(batchSize * (num_negatives + 1)).view(
                     batchSize, -1
@@ -250,30 +250,30 @@ class NCEAverage(nn.Module):
         self.negative_sampling_params = negative_sampling_params
         assert self.negative_sampling_params["TYPE"] in ["random", "debug"]
         self.negative_sampling_params = negative_sampling_params
-        if self.negative_sampling_params.TYPE == "debug":
+        if self.negative_sampling_params.type == "debug":
             logging.info("Using debug mode for negative sampling.")
             logging.info("Will use slower NumpySampler.")
             self.multinomial = NumpySampler(self.nLem)
         else:
             unigrams = torch.ones(self.nLem)
             self.multinomial = AliasMethod(unigrams)
-        self.num_negatives = negative_sampling_params["NUM_NEGATIVES"]
+        self.num_negatives = negative_sampling_params["num_negatives"]
 
     def init_memory(self, memory_params):
         self.memory_params = memory_params
-        num_items = memory_params.MEMORY_SIZE
-        embedding_dim = memory_params.EMBEDDING_DIM
-        self.update_memory_on_forward = memory_params.UPDATE_MEM_ON_FORWARD
+        num_items = memory_params.memory_size
+        embedding_dim = memory_params.embedding_dim
+        self.update_memory_on_forward = memory_params.update_mem_on_forward
         stdv = 1.0 / math.sqrt(embedding_dim / 3)
         self.register_buffer(
             "memory", torch.rand(num_items, embedding_dim).mul_(2 * stdv).add_(-stdv)
         )
 
-        if memory_params.NORM_INIT:
+        if memory_params.norm_init:
             self.memory = nn.functional.normalize(self.memory, p=2, dim=1)
         sample_norm = self.memory[:10].norm(dim=1).mean()
         mem_info = f"Init memory: {self.memory.shape}; \
-            stdv: {stdv}; normalize: {memory_params.NORM_INIT} \
+            stdv: {stdv}; normalize: {memory_params.norm_init} \
             norm: {sample_norm}"
         logging.info(f"Rank: {get_rank()} - {mem_info}")
 

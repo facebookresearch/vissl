@@ -47,7 +47,7 @@ class NormalizePrototypesHook(ClassyHook):
         """
         if not task.config["LOSS"]["name"] == "swav_loss":
             return
-        if not task.config.LOSS["swav_loss"].NORMALIZE_LAST_LAYER:
+        if not task.config.LOSS["swav_loss"].normalize_last_layer:
             return
         with torch.no_grad():
             try:

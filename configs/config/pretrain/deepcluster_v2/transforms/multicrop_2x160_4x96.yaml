@@ -3,9 +3,9 @@ config:
   DATA:
     TRANSFORMS:
       - name: ImgPilToMultiCrop
-        total_nmb_crops: 6
+        total_num_crops: 6
         size_crops: [160, 96]
-        nmb_crops: [2, 4]
+        num_crops: [2, 4]
         crop_scales: [[0.08, 1], [0.05, 0.14]]
       - name: RandomHorizontalFlip
         p: 0.5

@@ -233,7 +233,7 @@ config:
     name: "CrossEntropyLoss"
 
     # ----------------------------------------------------------------------------------- #
-    # Standard PyTorch Cross-Entropy Loss
+    # Standard PyTorch Cross-Entropy Loss. Use the loss name exactly as in PyTorch.
     # pass any variables that the loss takes.
     # ----------------------------------------------------------------------------------- #
     CrossEntropyLoss:
@@ -255,66 +255,65 @@ config:
     # ----------------------------------------------------------------------------------- #
     nce_loss_with_memory:
       # setting below to "cross_entropy" yields the InfoNCE loss
-      LOSS_TYPE: "nce"
-      NORM_EMBEDDING: true
-      TEMPERATURE: 0.07
+      loss_type: "nce"
+      norm_embedding: true
+      temperature: 0.07
       # if the NCE loss is computed between multiple pairs, we can set a loss weight per term
       # can be used to weight different pair contributions differently.
-      LOSS_WEIGHTS: [1.0]
-      NORM_CONSTANT: -1
-      UPDATE_MEM_WITH_EMB_INDEX: -100
-      NEGATIVE_SAMPLING_PARAMS:
-        NUM_NEGATIVES: 16000
-        TYPE: "random"
-      MEMORY_PARAMS:
-        MEMORY_SIZE: -1
-        EMBEDDING_DIM: 128
-        MOMENTUM: 0.5
-        NORM_INIT: true
-        UPDATE_MEM_ON_FORWARD: true
+      loss_weights: [1.0]
+      norm_constant: -1
+      update_mem_with_emb_index: -100
+      negative_sampling_params:
+        num_negatives: 16000
+        type: "random"
+      memory_params:
+        memory_size: -1
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: true
+        update_mem_on_forward: true
       # following parameters are auto-filled before the loss is created.
-      NUM_TRAIN_SAMPLES: -1    # @auto-filled
+      num_train_samples: -1    # @auto-filled
 
     # ----------------------------------------------------------------------------------- #
     # SimCLR InfoNCE LOSS (Specific to SimCLR https://arxiv.org/abs/2002.05709)
     # ----------------------------------------------------------------------------------- #
     simclr_info_nce_loss:
-      TEMPERATURE: 0.1
-      BUFFER_PARAMS:
-        WORLD_SIZE: 64
-        EMBEDDING_DIM: 128
-        EFFECTIVE_BATCH_SIZE: 4096
+      temperature: 0.1
+      buffer_params:
+        world_size: 64
+        embedding_dim: 128
+        effective_batch_size: 4096
 
     # ----------------------------------------------------------------------------------- #
     # Multi-crop version of SimCLR InfoNCE LOSS (supports multicrop augmentation proposed
     # in https://arxiv.org/abs/2006.09882)
     # ----------------------------------------------------------------------------------- #
     multicrop_simclr_info_nce_loss:
-      TEMPERATURE: 0.1
-      BUFFER_PARAMS:
-        WORLD_SIZE: 64
-        EMBEDDING_DIM: 128
-        EFFECTIVE_BATCH_SIZE: 4096
-      MULTI_CROP_PARAMS: # (as proposed in SwAV https://arxiv.org/abs/2006.09882)
-        NMB_CROPS: 2
+      temperature: 0.1
+      num_crops: 2
+      buffer_params:
+        world_size: 64
+        embedding_dim: 128
+        effective_batch_size: 4096
 
     # ----------------------------------------------------------------------------------- #
     # SwAV LOSS (Specific to SwAV https://arxiv.org/abs/2006.09882)
     # ----------------------------------------------------------------------------------- #
     swav_loss:
-      EMBEDDING_DIM: 128
-      TEMPERATURE: 0.1
-      USE_DOUBLE_PRECISION: false
-      NORMALIZE_LAST_LAYER: true
-      NMB_ITERS: 3
-      EPSILON: 0.05
-      NMB_CROPS: 2
-      CROPS_FOR_ASSIGN: [0, 1]
-      NMB_PROTOTYPES: [3000]
-      QUEUE:
-        QUEUE_LENGTH: 0
-        START_ITER: 0
-        LOCAL_QUEUE_LENGTH: 0
+      embedding_dim: 128
+      temperature: 0.1
+      use_double_precision: false
+      normalize_last_layer: true
+      num_iters: 3
+      epsilon: 0.05
+      num_crops: 2
+      crops_for_assign: [0, 1]
+      num_prototypes: [3000]
+      queue:
+        queue_length: 0
+        start_iter: 0
+        local_queue_length: 0
 
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
@@ -322,15 +321,15 @@ config:
     deepclusterv2_loss:
       DROP_LAST: true
       BATCHSIZE_PER_REPLICA: 256
-      NMB_CROPS: 2
-      TEMPERATURE: 0.1
-      NMB_CLUSTERS: [3000, 3000, 3000]
-      KMEANS_ITERS: 10
-      MEMORY_PARAMS:
-        CROPS_FOR_MB: [0]
-        EMBEDDING_DIM: 128
+      num_crops: 2
+      temperature: 0.1
+      num_clusters: [3000, 3000, 3000]
+      kmeans_iters: 10
+      memory_params:
+        crops_for_mb: [0]
+        embedding_dim: 128
       # following parameters are auto-filled before the loss is created.
-      NUM_TRAIN_SAMPLES: -1    # @auto-filled
+      num_train_samples: -1    # @auto-filled
 
   # ----------------------------------------------------------------------------------- #
   # OPTIMIZER
