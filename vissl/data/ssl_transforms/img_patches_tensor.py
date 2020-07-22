@@ -30,6 +30,10 @@ class ImgPatchesFromTensor(ClassyTransform):
         data = []
         grid_size = int(image.shape[1] / self.grid_side_len)
         patch_size = grid_size - self.patch_jitter
+        jitter = np.random.randint(
+            0, self.patch_jitter, (2, self.grid_side_len, self.grid_side_len)
+        )
+
         for i in range(self.grid_side_len):
             for j in range(self.grid_side_len):
                 x_offset = i * grid_size
@@ -37,12 +41,11 @@ class ImgPatchesFromTensor(ClassyTransform):
                 grid_cell = image[
                     :, y_offset : y_offset + grid_size, x_offset : x_offset + grid_size
                 ]
-                y_jitter = np.random.randint(0, self.patch_jitter)
-                x_jitter = np.random.randint(0, self.patch_jitter)
+
                 patch = grid_cell[
                     :,
-                    y_jitter : y_jitter + patch_size,
-                    x_jitter : x_jitter + patch_size,
+                    jitter[1, i, j] : jitter[1, i, j] + patch_size,
+                    jitter[0, i, j] : jitter[0, i, j] + patch_size,
                 ]
                 assert patch.shape[1] == patch_size, "Image not cropped properly"
                 assert patch.shape[2] == patch_size, "Image not cropped properly"
