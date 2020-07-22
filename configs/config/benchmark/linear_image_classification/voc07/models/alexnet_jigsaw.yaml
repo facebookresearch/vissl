@@ -8,7 +8,7 @@ config:
         - name: RandomCrop
           size: 227
         - name: RandomHorizontalFlip
-        - name: ToTensor
+        - name: ImgToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
@@ -18,7 +18,7 @@ config:
           size: [256, 256]
         - name: CenterCrop
           size: 227
-        - name: ToTensor
+        - name: ImgToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]

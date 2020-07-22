@@ -14,6 +14,7 @@ from vissl.data.ssl_transforms.img_pil_to_multicrop import ImgPilToMultiCrop
 from vissl.data.ssl_transforms.img_pil_to_patches_and_image import (
     ImgPilToPatchesAndImage,
 )
+from vissl.data.ssl_transforms.img_pil_to_tensor import ImgToTensor
 from vissl.data.ssl_transforms.img_rotate_pil import ImgRotatePil
 
 
@@ -54,6 +55,10 @@ def testToTensor():
     benchmark(transform, "ToTensor", requires_pil=True)
 
 
+def testImgToTensor():
+    benchmark(ImgToTensor(), "ImgToTensor", requires_pil=True)
+
+
 def testImgPatch():
     transform = ImgPilToPatchesAndImage()
     benchmark(transform, "Patches", requires_pil=True)
@@ -86,6 +91,7 @@ if __name__ == "__main__":
     testBlur()
     testColorDistort()
     testToTensor()
+    testImgToTensor()
     testImPil2Lab()
     testImgPatch()
     testImgRotate()

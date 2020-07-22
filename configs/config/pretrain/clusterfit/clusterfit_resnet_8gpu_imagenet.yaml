@@ -23,7 +23,7 @@ config:
           saturation: [0.6, 1.4]
           hue: [-0.2, 0.2]
         - name: RandomHorizontalFlip
-        - name: ToTensor
+        - name: ImgToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]

@@ -29,7 +29,7 @@ DATA:
         p: 0.5
         radius_min: 0.1
         radius_max: 2.0
-      - name: ToTensor
+      - name: ImgToTensor
       - name: Normalize
         mean: [0.485, 0.456, 0.406]
         std: [0.229, 0.224, 0.225]
@@ -133,8 +133,3 @@ CHECKPOINT:
   DIR: "."
   AUTO_RESUME: True
   CHECKPOINT_FREQUENCY: 5
-
-
-
-
-

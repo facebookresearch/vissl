@@ -1,9 +1,9 @@
-TEST_EVERY_NUM_EPOCH: 1                      
+TEST_EVERY_NUM_EPOCH: 1
 VERBOSE: True
 LOG_FREQUENCY: 200
 TEST_MODEL: True
 SEED_VALUE: 1
-MULTI_PROCESSING_METHOD: forkserver   
+MULTI_PROCESSING_METHOD: forkserver
 MONITOR_PERF_STATS: False
 DATA:
   TRAIN:
@@ -18,7 +18,7 @@ DATA:
       - name: RandomResizedCrop
         size: 224
       - name: RandomHorizontalFlip
-      - name: ToTensor
+      - name: ImgToTensor
       - name: Normalize
         mean: [0.485, 0.456, 0.406]
         std: [0.229, 0.224, 0.225]
@@ -38,7 +38,7 @@ DATA:
         size: 256
       - name: CenterCrop
         size: 224
-      - name: ToTensor
+      - name: ImgToTensor
       - name: Normalize
         mean: [0.485, 0.456, 0.406]
         std: [0.229, 0.224, 0.225]
