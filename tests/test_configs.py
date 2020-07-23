@@ -3,8 +3,7 @@
 import logging
 import unittest
 
-from hydra.errors import HydraException
-from omegaconf import MissingMandatoryValue
+from hydra.errors import HydraException, ConfigCompositionException
 from parameterized import parameterized
 from utils import (
     BENCHMARK_CONFIGS,
@@ -23,7 +22,7 @@ class TestConfigsFail(unittest.TestCase):
         try:
             SSLHydraConfig.from_configs()
             self.fail("We should fail if config is not specified")
-        except MissingMandatoryValue:
+        except ConfigCompositionException:
             # we must specify the base config otherwise it fails
             pass
 
