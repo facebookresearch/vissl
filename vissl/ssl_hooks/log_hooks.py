@@ -12,7 +12,7 @@ from typing import Optional
 
 import torch
 from classy_vision import tasks
-from classy_vision.generic.distributed_util import get_rank, is_master
+from classy_vision.generic.distributed_util import get_rank, is_leader
 from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.utils.checkpoint import get_checkpoint_folder, is_checkpoint_phase
@@ -32,14 +32,14 @@ class LogGpuStatsHook(ClassyHook):
     on_update = ClassyHook._noop
 
     def on_start(self, task: "tasks.ClassyTask") -> None:
-        if is_master() and task.use_gpu:
+        if is_leader() and task.use_gpu:
             # print the nvidia-smi stats
             log_gpu_stats()
 
     def on_step(self, task: "tasks.ClassyTask") -> None:
         # print the nvidia-smi stats again to get more accurate nvidia-smi
         # useful for monitoring memory usage.
-        if is_master() and task.use_gpu and task.local_iteration_num == 50:
+        if is_leader() and task.use_gpu and task.local_iteration_num == 50:
             log_gpu_stats()
 
 
@@ -64,7 +64,7 @@ class LogLossLrEtaHook(ClassyHook):
 
     def on_update(self, task: "tasks.ClassyTask") -> None:
         phase_type = "train" if task.train else "test"
-        if is_master() and phase_type == "train":
+        if is_leader() and phase_type == "train":
             train_phase_idx = task.train_phase_idx
             log_freq = task.config["LOG_FREQUENCY"]
             iteration = task.iteration
@@ -147,7 +147,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         Called at the end of each phase and forward. We log the metrics and also
         save the checkpoint. We pass the mode: phase or iteration
         """
-        if is_master():
+        if is_leader():
             self._print_and_save_meters(task, task.train_phase_idx)
         checkpoint_frequency = task.config["CHECKPOINT"]["CHECKPOINT_FREQUENCY"]
         self._checkpoint_model(
@@ -173,7 +173,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         )
         # save checkpoint:
         if (
-            is_master()
+            is_leader()
             and task.train
             and (checkpoint_folder is not None)
             and (is_final_train_phase or is_checkpointing_phase)

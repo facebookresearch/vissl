@@ -4,7 +4,7 @@ import logging
 
 import torch
 from classy_vision import tasks
-from classy_vision.generic.distributed_util import is_master
+from classy_vision.generic.distributed_util import is_leader
 from classy_vision.hooks.classy_hook import ClassyHook
 
 
@@ -58,7 +58,7 @@ class SSLTensorboardHook(ClassyHook):
             return
 
         # log the parameters just once, before training starts
-        if is_master() and task.train and task.train_phase_idx == 0:
+        if is_leader() and task.train and task.train_phase_idx == 0:
             for name, parameter in task.base_model.named_parameters():
                 self.tb_writer.add_histogram(
                     f"Parameters/{name}", parameter, global_step=-1
@@ -69,7 +69,7 @@ class SSLTensorboardHook(ClassyHook):
             return
 
         # Log the weights and bias at the end of the epoch
-        if is_master() and task.train:
+        if is_leader() and task.train:
             for name, parameter in task.base_model.named_parameters():
                 self.tb_writer.add_histogram(
                     f"Parameters/{name}", parameter, global_step=task.train_phase_idx
@@ -81,7 +81,7 @@ class SSLTensorboardHook(ClassyHook):
                 torch.cuda.reset_max_memory_cached()
 
     def on_update(self, task: "tasks.ClassyTask") -> None:
-        if not is_master():
+        if not is_leader():
             return
 
         iteration = task.iteration
