@@ -82,7 +82,7 @@ config:
       norm_constant: -1
       negative_sampling_params:
         num_negatives: 4096
-        TYPE: random
+        type: random
       memory_params:
         memory_size: -1
         embedding_dim: 128

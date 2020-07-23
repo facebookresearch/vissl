@@ -75,7 +75,7 @@ config:
       norm_constant: -1
       negative_sampling_params:
         num_negatives: 32000
-        TYPE: random
+        type: random
       memory_params:
         memory_size: -1
         embedding_dim: 128
@@ -83,6 +83,7 @@ config:
         norm_init: True
         update_mem_on_forward: False
       update_mem_with_emb_index: 1
+      num_train_samples: 1281167
   OPTIMIZER:
       name: sgd
       weight_decay: 0.0001

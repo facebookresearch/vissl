@@ -31,7 +31,7 @@ class NCELossWithMemory(ClassyLoss):
 
         self.loss_config = loss_config
         memory_params = self.loss_config.memory_params
-        memory_params.memory_size = self.loss_config.num_train_samples
+        memory_params.memory_size = self.loss_config["num_train_samples"]
         assert is_pos_int(
             memory_params.memory_size
         ), f"Memory size must be positive: {memory_params.memory_size}"
@@ -62,7 +62,7 @@ class NCELossWithMemory(ClassyLoss):
 
         if self.loss_type == "nce":
             # setup the actual NCE loss
-            self.nce_criterion = NCECriterion(self.loss_config.num_train_samples)
+            self.nce_criterion = NCECriterion(self.loss_config["num_train_samples"])
         elif self.loss_type == "cross_entropy":
             # cross-entropy loss. Also called InfoNCE
             self.xe_criterion = nn.CrossEntropyLoss()
@@ -248,7 +248,7 @@ class NCEAverage(nn.Module):
 
     def setup_negative_sampling(self, negative_sampling_params):
         self.negative_sampling_params = negative_sampling_params
-        assert self.negative_sampling_params["TYPE"] in ["random", "debug"]
+        assert self.negative_sampling_params["type"] in ["random", "debug"]
         self.negative_sampling_params = negative_sampling_params
         if self.negative_sampling_params.type == "debug":
             logging.info("Using debug mode for negative sampling.")
