@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from classy_vision.generic.distributed_util import (
     barrier,
-    is_master,
+    is_primary,
     set_cpu_device,
     set_cuda_device_index,
 )
@@ -79,7 +79,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         # Good to go, (re) start training
         task.run_hooks(SSLClassyHookFunctions.on_start.name)
 
-        if is_master():
+        if is_primary():
             logging.info("Model is:\n {}".format(task.model))
             logging.info("Loss is: {}".format(task.loss))
         logging.info("Starting training....")
@@ -224,7 +224,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
 
         task.init_distributed_data_parallel_model()
 
-        if is_master():
+        if is_primary():
             logging.info("Model is:\n {}".format(task.model))
         features = {}
         for split in task.available_splits:
