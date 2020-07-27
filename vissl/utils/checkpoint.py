@@ -2,9 +2,6 @@
 
 import logging
 import os
-import tempfile
-import traceback
-from shutil import copy2, move
 from typing import Any, Dict, List
 
 import torch
