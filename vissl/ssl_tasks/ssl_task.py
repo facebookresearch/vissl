@@ -29,7 +29,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.config = config
         self.checkpoint = None
         self.available_splits = []
-        self.loss = None
+        self.base_loss = None
         self.meters = None
         self.datasets = None
         self.phases = []
@@ -397,14 +397,14 @@ class SelfSupervisionTask(ClassificationTask):
         num_train_phases = len(train_phases)
         self.base_model = self._build_model()
         self._set_ddp_options()
-        self.loss = self._build_loss()
+        self.base_loss = self._build_loss()
         self.meters = self._build_meters()
         self.optimizer = self._build_optimizer()
         self.iteration = self.iteration
         self.num_train_phases = num_train_phases
 
         if self.use_gpu:
-            self.loss = self.loss.cuda()
+            self.base_loss = self.base_loss.cuda()
             self.base_model = copy_model_to_gpu(self.base_model)
 
         # initialize the pytorch optimizer now since the model has been moved to
@@ -426,7 +426,7 @@ class SelfSupervisionTask(ClassificationTask):
             self.local_iteration_num = self.checkpoint["iteration_num"]
             vissl_state_dict = self.checkpoint.get("classy_state_dict")
             if "loss" in self.checkpoint:
-                self.loss.load_state_dict(self.checkpoint["loss"])
+                self.base_loss.load_state_dict(self.checkpoint["loss"])
                 logging.info("======Loaded loss state from checkpoint======")
 
         return self._update_classy_state(device, vissl_state_dict)
