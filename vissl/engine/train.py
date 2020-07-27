@@ -77,7 +77,7 @@ def train_main(
     ssl_task = build_task(cfg)
 
     # Get the checkpoint where to load from. The load_checkpoints function will
-    # automatically takes care of detecting whether it"s a resume or not
+    # automatically take care of detecting whether it's a resume or not
     checkpoint = get_resume_checkpoint(cfg, checkpoint_folder=output_dir)
     ssl_task.set_checkpoint(checkpoint)
 

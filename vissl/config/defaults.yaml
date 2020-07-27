@@ -404,6 +404,15 @@ config:
     CHECKPOINT_ITER_FREQUENCY: -1
     # if we want to restart a training even if it has already succeeded on this machine
     OVERWRITE_EXISTING: false
+    # we can specify what "latest" checkpoint to use to resume training. This is only valid
+    # in case a training that needs to be resumed. If the training that has already finished
+    # this parameter is useless.  Sometimes the latest checkpoints could be corrupt so this
+    # option helps to resume from instead a few checkpoints before the last checkpoint.
+    # Possibilities:
+    #   1) LATEST_CHECKPOINT_RESUME_FILE_NUM = 1 -> resume from the latest checkpoint
+    #   2) LATEST_CHECKPOINT_RESUME_FILE_NUM = 2 -> resume from the second latest checkpoint
+    #   2) LATEST_CHECKPOINT_RESUME_FILE_NUM = N -> resume from the Nth latest checkpoint
+    LATEST_CHECKPOINT_RESUME_FILE_NUM: 1
 
   # ----------------------------------------------------------------------------------- #
   # DISTRIBUTED TRAINING (1-gpu, multi-gpu, multi-node)

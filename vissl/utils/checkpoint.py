@@ -5,10 +5,12 @@ import os
 import tempfile
 import traceback
 from shutil import copy2, move
+from typing import Any, Dict, List
 
 import torch
 from classy_vision.generic.util import load_checkpoint
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.hydra_config import AttrDict
 from vissl.utils.io import makedir
 
 
@@ -35,6 +37,9 @@ def get_checkpoint_folder(config):
 
 
 def get_absolute_path(input_path):
+    """
+    Convert a relative path to the absolute path
+    """
     odir = os.path.abspath(input_path)
     makedir(odir)
     return odir
@@ -44,6 +49,19 @@ def is_checkpoint_phase(mode_num, mode_frequency, train_phase_idx, num_epochs, m
     """
     Determines if a checkpoint should be saved on current epoch. If epoch=1, then
     we check whether to save at current iteration or not.
+
+    Args:
+        mode (str): what model we are checkpointing models at - every few iterations or
+                    at the end of every phase/epoch. The mode is encoded in the checkpoint
+                    filename.
+        mode_num (int): what is the current iteration or epoch number that we are trying to
+                        checkpoint at.
+        mode_frequency (int): checkpoint frequency - every N iterations or every N epochs/phase
+        train_phase_idx (int): the current training phase we are in. Starts from 0
+        num_epochs (int): total number of epochs in training
+
+    Returns:
+        checkpointing_phase (bool): whether the model should be checkpointed or not
     """
     if mode == "iteration":
         checkpointing_phase = (mode_num % mode_frequency) == 0
@@ -55,6 +73,17 @@ def is_checkpoint_phase(mode_num, mode_frequency, train_phase_idx, num_epochs, m
 
 
 def has_checkpoint(checkpoint_folder, skip_final: bool = False):
+    """
+    Check whether there are any checkpoints at all in the checkpoint folder.
+
+    Args:
+        checkpoint_folder (str): path to the checkpoint folder
+        skip_final (bool): if the checkpoint with `model_final_` prefix exist, whether
+                           to skip it and train.
+
+    Returns:
+        checkpoint_exists (bool): whether checkpoint exists or not
+    """
     checkpointed_files = os.listdir(checkpoint_folder)
     checkpoint_exists = False
     for f in checkpointed_files:
@@ -67,33 +96,43 @@ def has_checkpoint(checkpoint_folder, skip_final: bool = False):
 def has_final_checkpoint(
     checkpoint_folder, final_checkpoint_pattern: str = "model_final"
 ):
+    """
+    Check whether the final checkpoint exists in the checkpoint folder. The
+    final checkpoint is recognized by the prefix "model_final_" in VISSL.
+
+    Args:
+        checkpoint_folder (str): path to the checkpoint folder.
+        final_checkpoint_pattern (str): what prefix is used to save the final checkpoint.
+
+    Returns:
+        has_final_checkpoint: whether the final checkpoint exists or not
+    """
     checkpointed_files = os.listdir(checkpoint_folder)
     torch_files = filter(lambda x: x.endswith(".torch"), checkpointed_files)
     final_files = filter(lambda x: final_checkpoint_pattern in x, torch_files)
     return len(list(final_files)) > 0
 
 
-def move_checkpoint_to_backend(source, destination, backend):
-    success = False
-    i = 0
-    while (i < 3) and (not success):
-        try:
-            if backend == "disk":
-                ckpt_name = source.split("/")[-1]
-                tmp_dir = tempfile.mkdtemp()
-                tmp_file = os.path.join(tmp_dir, ckpt_name)
-                copy2(source, tmp_file)
-                move(tmp_file, destination)
-                logging.info(f"Checkpoint saved to {destination}")
-                success = True
-            else:
-                logging.warning(f"{backend} not supported")
-        except Exception:
-            if i == 2:
-                logging.error(traceback.format_exc())
+def get_checkpoint_resume_files(
+    checkpoint_folder: str,
+    config: AttrDict,
+    skip_final: bool = False,
+    latest_checkpoint_resume_num: int = 1,
+):
+    """
+    Get the checkpoint file from which the model should be resumed. We look at all
+    the checkpoints in the checkpoint_folder and if the final model checkpoint exists
+    (starts with `model_final_`) and not overriding it, then return the final
+    checkpoint. Otherwise find the latest checkpoint.
 
-
-def get_checkpoint_resume_file(checkpoint_folder, config, skip_final: bool = False):
+    Args:
+        checkpoint_folder (str): path to the checkpoint folder.
+        config (AttrDict): root config
+        skip_final (bool): whether the final model checkpoint should be skipped or not
+        latest_checkpoint_resume_num (int): what Nth latest checkpoint to resume from.
+                   Sometimes the latest checkpoints could be corrupt so this option
+                   helps to resume from instead a few checkpoints before the last checkpoint.
+    """
     all_files = os.listdir(checkpoint_folder)
     all_iters = []
     replace_prefix = "model_phase"
@@ -112,45 +151,56 @@ def get_checkpoint_resume_file(checkpoint_folder, config, skip_final: bool = Fal
         if replace_prefix in f:
             iter_num = int(f.replace(".torch", "").replace(replace_prefix, ""))
             all_iters.append(iter_num)
+
+    # make sure the checkpoint resume number is in bounds
+    checkpoint_resume_num = max(0, latest_checkpoint_resume_num - 1)
+    checkpoint_resume_num = min(len(all_iters), checkpoint_resume_num)
+    logging.info(f"checkpoint_resume_num: {checkpoint_resume_num}")
     if len(all_iters) > 0:
         all_iters.sort(reverse=True)
-        last_iter = int(all_iters[0])
+        last_iter = int(all_iters[checkpoint_resume_num])
         filename = f"{replace_prefix}{last_iter}.torch"
         return filename
     else:
         return None
 
 
-def get_resume_checkpoint(cfg, checkpoint_folder):
+def get_resume_checkpoint(cfg: AttrDict, checkpoint_folder: str):
     # we check whether there's a checkpoint that already exists
     checkpoint = None
-    # if we are overwriting the existing checkpoint, then ski_final=true in has_checkpoint
-    # call
+    # if we are overwriting the existing checkpoint, then skip_final=true in
+    # `has_checkpoint` call
     checkpoints_exists = has_checkpoint(
         checkpoint_folder, skip_final=cfg["CHECKPOINT"]["OVERWRITE_EXISTING"]
     )
     if checkpoints_exists and cfg["CHECKPOINT"]["AUTO_RESUME"]:
         checkpoint_device = torch.device("cpu")
-        checkpoint_file = get_checkpoint_resume_file(
-            checkpoint_folder, cfg, skip_final=cfg["CHECKPOINT"]["OVERWRITE_EXISTING"]
+        checkpoint_file = get_checkpoint_resume_files(
+            checkpoint_folder,
+            cfg,
+            skip_final=cfg["CHECKPOINT"]["OVERWRITE_EXISTING"],
+            latest_checkpoint_resume_num=cfg["CHECKPOINT"][
+                "LATEST_CHECKPOINT_RESUME_FILE_NUM"
+            ],
         )
-        logging.info(
-            f"Resume from file: {os.path.join(checkpoint_folder, checkpoint_file)}"
-        )
+
+        checkpoint_path = os.path.join(checkpoint_folder, checkpoint_file)
+        logging.info(f"Resume from file: {checkpoint_path}")
         checkpoint = load_checkpoint(
-            checkpoint_path=os.path.join(checkpoint_folder, checkpoint_file),
-            device=checkpoint_device,
+            checkpoint_path=checkpoint_path, device=checkpoint_device
         )
     return checkpoint
 
 
-def print_state_dict_shapes(state_dict):
+def print_state_dict_shapes(state_dict: Dict[str, Any]):
     logging.info("Model state_dict:")
     for param_tensor in state_dict.keys():
         logging.info(f"{param_tensor}:\t{state_dict[param_tensor].size()}")
 
 
-def print_loaded_dict_info(model_state_dict, state_dict, skip_layers):
+def print_loaded_dict_info(
+    model_state_dict: Dict[str, Any], state_dict: Dict[str, Any], skip_layers: List[str]
+):
     """
     Print what layers were loaded, what layers were ignored/skipped/not found
     when initializing a model from a specified model params file.
@@ -177,7 +227,9 @@ def print_loaded_dict_info(model_state_dict, state_dict, skip_layers):
     logging.info(f"Extra layers not loaded from checkpoint: {extra_layers}")
 
 
-def replace_module_prefix(state_dict, prefix, replace_with=""):
+def replace_module_prefix(
+    state_dict: Dict[str, Any], prefix: str, replace_with: str = ""
+):
     """
     Replace prefixes in a state_dict
     Needed when loading DDP or classy vision models
@@ -189,7 +241,7 @@ def replace_module_prefix(state_dict, prefix, replace_with=""):
     return state_dict
 
 
-def append_module_prefix(state_dict, prefix):
+def append_module_prefix(state_dict: Dict[str, Any], prefix: str):
     """
     Append prefixes in a state_dict
     Needed when loading DDP or classy vision models
@@ -198,7 +250,20 @@ def append_module_prefix(state_dict, prefix):
     return state_dict
 
 
-def check_model_compatibilty(config, state_dict):
+def check_model_compatibilty(config: AttrDict, state_dict: Dict[str, Any]):
+    """
+    Given a VISSL model and state_dict, check if the state_dict can be loaded
+    to VISSL model (trunk + head) based on the trunk and head prefix that is expected.
+    If not compatible, we raise exception.
+
+    Prefix checked for head: `heads.`
+    Prefix checked for trunk: `trunk._feature_blocks.` or `trunk.base_model._feature_blocks.`
+                              depending on the workflow type (training | evaluation).
+
+    Args:
+        config (AttrDict): root config
+        state_dict (Dict[str, Any]): state dict that should be checked for compatibility
+    """
     trunk_append_prefix, heads_append_prefix = "trunk._feature_blocks.", "heads."
     if config.MODEL.FEATURE_EVAL_MODE:
         trunk_append_prefix = "trunk.base_model._feature_blocks."
