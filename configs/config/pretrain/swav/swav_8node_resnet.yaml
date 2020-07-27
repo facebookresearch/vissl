@@ -131,5 +131,5 @@ config:
   CHECKPOINT:
     DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 1           # every phase since data is big
-    CHECKPOINT_ITER_FREQUENCY: 310    # equals 1epoch of imagenet-1k
+    CHECKPOINT_FREQUENCY: 5           # every phase since data is big
+    CHECKPOINT_ITER_FREQUENCY: -1    # equals 1epoch of imagenet-1k

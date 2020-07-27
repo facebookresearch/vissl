@@ -533,6 +533,7 @@ defaults:
   - config/pretrain/simclr/optimization: null
   # SwAV
   - config/pretrain/swav/models: null
+  - config/pretrain/swav/transforms: null
   - config/pretrain/swav/optimization: null
   # Jigsaw
   - config/pretrain/jigsaw/optimization: null

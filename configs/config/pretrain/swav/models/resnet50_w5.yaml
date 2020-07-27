@@ -2,13 +2,13 @@
 config:
   DATA:
     TRAIN:
-      BATCHSIZE_PER_REPLICA: 40
+      BATCHSIZE_PER_REPLICA: 12
       TRANSFORMS:
         - name: ImgPilToMultiCrop
           total_num_crops: 6
           size_crops: [224, 96]
           num_crops: [2, 4]
-          crop_scales: [[0.08, 1], [0.08, 0.14]]
+          crop_scales: [[0.14, 1], [0.05, 0.14]]
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
@@ -27,10 +27,10 @@ config:
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-          WIDTH_MULTIPLIER: 4
+          WIDTH_MULTIPLIER: 5  # on 16GB machines, use batch size 12 and 16nodes. On 32GB machines, use bs24 and 8nodes
     HEAD:
       PARAMS: [
-        ["swav_head", {"dims": [8192, 8192, 128], "use_bn": True, "num_clusters": [3000]}],
+        ["swav_head", {"dims": [10240, 10240, 128], "use_bn": True, "num_clusters": [3000]}],
       ]
   LOSS:
     name: swav_loss
@@ -42,8 +42,8 @@ config:
       epsilon: 0.05
       crops_for_assign: [0, 1]
       queue:
-        queue_length: 2560
+        queue_length: 1536
         start_iter: 0
   DISTRIBUTED:
-    NUM_NODES: 8
+    NUM_NODES: 16
     NUM_PROC_PER_NODE: 8

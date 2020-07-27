@@ -6,3 +6,8 @@ config:
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
+  LOSS:
+    swav_loss:
+      queue:
+        queue_length: 3840
+        start_iter: 4695  # 15 epochs
