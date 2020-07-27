@@ -3,7 +3,7 @@
 import logging
 import unittest
 
-from hydra.errors import HydraException, ConfigCompositionException
+from hydra.errors import ConfigCompositionException, HydraException
 from parameterized import parameterized
 from utils import (
     BENCHMARK_CONFIGS,
