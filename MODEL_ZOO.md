@@ -109,7 +109,7 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 
 ### SwAV
 <!-- swav -->
-- rn50 - 2x224 + 6x96 - 100ep - 8node:
+- rn50 - 2x224 + 6x96 - 100ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_100ep_swav_8node_resnet_27_07_20.7e6fc6bf/model_final_checkpoint_phase99.torch
 - rn50 - 2x224 + 6x96 - 200ep - 8node:
 - rn50 - 2x224 + 6x96 - 400ep - 8node:
 - rn50 - 2x224 + 6x96 - 800ep - 8node:

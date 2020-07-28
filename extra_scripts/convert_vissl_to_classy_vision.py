@@ -37,7 +37,8 @@ def convert_trunk_to_classy_model(state_dict_trunk, depth):
             num_blocks = layers[idx]
             for j in range(num_blocks):
                 k = k.replace(
-                    f"_feature_blocks.layer{idx + 1}.{j}.", f"blocks.{idx}.{j}._module."
+                    f"_feature_blocks.layer{idx + 1}.{j}.",
+                    f"blocks.{idx}.block{idx}-{j}.",
                 )
         k = k.replace(".conv1.weight", ".convolutional_block.0.weight")
         k = k.replace(".conv2.weight", ".convolutional_block.3.weight")
