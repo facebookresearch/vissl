@@ -36,9 +36,13 @@ def convert_sync_bn(config, model):
     sync_bn_config = config.MODEL.SYNC_BN_CONFIG
 
     def get_group_size():
+        world_size = config.DISTRIBUTED.NUM_PROC_PER_NODE * config.DISTRIBUTED.NUM_NODES
         if sync_bn_config["GROUP_SIZE"] > 0:
             # if the user specifies group_size to create, we use that.
-            group_size = sync_bn_config["GROUP_SIZE"]
+            # we also make sure additionally that the group size doesn't exceed
+            # the world_size. This is beneficial to handle especially in case
+            # of 1 node training where num_gpu <= 8
+            group_size = min(world_size, sync_bn_config["GROUP_SIZE"])
         elif sync_bn_config["GROUP_SIZE"] == 0:
             # group_size=0 is considered as world_size and no process group is created.
             group_size = None

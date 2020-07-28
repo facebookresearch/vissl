@@ -130,8 +130,8 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 
 ### SeLA-V2
 <!-- sela-v2 -->
-- rn50 - 2x224 - 400ep - 8node - https://dl.fbaipublicfiles.com/deepcluster/selav2_400ep_2x224_pretrain.pth.tar
-- rn50 - 2x224 + 4x96 - 400ep - 8node - https://dl.fbaipublicfiles.com/deepcluster/selav2_400ep_pretrain.pth.tar)
+- rn50 - 2x224 - 400ep - 8node - /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/selav2_400ep_2x224_pretrain.pth.tar
+- rn50 - 2x224 + 4x96 - 400ep - 8node - /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/selav2_400ep_pretrain.pth.tar
 
 ### MoCo
 <!-- moco -->
