@@ -113,8 +113,6 @@ config:
           # lengths: [0.1, 0.9]                 # 100ep
           # lengths: [0.05, 0.95]             # 200ep
           # lengths: [0.025, 0.975]           # 400ep
-          # lengths: [0.02, 0.98]             # 500ep
-          # lengths: [0.0166667, 0.9833333]   # 600ep
           lengths: [0.0125, 0.9875]         # 800ep
           # lengths: [0.0128, 0.9872]         # 1ep IG-1B
           # lengths: [0.00641, 0.99359]       # 2ep IG-1B

@@ -78,24 +78,20 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 ### NPID
 <!-- NPID -->
 - RN50 - in1k - 8gpu - lemniscate - /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_npid_lemniscate_neg4k_stepLR_8gpu.torch
+- RN50 -in1k - 8gpu - 4kneg - 200ep - vissl: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/npid_1node_200ep_4kneg_npid_8gpu_resnet_23_07_20.9eb36512/model_final_checkpoint_phase199.torch
 
 ### NPID++
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_npid_neg32k_cosineLR_ep800_4node.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_npid_neg32k_cosineLR_ep800_8gpu.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_npid_neg32k_stepLR_ep800_8gpu.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_npid_neg4k_stepLR_ep200_4node.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_npid_neg4k_stepLR_ep200_8gpu.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_w2_npid_neg4k_stepLR_ep200_4node.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_w2_npid_neg4k_stepLR_ep800_4node.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_w3_npid_neg32k_stepLR_ep800_4node.torch
-- /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_w3_npid_neg4k_stepLR_ep200_4node.torch
+<!-- NPID++ -->
+- RN50 - in1k - 4node - 32K neg - 800ep - cosine - vissl [old]: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_npid_neg32k_cosineLR_ep800_4node.torch
+- RN50 - in1k - 4node - 32K neg - 800ep - cosine - vissl: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/npid_4node_800ep_32kneg_cosine_npid++_4nodes_resnet_23_07_20.75432662/model_final_checkpoint_phase799.torch
+- RN50w2 - in1k - 4node - 32K neg - 800ep - cosine - vissl:
 
 
 ### PIRL
 <!-- PIRL -->
 - rn50 - in1k - jigsaw - ep200 [old] - /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_pirl_in1k_jigsaw_ep200.torch
 - rn50 - in1k - jigsaw - ep800 [old] - /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_pirl_in1k_jigsaw_ep800.torch
-- rn50 - in1k - jigsaw - ep200 -  TODO
+- rn50 - in1k - jigsaw - ep200 -  /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/pirl_jigsaw_4node_200ep_pirl_jigsaw_4node_resnet_22_07_20.ffd17b75/model_final_checkpoint_phase199.torch
 - rn50 - in1k - jigsaw - ep800 -  TODO
 
 ### SimCLR
@@ -106,7 +102,7 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50 - in1k - 800ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50_800ep_simclr_8node_resnet_16_07_20.7e8feed1/model_final_checkpoint_phase799.torch
 - rn50 - in1k - 1000ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50_1000ep_simclr_8node_resnet_16_07_20.afe428c7/model_final_checkpoint_phase999.torch
 - rn50w2 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50w2_100ep_simclr_8node_resnet_16_07_20.05b37ec3/model_final_checkpoint_phase99.torch
-- rn50w2 - in1k - 1000ep
+- rn50w2 - in1k - 1000ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50w2_1000ep_simclr_8node_resnet_16_07_20.e1e3bbf0/model_final_checkpoint_phase999.torch
 - rn50w4 - in1k - 1000ep
 - rn101 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn101_100ep_simclr_8node_resnet_16_07_20.1ff6cb4b/model_final_checkpoint_phase99.torch
 - rn101 - in1k - 1000ep
