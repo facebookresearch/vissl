@@ -1,4 +1,4 @@
-tensorboard==1.14.0
+tensorboard==1.15.0
 hydra-core@https://github.com/facebookresearch/hydra/tarball/8ac24
 classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
 faiss==1.5.3
