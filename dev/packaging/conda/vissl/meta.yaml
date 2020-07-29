@@ -13,7 +13,7 @@ requirements:
     - python
     - setuptools
     - torchvision>=0.5
-    - tensorboard>=1.14
+    - tensorboard>=1.15
     - opencv
     - scipy
     - scikit-learn
@@ -31,7 +31,7 @@ requirements:
   run:
     - python
     - torchvision>=0.5
-    - tensorboard>=1.14
+    - tensorboard>=1.15
     - opencv
     - scipy
     - scikit-learn

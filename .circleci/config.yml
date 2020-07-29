@@ -34,6 +34,15 @@ install_python: &install_python
         pyenv install 3.6.1
         pyenv global 3.6.1
 
+
+install_classy_vision: &install_classy_vision
+  - run:
+      name: Install ClassyVision
+      working_directory: ~/
+      command: |
+        pip uninstall -y classy_vision
+        pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
+
 setupcuda: &setupcuda
   run:
     name: Setup CUDA and NVIDIA driver
@@ -71,7 +80,7 @@ install_vissl_dep: &install_vissl_dep
       name: Install Dependencies
       working_directory: ~/vissl
       command: |
-        pip install --progress-bar off torch torchvision
+        pip install --progress-bar off torch==1.5.0 torchvision==0.6.0
         pip install --progress-bar off -r requirements.txt
 
 install_apex_gpu: &install_apex_gpu
@@ -119,16 +128,17 @@ jobs:
       # Cache the vissl_venv directory that contains dependencies
       - restore_cache:
           keys:
-            - v1-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+            - v2-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl_dep
+      - <<: *install_classy_vision
       - <<: *install_apex_cpu
       - <<: *pip_list
 
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v1-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+          key: v2-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl
 
@@ -161,9 +171,10 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v1-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+            - v2-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl_dep
+      - <<: *install_classy_vision
       - <<: *install_apex_gpu
       - <<: *pip_list
 
@@ -174,7 +185,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v1-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+          key: v2-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl
 
