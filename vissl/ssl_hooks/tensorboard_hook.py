@@ -91,13 +91,13 @@ class SSLTensorboardHook(ClassyHook):
         ):
             logging.info(f"Logging metrics. Iteration {iteration}")
             self.tb_writer.add_scalar(
-                tag="Loss",
+                tag="Training/Loss",
                 scalar_value=round(task.last_batch.loss.data.cpu().item(), 5),
                 global_step=iteration,
             )
 
             self.tb_writer.add_scalar(
-                tag="Learning_rate",
+                tag="Training/Learning_rate",
                 scalar_value=round(task.optimizer.parameters.lr, 5),
                 global_step=iteration,
             )
@@ -108,9 +108,20 @@ class SSLTensorboardHook(ClassyHook):
             else:
                 batch_times = [0]
 
+            batch_time_avg_s = sum(batch_times) / len(batch_times)
             self.tb_writer.add_scalar(
-                tag="Batch_processing_time_ms",
-                scalar_value=int(1000.0 * sum(batch_times) / len(batch_times)),
+                tag="Speed/Batch_processing_time_ms",
+                scalar_value=int(1000.0 * batch_time_avg_s),
+                global_step=iteration,
+            )
+
+            # Images per second per replica
+            pic_per_batch_per_gpu = task.config["DATA"]["TRAIN"][
+                "BATCHSIZE_PER_REPLICA"
+            ]
+            self.tb_writer.add_scalar(
+                tag="Speed/img_per_sec_per_gpu",
+                scalar_value=int(pic_per_batch_per_gpu / batch_time_avg_s),
                 global_step=iteration,
             )
 
@@ -118,28 +129,30 @@ class SSLTensorboardHook(ClassyHook):
             avg_time = sum(batch_times) / len(batch_times)
             eta_secs = avg_time * (task.max_iteration - iteration)
             self.tb_writer.add_scalar(
-                tag="ETA_hours", scalar_value=eta_secs / 3600.0, global_step=iteration
+                tag="Speed/ETA_hours",
+                scalar_value=eta_secs / 3600.0,
+                global_step=iteration,
             )
 
             # GPU Memory
             if torch.cuda.is_available():
                 # Memory actually being used
                 self.tb_writer.add_scalar(
-                    tag="Peak_GPU_Memory_allocated_MiB",
+                    tag="Memory/Peak_GPU_Memory_allocated_MiB",
                     scalar_value=torch.cuda.max_memory_allocated() / BYTE_TO_MiB,
                     global_step=iteration,
                 )
 
                 # Memory reserved by PyTorch's memory allocator
                 self.tb_writer.add_scalar(
-                    tag="Peak_GPU_Memory_reserved_MiB",
+                    tag="Memory/Peak_GPU_Memory_reserved_MiB",
                     scalar_value=torch.cuda.max_memory_reserved()
                     / BYTE_TO_MiB,  # byte to MiB
                     global_step=iteration,
                 )
 
                 self.tb_writer.add_scalar(
-                    tag="Current_GPU_Memory_reserved_MiB",
+                    tag="Memory/Current_GPU_Memory_reserved_MiB",
                     scalar_value=torch.cuda.memory_reserved()
                     / BYTE_TO_MiB,  # byte to MiB
                     global_step=iteration,
