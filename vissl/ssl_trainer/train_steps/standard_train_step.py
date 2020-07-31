@@ -147,10 +147,9 @@ def standard_train_step(task):  # NOQA
             else:
                 local_loss.backward()
 
-        task.optimizer.update_schedule_on_step(task.where)
         task.run_hooks(SSLClassyHookFunctions.on_backward.name)
         with PerfTimer("optimizer_step", perf_stats):
-            task.optimizer.step()
+            task.optimizer.step(where=task.where)
         task.run_hooks(SSLClassyHookFunctions.on_update.name)
         task.num_updates += task.get_global_batchsize()
 
