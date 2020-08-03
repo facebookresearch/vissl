@@ -23,5 +23,5 @@ This will output the images/sec, sec/image.
 ### Benchmarking transformations
 
 ```bash
-buck run @mode/dev-nosan deeplearning/projects/ssl_framework/tools/perf_measurement:benchmark_transforms
+buck run @mode/opt deeplearning/projects/ssl_framework/tools/perf_measurement:benchmark_transforms
 ```
