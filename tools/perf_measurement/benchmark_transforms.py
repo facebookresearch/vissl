@@ -25,15 +25,36 @@ Small util to test the throughput of the existing transforms on a cpu host
 RAND_TENSOR = (torch.rand((224, 224, 3)) * 255).to(dtype=torch.uint8)
 RAND_PIL = Image.fromarray(RAND_TENSOR.numpy())
 ITERATIONS = 1000
+N_QUEUES = 10  # Simulate the load of N dataloader queues
 
 
-def benchmark(transform: Callable, title: str, requires_pil: bool = False):
+def benchmark(transform: Callable, title: str, requires_pil: bool = False) -> float:
+    """ Given a transform, simulate a real-world load by creating multiple workers """
+    results = []
+
+    def store_result(result):
+        global results
+        results.append(result)
+
+    def worker_load(rank: int):
+        print(f"worker {rank}")
+        load_one_queue(transform, requires_pil)
+
+    pool = torch.multiprocessing.Pool(N_QUEUES)
+    pool.map_async(worker_load, range(N_QUEUES), callback=store_result)
+    pool.close()
+    pool.join()
+    fps = sum(results) / float(N_QUEUES)
+    print("{: <20}: {: >10.1f} fps".format(title, fps))
+
+
+def load_one_queue(transform: Callable, requires_pil: bool = False) -> float:
+    """ Run a given transform repeatedly to simulate a single dataloader worker"""
     start = time.time()
     for _ in range(ITERATIONS):
         transform(RAND_PIL) if requires_pil else transform(RAND_TENSOR)
 
-    fps = ITERATIONS / (time.time() - start)
-    print("{: <20}: {: >10.1f} fps".format(title, fps))
+    return ITERATIONS / (time.time() - start)
 
 
 def testBlur():
@@ -88,6 +109,7 @@ def testImgPilRandomPhotometric():
 if __name__ == "__main__":
     # Run the transforms and print out an average processing speed
     print("\n")
+    print(f"Using {N_QUEUES} {'queues' if N_QUEUES >1 else 'queue'}")
     testBlur()
     testColorDistort()
     testToTensor()
