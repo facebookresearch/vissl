@@ -1,7 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import time
-from typing import Callable
+from typing import Callable, List
 
 import torch
 import torchvision.transforms as transforms
@@ -25,17 +25,46 @@ Small util to test the throughput of the existing transforms on a cpu host
 RAND_TENSOR = (torch.rand((224, 224, 3)) * 255).to(dtype=torch.uint8)
 RAND_PIL = Image.fromarray(RAND_TENSOR.numpy())
 ITERATIONS = 1000
+N_QUEUES = torch.multiprocessing.cpu_count()  # Simulate the load of N dataloader queues
 
 
-def benchmark(transform: Callable, title: str, requires_pil: bool = False):
+# ---- Tooling -----
+def benchmark(transform: Callable, title: str, requires_pil: bool = False) -> float:
+    """ Given a transform, simulate a real-world load by creating multiple workers """
+
+    #  Test the multi-queue speed
+    global benchmark_results
+    benchmark_results = []
+    pool = torch.multiprocessing.Pool(N_QUEUES)
+    pool.starmap_async(
+        load_one_queue, [(transform, requires_pil)] * N_QUEUES, callback=store_result
+    ).get()
+
+    # Test the mono-queue speed
+    fps_mono = load_one_queue(transform, requires_pil)
+
+    print(
+        "{: <20}: {: >10.1f} fps single queue, {: >10.1f} fps multi queue".format(
+            title, fps_mono, sum(benchmark_results) / N_QUEUES
+        )
+    )
+
+
+def store_result(result: List[float]) -> None:
+    global benchmark_results
+    benchmark_results.extend(result)
+
+
+def load_one_queue(transform: Callable, requires_pil: bool = False) -> float:
+    """ Run a given transform repeatedly to simulate a single dataloader worker"""
     start = time.time()
     for _ in range(ITERATIONS):
         transform(RAND_PIL) if requires_pil else transform(RAND_TENSOR)
 
-    fps = ITERATIONS / (time.time() - start)
-    print("{: <20}: {: >10.1f} fps".format(title, fps))
+    return ITERATIONS / (time.time() - start)
 
 
+# ---- Transforms to be benchmarked -----
 def testBlur():
     transform = ImgPilGaussianBlur(p=0.5, radius_min=0.1, radius_max=2.0)
     benchmark(transform, "Blur", requires_pil=True)
@@ -88,6 +117,7 @@ def testImgPilRandomPhotometric():
 if __name__ == "__main__":
     # Run the transforms and print out an average processing speed
     print("\n")
+    print(f"*** Using {N_QUEUES} {'queues' if N_QUEUES >1 else 'queue'} ***")
     testBlur()
     testColorDistort()
     testToTensor()
