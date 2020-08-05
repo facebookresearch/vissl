@@ -6,6 +6,10 @@ from typing import Callable, List
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
+from vissl.data.ssl_transforms.img_cv_color_distortion import (
+    ColorDistortionSettings,
+    ImgOpenCVColorDistortion,
+)
 from vissl.data.ssl_transforms.img_pil_color_distortion import ImgPilColorDistortion
 from vissl.data.ssl_transforms.img_pil_gaussian_blur import ImgPilGaussianBlur
 from vissl.data.ssl_transforms.img_pil_random_photometric import ImgPilRandomPhotometric
@@ -44,7 +48,7 @@ def benchmark(transform: Callable, title: str, requires_pil: bool = False) -> fl
     fps_mono = load_one_queue(transform, requires_pil)
 
     print(
-        "{: <20}: {: >10.1f} fps single queue, {: >10.1f} fps multi queue".format(
+        "{: <25}: {: >10.1f} fps single queue, {: >10.1f} fps multi queue".format(
             title, fps_mono, sum(benchmark_results) / N_QUEUES
         )
     )
@@ -76,7 +80,12 @@ def testImPil2Lab():
 
 def testColorDistort():
     transform = ImgPilColorDistortion(strength=0.5)
-    benchmark(transform, "Color distortion", requires_pil=True)
+    benchmark(transform, "Color distort - PIL", requires_pil=True)
+
+
+def testOpenCVColorDistort():
+    transform = ImgOpenCVColorDistortion(ColorDistortionSettings.defaults())
+    benchmark(transform, "Color distort - OpenCV", requires_pil=True)
 
 
 def testToTensor():
@@ -120,6 +129,7 @@ if __name__ == "__main__":
     print(f"*** Using {N_QUEUES} {'queues' if N_QUEUES >1 else 'queue'} ***")
     testBlur()
     testColorDistort()
+    testOpenCVColorDistort()
     testToTensor()
     testImgToTensor()
     testImPil2Lab()

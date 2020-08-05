@@ -20,8 +20,13 @@ config:
           size: 224
         - name: RandomHorizontalFlip
           p: 0.5
-        - name: ImgPilColorDistortion
-          strength: 1.0
+        - name: ImgOpenCVColorDistortion
+          brightness: 0.8
+          contrast: 0.8
+          saturation: 0.8
+          hue: 0.2
+          p_color_distort: 0.8
+          p_grayscale: 0.2
         - name: ImgPilGaussianBlur
           p: 0.5
           radius_min: 0.1
