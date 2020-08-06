@@ -88,7 +88,7 @@ class LogLossLrEtaHook(ClassyHook):
 
                 eta_secs = avg_time * (task.max_iteration - iteration)
                 eta_string = str(datetime.timedelta(seconds=int(eta_secs)))
-                lr_val = round(task.optimizer.parameters.lr, 5)
+                lr_val = round(task.optimizer.options_view.lr, 5)
                 batch_time = int(1000.0 * avg_time)
                 rank = get_rank()
                 log_str = (

@@ -8,7 +8,7 @@ import torch
 from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
-from classy_vision.optim import build_optimizer
+from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
 from vissl.data import build_dataset, get_loader
@@ -186,6 +186,9 @@ class SelfSupervisionTask(ClassificationTask):
         optim = build_optimizer(optimizer_config)
         return optim
 
+    def _build_optimizer_schedulers(self):
+        return build_optimizer_schedulers(self.config["OPTIMIZER"])
+
     def _build_loss(self):
         # in some cases like memory bank, we need to store the size of data
         # as we use it to allocate memory. Hence we set that parameter here.
@@ -328,12 +331,8 @@ class SelfSupervisionTask(ClassificationTask):
         # set the model to train or eval depending on what phase we are in
         self.base_model.train(phase["train"])
 
-        # update the optimizer
-        # Here, the state.num_updates is used to calculate where we are in the
-        # training. If we are resuming, the state.num_updates will be restored
-        # and used to calculate the proper LR to use
         if self.train and self.train_phase_idx >= 0:
-            self.optimizer.update_schedule_on_epoch(self.where)
+            self.optimizer.on_epoch(self.where)
 
     def _update_classy_state(self, device, state_dict=None):
         """
@@ -371,21 +370,27 @@ class SelfSupervisionTask(ClassificationTask):
             model_config=self.config["MODEL"],
             optimizer_config=self.config["OPTIMIZER"],
         )
-        param_groups, frozen_param_groups = [], None
+        param_groups = []
         # regularized params. Users can append other options here
         # like different LR for the params
         if len(optim_params["regularized_params"]) != 0:
-            param_groups.append({"params": optim_params["regularized_params"]})
+            param_groups.append(
+                {
+                    "params": optim_params["regularized_params"],
+                    **self.optimizer_schedulers,
+                }
+            )
 
         # params which are not regularized i.e have weight_decay=0. common for BN
         if len(optim_params["unregularized_params"]) != 0:
-            frozen_param_groups = {
+            frozen_param_group = {
                 "params": optim_params["unregularized_params"],
-                "weight_decay": 0.0,
+                **self.optimizer_schedulers,
             }
-        self.optimizer.set_param_groups(
-            param_groups=param_groups, frozen_param_groups=frozen_param_groups
-        )
+            frozen_param_group["weight_decay"] = 0.0
+            param_groups.append(frozen_param_group)
+
+        self.optimizer.set_param_groups(param_groups)
 
     def prepare(self, device: str, pin_memory: bool = False):
         """
@@ -400,6 +405,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.base_loss = self._build_loss()
         self.meters = self._build_meters()
         self.optimizer = self._build_optimizer()
+        self.optimizer_schedulers = self._build_optimizer_schedulers()
         self.iteration = self.iteration
         self.num_train_phases = num_train_phases
 

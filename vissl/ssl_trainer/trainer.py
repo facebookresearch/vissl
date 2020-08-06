@@ -200,12 +200,9 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         # set the model to train or eval depending on what phase we are in
         task.model.train(phase["train"])
 
-        # update the optimizer
-        # Here, the task.num_updates is used to calculate where we are in the
-        # training. If we are resuming, the task.num_updates will be restored
-        # and used to calculate the proper LR to use
         if task.train and task.train_phase_idx >= 0:
-            task.optimizer.update_schedule_on_epoch(task.where)
+            task.optimizer.on_epoch(task.where)
+
         local_rank, _ = get_machine_local_and_dist_rank()
         logging.info(f"Phase advanced. Rank: {local_rank}")
 
