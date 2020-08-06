@@ -98,7 +98,7 @@ class SSLTensorboardHook(ClassyHook):
 
             self.tb_writer.add_scalar(
                 tag="Training/Learning_rate",
-                scalar_value=round(task.optimizer.parameters.lr, 5),
+                scalar_value=round(task.optimizer.options_view.lr, 5),
                 global_step=iteration,
             )
 
