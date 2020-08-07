@@ -9,6 +9,7 @@ import torch.nn as nn
 import torchvision.models as models
 from torchvision.models.resnet import Bottleneck
 from vissl.models.model_helpers import Flatten, _get_norm, get_trunk_forward_outputs
+from vissl.models.trunks import register_model_trunk
 
 
 # For more depths, add the block config here
@@ -38,6 +39,7 @@ class SUPPORTED_L4_STRIDE(int, Enum):
     two = 2
 
 
+@register_model_trunk("resnet")
 class ResNeXt(nn.Module):
     """
     Wrapper for TorchVison ResNet Model to support different depth and

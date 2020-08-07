@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from classy_vision.models import ClassyModel, register_model
 from vissl.models.heads import get_model_head
-from vissl.models.trunks import TRUNKS as SUPPORTED_TRUNKS
+from vissl.models.trunks import get_model_trunk
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
 from vissl.utils.checkpoint import (  # noqa
     print_loaded_dict_info,
@@ -161,8 +161,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         else:
             self.eval_mode = False
             trunk_name = self.config.TRUNK.NAME
-            assert trunk_name in SUPPORTED_TRUNKS, "Trunk unknown"
-            return SUPPORTED_TRUNKS[trunk_name](self.config, trunk_name)
+            return get_model_trunk(trunk_name)(self.config, trunk_name)
 
     def _set_heads(self):
         """
