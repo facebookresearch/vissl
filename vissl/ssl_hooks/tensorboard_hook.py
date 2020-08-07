@@ -108,7 +108,7 @@ class SSLTensorboardHook(ClassyHook):
             else:
                 batch_times = [0]
 
-            batch_time_avg_s = sum(batch_times) / len(batch_times)
+            batch_time_avg_s = sum(batch_times) / max(len(batch_times), 1)
             self.tb_writer.add_scalar(
                 tag="Speed/Batch_processing_time_ms",
                 scalar_value=int(1000.0 * batch_time_avg_s),
@@ -119,9 +119,14 @@ class SSLTensorboardHook(ClassyHook):
             pic_per_batch_per_gpu = task.config["DATA"]["TRAIN"][
                 "BATCHSIZE_PER_REPLICA"
             ]
+            pic_per_batch_per_gpu_per_sec = (
+                int(pic_per_batch_per_gpu / batch_time_avg_s)
+                if batch_time_avg_s > 0
+                else 0.0
+            )
             self.tb_writer.add_scalar(
                 tag="Speed/img_per_sec_per_gpu",
-                scalar_value=int(pic_per_batch_per_gpu / batch_time_avg_s),
+                scalar_value=pic_per_batch_per_gpu_per_sec,
                 global_step=iteration,
             )
 
