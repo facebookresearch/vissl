@@ -11,7 +11,7 @@ from hydra.experimental import compose, initialize_config_module
 from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features
 from vissl.utils.svm_utils.svm_trainer import SVMTrainer
 
@@ -70,6 +70,8 @@ def main(args, config):
         except Exception:
             output_mAP.append(-1)
     logging.info(f"AP for various layers:\n {layers}: {output_mAP}")
+    # close the logging streams including the filehandlers
+    shutdown_logging()
 
 
 def hydra_main(overrides):
