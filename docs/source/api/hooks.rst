@@ -1,52 +1,52 @@
-vissl.ssl_hooks package
+vissl.hooks package
 ===========================
 
-.. automodule:: vissl.ssl_hooks
+.. automodule:: vissl.hooks
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_hooks.log_hooks module
+vissl.hooks.log_hooks module
 --------------------------------------
 
-.. automodule:: vissl.ssl_hooks.log_hooks
+.. automodule:: vissl.hooks.log_hooks
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_hooks.state_update_hooks module
+vissl.hooks.state_update_hooks module
 ------------------------------------------------------
 
-.. automodule:: vissl.ssl_hooks.state_update_hooks
+.. automodule:: vissl.hooks.state_update_hooks
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_hooks.swav_hooks module
+vissl.hooks.swav_hooks module
 ------------------------------------------------------
 
-.. automodule:: vissl.ssl_hooks.swav_hooks
+.. automodule:: vissl.hooks.swav_hooks
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_hooks.deepclusterv2_hooks module
+vissl.hooks.deepclusterv2_hooks module
 ------------------------------------------------------
 
-.. automodule:: vissl.ssl_hooks.deepclusterv2_hooks
+.. automodule:: vissl.hooks.deepclusterv2_hooks
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_hooks.tensorboard_hooks module
+vissl.hooks.tensorboard_hooks module
 ------------------------------------------------------
 
-.. automodule:: vissl.ssl_hooks.tensorboard_hook
+.. automodule:: vissl.hooks.tensorboard_hook
     :members:
     :undoc-members:
     :show-inheritance:
