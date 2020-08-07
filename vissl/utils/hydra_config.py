@@ -276,7 +276,11 @@ def assert_hydra_conf(cfg):
             if (
                 meter_name == "accuracy_list_meter"
                 and cfg.MODEL.FEATURE_EVAL_MODE
-                and len(cfg.MODEL.EVAL_FEATURES) > 0
+                and len(cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP) > 0
             ):
-                meter_args["num_meters"] = len(cfg.MODEL.EVAL_FEATURES)
-                meter_args["meter_names"] = cfg.MODEL.EVAL_FEATURES
+                meter_args["num_meters"] = len(
+                    cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+                )
+                meter_args["meter_names"] = [
+                    item[0] for item in cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+                ]

@@ -113,12 +113,12 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50 - 2x224 + 6x96 - 200ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_200ep_swav_8node_resnet_27_07_20.bd595bb0/model_final_checkpoint_phase199.torch
 - rn50 - 2x224 + 6x96 - 400ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_400ep_swav_8node_resnet_27_07_20.a5990fc9/model_final_checkpoint_phase399.torch
 - rn50 - 2x224 + 6x96 - 800ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_800ep_swav_8node_resnet_27_07_20.a0a6b676/model_final_checkpoint_phase799.torch
-- rn50 - 2x224 + 6x96 - 200ep - 1node - use queue:
-- rn50 - 2x224 + 6x96 - 400ep - 1node - use queue:
+- rn50 - 2x224 + 6x96 - 200ep - 1node - use queue: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_4gpu_bs64_200ep_2x224_6x96_queue_swav_8node_resnet_28_07_20.a8f2c735/model_final_checkpoint_phase199.torch
+- rn50 - 2x224 + 6x96 - 400ep - 1node - use queue: [TODO]
 - rn50 - 2x224 - 400ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_8node_2x224_rn50_in1k_swav_8node_resnet_30_07_20.c8fd7169/model_final_checkpoint_phase399.torch
 - rn50w2 - 2x224 + 6x96 - 400ep - 16node - bs32: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_rn50w2_in1k_bs32_16node_400ep_swav_8node_resnet_30_07_20.93563e51/model_final_checkpoint_phase399.torch
-- rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40:
-- rn50w5 - 2x224 + 6x96 - 400ep - 16node - bs12:
+- rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40: [TODO]
+- rn50w5 - 2x224 + 6x96 - 400ep - 16node - bs12: [TODO]
 - rn50w2 - 2x224 + 6x96 - 400ep - 16node - bs32: /checkpoint/imisra/dcluster2/checkpoints_only/r50w2_swav_2x224_4x96v3_mlp8k_lr4pt8_minlr1pt-3_bg32_ep400/model_final_checkpoint_phase399.torch
 - rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40: /checkpoint/imisra/dcluster2/mathilde_runs/pretext_rn50w4_b40wq_2x224_4x96v2_indep_1head_8nodes_oto_imagenet_ampO1_minlr1pt-3_ep400/checkpoints/model_final_checkpoint_phase399.torch
 - rn50w5 - 2x224 + 6x96 - 400ep - 16node - bs12: /checkpoint/imisra/dcluster2/mathilde_runs/pretext_rn50w5_b12wq_2x224_4x96v3_indep_noBN_1head_16nodes_oto_imagenet_ampO1_ep400/checkpoints/model_final_checkpoint_phase399.torch

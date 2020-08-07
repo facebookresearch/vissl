@@ -48,7 +48,7 @@ def main(args, config):
     launch_distributed(config, args, hook_generator=default_hook_generator)
 
     # get the layers for which we will train svm
-    layers = config.MODEL.EVAL_FEATURES
+    layers = [item[0] for item in config.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP]
     output_dir = get_absolute_path(config.SVM.OUTPUT_DIR)
 
     # train svm for each layer. parallelize it.

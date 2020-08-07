@@ -123,19 +123,16 @@ config:
     # the model parameter names that should not be trained
     NON_TRAINABLE_PARAMS: []
     TEMP_FROZEN_PARAMS_ITER_MAP: []
-    # Colorization models take lab input. Everything else takes rgb
+    # Colorization models take lab input. Everything else takes rgb.
     INPUT_TYPE: "rgb"
     # if you want to evaluate several feature layers of the pre-trained model on
-    # benchmark tasks like linear classification, set this to True
+    # benchmark tasks like linear classification, set this to True. This freezes the model
+    # trunk for feature evaluation.
     FEATURE_EVAL_MODE: false
-    # if you want to only extract features and not train linear cls, set this to true
+    # if you want to only extract features and not train linear classifier, set to true
     EXTRACT_FEATURES_ONLY: false
-    # model features that should be evaluated. Consult the respective model python
-    # files for names of layers.
-    EVAL_FEATURES: []
-    # Multi-input model
-    # input keys in the sample dictionary and which head uses them
-    # for example, input contains "images" and "patches" and there
+    # Multi-input model: input keys in the sample dictionary and which head
+    # uses them for example, input contains "images" and "patches" and there
     # is one separate head applied to images and another to patches
     MULTI_INPUT_HEAD_MAPPING: []
     # ----------------------------------------------------------------------------------- #
@@ -159,20 +156,22 @@ config:
         EFFICIENT_NETS: {}  # follow classy vision for these
         REGNETS: {}
       SHOULD_FLATTEN: false
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[10, 10], 10, 4]],
-          ["AvgPool2d", [[16, 16], 8, 0]],
-          ["AvgPool2d", [[13, 13], 5, 0]],
-          ["AvgPool2d", [[8, 8], 3, 0]],
-          ["AvgPool2d", [[6, 6], 1, 0]],
-      ]
+      # model features that should be evaluated for linear classification and what
+      # pooling to apply on features. Could be any pooling operation or Identity.
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+            ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+            ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+            ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+            ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+            ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+        ]
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
     # ----------------------------------------------------------------------------------- #
     HEAD:
-      # List of Pairs:
-      # Pair[0] = Type of Head.
-      # Pair[1] = kwargs passed to head constructor.
+      # PARAMS is a List of Pairs:
+      #   Pair[0] = Name of Head.
+      #   Pair[1] = kwargs passed to head constructor.
       PARAMS: []
       BATCHNORM_EPS: 1e-5
       BATCHNORM_MOMENTUM: 0.1

@@ -203,18 +203,26 @@ def get_trunk_forward_outputs(
         out_feat_keys, list(feature_blocks.keys())
     )
 
-    out_feats = [None] * len(out_feat_keys)
-
+    unique_out_feat_keys = list(set(out_feat_keys))
+    unique_out_feats = {}
     # Go through the blocks, and save the features as we go
+    # NOTE: we are not doing several forward passes but instead just checking
+    # whether the feature should is requested to be returned.
     for i, (feature_name, feature_block) in enumerate(feature_blocks.items()):
         feat = feature_block(feat)
 
-        # This feature is requested, store
-        if feature_name in out_feat_keys:
-            out_feats[out_feat_keys.index(feature_name)] = feat
+        # This feature is requested, store. If the same feature is requested several
+        # times, we return the feature several times.
+        if feature_name in unique_out_feat_keys:
+            unique_out_feats[feature_name] = feat
 
         # Early exit if all the features have been collected
         if i == max_out_feat:
             break
 
-    return out_feats
+    # now return the features as requested by the user.
+    output_feats = []
+    for key_name in out_feat_keys:
+        output_feats.append(unique_out_feats[key_name])
+
+    return output_feats

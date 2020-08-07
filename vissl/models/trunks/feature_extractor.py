@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from vissl.models.model_helpers import Identity
 from vissl.models.trunks import get_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
 POOL_OPS = {
@@ -16,7 +17,7 @@ POOL_OPS = {
 
 
 class FeatureExtractorModel(nn.Module):
-    def __init__(self, model_config):
+    def __init__(self, model_config: AttrDict):
         super(FeatureExtractorModel, self).__init__()
 
         self.model_config = model_config
@@ -45,12 +46,11 @@ class FeatureExtractorModel(nn.Module):
             param.requires_grad = False
 
     def _attach_feature_pool_layers(self):
-        feat_pool = nn.ModuleList(
-            [
-                POOL_OPS[pool_ops](*args)
-                for (pool_ops, args) in self.model_config.TRUNK.LINEAR_FEAT_POOL_OPS
-            ]
-        )
+        feat_pool_ops = []
+        for entry in self.model_config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP:
+            pool_ops, args = entry[1]
+            feat_pool_ops.append(POOL_OPS[pool_ops](*args))
+        feat_pool = nn.ModuleList(feat_pool_ops)
         return feat_pool
 
     def train(self, mode=True):

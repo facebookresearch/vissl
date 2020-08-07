@@ -46,25 +46,24 @@ config:
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-    MULTI_INPUT_HEAD_MAPPING: ["patches", "images"]
-    EVAL_FEATURES: [
+    MULTI_INPUT_HEAD_MAPPING: [
         # "flatten" is the res5->avg->flatten feature from ResNet50
         ["patches", ["flatten"]], # feature layer to extract from second input "patches"
         ["images", ["flatten"]],  # feature layer to extract from first input "images"
     ]
     HEAD:
       PARAMS: [
-        # head 0 that operates on patches
+        # head 0 that operates on `patches`
         [
             ["mlp", {"dims": [2048, 128], "use_bn": False, "use_relu": False}],
             ["siamese_concat_view", {"num_towers": 9}],
             ["mlp", {"dims": [1152, 128]}],
         ],
-        # head 1 that operates on images. Linear projection.
-          [
-              ["mlp", {"dims": [2048, 128]}]
-          ],
-        ]
+        # head 1 that operates on `images`. Linear projection.
+        [
+            ["mlp", {"dims": [2048, 128]}]
+        ],
+      ]
   LOSS:
     name: nce_loss_with_memory
     nce_loss_with_memory:

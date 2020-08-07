@@ -238,16 +238,28 @@ class SelfSupervisionTrainer(object):
             pin_memory=self.cfg.DATA.PIN_MEMORY,
             use_gpu=self.task.use_gpu,
         )
-
         self.task.init_distributed_data_parallel_model()
 
         if is_primary():
             logging.info("Model is:\n {}".format(self.task.model))
+
+        # Get the names of the features that we are extracting. If user doesn't
+        # specify the features to evaluate, we get the full model output and freeze
+        # head/trunk both as caution.
+        if self.cfg.MODEL.FEATURE_EVAL_MODE:
+            feat_names = [
+                item[0] for item in self.cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+            ]
+        else:
+            feat_names = ["heads"]
+
         features = {}
         for split in self.task.available_splits:
             logging.info(f"Extracting features for partition: {split.lower()}")
             self.task.data_iterator = iter(self.task.dataloaders[split.lower()])
-            features[split.lower()] = self._get_split_features(self.cfg, self.task)
+            features[split.lower()] = self._get_split_features(
+                feat_names, self.cfg, self.task
+            )
             logging.info(f"Done getting features for partition: {split.lower()}")
 
         if hasattr(self.task, "data_iterator"):
@@ -266,17 +278,13 @@ class SelfSupervisionTrainer(object):
             return flat_features_list
         return features
 
-    def _get_split_features(self, cfg: AttrDict, task: ClassyTask):
+    def _get_split_features(
+        self, feat_names: List[str], cfg: AttrDict, task: ClassyTask
+    ):
         task.model.eval()
-        # if user doesn't specify the features to evaluate, we get the full model
-        # output and freeze head/trunk both as caution.
-        # TODO (prigoyal): pass "heads" to the EVAL_FEATURES
-        if len(cfg.MODEL.EVAL_FEATURES) == 0:
-            feat_layers = ["heads"]
-        else:
-            feat_layers = cfg.MODEL.EVAL_FEATURES
+
         out_features, out_targets = {}, {}
-        for layer in feat_layers:
+        for layer in feat_names:
             out_features[layer], out_targets[layer] = {}, {}
 
         while True:
@@ -293,7 +301,7 @@ class SelfSupervisionTrainer(object):
                     features = task.model(input_sample["input"])
                     flat_features_list = self._flatten_features_list(features)
                     num_images = input_sample["inds"].shape[0]
-                    for num, layer in enumerate(feat_layers):
+                    for num, layer in enumerate(feat_names):
                         feature = flat_features_list[num].cpu().numpy()
                         targets = input_sample["target"]
                         for idx in range(num_images):
@@ -306,7 +314,7 @@ class SelfSupervisionTrainer(object):
         barrier()
 
         output = {}
-        for layer in feat_layers:
+        for layer in feat_names:
             out_features[layer] = dict(sorted(out_features[layer].items()))
             out_targets[layer] = dict(sorted(out_targets[layer].items()))
             feats = np.array(list(out_features[layer].values()))
