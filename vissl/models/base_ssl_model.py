@@ -6,7 +6,7 @@ import logging
 import torch
 import torch.nn as nn
 from classy_vision.models import ClassyModel, register_model
-from vissl.models.heads import HEADS as SUPPORTED_HEADS
+from vissl.models.heads import get_model_head
 from vissl.models.trunks import TRUNKS as SUPPORTED_TRUNKS
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
 from vissl.utils.checkpoint import (  # noqa
@@ -285,8 +285,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
     def _make_head_module(self, head_param):
         head_name = head_param[0]
         head_kwargs = head_param[1]
-        assert head_name in SUPPORTED_HEADS, f"Head name {head_name} unknown"
-        head_module = SUPPORTED_HEADS[head_name](self.config, **head_kwargs)
+        head_module = get_model_head(head_name)(self.config, **head_kwargs)
         return head_module
 
     # we call this on the state.base_model which is not wrapped with DDP.
