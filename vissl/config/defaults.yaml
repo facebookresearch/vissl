@@ -387,7 +387,7 @@ config:
   # TRAINER (define your train step)
   # ----------------------------------------------------------------------------------- #
   TRAINER:
-    TRAIN_STEP_NAME: "standard"
+    TRAIN_STEP_NAME: "standard_train_step"
 
   # ----------------------------------------------------------------------------------- #
   # CHECKPOINT

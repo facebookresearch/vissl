@@ -49,7 +49,7 @@ config:
       num_list: 5
       topk: [1, 5]
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   MODEL:
     FEATURE_EVAL_MODE: True
     EVAL_FEATURES: ["conv1", "conv2", "conv3", "conv4", "conv5"]
