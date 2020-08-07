@@ -1,14 +1,17 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+from typing import List, Union
+
 import torch
 from classy_vision.generic.util import is_on_gpu
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_loss("cross_entropy_multiple_output_single_target")
 class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
-    def __init__(self, loss_config):
+    def __init__(self, loss_config: AttrDict):
         """
         Intializer for the sum cross-entropy loss. For a single
         tensor, this is equivalent to the cross-entropy loss. For a
@@ -33,7 +36,7 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
             self._normalize_output = loss_config["normalize_output"]
 
     @classmethod
-    def from_config(cls, loss_config):
+    def from_config(cls, loss_config: AttrDict):
         return cls(loss_config)
 
     def _create_loss_function(self):
@@ -47,7 +50,11 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
             self._losses.cuda()
         return self
 
-    def forward(self, output, target):
+    def forward(
+        self, output: Union[torch.Tensor, List[torch.Tensor]], target: torch.Tensor
+    ):
+        if isinstance(output, torch.Tensor):
+            output = [output]
         assert isinstance(
             output, list
         ), "Model output should be a list of tensors. Got Type {}".format(type(output))
