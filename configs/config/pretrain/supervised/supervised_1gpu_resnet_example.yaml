@@ -51,7 +51,8 @@ config:
         ["mlp", {"dims": [2048, 1000]}],
       ]
   LOSS:
-      name: cross_entropy_multiple_output_single_target
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
       name: sgd
@@ -74,9 +75,9 @@ config:
           values: [0.1, 0.01, 0.001, 0.0001, 0.00001] # the exact values of learning rate (N+1 vals)
           update_interval: epoch
   METERS:
-    accuracy_list:
-      num_list: 1
-      topk: [1, 5]
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1, 5]
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
