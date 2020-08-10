@@ -85,10 +85,8 @@ config:
       nesterov: False
       # num_epochs: 100
       # num_epochs: 200
-      # num_epochs: 400
-      # num_epochs: 500
-      # num_epochs: 600
-      num_epochs: 800
+      num_epochs: 400
+      # num_epochs: 800
       # num_epochs: 1
       # num_epochs: 2
       # num_epochs: 5
@@ -112,8 +110,8 @@ config:
           interval_scaling: [rescaled, fixed]
           # lengths: [0.1, 0.9]                 # 100ep
           # lengths: [0.05, 0.95]             # 200ep
-          # lengths: [0.025, 0.975]           # 400ep
-          lengths: [0.0125, 0.9875]         # 800ep
+          lengths: [0.025, 0.975]           # 400ep
+          # lengths: [0.0125, 0.9875]         # 800ep
           # lengths: [0.0128, 0.9872]         # 1ep IG-1B
           # lengths: [0.00641, 0.99359]       # 2ep IG-1B
           # lengths: [0.002563, 0.997437]     # 5ep IG-1B = 50 ep IG-100M
