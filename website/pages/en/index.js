@@ -93,7 +93,7 @@ class Index extends React.Component {
       </Container>
     );
 
-    
+
     const Description = () => (
       <Block background="light">
         {[
@@ -109,11 +109,11 @@ class Index extends React.Component {
     );
 
     const pre = '```';
-    
+
     const codeExample = `${pre}bash
-python tools/distributed_train.py config=test/integration_test/quick_simclr
+python tools/run_distributed_engines.py config=test/integration_test/quick_simclr
     `;
-    
+
     const QuickStart = () => (
       <div
         className="productShowcaseSection"
