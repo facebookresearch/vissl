@@ -18,7 +18,7 @@ from vissl.engine.train import train_main
 from vissl.ssl_hooks import ClassyHook, default_hook_generator
 from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.io import cleanup_dir, copy_data_to_local
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import get_dist_run_id
 from vissl.utils.slurm import get_node_id
 
@@ -128,6 +128,8 @@ def hydra_main(overrides):
     setup_logging(__name__)
     args, config = convert_to_attrdict(cfg)
     launch_distributed(config, args, hook_generator=default_hook_generator)
+    # close the logging streams including the filehandlers
+    shutdown_logging()
 
 
 if __name__ == "__main__":
