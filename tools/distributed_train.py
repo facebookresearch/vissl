@@ -13,8 +13,8 @@ from typing import Any, Callable, List
 import torch
 from hydra.experimental import compose, initialize_config_module
 from vissl.data.dataset_catalog import get_data_files
-from vissl.engine.extract_features import extract_main
-from vissl.engine.train import train_main
+from vissl.engines.extract_features import extract_main
+from vissl.engines.train import train_main
 from vissl.ssl_hooks import ClassyHook, default_hook_generator
 from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.io import cleanup_dir, copy_data_to_local
