@@ -8,7 +8,7 @@ import sys
 import numpy as np
 from hydra.experimental import compose, initialize_config_module
 from run_distributed_engines import launch_distributed
-from vissl.ssl_hooks import default_hook_generator
+from vissl.hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.logger import setup_logging, shutdown_logging

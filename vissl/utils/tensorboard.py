@@ -32,7 +32,7 @@ def get_tensorboard_dir(cfg):
 
 
 def get_tensorboard_hook(cfg):
-    from vissl.ssl_hooks import SSLTensorboardHook
+    from vissl.hooks import SSLTensorboardHook
     from torch.utils.tensorboard import SummaryWriter
 
     # get the tensorboard directory and check tensorboard is installed

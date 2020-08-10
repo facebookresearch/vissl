@@ -4,17 +4,14 @@ from enum import Enum, auto
 from typing import List
 
 from classy_vision.hooks.classy_hook import ClassyHook
-from vissl.ssl_hooks.deepclusterv2_hooks import (  # noqa
-    ClusterMemoryHook,
-    InitMemoryHook,
-)
-from vissl.ssl_hooks.log_hooks import (  # noqa
+from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
+from vissl.hooks.log_hooks import (  # noqa
     LogGpuStatsHook,
     LogLossLrEtaHook,
     LogLossMetricsCheckpointHook,
     LogPerfTimeMetricsHook,
 )
-from vissl.ssl_hooks.state_update_hooks import (  # noqa
+from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     FreezeParametersHook,
     SetDataSamplerEpochHook,
@@ -24,9 +21,9 @@ from vissl.ssl_hooks.state_update_hooks import (  # noqa
     UpdateTrainBatchTimeHook,
     UpdateTrainIterationNumHook,
 )
-from vissl.ssl_hooks.swav_hooks import NormalizePrototypesHook  # noqa
-from vissl.ssl_hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
-from vissl.ssl_hooks.tensorboard_hook import SSLTensorboardHook  # noqa
+from vissl.hooks.swav_hooks import NormalizePrototypesHook  # noqa
+from vissl.hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
+from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
 
