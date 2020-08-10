@@ -8,11 +8,9 @@ import torch
 from classy_vision.generic.distributed_util import set_cpu_device
 from parameterized import parameterized
 from utils import ROOT_OSS_CONFIGS, SSLHydraConfig
-from vissl.ssl_losses.multicrop_simclr_info_nce_loss import (
-    MultiCropSimclrInfoNCECriterion,
-)
-from vissl.ssl_losses.simclr_info_nce_loss import SimclrInfoNCECriterion
-from vissl.ssl_losses.swav_loss import SwAVCriterion
+from vissl.losses.multicrop_simclr_info_nce_loss import MultiCropSimclrInfoNCECriterion
+from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
+from vissl.losses.swav_loss import SwAVCriterion
 from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
 
