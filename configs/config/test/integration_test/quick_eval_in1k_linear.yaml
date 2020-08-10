@@ -63,8 +63,8 @@ config:
       PARAMS: [
         ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
       ]
-    PARAMS_FILE:
-      PATH: ""
+    WEIGHTS_INIT:
+      PARAMS_FILE: ""
       STATE_DICT_KEY_NAME: classy_state_dict
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True

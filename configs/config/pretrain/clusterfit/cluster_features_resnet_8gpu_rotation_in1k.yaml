@@ -35,8 +35,8 @@ config:
       ]
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 1000]}]]
-    PARAMS_FILE:
-      PATH: "specify weights to use for clustering."
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify weights to use for clustering."
       STATE_DICT_KEY_NAME: classy_state_dict
       SKIP_LAYERS: ["num_batches_tracked", "heads"]
       # REMOVE_PREFIX: "trunk."
