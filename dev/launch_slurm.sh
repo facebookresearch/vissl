@@ -56,7 +56,7 @@ echo "HEADER: $HEADER"
 
 ####################### setup experiment dir ###################################
 # create the experiments folder
-RUN_SCRIPT="$EXP_ROOT_DIR/$GITHUB_REPO/tools/distributed_train.py"
+RUN_SCRIPT="$EXP_ROOT_DIR/$GITHUB_REPO/tools/run_distributed_engines.py"
 CHECKPOINT_DIR="$EXP_ROOT_DIR/checkpoints/"
 
 echo "EXP_ROOT_DIR: $EXP_ROOT_DIR"
