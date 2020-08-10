@@ -71,8 +71,8 @@ config:
         ["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
       ]
       BATCHNORM_MOMENTUM: 0.1
-    PARAMS_FILE:
-      PATH: "specify model paths here"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify model paths here"
       STATE_DICT_KEY_NAME: model_state_dict
   LOSS:
     name: cross_entropy_multiple_output_single_target
