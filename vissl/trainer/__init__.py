@@ -7,11 +7,8 @@ import vissl.models  # NOQA
 import vissl.ssl_hooks  # NOQA
 import vissl.ssl_losses  # NOQA
 import vissl.ssl_optimizers.param_scheduler  # NOQA
-from vissl.ssl_tasks.ssl_task import SelfSupervisionTask
-
-
-def build_task(config):
-    return SelfSupervisionTask.from_config(config)
+from vissl.trainer.train_task import SelfSupervisionTask  # NOQA
+from vissl.trainer.trainer_main import SelfSupervisionTrainer  # noqa
 
 
 __all__ = [k for k in globals().keys() if not k.startswith("_")]
