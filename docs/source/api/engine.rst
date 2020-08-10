@@ -1,7 +1,7 @@
-vissl.engine package
+vissl.engines package
 ===========================
 
-.. automodule:: vissl.engine
+.. automodule:: vissl.engines
     :members:
     :undoc-members:
     :show-inheritance:
