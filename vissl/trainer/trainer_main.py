@@ -5,7 +5,7 @@ import logging
 import os
 import socket
 import time
-from typing import Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import torch
@@ -15,24 +15,48 @@ from classy_vision.generic.distributed_util import (
     set_cpu_device,
     set_cuda_device_index,
 )
+from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import ClassyTask
-from classy_vision.trainer import ClassyTrainer
 from vissl.data import print_sampler_config
 from vissl.ssl_hooks import SSLClassyHookFunctions
-from vissl.ssl_trainer.train_steps import get_train_step
+from vissl.trainer.train_steps import get_train_step
+from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.hydra_config import AttrDict
 
 
-class DistributedSelfSupervisionTrainer(ClassyTrainer):
-    def __init__(self, dist_run_id):
+class SelfSupervisionTrainer(object):
+    def __init__(
+        self,
+        cfg: AttrDict,
+        dist_run_id: str,
+        checkpoint: Dict[str, Any] = None,
+        hooks: List[ClassyHook] = None,
+    ):
+        self.cfg = cfg
         self.dist_run_id = dist_run_id
 
-    def _setup_distributed(self, cfg, use_gpu):
+        # now we should build the task. The task will also have the State attached
+        # to it. It will have information about phases (train, test) both. It will
+        # also contain all the other information like optimizers, etc
+        self.task = self.build_task()
+        self.task.set_checkpoint(checkpoint)
+        if hooks is None:
+            hooks = []
+        self.task.set_hooks(hooks)
+
+        self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
+        self.setup_distributed(self.task.use_gpu)
+
+    def build_task(self):
+        return SelfSupervisionTask.from_config(self.cfg)
+
+    def setup_distributed(self, use_gpu: bool):
 
         # we overwrite the distributed trainer setup here with our config options
         distributed_world_size = int(os.environ["WORLD_SIZE"])
-        assert distributed_world_size % cfg.DISTRIBUTED.NUM_NODES == 0
-        init_method = f"{cfg.DISTRIBUTED.INIT_METHOD}://{self.dist_run_id}"
+        assert distributed_world_size % self.cfg.DISTRIBUTED.NUM_NODES == 0
+        init_method = f"{self.cfg.DISTRIBUTED.INIT_METHOD}://{self.dist_run_id}"
         logging.info(
             f"Using Distributed init method: {init_method}, "
             f"world_size: {distributed_world_size}, rank: {self.distributed_rank}"
@@ -40,7 +64,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
 
         if not torch.distributed.is_initialized():
             torch.distributed.init_process_group(
-                backend=cfg.DISTRIBUTED.BACKEND,
+                backend=self.cfg.DISTRIBUTED.BACKEND,
                 init_method=init_method,
                 world_size=distributed_world_size,
                 rank=self.distributed_rank,
@@ -63,18 +87,18 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         else:
             set_cpu_device()
 
-    def train(self, cfg, task: ClassyTask):
-        self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
-
-        self._setup_distributed(cfg, task.use_gpu)
-
-        train_step_fn = get_train_step(cfg["TRAINER"]["TRAIN_STEP_NAME"])
-        task.prepare(device=cfg.MACHINE.DEVICE, pin_memory=cfg.DATA.PIN_MEMORY)
-        task.init_distributed_data_parallel_model()
+    def train(self):
+        train_step_fn = get_train_step(self.cfg["TRAINER"]["TRAIN_STEP_NAME"])
+        self.task.prepare(
+            device=self.cfg.MACHINE.DEVICE, pin_memory=self.cfg.DATA.PIN_MEMORY
+        )
+        self.task.init_distributed_data_parallel_model()
 
         # Find what phase, train_phase_idx, local_iteration_num we are starting from.
         # Recover it from the checkpoint (if available)
-        task, phase_idx, iteration_num = self._update_training_state(cfg, task)
+        task, phase_idx, iteration_num = self._update_training_state(
+            self.cfg, self.task
+        )
 
         # Good to go, (re) start training
         task.run_hooks(SSLClassyHookFunctions.on_start.name)
@@ -151,7 +175,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         logging.info(f"Total {num_samples} samples in one epoch")
         return task, phase_idx, task.local_iteration_num
 
-    def _advance_phase(self, task):
+    def _advance_phase(self, task: ClassyTask):
         # reset the meters at the beginning of the epoch
         for meter in task.meters:
             meter.reset()
@@ -206,39 +230,35 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
         local_rank, _ = get_machine_local_and_dist_rank()
         logging.info(f"Phase advanced. Rank: {local_rank}")
 
-    def extract(self, cfg, task: ClassyTask):
-        self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
-
-        self._setup_distributed(cfg, task.use_gpu)
-
+    def extract(self):
         # support feature extraction on gpu only.
-        assert task.use_gpu, "Set MACHINE.DEVICE = gpu"
-        task.prepare_extraction(
-            device=cfg.MACHINE.DEVICE,
-            pin_memory=cfg.DATA.PIN_MEMORY,
-            use_gpu=task.use_gpu,
+        assert self.task.use_gpu, "Set MACHINE.DEVICE = gpu"
+        self.task.prepare_extraction(
+            device=self.cfg.MACHINE.DEVICE,
+            pin_memory=self.cfg.DATA.PIN_MEMORY,
+            use_gpu=self.task.use_gpu,
         )
 
-        task.init_distributed_data_parallel_model()
+        self.task.init_distributed_data_parallel_model()
 
         if is_primary():
-            logging.info("Model is:\n {}".format(task.model))
+            logging.info("Model is:\n {}".format(self.task.model))
         features = {}
-        for split in task.available_splits:
+        for split in self.task.available_splits:
             logging.info(f"Extracting features for partition: {split.lower()}")
-            task.data_iterator = iter(task.dataloaders[split.lower()])
-            features[split.lower()] = self._get_split_features(cfg, task, task.model)
+            self.task.data_iterator = iter(self.task.dataloaders[split.lower()])
+            features[split.lower()] = self._get_split_features(self.cfg, self.task)
             logging.info(f"Done getting features for partition: {split.lower()}")
 
-        if hasattr(task, "data_iterator"):
-            del task.data_iterator
+        if hasattr(self.task, "data_iterator"):
+            del self.task.data_iterator
             gc.collect()
-        if hasattr(task, "dataloaders"):
-            del task.dataloaders
+        if hasattr(self.task, "dataloaders"):
+            del self.task.dataloaders
             gc.collect()
         return features
 
-    def _flatten_features_list(self, features):
+    def _flatten_features_list(self, features: Dict[str, Any]):
         assert isinstance(features, list), "features must be of type list"
         is_nested = isinstance(features[0], list)
         if is_nested:
@@ -246,8 +266,8 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
             return flat_features_list
         return features
 
-    def _get_split_features(self, cfg, task, model):
-        model.eval()
+    def _get_split_features(self, cfg: AttrDict, task: ClassyTask):
+        task.model.eval()
         # if user doesn't specify the features to evaluate, we get the full model
         # output and freeze head/trunk both as caution.
         # TODO (prigoyal): pass "heads" to the EVAL_FEATURES
@@ -270,7 +290,7 @@ class DistributedSelfSupervisionTrainer(ClassyTrainer):
                     "inds": torch.cat(sample["data_idx"]).numpy(),
                 }
                 with torch.no_grad():
-                    features = model(input_sample["input"])
+                    features = task.model(input_sample["input"])
                     flat_features_list = self._flatten_features_list(features)
                     num_images = input_sample["inds"].shape[0]
                     for num, layer in enumerate(feat_layers):
