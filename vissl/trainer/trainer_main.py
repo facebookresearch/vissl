@@ -18,7 +18,7 @@ from classy_vision.generic.distributed_util import (
 from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import ClassyTask
 from vissl.data import print_sampler_config
-from vissl.ssl_hooks import SSLClassyHookFunctions
+from vissl.hooks import SSLClassyHookFunctions
 from vissl.trainer.train_steps import get_train_step
 from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.env import get_machine_local_and_dist_rank

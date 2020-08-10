@@ -7,7 +7,7 @@ import pkg_resources
 from parameterized import parameterized
 from utils import UNIT_TEST_CONFIGS, SSLHydraConfig
 from vissl.engines.train import train_main
-from vissl.ssl_hooks import default_hook_generator
+from vissl.hooks import default_hook_generator
 from vissl.utils.hydra_config import convert_to_attrdict
 from vissl.utils.misc import get_dist_run_id
 
