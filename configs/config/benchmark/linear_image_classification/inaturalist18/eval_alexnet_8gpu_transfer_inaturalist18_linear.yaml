@@ -45,9 +45,9 @@ config:
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/inaturalist2018/
   METERS:
-    accuracy_list:
-      num_list: 5
-      topk: [1, 5]
+    accuracy_list_meter:
+      num_meters: 5
+      topk_values: [1, 5]
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:

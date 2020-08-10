@@ -1,0 +1,28 @@
+# @package _global_
+config:
+  METERS:
+    accuracy_list_meter:
+      num_meters: 5
+      topk_values: [1, 5]
+  MODEL:
+    EVAL_FEATURES: ["res5", "res5", "res5", "res5", "res5"]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_16gf
+      LINEAR_FEAT_POOL_OPS: [
+          ["AdaptiveAvgPool2d", [[3, 1]]],
+          ["AdaptiveAvgPool2d", [[2, 2]]],
+          ["AvgPool2d", [[5, 5], 2, 0]],
+          ["AvgPool2d", [[4, 4], 3, 0]],
+          ["AvgPool2d", [[6, 6], 1, 0]],
+      ]
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 3024, "dims": [9072, 1000]}],
+        ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
+        ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
+        ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
+        ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
+      ]

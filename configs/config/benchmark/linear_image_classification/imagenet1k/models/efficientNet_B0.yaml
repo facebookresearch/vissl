@@ -1,9 +1,9 @@
 # @package _global_
 config:
   METERS:
-    accuracy_list:
-      num_list: 1
-      topk: [1, 5]
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1, 5]
   MODEL:
     EVAL_FEATURES: ["conv_final"]
     TRUNK:
