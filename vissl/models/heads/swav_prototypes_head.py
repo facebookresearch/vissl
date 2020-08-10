@@ -1,8 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import torch.nn as nn
+from vissl.models.heads import register_model_head
 
 
+@register_model_head("swav_head")
 class SwAVPrototypesHead(nn.Module):
     """
     SwAV head used in https://arxiv.org/pdf/2006.09882.pdf paper.
