@@ -1,0 +1,27 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    num_epochs: 100
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: false
+          base_value: 0.3
+          base_lr_batch_size: 256
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.6
+            end_value: 4.8
+          - name: cosine
+            start_value: 4.8
+            end_value: 0.0048
+          - name: linear
+            start_value: 0.0048
+            end_value: 2.114
+          - name: cosine
+            start_value: 2.114
+            end_value: 0.0048
+        update_interval: step
+        interval_scaling: [rescaled, rescaled, rescaled, rescaled]
+        lengths: [0.1, 0.45, 0.1, 0.35]                 # 100ep
