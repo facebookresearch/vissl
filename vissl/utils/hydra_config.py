@@ -101,7 +101,7 @@ def resolve_linear_schedule(cfg, param_schedulers):
 
 
 def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
-    if param_schedulers["name"] == "cosine":
+    if "cosine" in param_schedulers["name"]:
         start_value = param_schedulers["start_value"]
         end_value = param_schedulers["end_value"]
         decay_multiplier = end_value / start_value
