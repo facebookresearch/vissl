@@ -9,7 +9,7 @@ from extra_scripts.create_voc07_low_shot_samples import generate_voc07_low_shot_
 from hydra.experimental import compose, initialize_config_module
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features
 from vissl.utils.svm_utils.svm_low_shot_trainer import SVMLowShotTrainer
 
@@ -54,6 +54,8 @@ def train_svm_low_shot(args, cfg):
     # k-value and report mean/min/max/std stats
     low_shot_trainer.aggregate_stats(k_values, sample_inds)
     logging.info("All Done!")
+    # close the logging streams including the filehandlers
+    shutdown_logging()
 
 
 def main(args, cfg):

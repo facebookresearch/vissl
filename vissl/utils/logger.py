@@ -45,6 +45,13 @@ def setup_logging(name, output_dir=None, rank=0):
     logging.root = logger
 
 
+def shutdown_logging():
+    logging.info("Shutting down loggers...")
+    handlers = logging.root.handlers
+    for handler in handlers:
+        handler.close()
+
+
 def log_gpu_stats():
     logging.info(subprocess.check_output(["nvidia-smi"]).decode("utf-8"))
 
