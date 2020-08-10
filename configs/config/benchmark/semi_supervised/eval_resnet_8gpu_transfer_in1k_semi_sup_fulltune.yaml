@@ -59,8 +59,8 @@ config:
       PARAMS: [
         ["mlp", {"dims": [2048, 1000]}],
       ]
-    PARAMS_FILE:
-      PATH: "specify model"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify model"
       STATE_DICT_KEY_NAME: classy_state_dict
       APPEND_PREFIX: trunk.
   LOSS:
