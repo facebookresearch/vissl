@@ -41,7 +41,7 @@ config:
       DATA_LIMIT: 250
       DROP_LAST: True
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   METERS: null
   MODEL:
     TRUNK:
