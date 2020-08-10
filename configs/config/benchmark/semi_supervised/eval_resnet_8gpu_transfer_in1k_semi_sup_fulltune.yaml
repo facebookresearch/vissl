@@ -48,7 +48,7 @@ config:
       num_list: 1
       topk: [1, 5]
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   MODEL:
     TRUNK:
       NAME: resnet
