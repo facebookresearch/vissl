@@ -43,14 +43,14 @@ def build_retrieval_model(cfg):
     """
     logging.info("Building model....")
     model = build_model(cfg.MODEL, cfg.OPTIMIZER)
-    if os.path.exists(cfg.MODEL.PARAMS_FILE.PATH):
-        init_weights_path = cfg.MODEL.PARAMS_FILE.PATH
+    if os.path.exists(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
+        init_weights_path = cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE
         logging.info(f"Initializing model from: {init_weights_path}")
         weights = torch.load(init_weights_path, map_location=torch.device("cuda"))
-        skip_layers = cfg.MODEL.PARAMS_FILE.get("SKIP_LAYERS", [])
-        replace_prefix = cfg.MODEL.PARAMS_FILE.get("REMOVE_PREFIX", None)
-        append_prefix = cfg.MODEL.PARAMS_FILE.get("APPEND_PREFIX", None)
-        state_dict_key_name = cfg.MODEL.PARAMS_FILE.get("STATE_DICT_KEY_NAME", None)
+        skip_layers = cfg.MODEL.WEIGHTS_INIT.get("SKIP_LAYERS", [])
+        replace_prefix = cfg.MODEL.WEIGHTS_INIT.get("REMOVE_PREFIX", None)
+        append_prefix = cfg.MODEL.WEIGHTS_INIT.get("APPEND_PREFIX", None)
+        state_dict_key_name = cfg.MODEL.WEIGHTS_INIT.get("STATE_DICT_KEY_NAME", None)
 
         init_model_from_weights(
             cfg,

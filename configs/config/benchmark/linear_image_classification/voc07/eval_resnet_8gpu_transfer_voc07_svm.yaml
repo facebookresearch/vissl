@@ -39,8 +39,8 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/voc2007/
   MODEL:
-    PARAMS_FILE:
-      PATH: "specify path"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify path"
       STATE_DICT_KEY_NAME: classy_state_dict
       # STATE_DICT_KEY_NAME: model_state_dict
     FEATURE_EVAL_MODE: True
