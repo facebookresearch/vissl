@@ -2,9 +2,11 @@
 
 import torch
 import torch.nn as nn
+from vissl.models.heads import register_model_head
 from vissl.models.heads.mlp import MLP
 
 
+@register_model_head("eval_mlp")
 class LinearEvalMLP(nn.Module):
     """
     A standard Linear classification module that can be attached to several

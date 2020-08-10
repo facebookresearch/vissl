@@ -2,8 +2,10 @@
 
 import torch
 import torch.nn as nn
+from vissl.models.heads import register_model_head
 
 
+@register_model_head("mlp")
 class MLP(nn.Module):
     """
     This module can be used to attach combination of {Linear, BatchNorm, Relu, Dropout}
