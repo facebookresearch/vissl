@@ -21,7 +21,7 @@ from vissl.utils.env import (
     set_env_vars,
 )
 from vissl.utils.hydra_config import print_cfg
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
 
@@ -88,3 +88,5 @@ def train_main(
     trainer = DistributedSelfSupervisionTrainer(dist_run_id)
     trainer.train(cfg, ssl_task)
     logging.info("All Done!")
+    # close the logging streams including the filehandlers
+    shutdown_logging()
