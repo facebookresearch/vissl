@@ -1,0 +1,24 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    num_epochs: 100
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.3
+          base_lr_batch_size: 256
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.6
+            end_value: 4.8
+          - name: cosine_warm_restart
+            start_value: 4.8
+            end_value: 0.0048
+            restart_interval_length: 0.334  # half wave after the warmup is done
+            wave_type: full
+            is_adaptive: True
+        update_interval: step
+        interval_scaling: [rescaled, rescaled]
+        lengths: [0.1, 0.9]                 # 100ep
