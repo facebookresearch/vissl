@@ -38,7 +38,7 @@ config:
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   METERS: null
   MODEL:
     TRUNK:
