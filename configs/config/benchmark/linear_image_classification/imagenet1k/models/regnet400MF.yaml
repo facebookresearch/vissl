@@ -5,7 +5,6 @@ config:
       num_meters: 1
       topk_values: [1, 5]
   MODEL:
-    EVAL_FEATURES: ["res5"]
     TRUNK:
       NAME: regnet
       TRUNK_PARAMS:
@@ -14,8 +13,8 @@ config:
           # classy_vision directory. Remember to change the
           # dimensions in HEAD.PARAMS below accordingly.
           name: regnet_y_400mf
-      LINEAR_FEAT_POOL_OPS: [
-          ["AdaptiveAvgPool2d", [[6, 5]]],
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res5", ["AdaptiveAvgPool2d", [[6, 5]]]],
       ]
     HEAD:
       PARAMS: [

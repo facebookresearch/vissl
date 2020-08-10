@@ -3,12 +3,12 @@ config:
   MODEL:
     TRUNK:
       NAME: alexnet_rotnet
-      LINEAR_FEAT_POOL_OPS: [
-          ["AdaptiveMaxPool2d", [12]],
-          ["AdaptiveMaxPool2d", [7]],
-          ["AdaptiveMaxPool2d", [5]],
-          ["AdaptiveMaxPool2d", [6]],
-          ["AdaptiveMaxPool2d", [6]],
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv1", ["AdaptiveMaxPool2d", [12]]],
+          ["conv2", ["AdaptiveMaxPool2d", [7]]],
+          ["conv3", ["AdaptiveMaxPool2d", [5]]],
+          ["conv4", ["AdaptiveMaxPool2d", [6]]],
+          ["conv5", ["AdaptiveMaxPool2d", [6]]],
       ]
     HEAD:
       PARAMS: [

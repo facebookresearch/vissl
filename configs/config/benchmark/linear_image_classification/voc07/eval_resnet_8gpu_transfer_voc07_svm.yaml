@@ -45,7 +45,6 @@ config:
       # STATE_DICT_KEY_NAME: model_state_dict
     FEATURE_EVAL_MODE: True
     EXTRACT_FEATURES_ONLY: True
-    EVAL_FEATURES: ["conv1", "res2", "res3", "res4", "res5"]
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 4]}]]
     TRUNK:
@@ -54,12 +53,12 @@ config:
         RESNETS:
           DEPTH: 50
       SHOULD_FLATTEN: True
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[10, 10], 10, 4]],
-          ["AvgPool2d", [[16, 16], 8, 0]],
-          ["AvgPool2d", [[13, 13], 5, 0]],
-          ["AvgPool2d", [[8, 8], 3, 0]],
-          ["AvgPool2d", [[6, 6], 1, 0]],
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+        ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+        ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+        ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+        ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
       ]
   DISTRIBUTED:
     NUM_NODES: 1

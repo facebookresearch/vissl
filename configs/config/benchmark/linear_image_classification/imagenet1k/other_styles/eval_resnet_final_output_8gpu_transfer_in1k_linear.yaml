@@ -51,14 +51,13 @@ config:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
     FEATURE_EVAL_MODE: True
-    EVAL_FEATURES: ["res5avg"]
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-      LINEAR_FEAT_POOL_OPS: [
-          ["Identity", []],
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res5avg", ["Identity", []]],
       ]
     HEAD:
       PARAMS: [

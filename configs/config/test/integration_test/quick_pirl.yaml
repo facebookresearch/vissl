@@ -66,8 +66,7 @@ config:
           ["mlp", {"dims": [2048, 128]}]
         ],
       ]
-    MULTI_INPUT_HEAD_MAPPING: ["patches", "images"]
-    EVAL_FEATURES: [
+    MULTI_INPUT_HEAD_MAPPING: [
         # "flatten" is the res5->avg->flatten feature from ResNet50
         ["patches", ["flatten"]], # feature layer to extract from second input "patches"
         ["images", ["flatten"]],  # feature layer to extract from first input "images"

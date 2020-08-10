@@ -23,15 +23,14 @@ config:
   MODEL:
     FEATURE_EVAL_MODE: True
     EXTRACT_FEATURES_ONLY: True
-    EVAL_FEATURES: ["res5"]
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
       SHOULD_FLATTEN: True
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[7, 7], 1, 0]],
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res5", ["AvgPool2d", [[7, 7], 1, 0]]],
       ]
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 1000]}]]
