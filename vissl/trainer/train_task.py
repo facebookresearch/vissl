@@ -222,8 +222,8 @@ class SelfSupervisionTask(ClassificationTask):
         return [build_meter(config) for config in meter_configs]
 
     def _restore_model_weights(self, model):
-        params_from_file = self.config["MODEL"]["PARAMS_FILE"]
-        init_weights_path = params_from_file["PATH"]
+        params_from_file = self.config["MODEL"]["WEIGHTS_INIT"]
+        init_weights_path = params_from_file["PARAMS_FILE"]
         logging.info(f"Initializing model from: {init_weights_path}")
 
         if os.path.exists(init_weights_path):
@@ -273,7 +273,7 @@ class SelfSupervisionTask(ClassificationTask):
         # we do it here. But we check that there is no checkpoint existing before
         # This is important in cases when the model training dies.
         if self.checkpoint is None and os.path.exists(
-            self.config["MODEL"]["PARAMS_FILE"]["PATH"]
+            self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
         ):
             model = self._restore_model_weights(model)
 
