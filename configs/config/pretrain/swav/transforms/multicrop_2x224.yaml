@@ -7,7 +7,7 @@ config:
           total_num_crops: 2
           size_crops: [224]
           num_crops: [2]
-          crop_scales: [[0.14, 1]]
+          crop_scales: [[0.08, 1]]
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
