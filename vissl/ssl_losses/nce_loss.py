@@ -31,7 +31,7 @@ class NCELossWithMemory(ClassyLoss):
 
         self.loss_config = loss_config
         memory_params = self.loss_config.memory_params
-        memory_params.memory_size = self.loss_config["num_train_samples"]
+        memory_params.memory_size = self.loss_config.num_train_samples
         assert is_pos_int(
             memory_params.memory_size
         ), f"Memory size must be positive: {memory_params.memory_size}"
@@ -62,7 +62,7 @@ class NCELossWithMemory(ClassyLoss):
 
         if self.loss_type == "nce":
             # setup the actual NCE loss
-            self.nce_criterion = NCECriterion(self.loss_config["num_train_samples"])
+            self.nce_criterion = NCECriterion(self.loss_config.num_train_samples)
         elif self.loss_type == "cross_entropy":
             # cross-entropy loss. Also called InfoNCE
             self.xe_criterion = nn.CrossEntropyLoss()

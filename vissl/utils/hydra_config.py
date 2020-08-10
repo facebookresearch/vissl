@@ -10,23 +10,79 @@ from omegaconf import DictConfig, OmegaConf
 
 class AttrDict(dict):
     """
-    Dictionary class which also support attribute access.
-    Credits: https://stackoverflow.com/a/38034502
+    Dictionary subclass whose entries can be accessed like attributes (as well as normally).
+    Credits: https://aiida.readthedocs.io/projects/aiida-core/en/latest/_modules/aiida/common/extendeddicts.html#AttributeDict  # noqa
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__dict__ = self
+    def __init__(self, dictionary):
+        """
+        Recursively turn the `dict` and all its nested dictionaries into `AttrDict` instance.
+        """
+        super().__init__()
 
-    @staticmethod
-    def from_dict(data):
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                self[key] = AttrDict(value)
+            else:
+                self[key] = value
+
+    def __getattr__(self, key):
         """
-        Construct nested AttrDicts from nested dictionaries.
+        Read a key as an attribute.
+
+        :raises AttributeError: if the attribute does not correspond to an existing key.
         """
-        if not isinstance(data, dict):
-            return data
+        if key in self:
+            return self[key]
         else:
-            return AttrDict({key: AttrDict.from_dict(data[key]) for key in data})
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {key}."
+            )
+
+    def __setattr__(self, key, value):
+        """
+        Set a key as an attribute.
+        """
+        self[key] = value
+
+    def __delattr__(self, key):
+        """
+        Delete a key as an attribute.
+
+        :raises AttributeError: if the attribute does not correspond to an existing key.
+        """
+        if key in self:
+            del self[key]
+        else:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {key}."
+            )
+
+    def __getstate__(self):
+        """
+        Needed for pickling this class.
+        """
+        return self.__dict__.copy()
+
+    def __setstate__(self, dictionary):
+        """
+        Needed for pickling this class.
+        """
+        self.__dict__.update(dictionary)
+
+    def __deepcopy__(self, memo=None):
+        """
+        Deep copy.
+        """
+        from copy import deepcopy
+
+        if memo is None:
+            memo = {}
+        retval = deepcopy(dict(self))
+        return self.__class__(retval)
+
+    def __dir__(self):
+        return self.keys()
 
 
 def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
@@ -40,7 +96,7 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
 
     # convert the config to AttrDict
     cfg = OmegaConf.to_container(cfg)
-    cfg = AttrDict.from_dict(cfg)
+    cfg = AttrDict(cfg)
     config = cfg.config
 
     # assert the config and infer
