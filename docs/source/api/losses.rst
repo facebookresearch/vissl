@@ -1,61 +1,61 @@
-vissl.ssl_losses package
+vissl.losses package
 ===================================
 
-.. automodule:: vissl.ssl_losses
+.. automodule:: vissl.losses
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_losses.simclr_info_nce_loss
+vissl.losses.simclr_info_nce_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_losses.simclr_info_nce_loss
+.. automodule:: vissl.losses.simclr_info_nce_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_losses.multicrop_simclr_info_nce_loss
+vissl.losses.multicrop_simclr_info_nce_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_losses.multicrop_simclr_info_nce_loss
+.. automodule:: vissl.losses.multicrop_simclr_info_nce_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_losses.swav_loss
+vissl.losses.swav_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_losses.swav_loss
+.. automodule:: vissl.losses.swav_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_losses.nce_loss
+vissl.losses.nce_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_losses.nce_loss
+.. automodule:: vissl.losses.nce_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_losses.deepclusterv2_loss
+vissl.losses.deepclusterv2_loss
 -----------------------------------------------------
 
-.. automodule:: vissl.ssl_losses.deepclusterv2_loss
+.. automodule:: vissl.losses.deepclusterv2_loss
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-vissl.ssl_losses.cross_entropy_multiple_output_single_target
+vissl.losses.cross_entropy_multiple_output_single_target
 -------------------------------------------------------------------
 
-.. automodule:: vissl.ssl_losses.cross_entropy_multiple_output_single_target
+.. automodule:: vissl.losses.cross_entropy_multiple_output_single_target
     :members:
     :undoc-members:
     :show-inheritance:
