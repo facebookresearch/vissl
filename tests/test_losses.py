@@ -13,7 +13,7 @@ from vissl.ssl_losses.multicrop_simclr_info_nce_loss import (
 )
 from vissl.ssl_losses.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.ssl_losses.swav_loss import SwAVCriterion
-from vissl.ssl_tasks import build_task
+from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
 
 
@@ -81,7 +81,7 @@ class TestRootConfigsLossesBuild(unittest.TestCase):
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
-        task = build_task(config)
+        task = SelfSupervisionTask.from_config(config)
         task.datasets, _ = task.build_datasets()
         self.assertTrue(task._build_loss(), "failed to build loss")
 
@@ -96,6 +96,6 @@ class TestRootConfigsLossesBuild(unittest.TestCase):
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
-        task = build_task(config)
+        task = SelfSupervisionTask.from_config(config)
         task.datasets, _ = task.build_datasets()
         self.assertTrue(task._build_loss(), "failed to build loss")
