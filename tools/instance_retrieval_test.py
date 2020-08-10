@@ -30,7 +30,7 @@ from vissl.utils.instance_retrieval_utils.data_util import (
 from vissl.utils.instance_retrieval_utils.pca import load_pca, train_and_save_pca
 from vissl.utils.instance_retrieval_utils.rmac import get_rmac_descriptors
 from vissl.utils.io import cleanup_dir, makedir
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 
 
 # frequency at which we log the image number being processed.
@@ -463,6 +463,8 @@ def main(args, config):
     print_cfg(config)
 
     instance_retrieval_test(args, config)
+    # close the logging streams including the filehandlers
+    shutdown_logging()
 
 
 def hydra_main(overrides):
