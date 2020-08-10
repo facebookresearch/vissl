@@ -136,7 +136,7 @@ if __name__ == "__main__":
     """
     Example usage:
 
-    `python tools/distributed_train.py config=test/integration_test/quick_simclr`
+    `python tools/run_distributed_engines.py config=test/integration_test/quick_simclr`
     """
     overrides = sys.argv[1:]
     assert is_hydra_available(), "Make sure to install hydra"
