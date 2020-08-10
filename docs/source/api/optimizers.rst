@@ -1,7 +1,7 @@
-vissl.ssl_optimizers package
+vissl.optimizers package
 ==============================================
 
-.. automodule:: vissl.ssl_optimizers
+.. automodule:: vissl.optimizers
     :members:
     :undoc-members:
     :show-inheritance:

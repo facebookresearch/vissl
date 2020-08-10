@@ -13,7 +13,7 @@ from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
 from vissl.data import build_dataset, get_loader
 from vissl.models import build_model, convert_sync_bn
-from vissl.ssl_optimizers import get_optimizer_regularized_params
+from vissl.optimizers import get_optimizer_regularized_params
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import is_apex_available
