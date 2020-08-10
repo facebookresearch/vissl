@@ -6,6 +6,7 @@ import vissl.meters  # NOQA
 import vissl.models  # NOQA
 import vissl.ssl_hooks  # NOQA
 import vissl.ssl_losses  # NOQA
+import vissl.ssl_optimizers.param_scheduler  # NOQA
 from vissl.ssl_tasks.ssl_task import SelfSupervisionTask
 
 
