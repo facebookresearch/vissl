@@ -8,4 +8,4 @@ from classy_vision.generic.registry_utils import import_all_modules
 FILE_ROOT = Path(__file__).parent
 
 # automatically import any Python files in the param_scheduler/ directory
-import_all_modules(FILE_ROOT, "vissl.ssl_optimizers.param_scheduler")
+import_all_modules(FILE_ROOT, "vissl.optimizers.param_scheduler")
