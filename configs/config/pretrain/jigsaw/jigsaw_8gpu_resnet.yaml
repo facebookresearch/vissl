@@ -34,9 +34,9 @@ config:
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
   METERS:
-    accuracy_list:
-      num_list: 1
-      topk: [1]
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1]
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
