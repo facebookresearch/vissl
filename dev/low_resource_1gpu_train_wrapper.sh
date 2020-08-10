@@ -13,7 +13,7 @@ CFG=( "$@" )
 
 ########################## Select the binary ##################################
 if [ "$TYPE" = "engine" ]; then
-  BNAME=distributed_train
+  BNAME=run_distributed_engines
 elif [ "$TYPE" = "cluster" ]; then
   BNAME=cluster_features_and_label
 else

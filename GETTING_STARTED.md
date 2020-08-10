@@ -56,6 +56,6 @@ We provide a config to train model using the pretext SimCLR task on the ResNet50
 Change the `TRAIN.DATA_PATHS` path in the config to where the imagenet handles are saved from the above script.
 
 ```bash
-python tools/distributed_train.py --node_id 0 \
+python tools/run_distributed_engines.py --node_id 0 \
     --config_file configs/simple_clr/pretext_rn50_2gpu_simpleCLR_imagenet.yaml
 ```
