@@ -1,8 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import torch
+from vissl.data.collators import register_collator
 
 
+@register_collator("simclr_collator")
 def simclr_collator(batch):
     """
     The collators collates the batch for the following input:
