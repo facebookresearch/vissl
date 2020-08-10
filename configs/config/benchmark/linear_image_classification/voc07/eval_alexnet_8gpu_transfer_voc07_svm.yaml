@@ -54,8 +54,8 @@ config:
       ]
     HEAD:
       PARAMS: [["mlp", {"dims": [9216, 20]}]]
-    PARAMS_FILE:
-      PATH: "specify path"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify path"
       STATE_DICT_KEY_NAME: model_state_dict
   DISTRIBUTED:
     NUM_NODES: 1
