@@ -49,8 +49,8 @@ config:
         ["mlp", {"dims": [2048, 2048], "use_relu": True}],
         ["mlp", {"dims": [2048, 128]}],
       ]
-    PARAMS_FILE:
-      PATH: ""
+    WEIGHTS_INIT:
+      PARAMS_FILE: ""
       STATE_DICT_KEY_NAME: classy_state_dict
   DISTRIBUTED:
     NUM_NODES: 1

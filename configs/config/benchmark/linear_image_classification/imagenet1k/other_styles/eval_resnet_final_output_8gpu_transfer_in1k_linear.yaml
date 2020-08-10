@@ -64,8 +64,8 @@ config:
       PARAMS: [
         ["mlp", {"dims": [2048, 1000]}],
       ]
-    PARAMS_FILE:
-      PATH: "specify the model weights"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify the model weights"
       STATE_DICT_KEY_NAME: classy_state_dict
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
