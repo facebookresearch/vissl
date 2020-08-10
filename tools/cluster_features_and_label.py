@@ -18,7 +18,7 @@ from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
 from vissl.utils.io import save_file
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features, set_seeds
 
 
@@ -111,6 +111,8 @@ def main(args, cfg):
 
     # cluster the extracted features
     cluster_features_and_label(args, cfg)
+    # close the logging streams including the filehandlers
+    shutdown_logging()
 
 
 def hydra_main(overrides):
