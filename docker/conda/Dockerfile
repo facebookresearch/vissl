@@ -43,6 +43,6 @@ CMD ["bash"]
 # python -m unittest discover -v -s tests
 
 ######## run gpu test
-# python tools/distributed_train.py \
+# python tools/run_distributed_engines.py \
 #     config=test/circleci/quick_simclr_synthetic \
 #     hydra.verbose=true config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
