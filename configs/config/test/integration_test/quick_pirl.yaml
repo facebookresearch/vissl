@@ -43,7 +43,7 @@ config:
       DATA_LIMIT: 500
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   METERS: null
   MODEL:
     MODEL_COMPLEXITY:
