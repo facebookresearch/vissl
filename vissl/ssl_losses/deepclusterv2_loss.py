@@ -14,6 +14,7 @@ from classy_vision.generic.distributed_util import (
 )
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import get_indices_sparse
 
 
@@ -22,7 +23,7 @@ class DeepClusterV2Loss(ClassyLoss):
     """
     """
 
-    def __init__(self, loss_config):
+    def __init__(self, loss_config: AttrDict):
         super().__init__()
 
         self.loss_config = loss_config
@@ -63,12 +64,10 @@ class DeepClusterV2Loss(ClassyLoss):
         self.cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=-100)
 
     @classmethod
-    def from_config(cls, loss_config):
+    def from_config(cls, loss_config: AttrDict):
         return cls(loss_config)
 
-    def forward(self, output, idx):
-        assert len(output) == 1
-        output = output[0]
+    def forward(self, output: torch.Tensor, idx: int):
         output = nn.functional.normalize(output, dim=1, p=2)
 
         loss = 0
