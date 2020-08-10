@@ -1,8 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import torch
+from vissl.data.collators import register_collator
 
 
+@register_collator("patch_and_image_collator")
 def patch_and_image_collator(batch):
     """
     batch contains two keys "data" and "label"
