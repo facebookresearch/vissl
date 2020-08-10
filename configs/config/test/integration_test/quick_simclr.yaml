@@ -1,7 +1,7 @@
 # @package _global_
 config:
   VERBOSE: False
-  LOG_FREQUENCY: 2
+  LOG_FREQUENCY: 1
   TEST_ONLY: False
   TEST_MODEL: False
   SEED_VALUE: 0
@@ -80,28 +80,28 @@ config:
       param_schedulers:
         lr:
           auto_lr_scaling:
-            auto_scale: true
+            auto_scale: false
             base_value: 0.3
             base_lr_batch_size: 256
-          # name: cosine
-          # start_value: 0.15   # LR for batch size 256
-          # end_value: 0.0000
-          # update_interval: step
           name: composite
           schedulers:
             - name: linear
               start_value: 0.6
               end_value: 4.8
-            - name: cosine
+            - name: cosine_warm_restart
               start_value: 4.8
-              end_value: 0.0000
+              end_value: 0.0048
+              # wave_type: half
+              # restart_interval_length: 0.5
+              wave_type: full
+              is_adaptive: True
+              restart_interval_length: 0.334
+          interval_scaling: [rescaled, rescaled]
           update_interval: step
-          interval_scaling: [rescaled, fixed]
           lengths: [0.1, 0.9]                 # 100ep
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    # NUM_PROC_PER_NODE: 2
     NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto
