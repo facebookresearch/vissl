@@ -1,9 +1,11 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-
 import pprint
+from typing import List, Union
 
+import torch
 from classy_vision.generic.util import is_pos_int
 from classy_vision.meters import AccuracyMeter, ClassyMeter, register_meter
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_meter("accuracy_list")
@@ -12,7 +14,7 @@ class AccuracyListMeter(ClassyMeter):
        image classification task.
     """
 
-    def __init__(self, num_list, topk):
+    def __init__(self, num_list: int, topk: List[int]):
         """
         args:
             num_list: num outputs
@@ -28,8 +30,8 @@ class AccuracyListMeter(ClassyMeter):
         self.reset()
 
     @classmethod
-    def from_config(cls, config):
-        return cls(num_list=config["num_list"], topk=config["topk"])
+    def from_config(cls, meters_config: AttrDict):
+        return cls(num_list=meters_config["num_list"], topk=meters_config["topk"])
 
     @property
     def name(self):
@@ -86,7 +88,11 @@ class AccuracyListMeter(ClassyMeter):
         repr_dict = {"name": self.name, "num_list": self._num_list, "value": value}
         return pprint.pformat(repr_dict, indent=2)
 
-    def update(self, model_output, target):
+    def update(
+        self,
+        model_output: Union[torch.Tensor, List[torch.Tensor]],
+        target: torch.Tensor,
+    ):
         """
         args:
             model_output: list of tensors of shape (B, C) where each value is
@@ -94,6 +100,8 @@ class AccuracyListMeter(ClassyMeter):
             target:       tensor of shape (B).
             Note: For binary classification, C=2.
         """
+        if isinstance(model_output, torch.Tensor):
+            model_output = [model_output]
         assert isinstance(model_output, list)
         assert len(model_output) == self._num_list
         for (meter, output) in zip(self._meters, model_output):

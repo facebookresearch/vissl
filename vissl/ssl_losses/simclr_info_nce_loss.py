@@ -12,11 +12,12 @@ from classy_vision.generic.distributed_util import (
 )
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_loss("simclr_info_nce_loss")
 class SimclrInfoNCELoss(ClassyLoss):
-    def __init__(self, loss_config, device: str = "gpu"):
+    def __init__(self, loss_config: AttrDict, device: str = "gpu"):
         super(SimclrInfoNCELoss, self).__init__()
 
         self.loss_config = loss_config
@@ -28,18 +29,12 @@ class SimclrInfoNCELoss(ClassyLoss):
         )
 
     @classmethod
-    def from_config(cls, loss_config):
+    def from_config(cls, loss_config: AttrDict):
         return cls(loss_config)
 
     def forward(self, output, target):
-        assert isinstance(
-            output, list
-        ), "Model output should be a list of tensors. Got Type {}".format(type(output))
-
-        loss = 0
-        for (_, l_output) in enumerate(output):
-            normalized_output = nn.functional.normalize(l_output, dim=1, p=2)
-            loss += self.info_criterion(normalized_output)
+        normalized_output = nn.functional.normalize(output, dim=1, p=2)
+        loss = self.info_criterion(normalized_output)
         return loss
 
     def __repr__(self):
@@ -92,7 +87,7 @@ class SimclrInfoNCECriterion(nn.Module):
         self.pos_mask = pos_mask.cuda(non_blocking=True) if self.use_gpu else pos_mask
         self.neg_mask = neg_mask.cuda(non_blocking=True) if self.use_gpu else neg_mask
 
-    def forward(self, embedding):
+    def forward(self, embedding: torch.Tensor):
         assert embedding.ndim == 2
         assert embedding.shape[1] == int(self.buffer_params.embedding_dim)
 
@@ -125,7 +120,7 @@ class SimclrInfoNCECriterion(nn.Module):
         }
         return pprint.pformat(repr_dict, indent=2)
 
-    def gather_embeddings(self, embedding):
+    def gather_embeddings(self, embedding: torch.Tensor):
         """
         Do a gather over all embeddings, so we can compute the loss.
         Final shape is like: (batch_size * num_gpus) x embedding_dim
