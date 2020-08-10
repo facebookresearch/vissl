@@ -7,8 +7,10 @@ import torch
 import torch.nn as nn
 from classy_vision.models import RegNet as ClassyRegNet, build_model
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
+from vissl.models.trunks import register_model_trunk
 
 
+@register_model_trunk("regnet")
 class RegNet(nn.Module):
     """
     Wrapper for ClassyVision RegNet model so we can map layers into feature

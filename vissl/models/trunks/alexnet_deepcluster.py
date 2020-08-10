@@ -3,8 +3,10 @@
 import torch
 import torch.nn as nn
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
+from vissl.models.trunks import register_model_trunk
 
 
+@register_model_trunk("alexnet_deepcluster")
 class AlexNetDeepCluster(nn.Module):
     # use soble, BN, dim=2
 

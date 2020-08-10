@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 from vissl.models.model_helpers import Identity
-from vissl.models.trunks import TRUNKS
+from vissl.models.trunks import get_model_trunk
 
 
 POOL_OPS = {
@@ -21,8 +21,7 @@ class FeatureExtractorModel(nn.Module):
 
         self.model_config = model_config
         trunk_name = model_config["TRUNK"]["NAME"]
-        assert trunk_name in TRUNKS, "Trunk unknown"
-        self.base_model = TRUNKS[trunk_name](self.model_config, trunk_name)
+        self.base_model = get_model_trunk(trunk_name)(self.model_config, trunk_name)
         self.feature_pool_ops = self._attach_feature_pool_layers()
         self._freeze_model()
 
