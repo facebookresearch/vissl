@@ -1,8 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import torch.nn as nn
+from vissl.models.heads import register_model_head
 
 
+@register_model_head("siamese_concat_view")
 class SiameseConcatView(nn.Module):
     """
     This head is useful for dealing with Siamese models which have multiple towers.
