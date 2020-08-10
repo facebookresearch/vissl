@@ -515,17 +515,17 @@ config:
 # two options:
 #
 # 1. you can add your defaults here to the list, if you want and run like this:
-#    python tools/distributed_train.py \
+#    python tools/run_distributed_engines.py \
 #        config=integration_test/quick_simclr \
 #        config/pretrain/simclr/optimization=bs32_16nodes
 #
 # 2. at runtime, add a "+" sign to the input. So run like this:
-#    python tools/distributed_train.py \
+#    python tools/run_distributed_engines.py \
 #        config=integration_test/quick_simclr \
 #        +config/pretrain/simclr/models=resnext101
 #
 # If you want to override single values in the config, you can achieve that with:
-#    python tools/distributed_train.py \
+#    python tools/run_distributed_engines.py \
 #        config=integration_test/quick_simclr \
 #        +config/pretrain/simclr/my_sub_folder=my_file_name \
 #        config.MODEL.PARAMS_FILE.PATH=<weights_path.torch>
