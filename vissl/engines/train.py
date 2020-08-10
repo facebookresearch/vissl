@@ -8,8 +8,7 @@ from typing import Any, Callable, List
 import torch
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.ssl_hooks import default_hook_generator
-from vissl.ssl_tasks import build_task
-from vissl.ssl_trainer import DistributedSelfSupervisionTrainer
+from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.checkpoint import (
     get_checkpoint_folder,
     get_resume_checkpoint,
@@ -72,22 +71,20 @@ def train_main(
         logging.info("Training already succeeded on this machine, bailing out")
         return
 
-    # now we should build the task. The task will also have the State attached
-    # to it. It will have information about phases (train, test) both. It will
-    # also contain all the other information like optimizers, etc
-    ssl_task = build_task(cfg)
-
     # Get the checkpoint where to load from. The load_checkpoints function will
     # automatically take care of detecting whether it's a resume or not
     checkpoint = get_resume_checkpoint(cfg, checkpoint_folder=output_dir)
-    ssl_task.set_checkpoint(checkpoint)
 
     # get the hooks - these hooks are executed per replica
     hooks = hook_generator(cfg)
-    ssl_task.set_hooks(hooks)
 
-    trainer = DistributedSelfSupervisionTrainer(dist_run_id)
-    trainer.train(cfg, ssl_task)
+    # build the SSL trainer. The trainer first prepares a "task" object which
+    # acts as a container for various things needed in a training: datasets,
+    # dataloader, optimizers, losses, hooks, etc. "Task" will also have information
+    # about phases (train, test) both. The trainer then sets up distributed
+    # training.
+    trainer = SelfSupervisionTrainer(cfg, dist_run_id, checkpoint, hooks)
+    trainer.train()
     logging.info("All Done!")
     # close the logging streams including the filehandlers
     shutdown_logging()

@@ -15,6 +15,7 @@ from vissl.data import build_dataset, get_loader
 from vissl.models import build_model, convert_sync_bn
 from vissl.ssl_optimizers import get_optimizer_regularized_params
 from vissl.utils.checkpoint import init_model_from_weights
+from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import is_apex_available
 
 
@@ -24,7 +25,7 @@ if is_apex_available():
 
 @register_task("self_supervision_task")
 class SelfSupervisionTask(ClassificationTask):
-    def __init__(self, config):
+    def __init__(self, config: AttrDict):
         super().__init__()
         self.config = config
         self.checkpoint = None

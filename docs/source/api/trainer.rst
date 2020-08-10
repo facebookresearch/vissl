@@ -1,16 +1,23 @@
-vissl.ssl_trainer package
+vissl.trainer package
 ==========================================
 
-.. automodule:: vissl.ssl_trainer
+.. automodule:: vissl.trainer_main
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-vissl.ssl_trainer.train_steps module
+vissl.train_task package
 ---------------------------------------
 
-.. automodule:: vissl.ssl_trainer.train_steps
+.. automodule:: vissl.trainer.train_task
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+vissl.trainer.train_steps module
+---------------------------------------
+
+.. automodule:: vissl.trainer.train_steps
     :members:
     :undoc-members:
     :show-inheritance:
