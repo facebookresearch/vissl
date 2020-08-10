@@ -50,7 +50,7 @@ config:
       DEFAULT_GRAY_IMG_SIZE: 224
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
-      COLLATE_FUNCTION: "default"
+      COLLATE_FUNCTION: "default_collate"
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: false
@@ -77,7 +77,7 @@ config:
       DEFAULT_GRAY_IMG_SIZE: 224
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
-      COLLATE_FUNCTION: "default"
+      COLLATE_FUNCTION: "default_collate"
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: false
