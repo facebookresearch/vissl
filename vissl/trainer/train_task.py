@@ -272,6 +272,13 @@ class SelfSupervisionTask(ClassificationTask):
         # If we want to initialize the model in case of finetuning or evaluation,
         # we do it here. But we check that there is no checkpoint existing before
         # This is important in cases when the model training dies.
+        if (
+            self.checkpoint is None
+            and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+        ):
+            assert os.path.exists(
+                self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+            ), "Specified PARAMS_FILE does NOT exist"
         if self.checkpoint is None and os.path.exists(
             self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
         ):
