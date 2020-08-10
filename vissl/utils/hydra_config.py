@@ -265,3 +265,18 @@ def assert_hydra_conf(cfg):
         cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
             cfg, param_schedulers, scaled_lr
         )
+
+    # in case of linear evaluation, we often evaluate several layers at a time. For each
+    # layer, there's a separate accuracy meter. In such case, we want to output the layer
+    # name in the meters output to make it easy to interpret the results. This is
+    # currently only supported for cases where we have linear evaluation.
+    if cfg.METERS is not None:
+        meter_items = cfg.METERS.items()
+        for meter_name, meter_args in meter_items:
+            if (
+                meter_name == "accuracy_list_meter"
+                and cfg.MODEL.FEATURE_EVAL_MODE
+                and len(cfg.MODEL.EVAL_FEATURES) > 0
+            ):
+                meter_args["num_meters"] = len(cfg.MODEL.EVAL_FEATURES)
+                meter_args["meter_names"] = cfg.MODEL.EVAL_FEATURES

@@ -96,10 +96,19 @@ config:
   # ----------------------------------------------------------------------------------- #
   # METERS
   # ----------------------------------------------------------------------------------- #
+  # what meters to attach. All the mentioned meters will be calculated.
   METERS:
-    accuracy_list:
-      num_list: 1
-      topk: [1]
+    accuracy_list_meter:
+      # number of accuracy meters. In cases like linear evaluation of feature, we perform
+      # evaluation of several layers and there's a separate meter for each layer.
+      # num_meters basically specifices number of meters.
+      num_meters: 1
+      # what topk values to calculate. Example topk_values = [1, 5] means top1 and top5
+      # both will be calculated
+      topk_values: [1]
+      # names of the meter. Useful in cases where we have several meters. For the linear
+      # feature evaluation workflows, meter name is automatically inferred.
+      meter_names: []
 
   # ----------------------------------------------------------------------------------- #
   # MACHINE (cpu, gpu)
