@@ -10,7 +10,7 @@ from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import get_machine_local_and_dist_rank, set_env_vars
 from vissl.utils.hydra_config import print_cfg
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
 
@@ -72,3 +72,5 @@ def extract_main(args, cfg, dist_run_id, local_rank=0, node_id=0):
             np.save(out_inds_file, features[split][layer]["inds"])
 
     logging.info("All Done!")
+    # close the logging streams including the filehandlers
+    shutdown_logging()
