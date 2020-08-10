@@ -7,7 +7,7 @@ from typing import Any, Callable, List
 
 import torch
 from classy_vision.hooks.classy_hook import ClassyHook
-from vissl.ssl_hooks import default_hook_generator
+from vissl.hooks import default_hook_generator
 from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.checkpoint import (
     get_checkpoint_folder,
