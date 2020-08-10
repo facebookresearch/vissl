@@ -6,10 +6,7 @@ import pprint
 import numpy as np
 import torch
 from classy_vision.losses import register_loss
-from vissl.ssl_losses.simclr_info_nce_loss import (
-    SimclrInfoNCECriterion,
-    SimclrInfoNCELoss,
-)
+from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion, SimclrInfoNCELoss
 from vissl.utils.hydra_config import AttrDict
 
 
