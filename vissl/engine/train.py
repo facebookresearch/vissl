@@ -2,6 +2,7 @@
 
 import logging
 import os
+from argparse import Namespace
 from typing import Any, Callable, List
 
 import torch
@@ -20,17 +21,17 @@ from vissl.utils.env import (
     print_system_env_info,
     set_env_vars,
 )
-from vissl.utils.hydra_config import print_cfg
+from vissl.utils.hydra_config import AttrDict, print_cfg
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
 
 def train_main(
-    args,
-    cfg,
-    dist_run_id,
-    local_rank=0,
-    node_id=0,
+    args: Namespace,
+    cfg: AttrDict,
+    dist_run_id: str,
+    local_rank: int = 0,
+    node_id: int = 0,
     hook_generator: Callable[[Any], List[ClassyHook]] = default_hook_generator,
 ):
     # setup the environment variables
