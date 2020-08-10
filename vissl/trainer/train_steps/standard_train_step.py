@@ -10,7 +10,7 @@ import torch
 from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.generic.util import recursive_copy_to_gpu
 from classy_vision.tasks import ClassyTask
-from vissl.ssl_hooks import SSLClassyHookFunctions
+from vissl.hooks import SSLClassyHookFunctions
 from vissl.trainer.train_steps import register_train_step
 from vissl.utils.misc import is_apex_available
 from vissl.utils.perf_stats import PerfTimer
@@ -98,6 +98,7 @@ def standard_train_step(task):
         # Forward pass of the model
         with PerfTimer("forward", perf_stats):
             model_output = task.model(sample["input"])
+
         # if the model outputs only one tensor, we take it out of the list.
         if len(model_output) == 1:
             model_output = model_output[0]
