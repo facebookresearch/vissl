@@ -95,7 +95,7 @@ def _distributed_worker(
     local_rank,
     cfg,
     node_id: int,
-    dist_run_id: int,
+    dist_run_id: str,
     args: Namespace,
     hook_generator: Callable[[Any], List[ClassyHook]],
 ):
