@@ -2,8 +2,10 @@
 
 import torch.nn as nn
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
+from vissl.models.trunks import register_model_trunk
 
 
+@register_model_trunk("alexnet_bvlc")
 class AlexNetBvlc(nn.Module):
     def __init__(self, model_config, model_name):
         super().__init__()
