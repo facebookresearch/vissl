@@ -5,7 +5,7 @@ import unittest
 
 from parameterized import parameterized
 from utils import ROOT_CONFIGS, SSLHydraConfig
-from vissl.ssl_tasks import build_task
+from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
 
 
@@ -18,5 +18,5 @@ class TestRootConfigsMeterBuild(unittest.TestCase):
         logger.info(f"Loading {filepath}")
         cfg = SSLHydraConfig.from_configs([filepath])
         _, config = convert_to_attrdict(cfg.default_cfg)
-        meters = build_task(config)._build_meters()
+        meters = SelfSupervisionTask.from_config(config)._build_meters()
         self.assertGreaterEqual(len(meters), 0, "Failed to build meters")
