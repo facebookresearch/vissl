@@ -10,7 +10,7 @@ from torch import nn
 from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
-from vissl.utils.logger import setup_logging
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features
 
 
@@ -95,6 +95,8 @@ def main(args, config):
     launch_distributed(config, args, hook_generator=default_hook_generator)
     top1, top5 = nearest_neighbor_test(config)
     logging.info(f"Top1: {top1}, Top5: {top5}")
+    # close the logging streams including the filehandlers
+    shutdown_logging()
 
 
 def hydra_main(overrides):
