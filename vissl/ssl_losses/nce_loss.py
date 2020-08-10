@@ -3,6 +3,7 @@
 import logging
 import math
 import pprint
+from typing import List, Union
 
 import numpy as np
 import torch
@@ -14,6 +15,7 @@ from classy_vision.generic.distributed_util import (
 from classy_vision.generic.util import is_pos_int
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from vissl.utils.hydra_config import AttrDict
 
 
 # Written by: Ishan Misra (imisra@fb.com)
@@ -24,9 +26,12 @@ class NCELossWithMemory(ClassyLoss):
     the allocated buffers like memory no a single gpu. For this, Pytorch distributed
     backend is used. If using NCCL, one must ensure that all the buffer are on GPU.
     This class supports training using both NCE and CrossEntropy (InfoNCE).
+
+    This loss is used by NPID (https://arxiv.org/pdf/1805.01978.pdf), NPID++ and
+    PIRL (https://arxiv.org/abs/1912.01991) approaches.
     """
 
-    def __init__(self, loss_config):
+    def __init__(self, loss_config: AttrDict):
         super(NCELossWithMemory, self).__init__()
 
         self.loss_config = loss_config
@@ -74,10 +79,14 @@ class NCELossWithMemory(ClassyLoss):
         self.ignore_index = self.loss_config.get("ignore_index", -1)
 
     @classmethod
-    def from_config(cls, loss_config):
+    def from_config(cls, loss_config: AttrDict):
         return cls(loss_config)
 
-    def forward(self, output, target):
+    def forward(
+        self, output: Union[torch.Tensor, List[torch.Tensor]], target: torch.Tensor
+    ):
+        if isinstance(output, torch.Tensor):
+            output = [output]
         assert isinstance(
             output, list
         ), "Model output should be a list of tensors. Got Type {}".format(type(output))

@@ -10,11 +10,12 @@ from vissl.ssl_losses.simclr_info_nce_loss import (
     SimclrInfoNCECriterion,
     SimclrInfoNCELoss,
 )
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_loss("multicrop_simclr_info_nce_loss")
 class MultiCropSimclrInfoNCELoss(SimclrInfoNCELoss):
-    def __init__(self, loss_config, device: str = "gpu"):
+    def __init__(self, loss_config: AttrDict, device: str = "gpu"):
         super(SimclrInfoNCELoss, self).__init__()
 
         self.loss_config = loss_config
@@ -81,7 +82,7 @@ class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
 
         self.pos_mask, self.neg_mask = pos_mask, neg_mask
 
-    def forward(self, embedding):
+    def forward(self, embedding: torch.Tensor):
         assert embedding.ndim == 2
         assert embedding.shape[1] == int(self.buffer_params.embedding_dim)
 

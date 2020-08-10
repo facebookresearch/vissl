@@ -14,11 +14,12 @@ from classy_vision.generic.distributed_util import (
 )
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_loss("swav_loss")
 class SwAVLoss(ClassyLoss):
-    def __init__(self, loss_config):
+    def __init__(self, loss_config: AttrDict):
         super().__init__()
 
         self.loss_config = loss_config
@@ -36,27 +37,21 @@ class SwAVLoss(ClassyLoss):
         )
 
     @classmethod
-    def from_config(cls, config):
-        return cls(config)
+    def from_config(cls, loss_config: AttrDict):
+        return cls(loss_config)
 
-    def forward(self, output, target):
-        assert isinstance(
-            output, list
-        ), "Model output should be a list of tensors. Got Type {}".format(type(output))
-
-        loss = 0
+    def forward(self, output: torch.Tensor, target: torch.Tensor):
         self.swav_criterion.use_queue = (
             self.swav_criterion.local_queue_length > 0
             and self.swav_criterion.num_iteration >= self.queue_start_iter
         )
-
-        assert len(output) == 1
-        for i, prototypes_scores in enumerate(output[0][1:]):
+        loss = 0
+        for i, prototypes_scores in enumerate(output[1:]):
             loss += self.swav_criterion(prototypes_scores, i)
-        loss /= len(output[0]) - 1
+        loss /= len(output) - 1
         self.swav_criterion.num_iteration += 1
         if self.swav_criterion.use_queue:
-            self.swav_criterion.update_emb_queue(output[0][0].detach())
+            self.swav_criterion.update_emb_queue(output[0].detach())
         return loss
 
     def __repr__(self):
@@ -99,7 +94,7 @@ class SwAVCriterion(nn.Module):
         if local_queue_length > 0:
             self.initialize_queue()
 
-    def distributed_sinkhornknopp(self, Q):
+    def distributed_sinkhornknopp(self, Q: torch.Tensor):
         with torch.no_grad():
             sum_Q = torch.sum(Q)
             all_reduce_sum(sum_Q)
