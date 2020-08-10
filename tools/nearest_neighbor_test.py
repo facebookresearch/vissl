@@ -4,8 +4,8 @@ import logging
 import sys
 
 import torch
-from distributed_train import launch_distributed
 from hydra.experimental import compose, initialize_config_module
+from run_distributed_engines import launch_distributed
 from torch import nn
 from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
