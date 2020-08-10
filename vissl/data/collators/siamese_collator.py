@@ -1,8 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import torch
+from vissl.data.collators import register_collator
 
 
+@register_collator("siamese_collator")
 def siamese_collator(batch):
     """
     batch: [

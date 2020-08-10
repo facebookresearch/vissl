@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 # We need to do the imports below so that classy vision registry can run
+import vissl.data.collators  # NOQA
 import vissl.data.ssl_transforms  # NOQA
 import vissl.meters  # NOQA
 import vissl.models  # NOQA
