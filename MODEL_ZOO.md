@@ -105,13 +105,13 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50w2 - in1k - 1000ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50w2_1000ep_simclr_8node_resnet_16_07_20.e1e3bbf0/model_final_checkpoint_phase999.torch
 - rn50w4 - in1k - 1000ep
 - rn101 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn101_100ep_simclr_8node_resnet_16_07_20.1ff6cb4b/model_final_checkpoint_phase99.torch
-- rn101 - in1k - 1000ep
+- rn101 - in1k - 1000ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn101_1000ep_simclr_8node_resnet_16_07_20.35063cea/model_final_checkpoint_phase999.torch
 
 ### SwAV
 <!-- swav -->
 - rn50 - 2x224 + 6x96 - 100ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_100ep_swav_8node_resnet_27_07_20.7e6fc6bf/model_final_checkpoint_phase99.torch
 - rn50 - 2x224 + 6x96 - 200ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_200ep_swav_8node_resnet_27_07_20.bd595bb0/model_final_checkpoint_phase199.torch
-- rn50 - 2x224 + 6x96 - 400ep - 8node:
+- rn50 - 2x224 + 6x96 - 400ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_400ep_swav_8node_resnet_27_07_20.a5990fc9/model_final_checkpoint_phase399.torch
 - rn50 - 2x224 + 6x96 - 800ep - 8node:
 - rn50 - 2x224 + 6x96 - 200ep - 1node - use queue:
 - rn50 - 2x224 + 6x96 - 400ep - 1node - use queue:
