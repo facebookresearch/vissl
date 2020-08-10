@@ -3,7 +3,7 @@
 
 SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SRC_DIR=$(dirname "${SRC_DIR}")
-BINARY="python ${SRC_DIR}/tools/distributed_train.py"
+BINARY="python ${SRC_DIR}/tools/run_distributed_engines.py"
 
 CFG_LIST=(
     "test/integration_test/quick_deepcluster_v2"
