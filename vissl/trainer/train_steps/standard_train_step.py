@@ -11,6 +11,7 @@ from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.generic.util import recursive_copy_to_gpu
 from classy_vision.tasks import ClassyTask
 from vissl.ssl_hooks import SSLClassyHookFunctions
+from vissl.trainer.train_steps import register_train_step
 from vissl.utils.misc import is_apex_available
 from vissl.utils.perf_stats import PerfTimer
 
@@ -73,7 +74,8 @@ def construct_sample_for_model(batch_data, task):
     return sample
 
 
-def standard_train_step(task):  # NOQA
+@register_train_step("standard_train_step")
+def standard_train_step(task):
     assert isinstance(task, ClassyTask), "task is not instance of ClassyTask"
 
     # reset the last batch info at every step
