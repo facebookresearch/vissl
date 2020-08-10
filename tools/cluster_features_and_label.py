@@ -11,8 +11,8 @@ import sys
 
 import faiss
 import numpy as np
-from distributed_train import launch_distributed
 from hydra.experimental import compose, initialize_config_module
+from run_distributed_engines import launch_distributed
 from vissl.data import build_dataset
 from vissl.ssl_hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
