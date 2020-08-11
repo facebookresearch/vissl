@@ -46,7 +46,7 @@ def get_dist_run_id(cfg, num_nodes):
             num_nodes == 1
         ), "cfg.DISTRIBUTED.RUN_ID=auto is allowed for 1 machine only."
         port = find_free_tcp_port()
-        run_id = f"127.0.0.1:{port}"
+        run_id = f"localhost:{port}"
     elif init_method == "file":
         if num_nodes > 1:
             logging.warning(

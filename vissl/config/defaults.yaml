@@ -442,7 +442,7 @@ config:
     # every training run should have a unique id. Following are the options:
     #   1. If using INIT_METHOD=env, RUN_ID="" is fine.
     #   2. If using INIT_METHOD=tcp,
-    #      - if you use > 1 machine, set port yourself. RUN_ID="127.0.0.1:{port}".
+    #      - if you use > 1 machine, set port yourself. RUN_ID="localhost:{port}".
     #      - If using 1 machine, set RUN_ID=auto and a free port will be automatically selected
     #   3. IF using INIT_METHOD=file, RUN_ID={file_path}
     RUN_ID: ""
