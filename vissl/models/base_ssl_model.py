@@ -51,6 +51,15 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         self._get_heads()
         self._setup_multi_input_head_mapping()
 
+        # get the feature names which we will output. If Feature eval mode is set,
+        # we get the feature names from the config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP.
+        self.feature_names = []
+        if self.model_config.FEATURE_EVAL_MODE:
+            self.feature_names = [
+                item[0]
+                for item in self.model_config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+            ]
+
     def multi_input_with_head_mapping_forward(self, batch):
         """
         Perform forward pass (trunk + heads) separately on each input and return the model
@@ -129,18 +138,10 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             # head is applied to each model output of a given input.
             return self.multi_input_with_head_mapping_forward(batch)
 
-        # get the feature names which we will output. If Feature eval mode is set,
-        # we get the feature names from the config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP.
-        feature_names = []
-        if self.model_config.FEATURE_EVAL_MODE:
-            feature_names = [
-                item[0]
-                for item in self.model_config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
-            ]
         if isinstance(batch, list):
-            return self.multi_res_input_forward(batch, feature_names)
+            return self.multi_res_input_forward(batch, self.feature_names)
 
-        return self.single_input_forward(batch, feature_names, self.heads)
+        return self.single_input_forward(batch, self.feature_names, self.heads)
 
     def freeze_head(self):
         for head in self.heads:
