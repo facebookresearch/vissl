@@ -76,7 +76,7 @@ config:
         num_negatives: 32000
         type: random
       memory_params:
-        memory_size: -1
+        memory_size: -1 # auto_filled as num_train_samples
         embedding_dim: 128
         momentum: 0.5
         norm_init: True
@@ -105,7 +105,7 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 4
-    RUN_ID: xxxxxxxxxxxxxxxx
+    RUN_ID: auto
     NUM_PROC_PER_NODE: 8
     INIT_METHOD: tcp
     NCCL_DEBUG: True
@@ -113,6 +113,6 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/
+    DIR: "." 
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 100
