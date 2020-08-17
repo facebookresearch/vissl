@@ -1,0 +1,32 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 8
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      LABEL_TYPE: sample_index
+      TRANSFORMS:
+        - name: ImgPilToPatchesAndImage
+          crop_scale_image: [0.08, 1.0]   # default PyTorch
+          crop_size_image: 224            # default PyTorch
+          crop_scale_patches: [0.6, 1.0]
+          crop_size_patches: 255          # default Jigsaw
+          num_patches: 9
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: "patch_and_image_collator"
+      INPUT_KEY_NAMES: ["patches", "images"] # keys produced by data that are `inputs' to the model
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False

@@ -122,7 +122,9 @@ class NCELossWithMemory(ClassyLoss):
                 curr_loss = self.nce_criterion(nce_average, target)
             elif self.loss_type == "cross_entropy":
                 labels = torch.zeros(
-                    nce_average.shape[0], device=nce_average.device, dtype=torch.int64
+                    (nce_average.shape[0], 1),
+                    device=nce_average.device,
+                    dtype=torch.int64,
                 )
                 curr_loss = self.xe_criterion(nce_average, labels)
             loss += self.loss_weights[l_idx] * curr_loss
