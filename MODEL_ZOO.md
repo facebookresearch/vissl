@@ -122,6 +122,7 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50w2 - 2x224 + 6x96 - 400ep - 16node - bs32: /checkpoint/imisra/dcluster2/checkpoints_only/r50w2_swav_2x224_4x96v3_mlp8k_lr4pt8_minlr1pt-3_bg32_ep400/model_final_checkpoint_phase399.torch
 - rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40: /checkpoint/imisra/dcluster2/mathilde_runs/pretext_rn50w4_b40wq_2x224_4x96v2_indep_1head_8nodes_oto_imagenet_ampO1_minlr1pt-3_ep400/checkpoints/model_final_checkpoint_phase399.torch
 - rn50w5 - 2x224 + 6x96 - 400ep - 16node - bs12: /checkpoint/imisra/dcluster2/mathilde_runs/pretext_rn50w5_b12wq_2x224_4x96v3_indep_noBN_1head_16nodes_oto_imagenet_ampO1_ep400/checkpoints/model_final_checkpoint_phase399.torch
+- swav official rn50-100ep-8node-8crop-in1k: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/swav_100ep_pretrain.pth.tar
 
 ### DeepClusterV2
 <!-- deepcluster v2 -->

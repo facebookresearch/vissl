@@ -13,7 +13,7 @@ import sys
 
 import torch
 from classy_vision.generic.util import save_checkpoint
-from vissl.utils.checkpoint import replace_module_suffix
+from vissl.utils.checkpoint import replace_module_prefix
 from vissl.utils.io import is_url
 
 
@@ -50,22 +50,22 @@ def convert_and_save_model(args, append_prefix):
     logger.info(f"Input model loaded. Number of params: {len(model_trunk.keys())}")
 
     # convert the trunk
-    converted_model = replace_module_suffix(
+    converted_model = replace_module_prefix(
         model_trunk, f"{append_prefix}5.", f"{append_prefix}layer4."
     )
-    converted_model = replace_module_suffix(
+    converted_model = replace_module_prefix(
         converted_model, f"{append_prefix}4.", f"{append_prefix}layer3."
     )
-    converted_model = replace_module_suffix(
+    converted_model = replace_module_prefix(
         converted_model, f"{append_prefix}3.", f"{append_prefix}layer2."
     )
-    converted_model = replace_module_suffix(
+    converted_model = replace_module_prefix(
         converted_model, f"{append_prefix}2.", f"{append_prefix}layer1."
     )
-    converted_model = replace_module_suffix(
+    converted_model = replace_module_prefix(
         converted_model, f"{append_prefix}0.1.", f"{append_prefix}bn1."
     )
-    converted_model = replace_module_suffix(
+    converted_model = replace_module_prefix(
         converted_model, f"{append_prefix}0.0.", f"{append_prefix}conv1."
     )
 

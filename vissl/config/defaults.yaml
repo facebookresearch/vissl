@@ -225,12 +225,13 @@ config:
       #       This assumes that your model is compatible with the VISSL trunks. The VISSL
       #       trunks start with "_feature_blocks." prefix. If your model doesn't have these
       #       prefix you can append them. For example:
-      #       for TorchVision ResNet trunk, set APPEND_PREFIX="trunk.base_model._feature_blocks."
+      #       For TorchVision ResNet trunk, set APPEND_PREFIX="trunk.base_model._feature_blocks."
       #    2. where you want to load the model simply and finetune the full model.
       #       Set APPEND_PREFIX="trunk."
       #       This assumes that your model is compatible with the VISSL trunks. The VISSL
       #       trunks start with "_feature_blocks." prefix. If your model doesn't have these
       #       prefix you can append them.
+      #       For TorchVision ResNet trunk, set APPEND_PREFIX="trunk._feature_blocks."
       # NOTE: the prefix is appended to all the layers in the model
       APPEND_PREFIX: ""
 
