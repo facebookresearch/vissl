@@ -275,7 +275,7 @@ def check_model_compatibilty(config: AttrDict, state_dict: Dict[str, Any]):
             break
     if not is_compatible:
         raise Exception(
-            "Model provided in config.MODEL.WEIGHTS_INIT.PARAMS_FILE is not compatible"
+            "Model provided in config.MODEL.WEIGHTS_INIT.PARAMS_FILE is not compatible "
             "with VISSL. Please set config.MODEL.WEIGHTS_INIT.APPEND_PREFIX and "
             "config.MODEL.WEIGHTS_INIT.REMOVE_PREFIX for making model compatible. "
             f"Expected trunk prefix: {trunk_append_prefix}"

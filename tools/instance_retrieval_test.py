@@ -167,7 +167,7 @@ def process_eval_image(
         descriptors = get_rmac_descriptors(activation_map, spatial_levels, pca=pca)
     elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "l2_norm":
         # we simply L2 normalize the features otherwise
-        descriptors = F.normalize(activation_map, p=2, dim=1)
+        descriptors = F.normalize(activation_map, p=2, dim=0)
     else:
         descriptors = activation_map
     np.save(fname_out, descriptors.data.numpy())

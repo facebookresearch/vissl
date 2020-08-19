@@ -93,6 +93,12 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50 - in1k - jigsaw - ep800 [old] - /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/converted_vissl_rn50_pirl_in1k_jigsaw_ep800.torch
 - rn50 - in1k - jigsaw - ep200 -  /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/pirl_jigsaw_4node_200ep_pirl_jigsaw_4node_resnet_22_07_20.ffd17b75/model_final_checkpoint_phase199.torch
 - rn50 - in1k - jigsaw - ep800 -  /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/pirl_jigsaw_4node_pirl_jigsaw_4node_resnet_22_07_20.34377f59/model_final_checkpoint_phase799.torch
+<!-- PIRL trained by Ishan -->
+- R50-200ep-62.85: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50_200ep/model_final_checkpoint_phase199.torch
+- R50-200ep-MLP-65.8: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50_200ep_mlp_gblur/model_final_checkpoint_phase199.torch
+- R50-800ep-MLP-69.9: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50_800ep_mlphead_gblur/model_final_checkpoint_phase799.torch
+- R50w2-400ep-Linear-69.3: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/w2_400ep/model_final_checkpoint_phase399.torch
+- R50w2-400ep-MLP-70.9: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50w2_400ep_mlphead_gblur/model_final_checkpoint_phase399.torch
 
 ### SimCLR
 <!-- simclr -->
@@ -117,7 +123,7 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50 - 2x224 + 6x96 - 400ep - 1node - use queue: [TODO]
 - rn50 - 2x224 - 400ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_8node_2x224_rn50_in1k_swav_8node_resnet_30_07_20.c8fd7169/model_final_checkpoint_phase399.torch
 - rn50w2 - 2x224 + 6x96 - 400ep - 16node - bs32: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_rn50w2_in1k_bs32_16node_400ep_swav_8node_resnet_30_07_20.93563e51/model_final_checkpoint_phase399.torch
-- rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40: [TODO]
+- rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_rn50w4_in1k_bs40_8node_400ep_swav_8node_resnet_30_07_20.1736135b/model_final_checkpoint_phase399.torch
 - rn50w5 - 2x224 + 6x96 - 400ep - 16node - bs12: [TODO]
 - rn50w2 - 2x224 + 6x96 - 400ep - 16node - bs32: /checkpoint/imisra/dcluster2/checkpoints_only/r50w2_swav_2x224_4x96v3_mlp8k_lr4pt8_minlr1pt-3_bg32_ep400/model_final_checkpoint_phase399.torch
 - rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40: /checkpoint/imisra/dcluster2/mathilde_runs/pretext_rn50w4_b40wq_2x224_4x96v2_indep_1head_8nodes_oto_imagenet_ampO1_minlr1pt-3_ep400/checkpoints/model_final_checkpoint_phase399.torch
