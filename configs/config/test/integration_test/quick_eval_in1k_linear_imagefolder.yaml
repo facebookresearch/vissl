@@ -58,6 +58,7 @@ config:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
           ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
       ]
+      SHOULD_FLATTEN: False
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],

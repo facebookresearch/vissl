@@ -22,7 +22,7 @@ config:
       COPY_TO_LOCAL_DISK: False
   MODEL:
     FEATURE_EVAL_MODE: True
-    EXTRACT_FEATURES_ONLY: True
+    EXTRACT_TRUNK_FEATURES_ONLY: True
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
@@ -32,8 +32,6 @@ config:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
           ["res5", ["AvgPool2d", [[7, 7], 1, 0]]],
       ]
-    HEAD:
-      PARAMS: [["mlp", {"dims": [2048, 1000]}]]
     WEIGHTS_INIT:
       PARAMS_FILE: "specify weights to use for clustering."
       STATE_DICT_KEY_NAME: classy_state_dict

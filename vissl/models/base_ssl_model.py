@@ -109,7 +109,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         assert isinstance(batch, torch.Tensor)
         feats = self.trunk(batch, feature_names)
         # if we are interested in extracting the features only.
-        if self.model_config["EXTRACT_FEATURES_ONLY"]:
+        if self.model_config["EXTRACT_TRUNK_FEATURES_ONLY"]:
             return feats
         return self.heads_forward(feats, heads)
 

@@ -116,7 +116,7 @@ class GenericSSLDataset(Dataset):
             item["data_idx"].append(idx)
             item["data_valid"].append(1 if valid else -1)
 
-        if self.label_objs or self.label_type == "standard":
+        if (len(self.label_objs) > 0) or self.label_type == "standard":
             item["label"] = []
             for source in self.label_objs:
                 item["label"].append(source[idx])
@@ -126,6 +126,8 @@ class GenericSSLDataset(Dataset):
                 item["label"].append(idx)
         else:
             raise ValueError(f"Unknown label type: {self.label_type}")
+
+        # apply the transforms on the image
         if self.transform:
             item = self.transform(item)
         return item

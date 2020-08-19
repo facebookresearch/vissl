@@ -41,9 +41,7 @@ config:
       DATA_LIMIT: 50
   MODEL:
     FEATURE_EVAL_MODE: True
-    EXTRACT_FEATURES_ONLY: True
-    HEAD:
-      PARAMS: [["mlp", {"dims": [2048, 4]}]]
+    EXTRACT_TRUNK_FEATURES_ONLY: True
     TRUNK:
       NAME: resnet
       RESNETS:

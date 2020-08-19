@@ -129,8 +129,8 @@ config:
     # benchmark tasks like linear classification, set this to True. This freezes the model
     # trunk for feature evaluation.
     FEATURE_EVAL_MODE: false
-    # if you want to only extract features and not train linear classifier, set to true
-    EXTRACT_FEATURES_ONLY: false
+    # if you want to only extract features from the trunk and not pass through heads, set to true
+    EXTRACT_TRUNK_FEATURES_ONLY: false
     # Multi-input model: input keys in the sample dictionary and which head
     # uses them for example, input contains "images" and "patches" and there
     # is one separate head applied to images and another to patches
@@ -142,6 +142,9 @@ config:
       NAME: "resnet"
       # for any extra params that the model requires, pass them in the trunk_params
       TRUNK_PARAMS:
+        # ------------------------------------------------------------- #
+        # ResNe(X)t params
+        # ------------------------------------------------------------- #
         RESNETS:
           DEPTH: 50
           WIDTH_MULTIPLIER: 1
@@ -153,9 +156,18 @@ config:
           # for the pixel-wise task. Torchvision default is stride=2 and all other models
           # use this so we set the default as 2.
           LAYER4_STRIDE: 2
-        EFFICIENT_NETS: {}  # follow classy vision for these
+
+        # ------------------------------------------------------------- #
+        # EfficientNet params
+        # ------------------------------------------------------------- #
+        # follow classy vision for efficientNet settings
+        EFFICIENT_NETS: {}
+
+        # ------------------------------------------------------------- #
+        # RegNet params
+        # ------------------------------------------------------------- #
         REGNETS: {}
-      SHOULD_FLATTEN: false
+      SHOULD_FLATTEN: True
       # model features that should be evaluated for linear classification and what
       # pooling to apply on features. Could be any pooling operation or Identity.
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
@@ -172,6 +184,39 @@ config:
       # PARAMS is a List of Pairs:
       #   Pair[0] = Name of Head.
       #   Pair[1] = kwargs passed to head constructor.
+      # Example of heads:
+      # Case1: Simple Head containing single module - Single Input, Single output
+      #          PARAMS: [
+      #            ["mlp", {"dims": [2048, 128]}]
+      #          ]
+      # Case2: Complex Head containing chain of head modules - Single Input, Single output
+      #          PARAMS: [
+      #              ["mlp", {"dims": [2048, 1000], "use_bn": False, "use_relu": False}],
+      #              ["siamese_concat_view", {"num_towers": 9}],
+      #              ["mlp", {"dims": [9000, 128]}]
+      #          ]
+      # Case3: Multiple Heads (example 2 heads) - Single input, multiple output
+      #        Can be used for multi-task learning
+      #          PARAMS: [
+      #            # head 0
+      #            [
+      #              ["mlp", {"dims": [2048, 128], "use_bn": False, "use_relu": False}],
+      #              ["siamese_concat_view", {"num_towers": 9}],
+      #              ["mlp", {"dims": [1152, 128]}],
+      #            ],
+      #            # head 1
+      #            [
+      #              ["mlp", {"dims": [2048, 128]}]
+      #            ],
+      #          ]
+      # Case4: Multiple Heads (example 5 simple heads) - Single input, multiple output.
+      #        PARAMS: [
+      #          ["eval_mlp", {"in_channels": 64, "dims": [9216, 1000]}],
+      #          ["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
+      #          ["eval_mlp", {"in_channels": 512, "dims": [8192, 1000]}],
+      #          ["eval_mlp", {"in_channels": 1024, "dims": [9216, 1000]}],
+      #          ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+      #        ]
       PARAMS: []
       BATCHNORM_EPS: 1e-5
       BATCHNORM_MOMENTUM: 0.1
@@ -446,7 +491,7 @@ config:
     #      - if you use > 1 machine, set port yourself. RUN_ID="localhost:{port}".
     #      - If using 1 machine, set RUN_ID=auto and a free port will be automatically selected
     #   3. IF using INIT_METHOD=file, RUN_ID={file_path}
-    RUN_ID: ""
+    RUN_ID: "auto"
 
   # ----------------------------------------------------------------------------------- #
   # SVM (benchmark)
@@ -568,3 +613,6 @@ defaults:
   - config/benchmark/nearest_neighbor/models: null
   - config/benchmark/semi_supervised/dataset: null
   - config/benchmark/semi_supervised/models: null
+  ######### some feature extraction related paths
+  - config/feature_extraction/with_head: null
+  - config/feature_extraction/trunk_only: null

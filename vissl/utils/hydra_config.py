@@ -284,3 +284,23 @@ def assert_hydra_conf(cfg):
                 meter_args["meter_names"] = [
                     item[0] for item in cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 ]
+
+    # in case of feature evaluation model, we freeze the trunk. The Feature evaluation mode
+    # is used for the feature extraction of trunk as well. VISSL supports distributed feature
+    # extraction to speed up the extraction time. Since the model needs to be DDP for the
+    # distributed extraction, we need some dummy parameters in the model otherwise model
+    # can't be converted to DDP. So we attach some dummy head to the model.
+    if (
+        cfg.MODEL.FEATURE_EVAL_MODE
+        and cfg.MODEL.EXTRACT_TRUNK_FEATURES_ONLY
+        and len(cfg.MODEL.HEAD.PARAMS) == 0
+    ):
+        cfg.MODEL.HEAD.PARAMS = [["mlp", {"dims": [2048, 1000]}]]
+
+    # in SSL, during pre-training we don't want to use annotated labels or during feature
+    # extraction, we don't have annotated labels for some datasets. In such cases, we set
+    # the label type to be just the image index in the dataset.
+    if len(cfg.DATA.TRAIN.LABEL_SOURCES) == 0:
+        cfg.DATA.TRAIN.LABEL_TYPE = "sample_index"
+    if len(cfg.DATA.TEST.LABEL_SOURCES) == 0:
+        cfg.DATA.TEST.LABEL_TYPE = "sample_index"

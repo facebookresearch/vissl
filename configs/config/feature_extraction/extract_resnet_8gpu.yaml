@@ -1,6 +1,5 @@
 # @package _global_
 extract_features: True
-nearest_neighbor_test: True
 config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
@@ -21,6 +20,7 @@ config:
       MMAP_MODE: False
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      ENABLE_QUEUE_DATASET: False
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
@@ -38,17 +38,13 @@ config:
       MMAP_MODE: False
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      ENABLE_QUEUE_DATASET: False
   MODEL:
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-    HEAD:
-      PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
-        ["mlp", {"dims": [2048, 128]}],
-      ]
     WEIGHTS_INIT:
       PARAMS_FILE: "specify the model weights"
       STATE_DICT_KEY_NAME: classy_state_dict
@@ -57,8 +53,3 @@ config:
     NUM_PROC_PER_NODE: 8
   MACHINE:
     DEVICE: gpu
-  NEAREST_NEIGHBOR:
-    OUTPUT_DIR: .
-    SIGMA: 0.1
-    TOPK: 200
-    L2_NORM_FEATS: False
