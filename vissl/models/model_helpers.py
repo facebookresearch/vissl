@@ -220,7 +220,11 @@ def get_trunk_forward_outputs(
         if i == max_out_feat:
             break
 
-    # now return the features as requested by the user.
+    # now return the features as requested by the user. If there are no duplicate keys,
+    # return as is.
+    if len(unique_out_feat_keys) == len(out_feat_keys):
+        return list(unique_out_feats.values())
+
     output_feats = []
     for key_name in out_feat_keys:
         output_feats.append(unique_out_feats[key_name])

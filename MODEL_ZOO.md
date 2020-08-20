@@ -109,7 +109,7 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50 - in1k - 1000ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50_1000ep_simclr_8node_resnet_16_07_20.afe428c7/model_final_checkpoint_phase999.torch
 - rn50w2 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50w2_100ep_simclr_8node_resnet_16_07_20.05b37ec3/model_final_checkpoint_phase99.torch
 - rn50w2 - in1k - 1000ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn50w2_1000ep_simclr_8node_resnet_16_07_20.e1e3bbf0/model_final_checkpoint_phase999.torch
-- rn50w4 - in1k - 1000ep
+- rn50w4 - in1k - 1000ep [TODO]
 - rn101 - in1k - 100ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn101_100ep_simclr_8node_resnet_16_07_20.1ff6cb4b/model_final_checkpoint_phase99.torch
 - rn101 - in1k - 1000ep /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/simclr_rn101_1000ep_simclr_8node_resnet_16_07_20.35063cea/model_final_checkpoint_phase999.torch
 
@@ -120,7 +120,7 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 - rn50 - 2x224 + 6x96 - 400ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_400ep_swav_8node_resnet_27_07_20.a5990fc9/model_final_checkpoint_phase399.torch
 - rn50 - 2x224 + 6x96 - 800ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_in1k_rn50_800ep_swav_8node_resnet_27_07_20.a0a6b676/model_final_checkpoint_phase799.torch
 - rn50 - 2x224 + 6x96 - 200ep - 1node - use queue: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_4gpu_bs64_200ep_2x224_6x96_queue_swav_8node_resnet_28_07_20.a8f2c735/model_final_checkpoint_phase199.torch
-- rn50 - 2x224 + 6x96 - 400ep - 1node - use queue: [TODO]
+- rn50 - 2x224 + 6x96 - 400ep - 1node - use queue: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_4gpu_bs64_400ep_2x224_6x96_queue_swav_8node_resnet_28_07_20.5e967ca0/model_final_checkpoint_phase399.torch
 - rn50 - 2x224 - 400ep - 8node: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_8node_2x224_rn50_in1k_swav_8node_resnet_30_07_20.c8fd7169/model_final_checkpoint_phase399.torch
 - rn50w2 - 2x224 + 6x96 - 400ep - 16node - bs32: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_rn50w2_in1k_bs32_16node_400ep_swav_8node_resnet_30_07_20.93563e51/model_final_checkpoint_phase399.torch
 - rn50w4 - 2x224 + 6x96 - 400ep - 8node - bs40: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/prigoyal/ssl_framework/swav_rn50w4_in1k_bs40_8node_400ep_swav_8node_resnet_30_07_20.1736135b/model_final_checkpoint_phase399.torch
@@ -132,8 +132,8 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 
 ### DeepClusterV2
 <!-- deepcluster v2 -->
-- rn50 - 2x160 + 4x96 - 400ep - 8node -
-- rn50 - 2x224 - 400ep - 8node -
+- rn50 - 2x160 + 4x96 - 400ep - 8node - [TODO]
+- rn50 - 2x224 - 400ep - 8node - [TODO]
 
 ### SeLA-V2
 <!-- sela-v2 -->

@@ -28,10 +28,11 @@ class ImgPilGaussianBlur(ClassyTransform):
         if not should_blur:
             return img
 
-        # randomly sample sigma
-        sigma = random.uniform(self.radius_min, self.radius_max)
-        img = img.filter(ImageFilter.GaussianBlur(radius=sigma))
-        return img
+        return img.filter(
+            ImageFilter.GaussianBlur(
+                radius=random.uniform(self.radius_min, self.radius_max)
+            )
+        )
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilGaussianBlur":
