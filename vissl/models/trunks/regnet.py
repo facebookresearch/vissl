@@ -8,6 +8,7 @@ import torch.nn as nn
 from classy_vision.models import RegNet as ClassyRegNet, build_model
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_trunk("regnet")
@@ -21,7 +22,7 @@ class RegNet(nn.Module):
     We follow the feature naming convention defined in the ResNet vissl trunk.
     """
 
-    def __init__(self, model_config, model_name):
+    def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
 
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"

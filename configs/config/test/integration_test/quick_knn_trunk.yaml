@@ -41,23 +41,24 @@ config:
   MODEL:
     FEATURE_EVAL_SETTINGS:
       EVAL_MODE_ON: True
-      FREEZE_TRUNK_AND_HEAD: True
-      EVAL_TRUNK_AND_HEAD: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+          ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      ]
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-    HEAD:
-      PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
-        ["mlp", {"dims": [2048, 128]}],
-      ]
     WEIGHTS_INIT:
       PARAMS_FILE: ""
       STATE_DICT_KEY_NAME: classy_state_dict
   DISTRIBUTED:
     NUM_NODES: 1
+    # NUM_PROC_PER_NODE: 2
     NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto

@@ -70,6 +70,22 @@ ROOT_OSS_CONFIGS = create_valid_input(
     )
 )
 
+# configs that require loss optimization and hence trainable
+ROOT_LOSS_CONFIGS = create_valid_input(
+    list_config_files(
+        "config",
+        exclude_folders=[
+            "models",
+            "optimization",
+            "object_detection",
+            "nearest_neighbor",
+            "feature_extraction",
+            "fb",
+        ],
+    )
+)
+
+
 UNIT_TEST_CONFIGS = create_valid_input(
     list_config_files("config/test/cpu_test", exclude_folders=None)
 )

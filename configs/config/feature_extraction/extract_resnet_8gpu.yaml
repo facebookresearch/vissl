@@ -1,5 +1,5 @@
 # @package _global_
-extract_features: True
+engine_name: extract_features
 config:
   DATA:
     NUM_DATALOADER_WORKERS: 5

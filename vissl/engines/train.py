@@ -2,7 +2,6 @@
 
 import logging
 import os
-from argparse import Namespace
 from typing import Any, Callable, List
 
 import torch
@@ -26,7 +25,6 @@ from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
 
 def train_main(
-    args: Namespace,
     cfg: AttrDict,
     dist_run_id: str,
     local_rank: int = 0,
@@ -53,7 +51,7 @@ def train_main(
 
     # set seeds
     logging.info("Setting seed....")
-    set_seeds(cfg, args.node_id)
+    set_seeds(cfg, node_id)
 
     # We set the CUDA device here as well as a safe solution for all downstream
     # `torch.cuda.current_device()` calls to return correct device.

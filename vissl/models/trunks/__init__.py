@@ -13,7 +13,7 @@ MODEL_TRUNKS_REGISTRY = {}
 MODEL_TRUNKS_NAMES = set()
 
 
-def register_model_trunk(name):
+def register_model_trunk(name: str):
     """Registers Self-Supervision Model Trunks.
 
     This decorator allows VISSL to add custom model trunk, even if the
@@ -45,7 +45,7 @@ def register_model_trunk(name):
     return register_model_trunk_cls
 
 
-def get_model_trunk(name):
+def get_model_trunk(name: str):
     assert name in MODEL_TRUNKS_REGISTRY, "Unknown model trunk"
     return MODEL_TRUNKS_REGISTRY[name]
 

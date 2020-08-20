@@ -1,6 +1,4 @@
 # @package _global_
-extract_features: True
-train_svm: True
 config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
@@ -39,11 +37,11 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/voc2007/
   MODEL:
-    FEATURE_EVAL_MODE: True
-    EXTRACT_TRUNK_FEATURES_ONLY: True
-    TRUNK:
-      NAME: alexnet_deepcluster
-      SHOULD_FLATTEN: True
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
           ["conv1", ["AvgPool2d", [[19, 19], 4, 0]]],
           ["conv2",["AvgPool2d", [[12, 12], 3, 0]]],
@@ -51,6 +49,8 @@ config:
           ["conv4",["AvgPool2d", [[9, 9], 1, 0]]],
           ["conv5",["AvgPool2d", [[8, 8], 1, 0]]],
       ]
+    TRUNK:
+      NAME: alexnet_deepcluster
     WEIGHTS_INIT:
       PARAMS_FILE: "specify path"
       STATE_DICT_KEY_NAME: model_state_dict

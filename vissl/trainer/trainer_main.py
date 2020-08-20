@@ -19,6 +19,7 @@ from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import ClassyTask
 from vissl.data import print_sampler_config
 from vissl.hooks import SSLClassyHookFunctions
+from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
 from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.env import get_machine_local_and_dist_rank
@@ -246,11 +247,8 @@ class SelfSupervisionTrainer(object):
         # Get the names of the features that we are extracting. If user doesn't
         # specify the features to evaluate, we get the full model output and freeze
         # head/trunk both as caution.
-        if self.cfg.MODEL.FEATURE_EVAL_MODE:
-            feat_names = [
-                item[0] for item in self.cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
-            ]
-        else:
+        feat_names = get_trunk_output_feature_names(self.cfg.MODEL)
+        if len(feat_names) == 0:
             feat_names = ["heads"]
 
         features = {}
@@ -282,6 +280,7 @@ class SelfSupervisionTrainer(object):
         self, feat_names: List[str], cfg: AttrDict, task: ClassyTask
     ):
         task.model.eval()
+        logging.info("Model set to eval mode during feature extraction...")
 
         out_features, out_targets = {}, {}
         for layer in feat_names:

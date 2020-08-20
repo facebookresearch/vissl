@@ -7,7 +7,7 @@ from collections import namedtuple
 import torch
 from classy_vision.generic.distributed_util import set_cpu_device
 from parameterized import parameterized
-from utils import ROOT_OSS_CONFIGS, SSLHydraConfig
+from utils import ROOT_LOSS_CONFIGS, SSLHydraConfig
 from vissl.losses.multicrop_simclr_info_nce_loss import MultiCropSimclrInfoNCECriterion
 from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.losses.swav_loss import SwAVCriterion
@@ -68,7 +68,7 @@ class TestLossesForward(unittest.TestCase):
 
 
 class TestRootConfigsLossesBuild(unittest.TestCase):
-    @parameterized.expand(ROOT_OSS_CONFIGS)
+    @parameterized.expand(ROOT_LOSS_CONFIGS)
     def test_loss_build(self, filepath):
         logger.info(f"Loading {filepath}")
         cfg = SSLHydraConfig.from_configs(

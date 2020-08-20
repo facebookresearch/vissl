@@ -5,11 +5,12 @@
 import torch.nn as nn
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_trunk("alexnet_rotnet")
 class AlexNetRotNet(nn.Module):
-    def __init__(self, model_config, model_name):
+    def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
 
         conv1 = nn.Sequential(

@@ -1,6 +1,4 @@
 # @package _global_
-extract_features: True
-train_svm: True
 config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
@@ -43,14 +41,11 @@ config:
       PARAMS_FILE: "specify path"
       STATE_DICT_KEY_NAME: classy_state_dict
       # STATE_DICT_KEY_NAME: model_state_dict
-    FEATURE_EVAL_MODE: True
-    EXTRACT_TRUNK_FEATURES_ONLY: True
-    TRUNK:
-      NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-      SHOULD_FLATTEN: True
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
         ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
         ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
@@ -58,6 +53,11 @@ config:
         ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
         ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
       ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8

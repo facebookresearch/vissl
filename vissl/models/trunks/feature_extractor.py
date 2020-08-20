@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+import logging
 
 import torch
 import torch.nn as nn
@@ -19,7 +20,7 @@ POOL_OPS = {
 class FeatureExtractorModel(nn.Module):
     def __init__(self, model_config: AttrDict):
         super(FeatureExtractorModel, self).__init__()
-
+        logging.info("Creating Feature extractor trunk...")
         self.model_config = model_config
         trunk_name = model_config["TRUNK"]["NAME"]
         self.base_model = get_model_trunk(trunk_name)(self.model_config, trunk_name)
@@ -36,19 +37,22 @@ class FeatureExtractorModel(nn.Module):
         out = []
         for feat, op in zip(feats, self.feature_pool_ops):
             feat = op(feat)
-            if self.model_config.TRUNK.SHOULD_FLATTEN:
+            if self.model_config.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS:
                 feat = torch.flatten(feat, start_dim=1)
             out.append(feat)
         return out
 
     def _freeze_model(self):
+        logging.info("Freezing model trunk...")
         for param in self.base_model.parameters():
             param.requires_grad = False
 
     def _attach_feature_pool_layers(self):
         feat_pool_ops = []
-        for entry in self.model_config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP:
-            pool_ops, args = entry[1]
+        for (
+            item
+        ) in self.model_config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP:
+            pool_ops, args = item[1]
             feat_pool_ops.append(POOL_OPS[pool_ops](*args))
         feat_pool = nn.ModuleList(feat_pool_ops)
         return feat_pool

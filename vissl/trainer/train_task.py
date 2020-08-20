@@ -266,8 +266,19 @@ class SelfSupervisionTask(ClassificationTask):
 
         # Enforce eval mode, no matter what the prior tranforms have done.
         # For instance apex converts batch-norms and sets `requires_grad` to True
-        if self.config["MODEL"]["FEATURE_EVAL_MODE"]:
-            model.freeze_trunk()
+        if self.config["MODEL"]["FEATURE_EVAL_SETTINGS"]["EVAL_MODE_ON"]:
+            if self.config["MODEL"]["FEATURE_EVAL_SETTINGS"]["FREEZE_TRUNK_ONLY"]:
+                logging.info(
+                    "config.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY=True, "
+                    "will freeze trunk..."
+                )
+                model.freeze_trunk()
+            elif self.config["MODEL"]["FEATURE_EVAL_SETTINGS"]["FREEZE_TRUNK_AND_HEAD"]:
+                logging.info(
+                    "config.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_AND_HEAD=True, will "
+                    "freeze trunk and head..."
+                )
+                model.freeze_head_and_trunk()
 
         # If we want to initialize the model in case of finetuning or evaluation,
         # we do it here. But we check that there is no checkpoint existing before

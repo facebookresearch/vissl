@@ -9,8 +9,7 @@ import logging
 import os
 
 
-def get_node_id(args):
-    node_id = args.node_id
+def get_node_id(node_id: int):
     node_list = os.environ.get("SLURM_STEP_NODELIST")
     if node_list is not None:
         node_name = str(os.environ["SLURMD_NODENAME"])
@@ -19,7 +18,7 @@ def get_node_id(args):
     return node_id
 
 
-def get_slurm_dir(input_dir):
+def get_slurm_dir(input_dir: str):
     output_dir = input_dir
     if "SLURM_JOBID" in os.environ:
         output_dir = os.path.join(input_dir, os.environ["SLURM_JOBID"])

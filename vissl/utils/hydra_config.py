@@ -271,31 +271,48 @@ def assert_hydra_conf(cfg):
     # name in the meters output to make it easy to interpret the results. This is
     # currently only supported for cases where we have linear evaluation.
     if cfg.METERS is not None:
+        from vissl.models import is_feature_extractor_model
+
         meter_items = cfg.METERS.items()
         for meter_name, meter_args in meter_items:
-            if (
-                meter_name == "accuracy_list_meter"
-                and cfg.MODEL.FEATURE_EVAL_MODE
-                and len(cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP) > 0
+            if meter_name == "accuracy_list_meter" and is_feature_extractor_model(
+                cfg.MODEL
             ):
                 meter_args["num_meters"] = len(
-                    cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+                    cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 )
                 meter_args["meter_names"] = [
-                    item[0] for item in cfg.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+                    item[0]
+                    for item in cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 ]
 
-    # in case of feature evaluation model, we freeze the trunk. The Feature evaluation mode
+    # in case of feature evaluation mode, we freeze the trunk. The Feature evaluation mode
     # is used for the feature extraction of trunk as well. VISSL supports distributed feature
     # extraction to speed up the extraction time. Since the model needs to be DDP for the
     # distributed extraction, we need some dummy parameters in the model otherwise model
     # can't be converted to DDP. So we attach some dummy head to the model.
+    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
     if (
-        cfg.MODEL.FEATURE_EVAL_MODE
-        and cfg.MODEL.EXTRACT_TRUNK_FEATURES_ONLY
+        cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+        and cfg.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
+        and cfg.MODEL.FEATURE_EVAL_SETTINGS.EXTRACT_TRUNK_FEATURES_ONLY
+        and world_size > 1
         and len(cfg.MODEL.HEAD.PARAMS) == 0
     ):
         cfg.MODEL.HEAD.PARAMS = [["mlp", {"dims": [2048, 1000]}]]
+
+    # in case of feature evaluation mode, if we are freezing both trunk and head, DDP won't
+    # work as there are no parameters in the model. Adding the dummy head will lead to
+    # features being not right.
+    if (
+        cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+        and cfg.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_AND_HEAD
+        and cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
+    ):
+        assert world_size == 1, (
+            "VISSL doesn't support distributed extraction for a completely frozen model. "
+            "Please use 1 gpu."
+        )
 
     # in SSL, during pre-training we don't want to use annotated labels or during feature
     # extraction, we don't have annotated labels for some datasets. In such cases, we set

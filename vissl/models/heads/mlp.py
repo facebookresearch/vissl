@@ -1,8 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+from typing import List
 
 import torch
 import torch.nn as nn
 from vissl.models.heads import register_model_head
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_head("mlp")
@@ -28,12 +30,12 @@ class MLP(nn.Module):
 
     def __init__(
         self,
-        model_config,
-        dims,
-        use_bn=False,
-        use_relu=False,
-        use_dropout=False,
-        use_bias=True,
+        model_config: AttrDict,
+        dims: List[int],
+        use_bn: bool = False,
+        use_relu: bool = False,
+        use_dropout: bool = False,
+        use_bias: bool = True,
     ):
         """
         Args:
@@ -66,7 +68,7 @@ class MLP(nn.Module):
                 layers.append(nn.Dropout())
         self.clf = nn.Sequential(*layers)
 
-    def forward(self, batch):
+    def forward(self, batch: torch.Tensor):
         """
         Args:
             batch (torch.Tensor): 2D torch tensor or 4D tensor of shape `N x C x 1 x 1`
@@ -74,5 +76,8 @@ class MLP(nn.Module):
             out (torch.Tensor): 2D output torch tensor
         """
         batch = torch.squeeze(batch)
+        assert (
+            len(batch.shape) == 2
+        ), "MLP expected 2D input tensor or 4D tensor of shape NxCx1x1"
         out = self.clf(batch)
         return out

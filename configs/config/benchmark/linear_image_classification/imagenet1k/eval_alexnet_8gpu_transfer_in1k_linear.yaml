@@ -51,9 +51,10 @@ config:
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
-    FEATURE_EVAL_MODE: True
-    TRUNK:
-      NAME: alexnet_deepcluster
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
           ["conv1", ["AvgPool2d", [[19, 19], 4, 0]]],
           ["conv2",["AvgPool2d", [[12, 12], 3, 0]]],
@@ -61,6 +62,8 @@ config:
           ["conv4",["AvgPool2d", [[9, 9], 1, 0]]],
           ["conv5",["AvgPool2d", [[8, 8], 1, 0]]],
       ]
+    TRUNK:
+      NAME: alexnet_deepcluster
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 96, "dims": [9600, 1000]}],

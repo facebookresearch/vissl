@@ -1,7 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 from vissl.models.base_ssl_model import BaseSSLMultiInputOutputModel
-from vissl.models.model_helpers import convert_sync_bn  # noqa
+from vissl.models.model_helpers import (  # noqa
+    convert_sync_bn,
+    is_feature_extractor_model,
+)
 
 
 def build_model(model_config, optimizer_config):

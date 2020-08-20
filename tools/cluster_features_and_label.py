@@ -8,6 +8,7 @@ using FAISS and assigning the hard labels to the dataset.
 import logging
 import os
 import sys
+from argparse import Namespace
 
 import faiss
 import numpy as np
@@ -16,13 +17,13 @@ from run_distributed_engines import launch_distributed
 from vissl.data import build_dataset
 from vissl.hooks import default_hook_generator
 from vissl.utils.checkpoint import get_absolute_path
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features, set_seeds
 
 
-def get_data_features_and_images(cfg):
+def get_data_features_and_images(cfg: AttrDict):
     output_dir = get_absolute_path(cfg.CLUSTERFIT.OUTPUT_DIR)
     split = cfg.CLUSTERFIT.FEATURES.DATA_PARTITION
     logging.info("Merging features...")
@@ -42,7 +43,7 @@ def get_data_features_and_images(cfg):
     return feature_data, feature_image_paths[0]
 
 
-def cluster_features_and_label(args, cfg):
+def cluster_features_and_label(args: Namespace, cfg: AttrDict):
     cluster_backend = cfg.CLUSTERFIT.CLUSTER_BACKEND
     num_clusters = cfg.CLUSTERFIT.NUM_CLUSTERS
     data_split = cfg.CLUSTERFIT.FEATURES.DATA_PARTITION
@@ -97,7 +98,7 @@ def cluster_features_and_label(args, cfg):
     logging.info("All Done!")
 
 
-def main(args, cfg):
+def main(args: Namespace, cfg: AttrDict):
     # setup logging
     setup_logging(__name__)
 
@@ -106,8 +107,12 @@ def main(args, cfg):
     set_seeds(cfg, args.node_id)
 
     # extract the features. We enable the feature extraction as well.
-    args.extract_features = True
-    launch_distributed(cfg, args, hook_generator=default_hook_generator)
+    launch_distributed(
+        cfg,
+        args.node_id,
+        engine_name="extract_features",
+        hook_generator=default_hook_generator,
+    )
 
     # cluster the extracted features
     cluster_features_and_label(args, cfg)

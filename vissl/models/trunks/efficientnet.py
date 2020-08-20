@@ -11,6 +11,7 @@ from classy_vision.models.efficientnet import (
 )
 from vissl.models.model_helpers import Flatten, Wrap, parse_out_keys_arg
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_trunk("efficientnet")
@@ -20,7 +21,7 @@ class EfficientNet(nn.Module):
     blocks to facilitate feature extraction and benchmarking at several layers.
     """
 
-    def __init__(self, model_config, model_name):
+    def __init__(self, model_config: AttrDict, model_name: str):
         super(EfficientNet, self).__init__()
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
 

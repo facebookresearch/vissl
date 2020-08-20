@@ -50,18 +50,23 @@ config:
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
-    FEATURE_EVAL_MODE: True
-    TRUNK:
-      NAME: resnet
-      RESNETS:
-        DEPTH: 50
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
           ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+          ["res5avg", ["Identity", []]],
       ]
-      SHOULD_FLATTEN: False
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 1000]}],
       ]
     WEIGHTS_INIT:
       PARAMS_FILE: ""

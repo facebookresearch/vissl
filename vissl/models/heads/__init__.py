@@ -13,7 +13,7 @@ MODEL_HEADS_REGISTRY = {}
 MODEL_HEADS_NAMES = set()
 
 
-def register_model_head(name):
+def register_model_head(name: str):
     """Registers Self-Supervision Model Heads.
 
     This decorator allows VISSL to add custom model heads, even if the
@@ -45,7 +45,7 @@ def register_model_head(name):
     return register_model_head_cls
 
 
-def get_model_head(name):
+def get_model_head(name: str):
     assert name in MODEL_HEADS_REGISTRY, "Unknown model head"
     return MODEL_HEADS_REGISTRY[name]
 

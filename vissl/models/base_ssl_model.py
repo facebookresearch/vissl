@@ -7,12 +7,12 @@ import torch
 import torch.nn as nn
 from classy_vision.models import ClassyModel, register_model
 from vissl.models.heads import get_model_head
+from vissl.models.model_helpers import (
+    get_trunk_output_feature_names,
+    is_feature_extractor_model,
+)
 from vissl.models.trunks import get_model_trunk
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
-from vissl.utils.checkpoint import (  # noqa
-    print_loaded_dict_info,
-    print_state_dict_shapes,
-)
 from vissl.utils.env import get_machine_local_and_dist_rank
 
 
@@ -48,17 +48,9 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         self.trunk = self._get_trunk()
         self.heads = nn.ModuleList()
         self.head_names = []
+        self._output_feature_names = get_trunk_output_feature_names(self.model_config)
         self._get_heads()
         self._setup_multi_input_head_mapping()
-
-        # get the feature names which we will output. If Feature eval mode is set,
-        # we get the feature names from the config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP.
-        self.feature_names = []
-        if self.model_config.FEATURE_EVAL_MODE:
-            self.feature_names = [
-                item[0]
-                for item in self.model_config.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP
-            ]
 
     def multi_input_with_head_mapping_forward(self, batch):
         """
@@ -108,8 +100,14 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         """
         assert isinstance(batch, torch.Tensor)
         feats = self.trunk(batch, feature_names)
-        # if we are interested in extracting the features only.
-        if self.model_config["EXTRACT_TRUNK_FEATURES_ONLY"]:
+        # if we are interested in evaluating the trunk only, we return the output of the trunk
+        # and don't forward through the heads
+        if (
+            self.model_config["FEATURE_EVAL_SETTINGS"]["EVAL_MODE_ON"]
+            and self.model_config["FEATURE_EVAL_SETTINGS"][
+                "EXTRACT_TRUNK_FEATURES_ONLY"
+            ]
+        ):
             return feats
         return self.heads_forward(feats, heads)
 
@@ -139,16 +137,18 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             return self.multi_input_with_head_mapping_forward(batch)
 
         if isinstance(batch, list):
-            return self.multi_res_input_forward(batch, self.feature_names)
+            return self.multi_res_input_forward(batch, self._output_feature_names)
 
-        return self.single_input_forward(batch, self.feature_names, self.heads)
+        return self.single_input_forward(batch, self._output_feature_names, self.heads)
 
     def freeze_head(self):
+        logging.info("Freezing model heads...")
         for head in self.heads:
             for param in head.parameters():
                 param.requires_grad = False
 
     def freeze_trunk(self):
+        logging.info("Freezing model trunk...")
         for param in self.trunk.parameters():
             param.requires_grad = False
 
@@ -158,6 +158,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         # pretext task. But in case of some models like NPID, SimCLR, SwAV, the
         # head is essentially a low dimensional feature projection which we want
         # to use. Hence, we provide utility to freeze the full model.
+        logging.info("Freezing model...")
         self.freeze_trunk()
         self.freeze_head()
 
@@ -168,7 +169,8 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         return feats
 
     def _get_trunk(self):
-        if self.model_config.FEATURE_EVAL_MODE:
+        # if we are going to evaluate trunk only we shift to feature extractor backbone
+        if is_feature_extractor_model(self.model_config):
             self.eval_mode = True
             return FeatureExtractorModel(self.model_config)
         else:
@@ -303,13 +305,18 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         }
         if deep_copy:
             model_state_dict = copy.deepcopy(model_state_dict)
-        # print_state_dict_shapes(trunk_state_dict)   # DEBUG
-        # print_state_dict_shapes_shapes(heads_state_dict)   # DEBUG
+        ###################### DEBUG ###################################
+        # from vissl.utils.checkpoint import print_state_dict_shapes
+
+        # print_state_dict_shapes(trunk_state_dict)
+        # print_state_dict_shapes_shapes(heads_state_dict)
         return model_state_dict
 
     # we call this on the state.base_model which is not wrapped with DDP.
     # load the model from checkpoint
     def set_classy_state(self, state):
+        from vissl.utils.checkpoint import print_loaded_dict_info
+
         logging.info("Loading Trunk state dict....")
         self.trunk.load_state_dict(state["model"]["trunk"])
         logging.info("Loading Heads state dict....")
@@ -336,7 +343,10 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             params_from_file = self.model_config["WEIGHTS_INIT"]
             skip_layers = params_from_file.get("SKIP_LAYERS", [])
             print_loaded_dict_info(
-                model_state_dict, checkpoint_state_dict, skip_layers=skip_layers
+                model_state_dict,
+                checkpoint_state_dict,
+                skip_layers=skip_layers,
+                model_config=self.model_config,
             )
 
     @property

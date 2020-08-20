@@ -4,19 +4,26 @@ import logging
 import multiprocessing as mp
 import os
 import sys
+from argparse import Namespace
 
 import numpy as np
 from hydra.experimental import compose, initialize_config_module
 from run_distributed_engines import launch_distributed
 from vissl.hooks import default_hook_generator
+from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.utils.checkpoint import get_absolute_path
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
+from vissl.utils.hydra_config import (
+    AttrDict,
+    convert_to_attrdict,
+    is_hydra_available,
+    print_cfg,
+)
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features
 from vissl.utils.svm_utils.svm_trainer import SVMTrainer
 
 
-def train_svm(cfg, output_dir, layername):
+def train_svm(cfg: AttrDict, output_dir: str, layername: str):
     # print the coniguration used for svm training
     print_cfg(cfg)
 
@@ -34,21 +41,32 @@ def train_svm(cfg, output_dir, layername):
     logging.info("All Done!")
 
 
-def main(args, config):
+def main(args: Namespace, config: AttrDict):
     # setup logging
     setup_logging(__name__)
 
     # print the coniguration used
     print_cfg(config)
 
+    assert config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON, (
+        "Feature eval mode is not ON. Can't run train_svm. "
+        "Set config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON=True "
+        "in your config or from command line."
+    )
     # extract the features
-    assert (
-        args.extract_features
-    ), "Please set extract_features=True to enable feature extraction"
-    launch_distributed(config, args, hook_generator=default_hook_generator)
+    launch_distributed(
+        config,
+        args.node_id,
+        engine_name="extract_features",
+        hook_generator=default_hook_generator,
+    )
 
-    # get the layers for which we will train svm
-    layers = [item[0] for item in config.MODEL.TRUNK.LINEAR_EVAL_FEAT_POOL_OPS_MAP]
+    # Get the names of the features that we extracted features for. If user doesn't
+    # specify the features to evaluate, we get the full model output and freeze
+    # head/trunk both as caution.
+    layers = get_trunk_output_feature_names(config.MODEL)
+    if len(layers) == 0:
+        layers = ["heads"]
     output_dir = get_absolute_path(config.SVM.OUTPUT_DIR)
 
     # train svm for each layer. parallelize it.

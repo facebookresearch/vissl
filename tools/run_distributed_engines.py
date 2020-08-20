@@ -7,7 +7,6 @@ Supports two engines: train and extract_features
 
 import logging
 import sys
-from argparse import Namespace
 from typing import Any, Callable, List
 
 import torch
@@ -23,11 +22,11 @@ from vissl.utils.misc import get_dist_run_id
 from vissl.utils.slurm import get_node_id
 
 
-def get_available_splits(cfg):
+def get_available_splits(cfg: AttrDict):
     return [key for key in cfg.DATA if key.lower() in ["train", "test"]]
 
 
-def copy_to_local(cfg):
+def copy_to_local(cfg: AttrDict):
     available_splits = get_available_splits(cfg)
     for split in available_splits:
         if cfg.DATA[split].COPY_TO_LOCAL_DISK:
@@ -40,7 +39,7 @@ def copy_to_local(cfg):
             copy_data_to_local(data_files, dest_dir)
 
 
-def cleanup_local_dir(cfg):
+def cleanup_local_dir(cfg: AttrDict):
     available_splits = get_available_splits(cfg)
     for split in available_splits:
         if cfg.DATA[split].COPY_TO_LOCAL_DISK:
@@ -49,17 +48,22 @@ def cleanup_local_dir(cfg):
 
 
 def launch_distributed(
-    cfg: AttrDict, args: Namespace, hook_generator: Callable[[Any], List[ClassyHook]]
+    cfg: AttrDict,
+    node_id: int,
+    engine_name: str,
+    hook_generator: Callable[[Any], List[ClassyHook]],
 ):
-    """Launch the distributed training across nodes, according to the config
+    """
+    Launch the distributed training across gpus, according to the cfg
 
     Args:
-        cfg  -- VISSL configuration
-        args -- Extra arguments for this node
-        hook_generator -- Callback to generate all the ClassyVision hooks for this training
+        cfg  -- VISSL yaml configuration
+        node_id -- node_id for this node
+        engine_name -- what engine to run: train or extract_features
+        hook_generator -- Callback to generate all the ClassyVision hooks for this engine
     """
     copy_to_local(cfg)
-    node_id = get_node_id(args)
+    node_id = get_node_id(node_id)
     dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
     world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
 
@@ -68,7 +72,7 @@ def launch_distributed(
             torch.multiprocessing.spawn(
                 _distributed_worker,
                 nprocs=cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
-                args=(cfg, node_id, dist_run_id, args, hook_generator),
+                args=(cfg, node_id, dist_run_id, engine_name, hook_generator),
                 daemon=False,
             )
         else:
@@ -77,7 +81,7 @@ def launch_distributed(
                 cfg=cfg,
                 node_id=node_id,
                 dist_run_id=dist_run_id,
-                args=args,
+                engine_name=engine_name,
                 hook_generator=hook_generator,
             )
 
@@ -92,21 +96,20 @@ def launch_distributed(
 
 
 def _distributed_worker(
-    local_rank,
-    cfg,
+    local_rank: int,
+    cfg: AttrDict,
     node_id: int,
     dist_run_id: str,
-    args: Namespace,
+    engine_name: str,
     hook_generator: Callable[[Any], List[ClassyHook]],
 ):
     dist_rank = cfg.DISTRIBUTED.NUM_PROC_PER_NODE * node_id + local_rank
-    if args.extract_features:
+    if engine_name == "extract_features":
         process_main = extract_main
     else:
 
-        def process_main(args, cfg, dist_run_id, local_rank, node_id):
+        def process_main(cfg, dist_run_id, local_rank, node_id):
             train_main(
-                args,
                 cfg,
                 dist_run_id,
                 local_rank=local_rank,
@@ -118,7 +121,7 @@ def _distributed_worker(
         f"Spawning process for node_id: {node_id}, local_rank: {local_rank}, "
         f"dist_rank: {dist_rank}, dist_run_id: {dist_run_id}"
     )
-    process_main(args, cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
 
 
 def hydra_main(overrides):
@@ -127,7 +130,12 @@ def hydra_main(overrides):
         cfg = compose("defaults", overrides=overrides)
     setup_logging(__name__)
     args, config = convert_to_attrdict(cfg)
-    launch_distributed(config, args, hook_generator=default_hook_generator)
+    launch_distributed(
+        config,
+        node_id=args.node_id,
+        engine_name=args.engine_name,
+        hook_generator=default_hook_generator,
+    )
     # close the logging streams including the filehandlers
     shutdown_logging()
 

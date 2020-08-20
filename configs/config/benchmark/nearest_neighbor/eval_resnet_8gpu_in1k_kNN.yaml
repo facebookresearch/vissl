@@ -1,6 +1,4 @@
 # @package _global_
-extract_features: True
-nearest_neighbor_test: True
 config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
@@ -39,6 +37,10 @@ config:
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
   MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:

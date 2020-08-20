@@ -8,12 +8,14 @@ from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.checkpoint import get_absolute_path
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import get_machine_local_and_dist_rank, set_env_vars
-from vissl.utils.hydra_config import print_cfg
+from vissl.utils.hydra_config import AttrDict, print_cfg
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
 
-def extract_main(args, cfg, dist_run_id, local_rank=0, node_id=0):
+def extract_main(
+    cfg: AttrDict, dist_run_id: str, local_rank: int = 0, node_id: int = 0
+):
     # setup logging
     setup_logging(__name__)
     # setup the environment variables

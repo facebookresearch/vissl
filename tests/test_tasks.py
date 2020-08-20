@@ -36,7 +36,6 @@ class TaskTest(unittest.TestCase):
         try:
             dist_run_id = get_dist_run_id(config, config.DISTRIBUTED.NUM_NODES)
             train_main(
-                args,
                 config,
                 dist_run_id=dist_run_id,
                 local_rank=0,

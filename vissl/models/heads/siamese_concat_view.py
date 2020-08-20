@@ -1,7 +1,9 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+import torch
 import torch.nn as nn
 from vissl.models.heads import register_model_head
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_head("siamese_concat_view")
@@ -15,7 +17,7 @@ class SiameseConcatView(nn.Module):
     Jigsaw https://arxiv.org/abs/1603.09246 approaches.
     """
 
-    def __init__(self, model_config, num_towers):
+    def __init__(self, model_config: AttrDict, num_towers: int):
         """
         Args:
             model_config (AttrDict): dictionary config.MODEL in the config file
@@ -25,7 +27,7 @@ class SiameseConcatView(nn.Module):
         super().__init__()
         self.num_towers = num_towers
 
-    def forward(self, batch):
+    def forward(self, batch: torch.Tensor):
         """
         Args:
             batch (torch.Tensor): 2D torch tensor `(N * num_towers) x C` or 4D tensor of

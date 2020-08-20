@@ -1,12 +1,7 @@
  # @package _global_
  config:
   MODEL:
-    TRUNK:
-      NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          WIDTH_MULTIPLIER: 3
+    FEATURE_EVAL_SETTINGS:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
           ########## res50-w3 #############
           ["conv1", ["AdaptiveAvgPool2d", [7]]],
@@ -15,6 +10,12 @@
           ["res4", ["AdaptiveAvgPool2d", [[3, 1]]]],
           ["res5", ["AdaptiveAvgPool2d", [[2, 1]]]],
       ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+          WIDTH_MULTIPLIER: 3
     HEAD:
       PARAMS: [
         ########## res50-w3 #############

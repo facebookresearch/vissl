@@ -18,12 +18,7 @@ config:
         - name: ImgPil2LabTensor
   MODEL:
     INPUT_TYPE: lab
-    TRUNK:
-      NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          LAYER4_STRIDE: 1
+    FEATURE_EVAL_SETTINGS:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
           ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
           ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
@@ -31,5 +26,11 @@ config:
           ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
           ["res5", ["AvgPool2d", [[12, 12], 2, 0]]],
       ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+          LAYER4_STRIDE: 1
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 4]}]]

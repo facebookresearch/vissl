@@ -1,7 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+from typing import List
 
+import torch
 import torch.nn as nn
 from vissl.models.heads import register_model_head
+from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_head("swav_head")
@@ -20,7 +23,14 @@ class SwAVPrototypesHead(nn.Module):
     Output: List(2D torch.tensor of shape N x num_clusters)
     """
 
-    def __init__(self, model_config, dims, use_bn, num_clusters, use_bias=True):
+    def __init__(
+        self,
+        model_config: AttrDict,
+        dims: List[int],
+        use_bn: bool,
+        num_clusters: int,
+        use_bias: bool = True,
+    ):
         """
         Args:
             model_config (AttrDict): dictionary config.MODEL in the config file
@@ -64,7 +74,7 @@ class SwAVPrototypesHead(nn.Module):
         else:
             self.nmb_heads = 0
 
-    def forward(self, batch):
+    def forward(self, batch: torch.Tensor):
         """
         Args:
             batch (4D torch.tensor): shape (N x C x H x W)

@@ -11,7 +11,7 @@ from vissl.utils.hydra_config import AttrDict
 from vissl.utils.io import makedir
 
 
-def is_training_finished(cfg, checkpoint_folder):
+def is_training_finished(cfg: AttrDict, checkpoint_folder: str):
     # given the checkpoint folder, we check that there's not already a final checkpoint
     if not cfg["CHECKPOINT"]["OVERWRITE_EXISTING"] and has_final_checkpoint(
         checkpoint_folder
@@ -19,7 +19,7 @@ def is_training_finished(cfg, checkpoint_folder):
         return True
 
 
-def get_checkpoint_folder(config):
+def get_checkpoint_folder(config: AttrDict):
     odir = None
     if config.CHECKPOINT.DIR:
         odir = os.path.abspath(config.CHECKPOINT.DIR)
@@ -33,7 +33,7 @@ def get_checkpoint_folder(config):
     return odir
 
 
-def get_absolute_path(input_path):
+def get_absolute_path(input_path: str):
     """
     Convert a relative path to the absolute path
     """
@@ -42,7 +42,9 @@ def get_absolute_path(input_path):
     return odir
 
 
-def is_checkpoint_phase(mode_num, mode_frequency, train_phase_idx, num_epochs, mode):
+def is_checkpoint_phase(
+    mode_num: int, mode_frequency: int, train_phase_idx: int, num_epochs: int, mode: str
+):
     """
     Determines if a checkpoint should be saved on current epoch. If epoch=1, then
     we check whether to save at current iteration or not.
@@ -69,7 +71,7 @@ def is_checkpoint_phase(mode_num, mode_frequency, train_phase_idx, num_epochs, m
     return checkpointing_phase
 
 
-def has_checkpoint(checkpoint_folder, skip_final: bool = False):
+def has_checkpoint(checkpoint_folder: str, skip_final: bool = False):
     """
     Check whether there are any checkpoints at all in the checkpoint folder.
 
@@ -91,7 +93,7 @@ def has_checkpoint(checkpoint_folder, skip_final: bool = False):
 
 
 def has_final_checkpoint(
-    checkpoint_folder, final_checkpoint_pattern: str = "model_final"
+    checkpoint_folder: str, final_checkpoint_pattern: str = "model_final"
 ):
     """
     Check whether the final checkpoint exists in the checkpoint folder. The
@@ -196,7 +198,10 @@ def print_state_dict_shapes(state_dict: Dict[str, Any]):
 
 
 def print_loaded_dict_info(
-    model_state_dict: Dict[str, Any], state_dict: Dict[str, Any], skip_layers: List[str]
+    model_state_dict: Dict[str, Any],
+    state_dict: Dict[str, Any],
+    skip_layers: List[str],
+    model_config: AttrDict,
 ):
     """
     Print what layers were loaded, what layers were ignored/skipped/not found
@@ -210,10 +215,24 @@ def print_loaded_dict_info(
             logging.info(f"Ignored layer:\t{layername}")
             continue
         if layername in state_dict:
-            logging.info(
-                f"Loaded: {layername: <{max_len_model}} of "
-                f"shape: {model_state_dict[layername].size()} from checkpoint"
-            )
+            if (
+                not ("heads" in layername)
+                or (
+                    "heads" in layername
+                    and not model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+                )
+                or (
+                    "heads" in layername
+                    and model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+                    and model_config.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
+                )
+            ):
+                logging.info(
+                    f"Loaded: {layername: <{max_len_model}} of "
+                    f"shape: {model_state_dict[layername].size()} from checkpoint"
+                )
+            else:
+                logging.info(f"Ignored layer:\t{layername}")
         else:
             logging.info(f"Not found:\t\t{layername}, not initialized")
 
@@ -261,8 +280,10 @@ def check_model_compatibilty(config: AttrDict, state_dict: Dict[str, Any]):
         config (AttrDict): root config
         state_dict (Dict[str, Any]): state dict that should be checked for compatibility
     """
+    from vissl.models import is_feature_extractor_model
+
     trunk_append_prefix, heads_append_prefix = "trunk._feature_blocks.", "heads."
-    if config.MODEL.FEATURE_EVAL_MODE:
+    if is_feature_extractor_model(config.MODEL):
         trunk_append_prefix = "trunk.base_model._feature_blocks."
 
     is_compatible = True
@@ -282,7 +303,7 @@ def check_model_compatibilty(config: AttrDict, state_dict: Dict[str, Any]):
         )
 
 
-def get_checkpoint_model_state_dict(config, state_dict):
+def get_checkpoint_model_state_dict(config: AttrDict, state_dict: Dict[str, Any]):
     """
     Given a specified pre-trained VISSL model (composed of head and trunk),
     we get the state_dict that can be loaded by appending prefixes to model and trunk.
@@ -295,9 +316,11 @@ def get_checkpoint_model_state_dict(config, state_dict):
         state_dict (Dict): vissl state_dict with layer names matching compatible with
                            vissl model. Hence this state_dict can be loaded directly.
     """
+    from vissl.models import is_feature_extractor_model
+
     classy_state_dict = state_dict["base_model"]["model"]
     trunk_append_prefix, heads_append_prefix = "trunk.", "heads."
-    if config.MODEL.FEATURE_EVAL_MODE:
+    if is_feature_extractor_model(config.MODEL):
         trunk_append_prefix = "trunk.base_model."
 
     trunk_state_dict = append_module_prefix(
@@ -313,11 +336,11 @@ def get_checkpoint_model_state_dict(config, state_dict):
 
 
 def init_model_from_weights(
-    config,
+    config: AttrDict,
     model,
-    state_dict,
-    state_dict_key_name,
-    skip_layers,
+    state_dict: Dict[str, Any],
+    state_dict_key_name: str,
+    skip_layers: List[str],
     replace_prefix=None,
     append_prefix=None,
 ):
@@ -358,21 +381,58 @@ def init_model_from_weights(
         if append_prefix:
             state_dict = append_module_prefix(state_dict, append_prefix)
         check_model_compatibilty(config, state_dict)
+
     # load the checkpoint now
     all_layers = model.state_dict()
     local_rank, _ = get_machine_local_and_dist_rank()
+    max_len_model = max(len(key) for key in all_layers.keys())
     for layername in all_layers.keys():
         if len(skip_layers) > 0 and any(item in layername for item in skip_layers):
+            if local_rank == 0:
+                logging.info(f"Ignored layer:\t{layername}")
             continue
         if layername in state_dict:
             param = state_dict[layername]
             if not isinstance(param, torch.Tensor):
                 param = torch.from_numpy(param)
-            all_layers[layername].copy_(param)
+            # if we are initializing the heads and the feature eval mode is on, we check
+            # if we are evaluating the heads as well or not. If not, we don't initialize
+            # the heads. Otherwise we initialize the heads.
+            if (
+                not ("heads" in layername)
+                or (
+                    "heads" in layername
+                    and not config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+                )
+                or (
+                    "heads" in layername
+                    and config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+                    and config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
+                )
+            ):
+                assert all_layers[layername].shape == param.shape, (
+                    f"{layername} have different shapes: "
+                    f"checkpoint: {param.shape}, model: {all_layers[layername].shape}"
+                )
+                all_layers[layername].copy_(param)
+                if local_rank == 0:
+                    logging.info(
+                        f"Loaded: {layername: <{max_len_model}} of "
+                        f"shape: {all_layers[layername].size()} from checkpoint"
+                    )
+            else:
+                if local_rank == 0:
+                    logging.info(f"Ignored layer:\t{layername}")
+        else:
+            if local_rank == 0:
+                logging.info(f"Not found:\t\t{layername}, not initialized")
     if local_rank == 0:
-        print_loaded_dict_info(
-            model_state_dict=all_layers, state_dict=state_dict, skip_layers=skip_layers
-        )
+        extra_layers = []
+        # go through the checkpoint state_dict and print what extra layers exist in checkpoint
+        for layername in state_dict.keys():
+            if layername not in all_layers:
+                extra_layers.append(layername)
+        logging.info(f"Extra layers not loaded from checkpoint: {extra_layers}")
 
     ####################### DEBUG ############################
     # print_state_dict_shapes(model.state_dict())

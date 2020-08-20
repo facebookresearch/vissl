@@ -1,20 +1,20 @@
 # @package _global_
 config:
   VERBOSE: True
-  LOG_FREQUENCY: 200
+  LOG_FREQUENCY: 10
   TEST_ONLY: False
-  TEST_EVERY_NUM_EPOCH: 1
+  TEST_EVERY_NUM_EPOCH: 2
   TEST_MODEL: True
   SEED_VALUE: 1
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: True
   DATA:
-    NUM_DATALOADER_WORKERS: 5
+    NUM_DATALOADER_WORKERS: 2
     TRAIN:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 25
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -25,12 +25,12 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DATA_LIMIT: 50
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 25
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -42,7 +42,7 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DATA_LIMIT: 50
   METERS:
     accuracy_list_meter:
       num_meters: 1
@@ -53,9 +53,7 @@ config:
     FEATURE_EVAL_SETTINGS:
       EVAL_MODE_ON: True
       FREEZE_TRUNK_ONLY: True
-      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
-          ["res5avg", ["Identity", []]],
-      ]
+      SHOULD_FLATTEN_FEATS: False
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
@@ -63,15 +61,15 @@ config:
           DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 1000]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 1000]}],
       ]
     WEIGHTS_INIT:
-      PARAMS_FILE: "specify the model weights"
+      PARAMS_FILE: ""
       STATE_DICT_KEY_NAME: classy_state_dict
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
-      GROUP_SIZE: 8
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 0
   LOSS:
     name: cross_entropy_multiple_output_single_target
     cross_entropy_multiple_output_single_target:
@@ -79,26 +77,22 @@ config:
   OPTIMIZER:
       name: sgd
       # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
-      weight_decay: 0.000001
+      weight_decay: 0.0005
       momentum: 0.9
-      num_epochs: 28
+      num_epochs: 2
       nesterov: True
       regularize_bn: False
       regularize_bias: True
       param_schedulers:
         lr:
-          auto_lr_scaling:
-            auto_scale: true
-            base_value: 0.3
-            base_lr_batch_size: 256
-          name: cosine
-          start_value: 0.3
-          end_value: 0.000
-          update_interval: step
+          name: multistep
+          values: [0.01, 0.001]
+          milestones: [1]
+          update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 8
+    NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
@@ -106,4 +100,5 @@ config:
   CHECKPOINT:
     DIR: "."
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 1
+    CHECKPOINT_FREQUENCY: 2
+    OVERWRITE_EXISTING: true

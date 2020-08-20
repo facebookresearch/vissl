@@ -5,6 +5,10 @@ config:
       num_meters: 1
       topk_values: [1, 5]
   MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv_final", ["AvgPool2d", [[5, 5], 1, 0]]],
+      ]
     TRUNK:
       NAME: efficientnet
       TRUNK_PARAMS:
@@ -16,9 +20,6 @@ config:
           width_divisor: 8
           min_width: null
           use_se: True
-      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
-          ["conv_final", ["AvgPool2d", [[5, 5], 1, 0]]],
-      ]
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 1280, "dims": [11520, 1000]}],

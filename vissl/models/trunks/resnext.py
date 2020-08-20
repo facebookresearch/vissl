@@ -10,6 +10,7 @@ import torchvision.models as models
 from torchvision.models.resnet import Bottleneck
 from vissl.models.model_helpers import Flatten, _get_norm, get_trunk_forward_outputs
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
 # For more depths, add the block config here
@@ -47,7 +48,7 @@ class ResNeXt(nn.Module):
     ResNet block and type of norm (BatchNorm, LayerNorm)
     """
 
-    def __init__(self, model_config, model_name):
+    def __init__(self, model_config: AttrDict, model_name: str):
         super(ResNeXt, self).__init__()
         self.model_config = model_config
 

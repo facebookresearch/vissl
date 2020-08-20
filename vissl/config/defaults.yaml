@@ -2,9 +2,7 @@
 
 ################## some command line options to decide workflow ###############
 node_id: 0
-extract_features: false
-train_svm: false
-nearest_neighbor_test: false
+engine_name: train
 config:
   # ----------------------------------------------------------------------------------- #
   # GLOBAL DEFAULTS
@@ -125,16 +123,42 @@ config:
     TEMP_FROZEN_PARAMS_ITER_MAP: []
     # Colorization models take lab input. Everything else takes rgb.
     INPUT_TYPE: "rgb"
-    # if you want to evaluate several feature layers of the pre-trained model on
-    # benchmark tasks like linear classification, set this to True. This freezes the model
-    # trunk for feature evaluation.
-    FEATURE_EVAL_MODE: false
-    # if you want to only extract features from the trunk and not pass through heads, set to true
-    EXTRACT_TRUNK_FEATURES_ONLY: false
     # Multi-input model: input keys in the sample dictionary and which head
     # uses them for example, input contains "images" and "patches" and there
     # is one separate head applied to images and another to patches
     MULTI_INPUT_HEAD_MAPPING: []
+    # ----------------------------------------------------------------------------------- #
+    # Feature evaluation settings
+    # ----------------------------------------------------------------------------------- #
+    FEATURE_EVAL_SETTINGS:
+      # for evaluating the features on any evaluation task/benchmark, set this to True
+      EVAL_MODE_ON: false
+      # if you want to evaluate several feature layers of the pre-trained model on
+      # benchmark tasks like linear classification, set this to True. This freezes the model
+      # trunk for feature evaluation.
+      FREEZE_TRUNK_ONLY: false
+      # if you want to evaluate the full self-supervised model including the trunk and heads,
+      # and want to freeze trunk and head both, set this to True
+      FREEZE_TRUNK_AND_HEAD: false
+      # if you want to extract features of trunk only, set this to True
+      EXTRACT_TRUNK_FEATURES_ONLY: false
+      # if we want to evaluate the full model, this requires loading the head weights as well
+      # from model weights file. In this case, set the following to True.
+      EVAL_TRUNK_AND_HEAD: false
+      # whether features should be flattened to result in N x D feature shape
+      SHOULD_FLATTEN_FEATS: True
+      # model features that should be evaluated for linear classification and what
+      # pooling to apply on features. Could be any pooling operation or Identity.
+      #
+      # Example: for evaluating 5 layers of ResNet-50,
+      #       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+      #           ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+      #           ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+      #           ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+      #           ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+      #           ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      #       ]
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
     # ----------------------------------------------------------------------------------- #
     # MODEL TRUNK
     # ----------------------------------------------------------------------------------- #
@@ -167,16 +191,6 @@ config:
         # RegNet params
         # ------------------------------------------------------------- #
         REGNETS: {}
-      SHOULD_FLATTEN: True
-      # model features that should be evaluated for linear classification and what
-      # pooling to apply on features. Could be any pooling operation or Identity.
-      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
-            ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
-            ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
-            ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
-            ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
-            ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
-        ]
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
     # ----------------------------------------------------------------------------------- #
@@ -265,11 +279,10 @@ config:
       # from the checkpoint keys, specify the name
       REMOVE_PREFIX: ""
       # In order to load the model (if not trained with VISSL) with VISSL, there are 2 scenarios:
-      #    1. using MODEL.FEATURE_EVAL_MODE=true where you are interested in evaluating the
-      #       model features and freeze the trunk. Set APPEND_PREFIX="trunk.base_model."
-      #       This assumes that your model is compatible with the VISSL trunks. The VISSL
-      #       trunks start with "_feature_blocks." prefix. If your model doesn't have these
-      #       prefix you can append them. For example:
+      #    1. If you are interested in evaluating the model features and freeze the trunk.
+      #       Set APPEND_PREFIX="trunk.base_model." This assumes that your model is compatible
+      #       with the VISSL trunks. The VISSL trunks start with "_feature_blocks." prefix. If
+      #       your model doesn't have these prefix you can append them. For example:
       #       For TorchVision ResNet trunk, set APPEND_PREFIX="trunk.base_model._feature_blocks."
       #    2. where you want to load the model simply and finetune the full model.
       #       Set APPEND_PREFIX="trunk."
