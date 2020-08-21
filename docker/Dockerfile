@@ -34,6 +34,7 @@ RUN pip install --user torch==1.5 torchvision==0.6 -f https://download.pytorch.o
 
 # install apex
 ARG TORCH_CUDA_ARCH_LIST
+ARG CUDA_VER
 ADD ./common/install_apex.sh install_apex.sh
 RUN bash ./install_apex.sh && rm install_apex.sh
 

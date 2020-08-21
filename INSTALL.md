@@ -61,5 +61,6 @@ That's it! You are now ready to use this code.
 Apex installation requires that you have a latest nvcc so the c++ extensions can be compiled with latest gcc (>=7.4). Check the APEX website for more instructions.
 
 ```bash
-CUDA_VER=10.1 ./docker/common/install_apex.sh
+# see https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#virtual-architecture-feature-list to select cuda architecture you want to build
+CUDA_VER=10.1 TORCH_CUDA_ARCH_LIST="5.0;5.2;5.3;6.0;6.1;6.2;7.0;7.5" ./docker/common/install_apex.sh
 ```
