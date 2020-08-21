@@ -17,6 +17,7 @@ cpu: &cpu
 gpu: &gpu
   environment:
     CUDA_VER: "10.2"
+    TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
     TERM: xterm
   machine:
     image: ubuntu-1604:201903-01
@@ -34,6 +35,18 @@ install_python: &install_python
         pyenv install 3.6.1
         pyenv global 3.6.1
 
+update_gcc7: &update_gcc7
+  - run:
+      name: Update GCC7
+      working_directory: ~/
+      command: |
+        sudo apt-get update
+        sudo add-apt-repository ppa:jonathonf/gcc-7.1
+        sudo apt-get update
+        sudo apt-get install gcc-7 g++-7
+        sudo update-alternatives  --install /usr/bin/gcc gcc /usr/bin/gcc-7 60  --slave /usr/bin/g++ g++ /usr/bin/g++-7  --slave /usr/bin/gcov gcov /usr/bin/gcov-7  --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-7  --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-7  --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-7  --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-7
+        gcc --version
+        g++ --version
 
 install_classy_vision: &install_classy_vision
   - run:
@@ -89,6 +102,7 @@ install_apex_gpu: &install_apex_gpu
       working_directory: ~/vissl
       environment:
         CUDA_VER: "10.2"
+        TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
       command: |
         bash ./docker/common/install_apex.sh
 
@@ -175,6 +189,7 @@ jobs:
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
+      - <<: *update_gcc7
       - <<: *install_apex_gpu
       - <<: *pip_list
 
