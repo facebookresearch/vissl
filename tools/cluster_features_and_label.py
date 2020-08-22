@@ -6,7 +6,6 @@ using FAISS and assigning the hard labels to the dataset.
 """
 
 import logging
-import os
 import sys
 from argparse import Namespace
 
@@ -16,7 +15,8 @@ from hydra.experimental import compose, initialize_config_module
 from run_distributed_engines import launch_distributed
 from vissl.data import build_dataset
 from vissl.hooks import default_hook_generator
-from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
@@ -24,7 +24,7 @@ from vissl.utils.misc import merge_features, set_seeds
 
 
 def get_data_features_and_images(cfg: AttrDict):
-    output_dir = get_absolute_path(cfg.CLUSTERFIT.OUTPUT_DIR)
+    output_dir = get_checkpoint_folder(cfg)
     split = cfg.CLUSTERFIT.FEATURES.DATA_PARTITION
     logging.info("Merging features...")
     # merge the features across all nodes/gpus into one
@@ -49,7 +49,7 @@ def cluster_features_and_label(args: Namespace, cfg: AttrDict):
     data_split = cfg.CLUSTERFIT.FEATURES.DATA_PARTITION
     data_name = cfg.CLUSTERFIT.FEATURES.DATASET_NAME
     n_iter = cfg.CLUSTERFIT.N_ITER
-    output_dir = get_absolute_path(cfg.CLUSTERFIT.OUTPUT_DIR)
+    output_dir = get_checkpoint_folder(cfg)
 
     ########### Step 1: Extract the features on full dataset ###################
     feature_data, image_paths = get_data_features_and_images(cfg)
@@ -85,12 +85,12 @@ def cluster_features_and_label(args: Namespace, cfg: AttrDict):
         "centroids": centroids,
         "distances": distances,
     }
-    cluster_output_filepath = os.path.join(
-        output_dir, f"{data_name}_{data_split}_N{num_clusters}_{cluster_backend}.pkl"
+    cluster_output_filepath = (
+        f"{output_dir}/{data_name}_{data_split}_N{num_clusters}_{cluster_backend}.pkl"
     )
-    hard_labels_output_filepath = os.path.join(
-        output_dir,
-        f"{data_name}_{data_split}_N{num_clusters}_{cluster_backend}_lbls.npy",
+    hard_labels_output_filepath = (
+        f"{output_dir}/"
+        f"{data_name}_{data_split}_N{num_clusters}_{cluster_backend}_lbls.npy"
     )
     out_hard_labels = np.array(hard_cluster_labels.tolist(), dtype=np.int64).reshape(-1)
     save_file(clustering_output_dict, cluster_output_filepath)
@@ -101,6 +101,9 @@ def cluster_features_and_label(args: Namespace, cfg: AttrDict):
 def main(args: Namespace, cfg: AttrDict):
     # setup logging
     setup_logging(__name__)
+
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=cfg)
 
     # set seeds
     logging.info("Setting seed....")

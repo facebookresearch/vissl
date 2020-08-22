@@ -5,7 +5,6 @@ This script contains some helpful functions to handle tensorboard setup.
 """
 
 import logging
-import os
 
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.io import makedir
@@ -25,7 +24,7 @@ def is_tensorboard_available():
 
 def get_tensorboard_dir(cfg):
     checkpoint_folder = get_checkpoint_folder(cfg)
-    tensorboard_dir = os.path.join(checkpoint_folder, "tb_logs")
+    tensorboard_dir = f"{checkpoint_folder}/tb_logs"
     logging.info(f"Tensorboard dir: {tensorboard_dir}")
     makedir(tensorboard_dir)
     return tensorboard_dir

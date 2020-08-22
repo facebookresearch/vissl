@@ -21,5 +21,5 @@ def get_node_id(node_id: int):
 def get_slurm_dir(input_dir: str):
     output_dir = input_dir
     if "SLURM_JOBID" in os.environ:
-        output_dir = os.path.join(input_dir, os.environ["SLURM_JOBID"])
+        output_dir = f"{input_dir}/{os.environ['SLURM_JOBID']}"
     return output_dir

@@ -1,13 +1,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 from typing import Any, Dict
 
 import numpy as np
 import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
+from fvcore.common.file_io import PathManager
+from vissl.utils.io import load_file
 
 
 @register_transform("ShuffleImgPatches")
@@ -31,11 +32,11 @@ class ShuffleImgPatches(ClassyTransform):
         self.perms = None
 
     def _load_perms(self):
-        assert os.path.exists(
+        assert PathManager.exists(
             self.perm_file
         ), f"Permutation file NOT found: {self.perm_file}"
         logging.info(f"Loading permutation: {self.perm_file}")
-        self.perms = np.load(self.perm_file)
+        self.perms = load_file(self.perm_file)
         if np.min(self.perms) == 1:
             self.perms = self.perms - 1
         logging.info(f"Loaded perm: {self.perms.shape}")

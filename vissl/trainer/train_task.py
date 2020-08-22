@@ -2,15 +2,15 @@
 
 import gc
 import logging
-import os
 
 import torch
-from classy_vision.generic.util import copy_model_to_gpu
+from classy_vision.generic.util import copy_model_to_gpu, load_and_broadcast_checkpoint
 from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
+from fvcore.common.file_io import PathManager
 from vissl.data import build_dataset, get_loader
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_regularized_params
@@ -28,6 +28,7 @@ class SelfSupervisionTask(ClassificationTask):
     def __init__(self, config: AttrDict):
         super().__init__()
         self.config = config
+        self.checkpoint_path = None
         self.checkpoint = None
         self.available_splits = []
         self.base_loss = None
@@ -105,11 +106,11 @@ class SelfSupervisionTask(ClassificationTask):
         self.amp_args = amp_args
         logging.info(f"Setting amp args: {self.amp_args}")
 
-    def set_checkpoint(self, checkpoint):
-        assert (
-            checkpoint is None or "classy_state_dict" in checkpoint
-        ), "Checkpoint does not contain classy_state_dict"
-        self.checkpoint = checkpoint
+    def set_checkpoint_path(self, checkpoint_path: str):
+        # assert (
+        #     checkpoint_path is None or "classy_state_dict" in checkpoint
+        # ), "Checkpoint does not contain classy_state_dict"
+        self.checkpoint_path = checkpoint_path
 
     def set_iteration(self, iteration):
         assert iteration >= 0, "Iteration number must be positive"
@@ -226,7 +227,7 @@ class SelfSupervisionTask(ClassificationTask):
         init_weights_path = params_from_file["PARAMS_FILE"]
         logging.info(f"Initializing model from: {init_weights_path}")
 
-        if os.path.exists(init_weights_path):
+        if PathManager.exists(init_weights_path):
             weights = torch.load(init_weights_path, map_location=torch.device("cpu"))
             skip_layers = params_from_file.get("SKIP_LAYERS", [])
             replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
@@ -280,17 +281,18 @@ class SelfSupervisionTask(ClassificationTask):
                 )
                 model.freeze_head_and_trunk()
 
+        # assert that if the user set the PARAMS_FILE, it must exist and be valid.
+        if (
+            self.checkpoint_path is None
+            and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+        ):
+            assert PathManager.exists(
+                self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+            ), "Specified PARAMS_FILE does NOT exist"
         # If we want to initialize the model in case of finetuning or evaluation,
         # we do it here. But we check that there is no checkpoint existing before
         # This is important in cases when the model training dies.
-        if (
-            self.checkpoint is None
-            and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
-        ):
-            assert os.path.exists(
-                self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
-            ), "Specified PARAMS_FILE does NOT exist"
-        if self.checkpoint is None and os.path.exists(
+        if self.checkpoint_path is None and PathManager.exists(
             self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
         ):
             model = self._restore_model_weights(model)
@@ -446,7 +448,10 @@ class SelfSupervisionTask(ClassificationTask):
             )
 
         vissl_state_dict = None
-        if self.checkpoint is not None:
+        if self.checkpoint_path is not None:
+            self.checkpoint = load_and_broadcast_checkpoint(
+                checkpoint_path=self.checkpoint_path, device=torch.device("cpu")
+            )
             self.iteration = self.checkpoint["iteration"]
             self.local_iteration_num = self.checkpoint["iteration_num"]
             vissl_state_dict = self.checkpoint.get("classy_state_dict")

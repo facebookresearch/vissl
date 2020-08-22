@@ -1,7 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 import random
 import tempfile
 
@@ -10,6 +9,7 @@ import pkg_resources
 import torch
 import torch.multiprocessing as mp
 from scipy.sparse import csr_matrix
+from vissl.utils.io import load_file
 
 
 def is_apex_available():
@@ -97,19 +97,13 @@ def merge_features(output_dir, split, layer, cfg):
     for local_rank in range(0, cfg.DISTRIBUTED.NUM_PROC_PER_NODE):
         for node_id in range(0, cfg.DISTRIBUTED.NUM_NODES):
             dist_rank = cfg.DISTRIBUTED.NUM_PROC_PER_NODE * node_id + local_rank
-            feat_file = os.path.join(
-                output_dir, f"rank{dist_rank}_{split}_{layer}_features.npy"
-            )
-            targets_file = os.path.join(
-                output_dir, f"rank{dist_rank}_{split}_{layer}_targets.npy"
-            )
-            inds_file = os.path.join(
-                output_dir, f"rank{dist_rank}_{split}_{layer}_inds.npy"
-            )
+            feat_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_features.npy"
+            targets_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_targets.npy"
+            inds_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_inds.npy"
             logging.info(f"Loading:\n{feat_file}\n{targets_file}\n{inds_file}")
-            feats = np.load(feat_file)
-            targets = np.load(targets_file)
-            indices = np.load(inds_file)
+            feats = load_file(feat_file)
+            targets = load_file(targets_file)
+            indices = load_file(inds_file)
             num_samples = feats.shape[0]
             for idx in range(num_samples):
                 index = indices[idx]

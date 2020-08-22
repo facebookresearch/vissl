@@ -11,12 +11,13 @@ import os
 from glob import glob
 
 import numpy as np
-from vissl.utils.io import makedir
+from fvcore.common.file_io import PathManager
+from vissl.utils.io import makedir, save_file
 
 
 def get_output_dir():
     curr_folder = os.path.abspath(".")
-    datasets_dir = os.path.join(curr_folder, "datasets")
+    datasets_dir = f"{curr_folder}/datasets"
     logging.info(f"Datasets dir: {datasets_dir}")
     makedir(datasets_dir)
     return datasets_dir
@@ -35,8 +36,8 @@ def validate_files(input_files):
 
 
 def get_data_files(split, data_source_dir):
-    data_dir = os.path.join(data_source_dir, "ImageSets/Main")
-    assert os.path.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
+    data_dir = f"{data_source_dir}/ImageSets/Main"
+    assert PathManager.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
     test_data_files = glob(os.path.join(data_dir, "*_test.txt"))
     test_data_files = validate_files(test_data_files)
     train_data_files = glob(os.path.join(data_dir, "*_trainval.txt"))
@@ -52,7 +53,7 @@ def get_data_files(split, data_source_dir):
 
 
 def get_voc_images_labels_info(split, data_source_dir):
-    assert os.path.exists(data_source_dir), "Data source NOT found. Abort"
+    assert PathManager.exists(data_source_dir), "Data source NOT found. Abort"
     data_files = get_data_files(split, data_source_dir)
     # we will construct a map for image name to the vector of -1, 0, 1
     # we sort the data_files which gives sorted class names as well
@@ -60,7 +61,7 @@ def get_voc_images_labels_info(split, data_source_dir):
     for cls_num, data_path in enumerate(sorted(data_files)):
         # for this class, we have images and each image will have label
         # 1, -1, 0 -> present, not present, ignore respectively as in VOC data.
-        with open(data_path, "r") as fopen:
+        with PathManager.open(data_path, "r") as fopen:
             for line in fopen:
                 try:
                     img_name, orig_label = line.strip().split()
@@ -82,13 +83,13 @@ def get_voc_images_labels_info(split, data_source_dir):
                     )
     img_paths, img_labels = [], []
     for item in sorted(img_labels_map.keys()):
-        img_paths.append(os.path.join(data_source_dir, "JPEGImages", item + ".jpg"))
+        img_paths.append(f"{data_source_dir}/JPEGImages/{item}.jpg")
         img_labels.append(img_labels_map[item])
 
     # save to the datasets folder and return the path
     output_dir = get_output_dir()
-    img_info_out_path = os.path.join(output_dir, split + "_images.npy")
-    label_info_out_path = os.path.join(output_dir, split + "_labels.npy")
-    np.save(img_info_out_path, np.array(img_paths))
-    np.save(label_info_out_path, np.array(img_labels))
+    img_info_out_path = f"{output_dir}/{split}_images.npy"
+    label_info_out_path = f"{output_dir}/{split}_labels.npy"
+    save_file(np.array(img_paths), img_info_out_path)
+    save_file(np.array(img_labels), label_info_out_path)
     return [img_info_out_path, label_info_out_path]

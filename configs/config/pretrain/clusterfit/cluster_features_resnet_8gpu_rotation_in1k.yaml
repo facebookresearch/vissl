@@ -44,8 +44,9 @@ config:
     NUM_PROC_PER_NODE: 8
   MACHINE:
     DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
   CLUSTERFIT:
-    OUTPUT_DIR: .
     NUM_CLUSTERS: 16000
     CLUSTER_BACKEND: faiss
     N_ITER: 50

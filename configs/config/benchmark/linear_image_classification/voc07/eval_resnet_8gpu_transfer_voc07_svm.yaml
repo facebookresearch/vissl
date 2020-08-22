@@ -63,8 +63,9 @@ config:
     NUM_PROC_PER_NODE: 8
   MACHINE:
     DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
   SVM:
-    OUTPUT_DIR: .
     costs:
       costs_list: [0.01, 0.1, 1.0, 2, 5, 10, 15, 20, 50, 100, 1000]
     normalize: True

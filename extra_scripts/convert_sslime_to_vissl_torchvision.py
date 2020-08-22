@@ -8,11 +8,11 @@ other models.
 
 import argparse
 import logging
-import os
 import sys
 
 import torch
 from classy_vision.generic.util import save_checkpoint
+from fvcore.common.file_io import PathManager
 from vissl.utils.checkpoint import replace_module_prefix
 from vissl.utils.io import is_url
 
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def convert_and_save_model(args, append_prefix):
-    assert os.path.exists(args.output_dir), "Output directory does NOT exist"
+    assert PathManager.exists(args.output_dir), "Output directory does NOT exist"
 
     # load the model
     model_path = args.model_url_or_file
@@ -79,7 +79,7 @@ def convert_and_save_model(args, append_prefix):
 
     # save the state
     output_filename = f"converted_vissl_{args.output_name}.torch"
-    output_model_filepath = os.path.join(args.output_dir, output_filename)
+    output_model_filepath = f"{args.output_dir}/{output_filename}"
     logger.info(f"Saving model: {output_model_filepath}")
     save_checkpoint(args.output_dir, state, checkpoint_file=output_filename)
     logger.info("DONE!")

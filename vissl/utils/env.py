@@ -3,8 +3,10 @@
 import logging
 import os
 
+from vissl.utils.hydra_config import AttrDict
 
-def set_env_vars(local_rank, node_id, cfg):
+
+def set_env_vars(local_rank: int, node_id: int, cfg: AttrDict):
     os.environ["WORLD_SIZE"] = str(
         cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
     )

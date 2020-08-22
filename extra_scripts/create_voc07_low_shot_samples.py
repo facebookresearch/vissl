@@ -5,11 +5,12 @@ This script is used to create the low-shot data for VOC svm trainings.
 """
 import argparse
 import logging
-import os
 import random
 import sys
 
 import numpy as np
+from fvcore.common.file_io import PathManager
+from vissl.utils.io import load_file
 
 
 # create the logger
@@ -44,7 +45,7 @@ def generate_voc07_low_shot_samples(
             output = np.ones(targets.shape, dtype=np.int32) * -1
             output = sample_symbol(targets, output, 1, k)
             output = sample_symbol(targets, output, 0, (num_classes - 1) * k)
-            output_file = os.path.join(output_path, f"{layername}_sample{idx}_k{k}.npy")
+            output_file = f"{output_path}/{layername}_sample{idx}_k{k}.npy"
             logger.info(f"Saving file: {output_file}")
             np.save(output_file, output)
     logger.info("Done!!")
@@ -75,8 +76,8 @@ def main():
     )
     opts = parser.parse_args()
 
-    assert os.path.exists(opts.targets_data_file), "Target file not found. Abort"
-    targets = np.load(opts.targets_data_file, encoding="latin1")
+    assert PathManager.exists(opts.targets_data_file), "Target file not found. Abort"
+    targets = load_file(opts.targets_data_file)
     sample_ids = list(range(1, 1 + opts.num_samples))
     generate_voc07_low_shot_samples(
         targets, opts.k_values, sample_ids, opts.output_path, opts.layername

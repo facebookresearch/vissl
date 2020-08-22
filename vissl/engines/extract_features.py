@@ -1,14 +1,13 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 
-import numpy as np
 from vissl.trainer import SelfSupervisionTrainer
-from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import get_machine_local_and_dist_rank, set_env_vars
 from vissl.utils.hydra_config import AttrDict, print_cfg
+from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
@@ -35,7 +34,7 @@ def extract_main(
         print_cfg(cfg)
         logging.info("System config:\n{}".format(collect_env_info()))
 
-    output_dir = get_absolute_path(cfg.SVM.OUTPUT_DIR)
+    output_dir = get_checkpoint_folder(cfg)
     trainer = SelfSupervisionTrainer(cfg, dist_run_id)
     features = trainer.extract()
 
@@ -43,34 +42,31 @@ def extract_main(
         logging.info(f"============== Split: {split} =======================")
         layers = features[split].keys()
         for layer in layers:
-            out_feat_file = os.path.join(
-                output_dir, f"rank{local_rank}_{split}_{layer}_features.npy"
+            out_feat_file = (
+                f"{output_dir}/rank{local_rank}_{split}_{layer}_features.npy"
             )
-            out_target_file = os.path.join(
-                output_dir, f"rank{local_rank}_{split}_{layer}_targets.npy"
+            out_target_file = (
+                f"{output_dir}/rank{local_rank}_{split}_{layer}_targets.npy"
             )
-            out_inds_file = os.path.join(
-                output_dir, f"rank{local_rank}_{split}_{layer}_inds.npy"
-            )
+            out_inds_file = f"{output_dir}/rank{local_rank}_{split}_{layer}_inds.npy"
             logging.info(
                 "Saving extracted features: {} {} to: {}".format(
                     layer, features[split][layer]["features"].shape, out_feat_file
                 )
             )
-            np.save(out_feat_file, features[split][layer]["features"])
+            save_file(features[split][layer]["features"], out_feat_file)
             logging.info(
                 "Saving extracted targets: {} to: {}".format(
                     features[split][layer]["targets"].shape, out_target_file
                 )
             )
-            np.save(out_target_file, features[split][layer]["targets"])
+            save_file(features[split][layer]["targets"], out_target_file)
             logging.info(
                 "Saving extracted indices: {} to: {}".format(
                     features[split][layer]["inds"].shape, out_inds_file
                 )
             )
-            np.save(out_inds_file, features[split][layer]["inds"])
-
+            save_file(features[split][layer]["inds"], out_inds_file)
     logging.info("All Done!")
     # close the logging streams including the filehandlers
     shutdown_logging()
