@@ -1,10 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import pickle
 
 import numpy as np
 import torch
+from vissl.utils.io import load_file, save_file
 
 
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
@@ -54,8 +54,7 @@ class PCA(object):
 
 
 def load_pca(pca_out_fname):
-    with open(pca_out_fname, "rb") as fopen:
-        pca = pickle.load(fopen)
+    pca = load_file(pca_out_fname)
     return pca
 
 
@@ -63,7 +62,6 @@ def train_and_save_pca(features, n_pca, pca_out_fname):
     pca = PCA(n_pca)
     pca.fit(features)
     logging.info(f"Saving PCA features to: {pca_out_fname}")
-    with open(pca_out_fname, "wb") as fwrite:
-        pickle.dump(pca, fwrite)
+    save_file(pca, pca_out_fname)
     logging.info(f"Saved PCA features to: {pca_out_fname}")
     return pca

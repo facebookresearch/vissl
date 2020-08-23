@@ -1,11 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 from typing import Any, Dict, List
 
 import torch
-from classy_vision.generic.util import load_checkpoint
+from fvcore.common.file_io import PathManager
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.io import makedir
@@ -20,25 +19,14 @@ def is_training_finished(cfg: AttrDict, checkpoint_folder: str):
 
 
 def get_checkpoint_folder(config: AttrDict):
-    odir = None
-    if config.CHECKPOINT.DIR:
-        odir = os.path.abspath(config.CHECKPOINT.DIR)
-    else:
-        raise Exception(
-            "Please specify config.CHECKPOINT.DIR parameter. It should not be None."
-        )
+    odir = config.CHECKPOINT.DIR
     if config.DISTRIBUTED.NUM_NODES > 1 and config.CHECKPOINT.APPEND_DISTR_RUN_ID:
-        odir = os.path.join(odir, config.DISTRIBUTED.RUN_ID)
-    makedir(odir)
-    return odir
+        odir = f"{odir}/{config.DISTRIBUTED.RUN_ID}"
 
-
-def get_absolute_path(input_path: str):
-    """
-    Convert a relative path to the absolute path
-    """
-    odir = os.path.abspath(input_path)
     makedir(odir)
+    assert PathManager.exists(
+        config.CHECKPOINT.DIR
+    ), "Please specify config.CHECKPOINT.DIR parameter. It should not be None."
     return odir
 
 
@@ -83,7 +71,7 @@ def has_checkpoint(checkpoint_folder: str, skip_final: bool = False):
     Returns:
         checkpoint_exists (bool): whether checkpoint exists or not
     """
-    checkpointed_files = os.listdir(checkpoint_folder)
+    checkpointed_files = PathManager.ls(checkpoint_folder)
     checkpoint_exists = False
     for f in checkpointed_files:
         if f.endswith(".torch") and ("model_final" not in f or not skip_final):
@@ -106,7 +94,7 @@ def has_final_checkpoint(
     Returns:
         has_final_checkpoint: whether the final checkpoint exists or not
     """
-    checkpointed_files = os.listdir(checkpoint_folder)
+    checkpointed_files = PathManager.ls(checkpoint_folder)
     torch_files = filter(lambda x: x.endswith(".torch"), checkpointed_files)
     final_files = filter(lambda x: final_checkpoint_pattern in x, torch_files)
     return len(list(final_files)) > 0
@@ -132,7 +120,7 @@ def get_checkpoint_resume_files(
                    Sometimes the latest checkpoints could be corrupt so this option
                    helps to resume from instead a few checkpoints before the last checkpoint.
     """
-    all_files = os.listdir(checkpoint_folder)
+    all_files = PathManager.ls(checkpoint_folder)
     all_iters = []
     replace_prefix = "model_phase"
     # if we checkpoint at iterations too, we start from an iteration checkpoint
@@ -166,14 +154,13 @@ def get_checkpoint_resume_files(
 
 def get_resume_checkpoint(cfg: AttrDict, checkpoint_folder: str):
     # we check whether there's a checkpoint that already exists
-    checkpoint = None
+    checkpoint_path = None
     # if we are overwriting the existing checkpoint, then skip_final=true in
     # `has_checkpoint` call
     checkpoints_exists = has_checkpoint(
         checkpoint_folder, skip_final=cfg["CHECKPOINT"]["OVERWRITE_EXISTING"]
     )
     if checkpoints_exists and cfg["CHECKPOINT"]["AUTO_RESUME"]:
-        checkpoint_device = torch.device("cpu")
         checkpoint_file = get_checkpoint_resume_files(
             checkpoint_folder,
             cfg,
@@ -183,12 +170,9 @@ def get_resume_checkpoint(cfg: AttrDict, checkpoint_folder: str):
             ],
         )
 
-        checkpoint_path = os.path.join(checkpoint_folder, checkpoint_file)
+        checkpoint_path = f"{checkpoint_folder}/{checkpoint_file}"
         logging.info(f"Resume from file: {checkpoint_path}")
-        checkpoint = load_checkpoint(
-            checkpoint_path=checkpoint_path, device=checkpoint_device
-        )
-    return checkpoint
+    return checkpoint_path
 
 
 def print_state_dict_shapes(state_dict: Dict[str, Any]):

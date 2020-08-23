@@ -31,7 +31,7 @@ class SelfSupervisionTrainer(object):
         self,
         cfg: AttrDict,
         dist_run_id: str,
-        checkpoint: Dict[str, Any] = None,
+        checkpoint_path: str = None,
         hooks: List[ClassyHook] = None,
     ):
         self.cfg = cfg
@@ -41,7 +41,7 @@ class SelfSupervisionTrainer(object):
         # to it. It will have information about phases (train, test) both. It will
         # also contain all the other information like optimizers, etc
         self.task = self.build_task()
-        self.task.set_checkpoint(checkpoint)
+        self.task.set_checkpoint_path(checkpoint_path)
         if hooks is None:
             hooks = []
         self.task.set_hooks(hooks)
@@ -97,9 +97,7 @@ class SelfSupervisionTrainer(object):
 
         # Find what phase, train_phase_idx, local_iteration_num we are starting from.
         # Recover it from the checkpoint (if available)
-        task, phase_idx, iteration_num = self._update_training_state(
-            self.cfg, self.task
-        )
+        task, phase_idx, iteration_num = self._init_training_state(self.cfg, self.task)
 
         # Good to go, (re) start training
         task.run_hooks(SSLClassyHookFunctions.on_start.name)
@@ -138,7 +136,7 @@ class SelfSupervisionTrainer(object):
             gc.collect()
 
     @staticmethod
-    def _update_training_state(cfg, task: ClassyTask) -> Tuple[ClassyTask, int, int]:
+    def _init_training_state(cfg, task: ClassyTask) -> Tuple[ClassyTask, int, int]:
         """If a checkpoint is present, recover the current training status.
         If not initialize everything properly
 

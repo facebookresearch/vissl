@@ -439,7 +439,6 @@ config:
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #
   CLUSTERFIT:
-    OUTPUT_DIR: ""
     NUM_CLUSTERS: 16000
     # currently we only support faiss backend for clustering.
     CLUSTER_BACKEND: "faiss"
@@ -510,7 +509,6 @@ config:
   # SVM (benchmark)
   # ----------------------------------------------------------------------------------- #
   SVM:
-    OUTPUT_DIR: "."
     normalize: true
     cls_list: []
     loss: "squared_hinge"
@@ -559,7 +557,6 @@ config:
   # K-NEAREST NEIGHBOR (benchmark)
   # ----------------------------------------------------------------------------------- #
   NEAREST_NEIGHBOR:
-    OUTPUT_DIR: ""
     # temperature value to use
     SIGMA: 0.1
     TOPK: 200

@@ -64,8 +64,9 @@ config:
     RUN_ID: auto
   MACHINE:
     DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
   NEAREST_NEIGHBOR:
-    OUTPUT_DIR: .
     SIGMA: 0.1
     TOPK: 20
     L2_NORM_FEATS: False

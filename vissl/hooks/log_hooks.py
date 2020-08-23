@@ -6,7 +6,6 @@ All the hooks involved in human-readable logging
 
 import datetime
 import logging
-import os
 import time
 from typing import Optional
 
@@ -209,9 +208,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             save_checkpoint(
                 checkpoint_folder, checkpoint_task, checkpoint_file=ckpt_name
             )
-            logging.info(
-                f"Saved checkpoint: {os.path.join(checkpoint_folder, ckpt_name)}"
-            )
+            logging.info(f"Saved checkpoint: {checkpoint_folder}/{ckpt_name}")
 
     def _print_and_save_meters(self, task, train_phase_idx):
         phase_type = "train" if task.train else "test"
@@ -228,7 +225,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             task.metrics[metric_key].append(meter.value)
             save_metrics[metric_key] = meter.value
             logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter.value}")
-        meter_file = os.path.join(checkpoint_folder, "metrics.json")
+        meter_file = f"{checkpoint_folder}/metrics.json"
         save_file(save_metrics, meter_file)
 
 

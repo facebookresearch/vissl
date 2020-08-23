@@ -77,7 +77,7 @@ class MLP(nn.Module):
         """
         batch = torch.squeeze(batch)
         assert (
-            len(batch.shape) == 2
-        ), "MLP expected 2D input tensor or 4D tensor of shape NxCx1x1"
+            len(batch.shape) <= 2
+        ), f"MLP expected 2D input tensor or 4D tensor of shape NxCx1x1. got: {batch.shape}"
         out = self.clf(batch)
         return out

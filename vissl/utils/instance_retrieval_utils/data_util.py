@@ -3,7 +3,6 @@
 import logging
 import math
 import os
-import pickle
 import subprocess
 from collections import OrderedDict
 
@@ -11,6 +10,7 @@ import numpy as np
 import scipy.io
 import torch
 import torchvision.transforms.functional as TF
+from fvcore.common.file_io import PathManager
 from PIL import Image, ImageFile
 from torch.nn import functional as F
 from torchvision import transforms
@@ -18,6 +18,7 @@ from vissl.utils.instance_retrieval_utils.evaluate import (
     compute_map,
     score_ap_from_ranks_1,
 )
+from vissl.utils.io import load_file
 
 
 def is_revisited_dataset(dataset_name):
@@ -118,7 +119,7 @@ class WhiteningTrainingImageDataset:
     """ A set of training images for whitening """
 
     def __init__(self, base_dir, image_list_file):
-        with open(image_list_file) as fopen:
+        with PathManager.open(image_list_file) as fopen:
             self.image_list = fopen.readlines()
         self.root = base_dir
         self.N_images = len(self.image_list)
@@ -134,7 +135,7 @@ class WhiteningTrainingImageDataset:
 class InstreDataset:
     def __init__(self, dataset_path):
         self.base_dir = dataset_path
-        gnd_instre = scipy.io.loadmat(os.path.join(self.base_dir, "gnd_instre.mat"))
+        gnd_instre = scipy.io.loadmat(f"{self.base_dir}/gnd_instre.mat")
         self.gnd = gnd_instre["gnd"][0]
         self.qimlist = [fname[0] for fname in gnd_instre["qimlist"][0]]
         self.db_imlist = [fname[0] for fname in gnd_instre["imlist"][0]]
@@ -197,15 +198,14 @@ class RevisitedInstanceRetrievalDataset:
         assert is_revisited_dataset(dataset), f"Unknown dataset: {dataset}!"
 
         # loading imlist, qimlist, and gnd, in cfg as a dict
-        gnd_fname = os.path.join(dir_main, dataset, f"gnd_{dataset}.pkl")
-        with open(gnd_fname, "rb") as f:
-            cfg = pickle.load(f)
+        gnd_fname = f"{dir_main}/{dataset}/gnd_{dataset}.pkl"
+        cfg = load_file(gnd_fname)
         cfg["gnd_fname"] = gnd_fname
         cfg["ext"] = ".jpg"
         cfg["qext"] = ".jpg"
 
-        cfg["dir_data"] = os.path.join(dir_main, dataset)
-        cfg["dir_images"] = os.path.join(cfg["dir_data"], "jpg")
+        cfg["dir_data"] = f"{dir_main}/{dataset}"
+        cfg["dir_images"] = f"{cfg['dir_data']}/jpg"
 
         cfg["n"] = len(cfg["imlist"])
         cfg["nq"] = len(cfg["qimlist"])
@@ -218,14 +218,10 @@ class RevisitedInstanceRetrievalDataset:
         )
 
     def get_filename(self, i):
-        return os.path.join(
-            self.cfg["dir_images"], self.cfg["imlist"][i] + self.cfg["ext"]
-        )
+        return f"{self.cfg['dir_images']}/{self.cfg['imlist'][i] + self.cfg['ext']}"
 
     def get_query_filename(self, i):
-        return os.path.join(
-            self.cfg["dir_images"], self.cfg["qimlist"][i] + self.cfg["qext"]
-        )
+        return f"{self.cfg['dir_images']}/{self.cfg['qimlist'][i] + self.cfg['qext']}"
 
     def get_num_images(self):
         return self.cfg["n"]
@@ -346,7 +342,7 @@ class InstanceRetrievalImageLoader:
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         # open path as file to avoid ResourceWarning
         # (https://github.com/python-pillow/Pillow/issues/835)
-        with open(img_path, "rb") as f:
+        with PathManager.open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
         if roi is not None:
             im_resized = img.crop(roi)
@@ -428,7 +424,7 @@ class InstanceRetrievalDataset:
         for e in lab_filenames:
             if e.endswith("_query.txt"):
                 q_name = e[: -len("_query.txt")]
-                with open(f"{self.lab_root}/{e}") as fopen:
+                with PathManager.open(f"{self.lab_root}/{e}") as fopen:
                     q_data = fopen.readline().split(" ")
                 if q_data[0].startswith("oxc1_"):
                     q_filename = q_data[0][5:]
@@ -436,11 +432,11 @@ class InstanceRetrievalDataset:
                     q_filename = q_data[0]
                 self.filename_to_name[q_filename] = q_name
                 self.name_to_filename[q_name] = q_filename
-                with open(f"{self.lab_root}/{q_name}_ok.txt") as fopen:
+                with PathManager.open(f"{self.lab_root}/{q_name}_ok.txt") as fopen:
                     good = {e.strip() for e in fopen}
-                with open(f"{self.lab_root}/{q_name}_good.txt") as fopen:
+                with PathManager.open(f"{self.lab_root}/{q_name}_good.txt") as fopen:
                     good = good.union({e.strip() for e in fopen})
-                with open(f"{self.lab_root}/{q_name}_junk.txt") as fopen:
+                with PathManager.open(f"{self.lab_root}/{q_name}_junk.txt") as fopen:
                     junk = {e.strip() for e in fopen}
                 good_plus_junk = good.union(junk)
                 self.relevants[q_name] = [
@@ -484,7 +480,7 @@ class InstanceRetrievalDataset:
 
     def score_rnk_partial(self, i, idx, temp_dir):
         rnk = np.array(self.img_filenames)[idx]
-        with open("{0}/{1}.rnk".format(temp_dir, self.q_names[i]), "w") as f:
+        with PathManager.open(f"{temp_dir}/{self.q_names[i]}.rnk", "w") as f:
             f.write("\n".join(rnk) + "\n")
         cmd = (
             f"{self.eval_binary_path} {self.lab_root}{self.q_names[i]} "

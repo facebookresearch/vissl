@@ -8,6 +8,7 @@ import re
 import time
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 from vissl.utils.slurm import get_slurm_dir
 
 
@@ -15,17 +16,46 @@ def save_file(data, filename):
     logging.info(f"Saving data to file: {filename}")
     file_ext = os.path.splitext(filename)[1]
     if file_ext == ".pkl":
-        with open(filename, "wb") as fopen:
+        with PathManager.open(filename, "wb") as fopen:
             pickle.dump(data, fopen, pickle.HIGHEST_PROTOCOL)
     elif file_ext == ".npy":
-        np.save(filename, data)
+        with PathManager.open(filename, "wb") as fopen:
+            np.save(fopen, data)
     elif file_ext == ".json":
-        with open(filename, "a") as fopen:
+        with PathManager.open(filename, "a") as fopen:
             fopen.write(json.dumps(data, sort_keys=True) + "\n")
             fopen.flush()
     else:
         raise Exception(f"Saving {file_ext} is not supported yet")
     logging.info(f"Saved data to file: {filename}")
+
+
+def load_file(filename):
+    logging.info(f"Loading data from file: {filename}")
+    file_ext = os.path.splitext(filename)[1]
+    if file_ext in [".pkl", ".pickle"]:
+        with PathManager.open(filename, "rb") as fopen:
+            data = pickle.load(fopen, encoding="latin1")
+    elif file_ext == ".npy":
+        with PathManager.open(filename, "rb") as fopen:
+            data = np.load(fopen, encoding="latin1")
+    elif file_ext == ".json":
+        with PathManager.open(filename, "r") as fopen:
+            data = json.loads(fopen)
+    else:
+        raise Exception(f"Reading from {file_ext} is not supported yet")
+    return data
+
+
+def makedir(dir_path):
+    is_success = False
+    try:
+        if not PathManager.exists(dir_path):
+            PathManager.mkdirs(dir_path)
+        is_success = True
+    except BaseException:
+        logging.info(f"Error creating directory: {dir_path}")
+    return is_success
 
 
 def is_url(input_url):
@@ -34,7 +64,7 @@ def is_url(input_url):
 
 
 def cleanup_dir(dir):
-    if os.path.exists(dir):
+    if PathManager.exists(dir):
         logging.info(f"Deleting directory: {dir}")
         os.system(f"rm -rf {dir}")
     logging.info(f"Deleted contents of directory: {dir}")
@@ -45,24 +75,13 @@ def get_file_size(filename):
     return size_in_mb
 
 
-def makedir(dir_path):
-    is_success = False
-    try:
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-        is_success = True
-    except BaseException:
-        logging.info(f"Error creating directory: {dir_path}")
-    return is_success
-
-
 def copy_file(input_file, destination_dir):
     destination_dir = get_slurm_dir(destination_dir)
     if "SLURM_JOBID" in os.environ:
         destination_dir = get_slurm_dir(destination_dir)
     makedir(destination_dir)
-    output_file = os.path.join(destination_dir, os.path.basename(input_file))
-    if os.path.exists(output_file):
+    output_file = f"{destination_dir}/{os.path.basename(input_file)}"
+    if PathManager.exists(output_file):
         logging.info(f"File already copied: {output_file}")
         return output_file
 
@@ -82,10 +101,10 @@ def copy_dir(input_dir, destination_dir, num_threads):
     data_name = input_dir.strip("/").split("/")[-1]
     if "SLURM_JOBID" in os.environ:
         destination_dir = get_slurm_dir(destination_dir)
-    destination_dir = os.path.join(destination_dir, data_name)
+    destination_dir = f"{destination_dir}/{data_name}"
     makedir(destination_dir)
-    complete_flag = os.path.join(destination_dir, "copy_complete")
-    if os.path.isfile(complete_flag):
+    complete_flag = f"{destination_dir}/copy_complete"
+    if PathManager.isfile(complete_flag):
         logging.info(f"Found Data already copied: {destination_dir}...")
         return destination_dir
     logging.info(
@@ -97,7 +116,7 @@ def copy_dir(input_dir, destination_dir, num_threads):
         f"rsync -ruW --inplace {{}} {destination_dir}"
     )
     os.system(cmd)
-    open(complete_flag, "a").close()
+    PathManager.open(complete_flag, "a").close()
     logging.info("Copied to local directory")
     return destination_dir
 
@@ -106,9 +125,9 @@ def copy_data(input_file, destination_dir, num_threads):
     # return whatever the input is: whether "", None or anything else.
     logging.info(f"Creating directory: {destination_dir}")
     makedir(destination_dir)
-    if os.path.isfile(input_file):
+    if PathManager.isfile(input_file):
         output_file = copy_file(input_file, destination_dir)
-    elif os.path.isdir(input_file):
+    elif PathManager.isdir(input_file):
         output_file = copy_dir(input_file, destination_dir, num_threads)
     return output_file
 

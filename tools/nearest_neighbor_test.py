@@ -10,7 +10,8 @@ from run_distributed_engines import launch_distributed
 from torch import nn
 from vissl.hooks import default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
-from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import (
     AttrDict,
     convert_to_attrdict,
@@ -24,7 +25,7 @@ from vissl.utils.misc import merge_features
 def nearest_neighbor_test(cfg: AttrDict, layer_name: str = "heads"):
     temperature = cfg.NEAREST_NEIGHBOR.SIGMA
     num_neighbors = cfg.NEAREST_NEIGHBOR.TOPK
-    output_dir = get_absolute_path(cfg.NEAREST_NEIGHBOR.OUTPUT_DIR)
+    output_dir = get_checkpoint_folder(cfg)
     logging.info(f"Testing with sigma: {temperature}, topk neighbors: {num_neighbors}")
 
     ############################################################################
@@ -97,6 +98,9 @@ def main(args: Namespace, config: AttrDict):
 
     # print the coniguration used
     print_cfg(config)
+
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=config)
 
     # extract the features
     launch_distributed(

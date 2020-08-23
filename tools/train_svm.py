@@ -2,7 +2,6 @@
 
 import logging
 import multiprocessing as mp
-import os
 import sys
 from argparse import Namespace
 
@@ -11,25 +10,30 @@ from hydra.experimental import compose, initialize_config_module
 from run_distributed_engines import launch_distributed
 from vissl.hooks import default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
-from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import (
     AttrDict,
     convert_to_attrdict,
     is_hydra_available,
     print_cfg,
 )
+from vissl.utils.io import load_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features
 from vissl.utils.svm_utils.svm_trainer import SVMTrainer
 
 
 def train_svm(cfg: AttrDict, output_dir: str, layername: str):
-    # print the coniguration used for svm training
+    # print the configuration used for svm training
     print_cfg(cfg)
+
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=cfg)
 
     # train the svm
     logging.info(f"Training SVM for layer: {layername}")
-    trainer = SVMTrainer(cfg["SVM"], layer=layername)
+    trainer = SVMTrainer(cfg["SVM"], layer=layername, output_dir=output_dir)
     train_data = merge_features(output_dir, "train", layername, cfg)
     train_features, train_targets = train_data["features"], train_data["targets"]
     trainer.train(train_features, train_targets)
@@ -67,8 +71,8 @@ def main(args: Namespace, config: AttrDict):
     layers = get_trunk_output_feature_names(config.MODEL)
     if len(layers) == 0:
         layers = ["heads"]
-    output_dir = get_absolute_path(config.SVM.OUTPUT_DIR)
 
+    output_dir = get_checkpoint_folder(config)
     # train svm for each layer. parallelize it.
     running_tasks = [
         mp.Process(target=train_svm, args=(config, output_dir, layer))
@@ -83,8 +87,8 @@ def main(args: Namespace, config: AttrDict):
     output_mAP = []
     for layer in layers:
         try:
-            ap_file = os.path.join(output_dir, layer, "test_ap.npy")
-            output_mAP.append(round(100.0 * np.mean(np.load(ap_file)), 3))
+            ap_file = f"{output_dir}/{layer}/test_ap.npy"
+            output_mAP.append(round(100.0 * np.mean(load_file(ap_file)), 3))
         except Exception:
             output_mAP.append(-1)
     logging.info(f"AP for various layers:\n {layers}: {output_mAP}")

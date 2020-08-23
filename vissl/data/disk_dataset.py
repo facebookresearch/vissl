@@ -1,9 +1,9 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 from PIL import Image
 from torchvision.datasets import ImageFolder
 from vissl.data.data_helper import QueueDataset, get_mean_image
@@ -47,9 +47,9 @@ class DiskImageDataset(QueueDataset):
             "disk_folder",
         ], "data_source must be either disk_filelist or disk_folder"
         if data_source == "disk_filelist":
-            assert os.path.isfile(path), f"File {path} does not exist"
+            assert PathManager.isfile(path), f"File {path} does not exist"
         elif data_source == "disk_folder":
-            assert os.path.isdir(path), f"Directory {path} does not exist"
+            assert PathManager.isdir(path), f"Directory {path} does not exist"
         self.cfg = cfg
         self.split = split
         self.dataset_name = dataset_name

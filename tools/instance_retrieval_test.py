@@ -1,7 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 import sys
 import uuid
 
@@ -10,9 +9,11 @@ import torch
 import torch.nn.functional as F
 import torchvision
 from classy_vision.generic.util import copy_model_to_gpu
+from fvcore.common.file_io import PathManager
 from hydra.experimental import compose, initialize_config_module
 from vissl.models import build_model
 from vissl.utils.checkpoint import init_model_from_weights
+from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.instance_retrieval_utils.data_util import (
     InstanceRetrievalDataset,
@@ -29,7 +30,7 @@ from vissl.utils.instance_retrieval_utils.data_util import (
 )
 from vissl.utils.instance_retrieval_utils.pca import load_pca, train_and_save_pca
 from vissl.utils.instance_retrieval_utils.rmac import get_rmac_descriptors
-from vissl.utils.io import cleanup_dir, makedir
+from vissl.utils.io import cleanup_dir, load_file, makedir, save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 
 
@@ -43,7 +44,7 @@ def build_retrieval_model(cfg):
     """
     logging.info("Building model....")
     model = build_model(cfg.MODEL, cfg.OPTIMIZER)
-    if os.path.exists(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
+    if PathManager.exists(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
         init_weights_path = cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE
         logging.info(f"Initializing model from: {init_weights_path}")
         weights = torch.load(init_weights_path, map_location=torch.device("cuda"))
@@ -70,13 +71,13 @@ def build_retrieval_model(cfg):
 
 
 def gem_pool_and_save_features(features, p, add_bias, gem_out_fname):
-    if os.path.exists(gem_out_fname):
+    if PathManager.exists(gem_out_fname):
         logging.info("Loading train GeM features...")
-        features = np.load(gem_out_fname)
+        features = load_file(gem_out_fname)
     else:
         logging.info(f"GeM pooling features: {features.shape}")
         features = l2n(gem(features, p=p, add_bias=True))
-        np.save(gem_out_fname, features)
+        save_file(features, gem_out_fname)
         logging.info(f"Saved GeM features to: {gem_out_fname}")
     return features
 
@@ -97,8 +98,8 @@ def get_train_features(
         if i % LOG_FREQUENCY == 0:
             logging.info(f"Train Image: {i}"),
         fname_out = f"{out_dir}/{i}.npy"
-        if os.path.exists(fname_out):
-            feat = np.load(fname_out)
+        if PathManager.exists(fname_out):
+            feat = load_file(fname_out)
             train_features.append(feat)
         else:
             fname_in = train_dataset.get_filename(i)
@@ -118,7 +119,7 @@ def get_train_features(
                 descriptors = get_rmac_descriptors(activation_map, spatial_levels)
             else:
                 descriptors = activation_map
-            np.save(fname_out, descriptors.data.numpy())
+            save_file(descriptors.data.numpy(), fname_out)
             train_features.append(descriptors.data.numpy())
 
     num_images = train_dataset.get_num_images()
@@ -170,7 +171,7 @@ def process_eval_image(
         descriptors = F.normalize(activation_map, p=2, dim=0)
     else:
         descriptors = activation_map
-    np.save(fname_out, descriptors.data.numpy())
+    save_file(descriptors.data.numpy(), fname_out)
     return descriptors.data.numpy()
 
 
@@ -196,8 +197,8 @@ def get_dataset_features(
             logging.info(f"Eval Dataset Image: {idx}"),
         db_fname_in = eval_dataset.get_filename(idx)
         db_fname_out = f"{db_fname_out_dir}/{idx}.npy"
-        if os.path.exists(db_fname_out):
-            db_feature = np.load(db_fname_out)
+        if PathManager.exists(db_fname_out):
+            db_feature = load_file(db_fname_out)
         else:
             db_feature = process_eval_image(
                 cfg,
@@ -251,8 +252,8 @@ def get_queries_features(
         q_fname_in = eval_dataset.get_query_filename(idx)
         roi = eval_dataset.get_query_roi(idx)
         q_fname_out = f"{q_fname_out_dir}/{idx}.npy"
-        if os.path.exists(q_fname_out):
-            query_feature = np.load(q_fname_out)
+        if PathManager.exists(q_fname_out):
+            query_feature = load_file(q_fname_out)
         else:
             query_feature = process_eval_image(
                 cfg,
@@ -312,8 +313,8 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
     # We only create the train dataset if we need PCA or whitening training.
     # Otherwise not.
     if cfg.IMG_RETRIEVAL.SHOULD_TRAIN_PCA_OR_WHITENING:
-        train_data_path = os.path.join(root_dataset_path, train_dataset_name)
-        assert os.path.exists(train_data_path), f"Unknown path: {train_data_path}"
+        train_data_path = f"{root_dataset_path}/{train_dataset_name}"
+        assert PathManager.exists(train_data_path), f"Unknown path: {train_data_path}"
         if is_revisited_dataset(train_dataset_name):
             train_dataset = RevisitedInstanceRetrievalDataset(
                 train_dataset_name, root_dataset_path
@@ -330,8 +331,8 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
 
 
 def get_eval_dataset(cfg, root_dataset_path, eval_dataset_name, eval_binary_path):
-    eval_data_path = os.path.join(root_dataset_path, eval_dataset_name)
-    assert os.path.exists(eval_data_path), f"Unknown path: {eval_data_path}"
+    eval_data_path = f"{root_dataset_path}/{eval_dataset_name}"
+    assert PathManager.exists(eval_data_path), f"Unknown path: {eval_data_path}"
     if is_revisited_dataset(eval_dataset_name):
         eval_dataset = RevisitedInstanceRetrievalDataset(
             eval_dataset_name, root_dataset_path
@@ -353,7 +354,7 @@ def instance_retrieval_test(args, cfg):
     resize_img = cfg.IMG_RETRIEVAL.RESIZE_IMG
     eval_binary_path = cfg.IMG_RETRIEVAL.EVAL_BINARY_PATH
     root_dataset_path = cfg.IMG_RETRIEVAL.DATASET_PATH
-    temp_dir = os.path.join(cfg.IMG_RETRIEVAL.TEMP_DIR, str(uuid.uuid4()))
+    temp_dir = f"{cfg.IMG_RETRIEVAL.TEMP_DIR}/{str(uuid.uuid4())}"
     logging.info(f"Temp directory: {temp_dir}")
 
     ############################################################################
@@ -402,7 +403,7 @@ def instance_retrieval_test(args, cfg):
         ########################################################################
         # Train PCA on the train features
         pca_out_fname = f"{temp_dir}/{train_dataset_name}_S{resize_img}_PCA.pickle"
-        if os.path.exists(pca_out_fname):
+        if PathManager.exists(pca_out_fname):
             logging.info("Loading PCA...")
             pca = load_pca(pca_out_fname)
         else:
@@ -461,6 +462,9 @@ def main(args, config):
 
     # print the config
     print_cfg(config)
+
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=config)
 
     instance_retrieval_test(args, config)
     # close the logging streams including the filehandlers

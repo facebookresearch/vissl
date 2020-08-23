@@ -1,10 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
+from fvcore.common.file_io import PathManager
 from torch.utils.data import Dataset
 from vissl.data import dataset_catalog
 from vissl.data.ssl_transforms import get_transform
@@ -74,7 +74,7 @@ class GenericSSLDataset(Dataset):
             if label_source == "disk_filelist":
                 path = self.label_paths[idx]
                 # Labels are stored in a file
-                assert os.path.isfile(path), f"Path to labels {path} is not a file"
+                assert PathManager.isfile(path), f"Path to labels {path} is not a file"
 
                 assert path.endswith("npy"), "Please specify a numpy file for labels"
                 if self.cfg["DATA"][self.split].MMAP_MODE:

@@ -71,7 +71,7 @@ def train_main(
 
     # Get the checkpoint where to load from. The load_checkpoints function will
     # automatically take care of detecting whether it's a resume or not
-    checkpoint = get_resume_checkpoint(cfg, checkpoint_folder=output_dir)
+    checkpoint_path = get_resume_checkpoint(cfg, checkpoint_folder=output_dir)
 
     # get the hooks - these hooks are executed per replica
     hooks = hook_generator(cfg)
@@ -81,7 +81,7 @@ def train_main(
     # dataloader, optimizers, losses, hooks, etc. "Task" will also have information
     # about phases (train, test) both. The trainer then sets up distributed
     # training.
-    trainer = SelfSupervisionTrainer(cfg, dist_run_id, checkpoint, hooks)
+    trainer = SelfSupervisionTrainer(cfg, dist_run_id, checkpoint_path, hooks)
     trainer.train()
     logging.info("All Done!")
     # close the logging streams including the filehandlers

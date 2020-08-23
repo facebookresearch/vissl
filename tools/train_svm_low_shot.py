@@ -1,20 +1,20 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 import sys
 from argparse import Namespace
 
-import numpy as np
 from extra_scripts.create_voc07_low_shot_samples import generate_voc07_low_shot_samples
 from hydra.experimental import compose, initialize_config_module
-from vissl.utils.checkpoint import get_absolute_path
+from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import (
     AttrDict,
     convert_to_attrdict,
     is_hydra_available,
     print_cfg,
 )
+from vissl.utils.io import load_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features
 from vissl.utils.svm_utils.svm_low_shot_trainer import SVMLowShotTrainer
@@ -22,7 +22,9 @@ from vissl.utils.svm_utils.svm_low_shot_trainer import SVMLowShotTrainer
 
 def train_svm_low_shot(cfg: AttrDict, output_dir: str, layername: str):
     logging.info(f"Training Low-shot SVM for layer: {layername}")
-    low_shot_trainer = SVMLowShotTrainer(cfg["SVM"], layer=layername)
+    low_shot_trainer = SVMLowShotTrainer(
+        cfg["SVM"], layer=layername, output_dir=output_dir
+    )
     train_data = merge_features(output_dir, "train", layername, cfg)
     train_features, train_targets = train_data["features"], train_data["targets"]
     test_data = merge_features(output_dir, "test", layername, cfg)
@@ -39,10 +41,8 @@ def train_svm_low_shot(cfg: AttrDict, output_dir: str, layername: str):
     # Now, we train and test the low-shot SVM for every sample and k-value.
     for sample_num in sample_inds:
         for low_shot_kvalue in k_values:
-            train_targets = np.load(
-                os.path.join(
-                    output_dir, f"{layername}_sample{sample_num}_k{low_shot_kvalue}.npy"
-                )
+            train_targets = load_file(
+                f"{output_dir}/{layername}_sample{sample_num}_k{low_shot_kvalue}.npy"
             )
             low_shot_trainer.train(
                 train_features, train_targets, sample_num, low_shot_kvalue
@@ -66,12 +66,15 @@ def main(args: Namespace, cfg: AttrDict):
     # print the cfg
     print_cfg(cfg)
 
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=cfg)
+
     # get the layers for which we will train low shot svm
     layers = [
         item[0]
         for item in cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
     ]
-    output_dir = get_absolute_path(cfg.SVM.OUTPUT_DIR)
+    output_dir = get_checkpoint_folder(cfg)
 
     # train low shot svm for each layer.
     for layer in layers:
