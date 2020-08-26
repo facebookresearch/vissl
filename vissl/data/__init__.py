@@ -48,13 +48,7 @@ def print_sampler_config(data_sampler):
     logging.info("Distributed Sampler config:\n{}".format(sampler_cfg))
 
 
-def get_loader(
-    dataset, dataset_config, num_dataloader_workers, pin_memory, multi_processing_method
-):
-    # pytorch dataloader requires setting the multiprocessing type.
-    setup_multiprocessing_method(multi_processing_method)
-    # we don't need to set the rank, replicas as the Sampler already does so in
-    # it's init function
+def get_sampler_fn(dataset, dataset_config):
     data_sampler = None
     if torch.distributed.is_available() and torch.distributed.is_initialized():
         if dataset_config["USE_STATEFUL_DISTRIBUTED_SAMPLER"]:
@@ -69,6 +63,22 @@ def get_loader(
         logging.warning(
             "Distributed trainer not initialized. Not using the sampler and data will NOT be shuffled"  # NOQA
         )
+    return data_sampler
+
+
+def get_loader(
+    dataset,
+    dataset_config,
+    num_dataloader_workers,
+    pin_memory,
+    multi_processing_method,
+    get_sampler_fn=get_sampler_fn,
+):
+    # pytorch dataloader requires setting the multiprocessing type.
+    setup_multiprocessing_method(multi_processing_method)
+    # we don't need to set the rank, replicas as the Sampler already does so in
+    # it's init function
+    data_sampler = get_sampler_fn(dataset, dataset_config)
     collate_function = get_collator(dataset_config["COLLATE_FUNCTION"])
     dataloader = DataLoader(
         dataset=dataset,
