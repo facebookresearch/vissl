@@ -29,6 +29,7 @@ class SelfSupervisionTask(ClassificationTask):
         super().__init__()
         self.config = config
         self.checkpoint_path = None
+
         self.checkpoint = None
         self.available_splits = []
         self.base_loss = None
@@ -82,6 +83,17 @@ class SelfSupervisionTask(ClassificationTask):
         self.batches = -1  # set by the hook at start of each epoch or phase
         # loss curve. Reset at start of each phase/epoch by SetDataSamplerEpochHook hook.
         self.losses = []  # set by the hook at start of each epoch or phase
+
+        # Register the task to the proper device (cpu, gpu, ...)
+        self.set_device()
+
+    def set_device(self):
+        try:
+            self.device = torch.device(
+                "cuda" if self.config.MACHINE.DEVICE == "gpu" else "cpu"
+            )
+        except AttributeError:
+            self.device = torch.device("cuda")
 
     def set_available_splits(self):
         # self.available_splits = list(self.config["DATA"].keys())
@@ -167,18 +179,22 @@ class SelfSupervisionTask(ClassificationTask):
             data_and_label_keys["target"] = self.config.DATA[split].TARGET_KEY_NAMES
         return datasets, data_and_label_keys
 
-    def build_dataloaders(self, pin_memory):
+    def build_dataloaders(self, pin_memory: bool) -> torch.utils.data.DataLoader:
+
         self.datasets, self.data_and_label_keys = self.build_datasets()
-        loaders = {}
-        for split in self.available_splits:
-            loader = get_loader(
+
+        loaders = {
+            split.lower(): get_loader(
                 dataset=self.datasets[split],
                 dataset_config=self.config["DATA"][split],
                 num_dataloader_workers=self.config.DATA.NUM_DATALOADER_WORKERS,
                 pin_memory=pin_memory,
                 multi_processing_method=self.config.MULTI_PROCESSING_METHOD,
+                device=self.device,
             )
-            loaders[split.lower()] = loader
+            for split in self.available_splits
+        }
+
         return loaders
 
     def _build_optimizer(self):
@@ -305,7 +321,7 @@ class SelfSupervisionTask(ClassificationTask):
         gc.collect()
         self.data_iterator = iter(self.dataloaders[phase_type])
 
-    def _set_classy_state(self, device, state):
+    def _set_classy_state(self, state):
         """
         We overwrite the classy state setting here to match our dataloader calls
         """
@@ -323,8 +339,8 @@ class SelfSupervisionTask(ClassificationTask):
         # (since the model isn't copied to gpu yet). The copy_model_to_gpu()
         # doesn't modify optimizer params device. The optimizer is constructed
         # with the CPU inputs. When the model runs, it rather sends CUDA.
-        if device == "gpu":
-            self.base_model.cuda()
+        self.base_model.to(self.device)
+
         for meter, meter_state in zip(self.meters, state["meters"]):
             meter.set_classy_state(meter_state)
         self.optimizer.set_classy_state(state["optimizer"])
@@ -355,14 +371,14 @@ class SelfSupervisionTask(ClassificationTask):
         if self.train and self.train_phase_idx >= 0:
             self.optimizer.on_epoch(self.where)
 
-    def _update_classy_state(self, device, state_dict=None):
+    def _update_classy_state(self, state_dict=None):
         """
         Updates classy state with the provided state dict from a checkpoint.
         state_dict = checkpoint loaded state
         """
         if state_dict is not None:
             try:
-                self._set_classy_state(device, state_dict)
+                self._set_classy_state(state_dict)
                 success = True
             except Exception as e:
                 logging.exception(f"Could not load the checkpoint: {e}")
@@ -413,10 +429,11 @@ class SelfSupervisionTask(ClassificationTask):
 
         self.optimizer.set_param_groups(param_groups)
 
-    def prepare(self, device: str, pin_memory: bool = False):
+    def prepare(self, pin_memory: bool = False):
         """
         Prepares the task.
         """
+
         self.dataloaders = self.build_dataloaders(pin_memory=pin_memory)
         self.phases = self._build_phases()
         train_phases = [phase for phase in self.phases if phase["train"]]
@@ -430,8 +447,8 @@ class SelfSupervisionTask(ClassificationTask):
         self.iteration = self.iteration
         self.num_train_phases = num_train_phases
 
-        if self.use_gpu:
-            self.base_loss = self.base_loss.cuda()
+        self.base_loss = self.base_loss.to(self.device)
+        if self.device.type == "cuda":
             self.base_model = copy_model_to_gpu(self.base_model)
 
         # initialize the pytorch optimizer now since the model has been moved to
@@ -459,15 +476,15 @@ class SelfSupervisionTask(ClassificationTask):
                 self.base_loss.load_state_dict(self.checkpoint["loss"])
                 logging.info("======Loaded loss state from checkpoint======")
 
-        return self._update_classy_state(device, vissl_state_dict)
+        return self._update_classy_state(vissl_state_dict)
 
-    def prepare_extraction(self, device, pin_memory=False, use_gpu=True):
+    def prepare_extraction(self, pin_memory: bool = False):
         """
         Prepares a light-weight task for feature extraction on multi-gpu. The model
         runs in eval mode only.
         """
         self.dataloaders = self.build_dataloaders(pin_memory=pin_memory)
         self.base_model = self._build_model()
-        if use_gpu:
+        if self.device.type == "cuda":
             self.base_model = copy_model_to_gpu(self.base_model)
         return self

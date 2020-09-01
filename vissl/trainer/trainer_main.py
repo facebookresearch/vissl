@@ -90,9 +90,7 @@ class SelfSupervisionTrainer(object):
 
     def train(self):
         train_step_fn = get_train_step(self.cfg["TRAINER"]["TRAIN_STEP_NAME"])
-        self.task.prepare(
-            device=self.cfg.MACHINE.DEVICE, pin_memory=self.cfg.DATA.PIN_MEMORY
-        )
+        self.task.prepare(pin_memory=self.cfg.DATA.PIN_MEMORY)
         self.task.init_distributed_data_parallel_model()
 
         # Find what phase, train_phase_idx, local_iteration_num we are starting from.
@@ -232,11 +230,7 @@ class SelfSupervisionTrainer(object):
     def extract(self):
         # support feature extraction on gpu only.
         assert self.task.use_gpu, "Set MACHINE.DEVICE = gpu"
-        self.task.prepare_extraction(
-            device=self.cfg.MACHINE.DEVICE,
-            pin_memory=self.cfg.DATA.PIN_MEMORY,
-            use_gpu=self.task.use_gpu,
-        )
+        self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
         self.task.init_distributed_data_parallel_model()
 
         if is_primary():
@@ -291,8 +285,8 @@ class SelfSupervisionTrainer(object):
                 assert "data_idx" in sample, "Indices not passed"
                 input_sample = {
                     "input": torch.cat(sample["data"]).cuda(non_blocking=True),
-                    "target": torch.cat(sample["label"]).numpy(),
-                    "inds": torch.cat(sample["data_idx"]).numpy(),
+                    "target": torch.cat(sample["label"]).cpu().numpy(),
+                    "inds": torch.cat(sample["data_idx"]).cpu().numpy(),
                 }
                 with torch.no_grad():
                     features = task.model(input_sample["input"])

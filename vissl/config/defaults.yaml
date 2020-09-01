@@ -31,6 +31,7 @@ config:
     # Common data options
     NUM_DATALOADER_WORKERS: 4 # Set this depending on the number of CPUs you have
     PIN_MEMORY: true # Makes CPU->GPU copy of the data faster
+    ENABLE_ASYNC_GPU_COPY: true
     # Training Data Options
     TRAIN:
       # if we want to resume the data sampler as well from a previous iteration
