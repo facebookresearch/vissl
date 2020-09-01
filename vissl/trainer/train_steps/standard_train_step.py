@@ -8,7 +8,6 @@ from typing import Any, Dict, NamedTuple
 
 import torch
 from classy_vision.generic.distributed_util import all_reduce_mean
-from classy_vision.generic.util import recursive_copy_to_gpu
 from classy_vision.tasks import ClassyTask
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.trainer.train_steps import register_train_step
@@ -65,11 +64,6 @@ def construct_sample_for_model(batch_data, task):
         else:
             sample["target"] = batch_data[target_key[0]][0]
         sample["data_valid"] = batch_data["data_valid"][0]
-
-    # copy sample to GPU recursively
-    if task.use_gpu:
-        for key, value in sample.items():
-            sample[key] = recursive_copy_to_gpu(value, non_blocking=True)
 
     return sample
 

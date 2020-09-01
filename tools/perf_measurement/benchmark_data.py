@@ -3,6 +3,7 @@
 import logging
 import sys
 
+import torch
 import tqdm
 from fvcore.common.timer import Timer
 from hydra.experimental import compose, initialize_config_module
@@ -21,12 +22,19 @@ def benchmark_data(cfg, split="train"):
     total_images = MAX_ITERS * cfg["DATA"][split]["BATCHSIZE_PER_REPLICA"]
     timer = Timer()
     dataset = build_dataset(cfg, split)
+
+    try:
+        device = torch.device("cuda" if cfg.MACHINE.DEVICE == "gpu" else "cpu")
+    except AttributeError:
+        device = torch.device("cuda")
+
     dataloader = get_loader(
         dataset=dataset,
         dataset_config=cfg["DATA"][split],
         num_dataloader_workers=cfg.DATA.NUM_DATALOADER_WORKERS,
         pin_memory=False,
         multi_processing_method=cfg.MULTI_PROCESSING_METHOD,
+        device=device,
     )
 
     # initial warmup measured as warmup time

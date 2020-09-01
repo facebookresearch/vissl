@@ -62,7 +62,7 @@ def get_dist_run_id(cfg, num_nodes):
     return run_id
 
 
-def setup_multiprocessing_method(method_name):
+def setup_multiprocessing_method(method_name: str):
     try:
         mp.set_start_method(method_name, force=True)
         logging.info("Set start method of multiprocessing to {}".format(method_name))

@@ -3,9 +3,11 @@
 import logging
 
 import torch
+from classy_vision.dataset import DataloaderAsyncGPUWrapper
 from torch.utils.data import DataLoader
 from vissl.data.collators import get_collator
 from vissl.data.data_helper import StatefulDistributedSampler
+from vissl.data.dataloader_sync_gpu_wrapper import DataloaderSyncGPUWrapper
 from vissl.data.dataset_catalog import VisslDatasetCatalog, register_datasets
 from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
@@ -67,11 +69,12 @@ def get_sampler(dataset, dataset_config):
 
 
 def get_loader(
-    dataset,
-    dataset_config,
-    num_dataloader_workers,
-    pin_memory,
-    multi_processing_method,
+    dataset: GenericSSLDataset,
+    dataset_config: dict,
+    num_dataloader_workers: int,
+    pin_memory: bool,
+    multi_processing_method: str,
+    device: torch.device,
     get_sampler=get_sampler,
 ):
     # pytorch dataloader requires setting the multiprocessing type.
@@ -90,4 +93,19 @@ def get_loader(
         sampler=data_sampler,
         drop_last=dataset_config["DROP_LAST"],
     )
+
+    # If the targeted device is CUDA, set up async device copy:
+    # - makes sure that samples are on device
+    # - overlap the copy with the previous batch computation.
+    if device.type == "cuda":
+        if dataset.cfg["DATA"]["ENABLE_ASYNC_GPU_COPY"]:
+            logging.info("Wrapping the dataloader to async device copies")  # NOQA
+            dataloader = DataloaderAsyncGPUWrapper(dataloader)
+        else:
+            logging.info("Wrapping the dataloader to synchronous device copies")  # NOQA
+            dataloader = DataloaderSyncGPUWrapper(dataloader)
+
+    else:
+        logging.warning("Selecting a CPU device")
+
     return dataloader
