@@ -15,7 +15,7 @@ from vissl.utils.slurm import get_slurm_dir
 def save_file(data, filename):
     logging.info(f"Saving data to file: {filename}")
     file_ext = os.path.splitext(filename)[1]
-    if file_ext == ".pkl":
+    if file_ext in [".pkl", ".pickle"]:
         with PathManager.open(filename, "wb") as fopen:
             pickle.dump(data, fopen, pickle.HIGHEST_PROTOCOL)
     elif file_ext == ".npy":
