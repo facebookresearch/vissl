@@ -4,7 +4,7 @@
 This is the train step that"s most commonly used in most of the model trainings.
 """
 
-from typing import Any, Dict, NamedTuple
+from types import SimpleNamespace
 
 import torch
 from classy_vision.generic.distributed_util import all_reduce_mean
@@ -18,12 +18,10 @@ from vissl.utils.perf_stats import PerfTimer
 if is_apex_available():
     import apex
 
-
-class LastBatchInfo(NamedTuple):
-    loss: torch.Tensor
-    output: torch.Tensor
-    target: torch.Tensor
-    sample: Dict[str, Any]
+# LastBatchInfo will typically hold
+# the last samples, target, loss and output.
+# More attributes can be added as needed in dependent codeblocks
+LastBatchInfo = SimpleNamespace
 
 
 def construct_sample_for_model(batch_data, task):
@@ -65,6 +63,11 @@ def construct_sample_for_model(batch_data, task):
             sample["target"] = batch_data[target_key[0]][0]
         sample["data_valid"] = batch_data["data_valid"][0]
 
+    # copy the other keys as-is, method dependent
+    for k in batch_data.keys():
+        if k not in all_keys:
+            sample[k] = batch_data[k]
+
     return sample
 
 
@@ -73,7 +76,7 @@ def standard_train_step(task):
     assert isinstance(task, ClassyTask), "task is not instance of ClassyTask"
 
     # reset the last batch info at every step
-    task.last_batch = {}
+    task.last_batch = LastBatchInfo()
 
     # We'll time train_step and some of its sections, and accumulate values
     # into perf_stats if it were defined in local_variables:
@@ -84,6 +87,7 @@ def standard_train_step(task):
     # Process next sample
     with PerfTimer("read_sample", perf_stats):
         sample = next(task.data_iterator)
+
     sample = construct_sample_for_model(sample, task)
 
     # Only need gradients during training
@@ -96,6 +100,8 @@ def standard_train_step(task):
         # if the model outputs only one tensor, we take it out of the list.
         if len(model_output) == 1:
             model_output = model_output[0]
+
+        task.last_batch.sample = sample
         target = sample["target"]
 
         # run hooks on forward pass
@@ -108,9 +114,9 @@ def standard_train_step(task):
         # Reduce the loss value across all nodes and gpus.
         with PerfTimer("loss_all_reduce", perf_stats):
             loss = local_loss.detach().clone()
-            loss = all_reduce_mean(loss)
+            task.last_batch.loss = all_reduce_mean(loss)
 
-        task.losses.append(loss.data.cpu().item() * target.size(0))
+        task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
 
         # update meters
         if len(task.meters) > 0:
@@ -123,10 +129,9 @@ def standard_train_step(task):
                 for meter in task.meters:
                     meter.update(model_output_cpu, target.detach().cpu())
 
-        # create the LastBatchInfo object with the current batch info
-        task.last_batch = LastBatchInfo(
-            loss=loss, output=model_output, target=target, sample=sample
-        )
+        task.last_batch.model_output = model_output
+        task.last_batch.target = target
+
         # update the iteration number, check loss is not NaN and measure batch time
         # now if it's a test phase since test phase doesn't have update step.
         task.run_hooks(SSLClassyHookFunctions.on_loss_and_meter.name)

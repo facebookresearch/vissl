@@ -11,6 +11,7 @@ from vissl.hooks.log_hooks import (  # noqa
     LogLossMetricsCheckpointHook,
     LogPerfTimeMetricsHook,
 )
+from vissl.hooks.moco_hooks import MoCoHook  # noqa
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     FreezeParametersHook,
@@ -57,6 +58,15 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         hooks.extend([SwAVUpdateQueueScoresHook(), NormalizePrototypesHook()])
     if cfg.LOSS.name == "deepclusterv2_loss":
         hooks.extend([InitMemoryHook(), ClusterMemoryHook()])
+    if cfg.LOSS.name == "moco_loss":
+        hooks.extend(
+            [
+                MoCoHook(
+                    cfg.LOSS["moco_loss"]["momentum"],
+                    shuffle_batch=(not cfg.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN),
+                )
+            ]
+        )
     if cfg.MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
     if cfg.TENSORBOARD_SETUP.USE_TENSORBOARD:
