@@ -27,9 +27,9 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
-      DATA_SOURCES: [disk_filelist]
-      LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k]
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -40,8 +40,8 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-      MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
   METERS:
     accuracy_list_meter:

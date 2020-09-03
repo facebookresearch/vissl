@@ -75,6 +75,11 @@ class MLP(nn.Module):
         Returns:
             out (torch.Tensor): 2D output torch tensor
         """
+        if isinstance(batch, list):
+            assert (
+                len(batch) == 1
+            ), "MLP input should be either a tensor (2D, 4D) or list containing 1 tensor."
+            batch = batch[0]
         batch = torch.squeeze(batch)
         assert (
             len(batch.shape) <= 2

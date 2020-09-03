@@ -30,6 +30,7 @@ class SwAVPrototypesHead(nn.Module):
         use_bn: bool,
         num_clusters: int,
         use_bias: bool = True,
+        skip_last_bn: bool = True,
     ):
         """
         Args:
@@ -42,6 +43,16 @@ class SwAVPrototypesHead(nn.Module):
                                       Example dims=[3000] will attach 1 prototype head.
                                               dims=[3000, 3000] will attach 2 prototype heads
             use_bias (bool): whether the Linear layer should have bias or not
+            skip_last_bn (bool): whether to attach BN + Relu at the end of projection head.
+                        Example:
+                            [2048, 2048, 128] with skip_last_bn=True attaches linear layer
+                            Linear(2048, 2048) -> BN -> Relu -> Linear(2048, 128)
+
+                            [2048, 2048, 128] with skip_last_bn=False attaches linear layer
+                            Linear(2048, 2048) -> BN -> Relu -> Linear(2048, 128) -> BN -> ReLU
+
+                        This could be particularly useful when performing full finetuning on
+                        hidden layers.
         """
 
         super().__init__()
@@ -50,7 +61,7 @@ class SwAVPrototypesHead(nn.Module):
         last_dim = dims[0]
         for i, dim in enumerate(dims[1:]):
             layers.append(nn.Linear(last_dim, dim, bias=use_bias))
-            if i == len(dims) - 2:
+            if (i == len(dims) - 2) and skip_last_bn:
                 break
             if use_bn:
                 layers.append(
