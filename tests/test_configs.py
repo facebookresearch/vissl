@@ -42,7 +42,7 @@ class TestConfigsComposition(unittest.TestCase):
         cfg = SSLHydraConfig.from_configs(
             [
                 "config=test/integration_test/quick_simclr",
-                "config/pretrain/simclr/models=resnext101",
+                "+config/pretrain/simclr/models=resnext101",
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
@@ -60,12 +60,12 @@ class TestConfigsFailComposition(unittest.TestCase):
             SSLHydraConfig.from_configs(
                 [
                     "config=test/integration_test/quick_simclr",
-                    "+config/pretrain/simclr/models=resnext101",
+                    "config/pretrain/simclr/models=resnext101",
                 ]
             )
             self.fail(
                 "We should fail for invalid composition. "
-                "+ is not necessary as the group already exists in defaults"
+                "+ is necessary as the group does not exists in defaults"
             )
         except HydraException:
             pass
@@ -77,7 +77,7 @@ class TestConfigsCliComposition(unittest.TestCase):
         cfg = SSLHydraConfig.from_configs(
             [
                 "config=test/integration_test/quick_simclr",
-                "config/pretrain/simclr/models=resnext101",
+                "+config/pretrain/simclr/models=resnext101",
                 "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.GROUPS=32",
                 "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_PER_GROUP=16",
             ]
