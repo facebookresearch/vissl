@@ -3,6 +3,8 @@
 import logging
 import sys
 import uuid
+from argparse import Namespace
+from typing import Any, List
 
 import numpy as np
 import torch
@@ -14,7 +16,12 @@ from hydra.experimental import compose, initialize_config_module
 from vissl.models import build_model
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.env import set_env_vars
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
+from vissl.utils.hydra_config import (
+    AttrDict,
+    convert_to_attrdict,
+    is_hydra_available,
+    print_cfg,
+)
 from vissl.utils.instance_retrieval_utils.data_util import (
     InstanceRetrievalDataset,
     InstanceRetrievalImageLoader,
@@ -456,7 +463,7 @@ def instance_retrieval_test(args, cfg):
     logging.info("All done!!")
 
 
-def main(args, config):
+def main(args: Namespace, config: AttrDict):
     # setup the logging
     setup_logging(__name__)
 
@@ -471,7 +478,7 @@ def main(args, config):
     shutdown_logging()
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[Any]):
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)

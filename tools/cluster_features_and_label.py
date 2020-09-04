@@ -8,6 +8,7 @@ using FAISS and assigning the hard labels to the dataset.
 import logging
 import sys
 from argparse import Namespace
+from typing import Any, List
 
 import faiss
 import numpy as np
@@ -123,7 +124,7 @@ def main(args: Namespace, cfg: AttrDict):
     shutdown_logging()
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[Any]):
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)

@@ -81,9 +81,9 @@ config:
       # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
       weight_decay: 0.000001
       momentum: 0.9
-      num_epochs: 28
-      nesterov: True
-      regularize_bn: False
+      num_epochs: 100
+      nesterov: False
+      regularize_bn: True
       regularize_bias: True
       param_schedulers:
         lr:

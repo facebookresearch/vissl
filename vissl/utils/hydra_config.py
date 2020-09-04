@@ -6,6 +6,7 @@ import sys
 from typing import Any, List
 
 from omegaconf import DictConfig, OmegaConf
+from vissl.config import check_cfg_version
 
 
 class AttrDict(dict):
@@ -97,9 +98,15 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
     # convert the config to AttrDict
     cfg = OmegaConf.to_container(cfg)
     cfg = AttrDict(cfg)
-    config = cfg.config
+
+    # check the cfg has valid version
+    check_cfg_version(cfg)
+
+    # print the cfg
+    print_cfg(cfg)
 
     # assert the config and infer
+    config = cfg.config
     assert_hydra_conf(config)
     return cfg, config
 

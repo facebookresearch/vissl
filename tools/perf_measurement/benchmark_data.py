@@ -2,13 +2,14 @@
 
 import logging
 import sys
+from typing import List
 
 import torch
 import tqdm
 from fvcore.common.timer import Timer
 from hydra.experimental import compose, initialize_config_module
 from vissl.data import build_dataset, get_loader
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.logger import setup_logging
 
 
@@ -17,7 +18,7 @@ MAX_ITERS = 500
 BENCHMARK_ROUNDS = 2
 
 
-def benchmark_data(cfg, split="train"):
+def benchmark_data(cfg: AttrDict, split: str = "train"):
     split = split.upper()
     total_images = MAX_ITERS * cfg["DATA"][split]["BATCHSIZE_PER_REPLICA"]
     timer = Timer()
@@ -74,7 +75,7 @@ def benchmark_data(cfg, split="train"):
     del dataloader
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[str]):
     print(f"####### overrides: {overrides}")
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
