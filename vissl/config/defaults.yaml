@@ -584,55 +584,27 @@ config:
     # flush logs every n minutes
     FLUSH_EVERY_N_MIN: 5
 
-
-# If you create sub-folders in configs to override, you must follow one of the
-# two options:
+# VISSL uses hydra for configuration management. The usage looks like:
+#    python tools/<binary-name>.py config=<config path>
+# Example:
+#    python tools/run_distributed_engines.py config=pretrain/simclr/simclr_8node_resnet
 #
-# 1. you can add your defaults here to the list, if you want and run like this:
-#    python tools/run_distributed_engines.py \
-#        config=integration_test/quick_simclr \
-#        config/pretrain/simclr/optimization=bs32_16nodes
 #
-# 2. at runtime, add a "+" sign to the input. So run like this:
+# If you create sub-folders in config folder to override parameters, you can use the
+# config files in the subfolder by adding at a "+" sign to the command line input.
+# For example:
 #    python tools/run_distributed_engines.py \
-#        config=integration_test/quick_simclr \
-#        +config/pretrain/simclr/models=resnext101
+#        config=pretrain/simclr/simclr_8node_resnet \
+#        +config/pretrain/simclr/optimization=bs32_16nodes \
+#        +config/pretrain/simclr/my_new_subfolder=my_file_in_subfolder \
+#
 #
 # If you want to override single values in the config, you can achieve that with:
 #    python tools/run_distributed_engines.py \
-#        config=integration_test/quick_simclr \
+#        config=pretrain/simclr/simclr_8node_resnet \
 #        +config/pretrain/simclr/my_sub_folder=my_file_name \
 #        config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<weights_path.torch>
 #
-# TODO: (prigoyal) figure out whether we should support these defaults or not
 defaults:
   # you must specify the base config you want to run
   - config: ???
-  ####### some pre=traning related paths
-  - config/pretrain/datasets: null
-  # simclr
-  - config/pretrain/simclr/models: null
-  - config/pretrain/simclr/transforms: null
-  - config/pretrain/simclr/optimization: null
-  # SwAV
-  - config/pretrain/swav/models: null
-  - config/pretrain/swav/transforms: null
-  - config/pretrain/swav/optimization: null
-  # Jigsaw
-  - config/pretrain/jigsaw/optimization: null
-  - config/pretrain/jigsaw/permutations: null
-  # NPID
-  - config/pretrain/npid/models: null
-  - config/pretrain/npid/optimizations: null
-  ######### some benchmark related paths
-  - config/benchmark/imagenet1k_fulltune/models: null
-  - config/benchmark/linear_image_classification/imagenet1k/models: null
-  - config/benchmark/linear_image_classification/inaturalist18/models: null
-  - config/benchmark/linear_image_classification/places205/models: null
-  - config/benchmark/linear_image_classification/voc07/models: null
-  - config/benchmark/nearest_neighbor/models: null
-  - config/benchmark/semi_supervised/dataset: null
-  - config/benchmark/semi_supervised/models: null
-  ######### some feature extraction related paths
-  - config/feature_extraction/with_head: null
-  - config/feature_extraction/trunk_only: null
