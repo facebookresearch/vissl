@@ -76,6 +76,7 @@ def get_loader(
     multi_processing_method: str,
     device: torch.device,
     get_sampler=get_sampler,
+    worker_init_fn=None,
 ):
     # pytorch dataloader requires setting the multiprocessing type.
     setup_multiprocessing_method(multi_processing_method)
@@ -92,6 +93,7 @@ def get_loader(
         collate_fn=collate_function,
         sampler=data_sampler,
         drop_last=dataset_config["DROP_LAST"],
+        worker_init_fn=worker_init_fn,
     )
 
     # If the targeted device is CUDA, set up async device copy:
