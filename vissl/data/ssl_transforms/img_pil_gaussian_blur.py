@@ -24,7 +24,7 @@ class ImgPilGaussianBlur(ClassyTransform):
         self.radius_max = radius_max
 
     def __call__(self, img):
-        should_blur = np.random.rand() > self.prob
+        should_blur = np.random.rand() <= self.prob
         if not should_blur:
             return img
 
