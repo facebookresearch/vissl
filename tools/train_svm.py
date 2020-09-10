@@ -26,9 +26,6 @@ from vissl.utils.svm_utils.svm_trainer import SVMTrainer
 
 
 def train_svm(cfg: AttrDict, output_dir: str, layername: str):
-    # print the configuration used for svm training
-    print_cfg(cfg)
-
     # setup the environment variables
     set_env_vars(local_rank=0, node_id=0, cfg=cfg)
 
@@ -74,7 +71,6 @@ def main(args: Namespace, config: AttrDict):
         layers = ["heads"]
 
     output_dir = get_checkpoint_folder(config)
-    # train svm for each layer. parallelize it.
     running_tasks = [
         mp.Process(target=train_svm, args=(config, output_dir, layer))
         for layer in layers

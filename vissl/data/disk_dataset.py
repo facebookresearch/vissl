@@ -108,7 +108,8 @@ class DiskImageDataset(QueueDataset):
         image_path = self.image_dataset[idx]
         try:
             if self.data_source == "disk_filelist":
-                img = Image.open(image_path).convert("RGB")
+                with PathManager.open(image_path, "rb") as fopen:
+                    img = Image.open(fopen).convert("RGB")
             elif self.data_source == "disk_folder":
                 img = self.image_dataset[idx][0]
             if is_success and self.enable_queue_dataset:

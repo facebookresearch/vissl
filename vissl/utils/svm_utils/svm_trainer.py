@@ -116,7 +116,7 @@ class SVMTrainer(object):
                 logging.info(f"AP file exists: {ap_out_file}")
                 continue
 
-            logging.info(f"Training model with the cost: {cost}")
+            logging.info(f"Training model with the cost: {cost} cls: {cls_num}")
             clf = LinearSVC(
                 C=cost,
                 class_weight={1: 2, -1: 1},

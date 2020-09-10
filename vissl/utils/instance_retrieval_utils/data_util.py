@@ -21,19 +21,19 @@ from vissl.utils.instance_retrieval_utils.evaluate import (
 from vissl.utils.io import load_file
 
 
-def is_revisited_dataset(dataset_name):
+def is_revisited_dataset(dataset_name: str):
     if dataset_name in ["roxford5k", "rparis6k"]:
         return True
     return False
 
 
-def is_instre_dataset(dataset_name):
+def is_instre_dataset(dataset_name: str):
     if dataset_name == "instre":
         return True
     return False
 
 
-def is_whiten_dataset(dataset_name):
+def is_whiten_dataset(dataset_name: str):
     if dataset_name == "whitening":
         return True
     return False
@@ -41,7 +41,7 @@ def is_whiten_dataset(dataset_name):
 
 # pooling + whitening
 # Credits: Matthijs Douze
-def add_bias_channel(x, dim=1):
+def add_bias_channel(x, dim: int = 1):
     bias_size = list(x.size())
     bias_size[dim] = 1
     one = x.new_ones(bias_size)
@@ -49,7 +49,7 @@ def add_bias_channel(x, dim=1):
 
 
 # Credits: Matthijs Douze
-def flatten(x, keepdims=False):
+def flatten(x: torch.Tensor, keepdims: bool = False):
     """
     Flattens B C H W input to B C*H*W output, optionally retains trailing dimensions.
     """
@@ -61,7 +61,14 @@ def flatten(x, keepdims=False):
 
 
 # Credits: Matthijs Douze
-def gem(x, p=3, eps=1e-6, clamp=True, add_bias=False, keepdims=False):
+def gem(
+    x: torch.Tensor,
+    p: int = 3,
+    eps: float = 1e-6,
+    clamp: bool = True,
+    add_bias: bool = False,
+    keepdims: bool = False,
+):
     if p == math.inf or p == "inf":
         x = F.max_pool2d(x, (x.size(-2), x.size(-1)))
     elif p == 1 and not (torch.is_tensor(p) and p.requires_grad):
@@ -78,7 +85,7 @@ def gem(x, p=3, eps=1e-6, clamp=True, add_bias=False, keepdims=False):
 
 
 # Credits: Matthijs Douze
-def l2n(x, eps=1e-6, dim=1):
+def l2n(x: torch.Tensor, eps: float = 1e-6, dim: int = 1):
     x = x / (torch.norm(x, p=2, dim=dim, keepdim=True) + eps).expand_as(x)
     return x
 
@@ -90,12 +97,12 @@ class MultigrainResize(transforms.Resize):
     allowing to resize to a common largest side without cropping
     """
 
-    def __init__(self, size, largest=False, **kwargs):
+    def __init__(self, size: int, largest: bool = False, **kwargs):
         super().__init__(size, **kwargs)
         self.largest = largest
 
     @staticmethod
-    def target_size(w, h, size, largest=False):
+    def target_size(w: int, h: int, size: int, largest: bool = False):
         if (h < w) == largest:
             w, h = size, int(size * h / w)
         else:
@@ -118,7 +125,7 @@ class MultigrainResize(transforms.Resize):
 class WhiteningTrainingImageDataset:
     """ A set of training images for whitening """
 
-    def __init__(self, base_dir, image_list_file):
+    def __init__(self, base_dir: str, image_list_file: str):
         with PathManager.open(image_list_file) as fopen:
             self.image_list = fopen.readlines()
         self.root = base_dir
@@ -128,12 +135,12 @@ class WhiteningTrainingImageDataset:
     def get_num_images(self):
         return self.N_images
 
-    def get_filename(self, i):
+    def get_filename(self, i: int):
         return f"{self.root}/{self.image_list[i][:-1]}"
 
 
 class InstreDataset:
-    def __init__(self, dataset_path):
+    def __init__(self, dataset_path: str):
         self.base_dir = dataset_path
         gnd_instre = scipy.io.loadmat(f"{self.base_dir}/gnd_instre.mat")
         self.gnd = gnd_instre["gnd"][0]
@@ -155,13 +162,13 @@ class InstreDataset:
     def get_num_query_images(self):
         return self.N_queries
 
-    def get_filename(self, i):
+    def get_filename(self, i: int):
         return f"{self.base_dir}/{self.db_imlist[i]}"
 
-    def get_query_filename(self, i):
+    def get_query_filename(self, i: int):
         return f"{self.base_dir}/{self.qimlist[i]}"
 
-    def get_query_roi(self, i):
+    def get_query_roi(self, i: int):
         # INSTRE dataset has no notion of ROI so we return None
         return None
 
@@ -190,7 +197,7 @@ class InstreDataset:
 
 
 class RevisitedInstanceRetrievalDataset:
-    def __init__(self, dataset, dir_main):
+    def __init__(self, dataset: str, dir_main: str):
         # Credits: https://github.com/filipradenovic/revisitop/blob/master/python/dataset.py#L6     # NOQA
 
         self.DATASETS = ["roxford5k", "rparis6k"]
@@ -217,10 +224,10 @@ class RevisitedInstanceRetrievalDataset:
             f"queries: {self.get_num_query_images()}"
         )
 
-    def get_filename(self, i):
+    def get_filename(self, i: int):
         return f"{self.cfg['dir_images']}/{self.cfg['imlist'][i] + self.cfg['ext']}"
 
-    def get_query_filename(self, i):
+    def get_query_filename(self, i: int):
         return f"{self.cfg['dir_images']}/{self.cfg['qimlist'][i] + self.cfg['qext']}"
 
     def get_num_images(self):
@@ -229,10 +236,10 @@ class RevisitedInstanceRetrievalDataset:
     def get_num_query_images(self):
         return self.cfg["nq"]
 
-    def get_query_roi(self, i):
+    def get_query_roi(self, i: int):
         return self.cfg["gnd"][i]["bbx"]
 
-    def score(self, sim, temp_dir):
+    def score(self, sim, temp_dir: str):
         sim = sim.T
         # Credits: https://github.com/filipradenovic/revisitop/blob/master/python/example_evaluate.py  # NOQA
         ranks = np.argsort(-sim, axis=0)
@@ -312,7 +319,8 @@ class InstanceRetrievalImageLoader:
         return im_resized, ratio
 
     def load_and_prepare_whitening_image(self, fname):
-        im = Image.open(fname)
+        with PathManager.open(fname, "rb") as f:
+            im = Image.open(f)
         if im.mode != "RGB":
             im = im.convert(mode="RGB")
         if self.transforms is not None:
@@ -320,14 +328,16 @@ class InstanceRetrievalImageLoader:
         return im
 
     def load_and_prepare_instre_image(self, fname):
-        im = Image.open(fname)
+        with PathManager.open(fname, "rb") as f:
+            im = Image.open(f)
         if self.transforms is not None:
             im = self.transforms(im)
         return im
 
     def load_and_prepare_image(self, fname, roi=None):
         # Read image, get aspect ratio, and resize such as the largest side equals S
-        im = Image.open(fname)
+        with PathManager.open(fname, "rb") as f:
+            im = Image.open(f)
         im_resized, ratio = self.apply_img_transform(im)
         # If there is a roi, adapt the roi to the new size and crop. Do not rescale
         # the image once again

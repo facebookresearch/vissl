@@ -102,9 +102,6 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
     # check the cfg has valid version
     check_cfg_version(cfg)
 
-    # print the cfg
-    print_cfg(cfg)
-
     # assert the config and infer
     config = cfg.config
     assert_hydra_conf(config)
