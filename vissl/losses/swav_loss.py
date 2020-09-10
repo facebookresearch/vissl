@@ -96,7 +96,7 @@ class SwAVCriterion(nn.Module):
 
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
         with torch.no_grad():
-            sum_Q = torch.sum(Q)
+            sum_Q = torch.sum(Q, dtype=Q.dtype)
             all_reduce_sum(sum_Q)
             Q /= sum_Q
 
@@ -117,16 +117,16 @@ class SwAVCriterion(nn.Module):
                 r = r.cuda(non_blocking=True)
                 c = c.cuda(non_blocking=True)
 
-            curr_sum = torch.sum(Q, dim=1)
+            curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
             all_reduce_sum(curr_sum)
 
             for _ in range(self.nmb_sinkhornknopp_iters):
                 u = curr_sum
                 Q *= (r / u).unsqueeze(1)
-                Q *= (c / torch.sum(Q, dim=0)).unsqueeze(0)
-                curr_sum = torch.sum(Q, dim=1)
+                Q *= (c / torch.sum(Q, dim=0, dtype=Q.dtype)).unsqueeze(0)
+                curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
                 all_reduce_sum(curr_sum)
-            return (Q / torch.sum(Q, dim=0, keepdim=True)).t().float()
+            return (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
 
     def forward(self, scores: torch.Tensor, head_id: int):
         assert scores.shape[0] % self.num_crops == 0
@@ -140,9 +140,13 @@ class SwAVCriterion(nn.Module):
                 if self.use_queue:
                     queue = getattr(self, "local_queue" + str(head_id))[i].clone()
                     scores_this_crop = torch.cat((scores_this_crop, queue))
-                assignments = torch.exp(scores_this_crop / self.epsilon).t()
                 if self.use_double_prec:
+                    assignments = torch.exp(
+                        scores_this_crop.double() / np.float64(self.epsilon)
+                    ).t()
                     assignments = assignments.double()
+                else:
+                    assignments = torch.exp(scores_this_crop / self.epsilon).t()
                 assignments = self.distributed_sinkhornknopp(assignments)[:bs]
                 idx_crop_pred = np.delete(np.arange(self.num_crops), crop_id)
             loss = 0
