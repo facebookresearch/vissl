@@ -4,6 +4,7 @@ import logging
 import multiprocessing as mp
 import sys
 from argparse import Namespace
+from typing import Any, List
 
 import numpy as np
 from hydra.experimental import compose, initialize_config_module
@@ -96,7 +97,7 @@ def main(args: Namespace, config: AttrDict):
     shutdown_logging()
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[Any]):
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)

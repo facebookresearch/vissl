@@ -1,5 +1,11 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+######################### versioning ###################################
+# this version is checked with the VISSL latest config version in
+# vissl/config/__init__.py
+# Users are recommended to keep a config version in their config file so vissl can
+# take care of upgrades to config files as the version evolves.
+VERSION: 1
 ################## some command line options to decide workflow ###############
 node_id: 0
 engine_name: train

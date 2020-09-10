@@ -3,6 +3,7 @@
 import logging
 import sys
 from argparse import Namespace
+from typing import Any, List
 
 from extra_scripts.create_voc07_low_shot_samples import generate_voc07_low_shot_samples
 from hydra.experimental import compose, initialize_config_module
@@ -81,7 +82,7 @@ def main(args: Namespace, cfg: AttrDict):
         train_svm_low_shot(cfg, output_dir, layer)
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[Any]):
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)

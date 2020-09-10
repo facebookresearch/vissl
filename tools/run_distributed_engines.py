@@ -124,7 +124,7 @@ def _distributed_worker(
     process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[Any]):
     print(f"####### overrides: {overrides}")
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
