@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
+from torch.utils.checkpoint import checkpoint
 from vissl.utils.misc import is_apex_available
 
 
@@ -199,6 +200,7 @@ def get_trunk_forward_outputs(
     out_feat_keys: List[str],
     feature_blocks: nn.ModuleDict,
     feature_mapping: Dict[str, str] = None,
+    use_checkpoint: bool = True,
 ) -> List[torch.Tensor]:
     """
     Args:
@@ -229,7 +231,10 @@ def get_trunk_forward_outputs(
     # NOTE: we are not doing several forward passes but instead just checking
     # whether the feature should is requested to be returned.
     for i, (feature_name, feature_block) in enumerate(feature_blocks.items()):
-        feat = feature_block(feat)
+        if use_checkpoint:
+            feat = checkpoint(feature_block, feat)
+        else:
+            feat = feature_block(feat)
 
         # This feature is requested, store. If the same feature is requested several
         # times, we return the feature several times.
