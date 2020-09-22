@@ -47,6 +47,8 @@ def print_sampler_config(data_sampler):
         sampler_cfg["start_iter"] = data_sampler.start_iter
     if hasattr(data_sampler, "batch_size"):
         sampler_cfg["batch_size"] = data_sampler.batch_size
+    if hasattr(data_sampler, "seed"):
+        sampler_cfg["seed"] = data_sampler.seed
     logging.info("Distributed Sampler config:\n{}".format(sampler_cfg))
 
 

@@ -11,7 +11,7 @@ from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
 from fvcore.common.file_io import PathManager
-from vissl.data import build_dataset, get_loader
+from vissl.data import build_dataset, get_loader, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_regularized_params
 from vissl.utils.checkpoint import init_model_from_weights
@@ -315,10 +315,37 @@ class SelfSupervisionTask(ClassificationTask):
 
         return model
 
-    def recreate_data_iterator(self, phase_type):
-        # re-create the data iterator
+    def recreate_data_iterator(self, phase_type, epoch, compute_start_iter):
+        """ Recreate data iterator (including multiprocessing workers)
+
+            This is called when we load a new checkpoint or when phase changes.
+            Sampler may need to be informed on those events, so we call them
+            here.
+        """
+        if hasattr(self.dataloaders[phase_type], "sampler"):
+            sampler = self.dataloaders[phase_type].sampler
+            # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler.
+            if hasattr(sampler, "set_epoch"):
+                sampler.set_epoch(epoch)
+            # Resume from the iteration if valid
+            if hasattr(sampler, "set_start_iter"):
+                if (
+                    compute_start_iter
+                    and self.checkpoint is not None
+                    and self.checkpoint["iteration"] > 0
+                ):
+                    num_iters_in_epochs = len(self.dataloaders[phase_type])
+                    num_epochs = self.checkpoint["train_phase_idx"] + 1
+                    num_train_iters_done = num_epochs * num_iters_in_epochs
+                    start_iter = self.checkpoint["iteration"] - num_train_iters_done
+                else:
+                    start_iter = 0
+                sampler.set_start_iter(start_iter)
+            print_sampler_config(sampler)
+        # delete the old data iterator
         del self.data_iterator
         gc.collect()
+        # recreate the data iterator
         self.data_iterator = iter(self.dataloaders[phase_type])
 
     def _set_classy_state(self, state):
@@ -362,8 +389,16 @@ class SelfSupervisionTask(ClassificationTask):
         phase_type = "train" if self.train else "test"
         phase = self.phases[self.phase_idx]
 
-        # re-create the data iterator
-        self.recreate_data_iterator(phase_type)
+        # Re-create the data iterator.
+        # We are restoring from a checkpoint, which means we need to
+        #   (1) set the right epoch
+        #   (2) set the right start_iter
+        # epoch number is `phase_idx + 1` since checkpoint's value is the epoch finished.
+        # start_iter is computed in recreate_data_iterator based on iteration
+        # number from the checkpoint state.
+        self.recreate_data_iterator(
+            phase_type, epoch=self.phase_idx + 1, compute_start_iter=True
+        )
 
         # set the model to train or eval depending on what phase we are in
         self.base_model.train(phase["train"])
@@ -444,7 +479,6 @@ class SelfSupervisionTask(ClassificationTask):
         self.meters = self._build_meters()
         self.optimizer = self._build_optimizer()
         self.optimizer_schedulers = self._build_optimizer_schedulers()
-        self.iteration = self.iteration
         self.num_train_phases = num_train_phases
 
         self.base_loss = self.base_loss.to(self.device)

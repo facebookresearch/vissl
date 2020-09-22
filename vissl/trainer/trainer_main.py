@@ -17,7 +17,6 @@ from classy_vision.generic.distributed_util import (
 )
 from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import ClassyTask
-from vissl.data import print_sampler_config
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
@@ -187,36 +186,14 @@ class SelfSupervisionTrainer(object):
         if task.train:
             task.train_phase_idx += 1
 
-        # get the data iterator - delete the iterator at the beginning explicitly
+        # get a new data iterator - delete the iterator at the beginning explicitly
         # so that all dataloader processes are cleaned up
         phase_type = "train" if phase["train"] else "test"
-        if hasattr(task.dataloaders[phase_type], "sampler"):
-            # (Re-)Shuffle data: set epoch of distributed sampler.
-            if hasattr(task.dataloaders[phase_type].sampler, "set_epoch"):
-                # task.phase_idx is current running phase id
-                task.dataloaders[phase_type].sampler.set_epoch(task.phase_idx)
-                logging.info(
-                    f"rank: {self.distributed_rank} "
-                    f"Epoch set for the sampler: {task.phase_idx}"
-                )
-            # resume from the iteration if valid
-            if hasattr(task.dataloaders[phase_type].sampler, "set_start_iter"):
-                if (
-                    task.checkpoint is not None
-                    and task.checkpoint["iteration"] > 0
-                    and task.checkpoint["train_phase_idx"] == (task.train_phase_idx - 1)
-                ):
-                    num_iters_in_epochs = len(task.dataloaders[phase_type])
-                    num_epochs = task.checkpoint["train_phase_idx"] + 1
-                    num_train_iters_done = num_epochs * num_iters_in_epochs
-                    start_iter = task.checkpoint["iteration"] - num_train_iters_done
-                else:
-                    start_iter = 0
-                task.dataloaders[phase_type].sampler.set_start_iter(start_iter)
-                # we recreate the iterator since we adjust things in the sampler
-                task.recreate_data_iterator(phase_type)
-            print_sampler_config(task.dataloaders[phase_type].sampler)
-        task.recreate_data_iterator(phase_type)
+        # we are advancing to next epoch, so no need to compute start_iter,
+        # just let it to be 0 inside of recreate_data_iterator.
+        task.recreate_data_iterator(
+            phase_type, epoch=task.phase_idx, compute_start_iter=False
+        )
 
         # set the model to train or eval depending on what phase we are in
         task.model.train(phase["train"])

@@ -141,7 +141,8 @@ def get_checkpoint_resume_files(
 
     # make sure the checkpoint resume number is in bounds
     checkpoint_resume_num = max(0, latest_checkpoint_resume_num - 1)
-    checkpoint_resume_num = min(len(all_iters), checkpoint_resume_num)
+    # len(all_iters) - 1 is the last index, checkpoint_resume_num can't be beyond that.
+    checkpoint_resume_num = min(len(all_iters) - 1, checkpoint_resume_num)
     logging.info(f"checkpoint_resume_num: {checkpoint_resume_num}")
     if len(all_iters) > 0:
         all_iters.sort(reverse=True)

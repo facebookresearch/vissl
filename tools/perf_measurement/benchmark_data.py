@@ -38,6 +38,10 @@ def benchmark_data(cfg: AttrDict, split: str = "train"):
         device=device,
     )
 
+    # Fairstore data sampler would require setting the start iter before it can start.
+    if hasattr(dataloader.sampler, "set_start_iter"):
+        dataloader.sampler.set_start_iter(0)
+
     # initial warmup measured as warmup time
     timer.reset()
     data_iterator = iter(dataloader)
