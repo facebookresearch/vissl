@@ -33,14 +33,12 @@ class TaskTest(unittest.TestCase):
             pkg_resources.resource_filename(__name__, "test_data")
         ]
 
-        try:
-            dist_run_id = get_dist_run_id(config, config.DISTRIBUTED.NUM_NODES)
-            train_main(
-                config,
-                dist_run_id=dist_run_id,
-                local_rank=0,
-                node_id=0,
-                hook_generator=default_hook_generator,
-            )
-        except Exception as e:
-            self.fail(e)
+        # run training and make sure no exception is raised
+        dist_run_id = get_dist_run_id(config, config.DISTRIBUTED.NUM_NODES)
+        train_main(
+            config,
+            dist_run_id=dist_run_id,
+            local_rank=0,
+            node_id=0,
+            hook_generator=default_hook_generator,
+        )

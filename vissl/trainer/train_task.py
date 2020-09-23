@@ -197,6 +197,14 @@ class SelfSupervisionTask(ClassificationTask):
 
         return loaders
 
+    def get_global_batchsize(self):
+        """Return global batchsize across all trainers
+        """
+        for phase_type in self.datasets:
+            if phase_type.lower() == self.phase_type.lower():
+                return self.datasets[phase_type].get_global_batchsize()
+        raise ValueError(f"{self.phase_type} not found in self.datasets")
+
     def _build_optimizer(self):
         optimizer_config = self.config["OPTIMIZER"]
         if optimizer_config.use_larc:
