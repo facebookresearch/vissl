@@ -93,6 +93,8 @@ class QueueDataset(Dataset):
                 continue
 
     def _enqueue_valid_image(self, img):
+        if self._get_enqueue_buffer_size() >= self.queue_size:
+            return
         try:
             self.enqueue_images_queue.put(img, block=True, timeout=0.1)
             return
@@ -100,6 +102,8 @@ class QueueDataset(Dataset):
             return
 
     def _dequeue_valid_image(self):
+        if self._get_dequeue_buffer_size() == 0:
+            return
         try:
             return self.dequeue_images_queue.get(block=True, timeout=0.1)
         except queue.Empty:
