@@ -35,6 +35,7 @@ class SwAVLoss(ClassyLoss):
             self.loss_config.queue.local_queue_length,
             self.loss_config.embedding_dim,
             self.loss_config.temp_hard_assignment_iters,
+            self.loss_config.clipping_value,
         )
 
     @classmethod
@@ -73,6 +74,7 @@ class SwAVCriterion(nn.Module):
         local_queue_length: int,
         embedding_dim: int,
         temp_hard_assignment_iters: int,
+        clipping_value: float,
     ):
         super(SwAVCriterion, self).__init__()
 
@@ -88,6 +90,7 @@ class SwAVCriterion(nn.Module):
         self.nmb_heads = len(self.num_prototypes)
         self.embedding_dim = embedding_dim
         self.temp_hard_assignment_iters = temp_hard_assignment_iters
+        self.clipping_value = clipping_value
         self.local_queue_length = local_queue_length
         self.dist_rank = get_rank()
         self.world_size = get_world_size()
@@ -98,7 +101,14 @@ class SwAVCriterion(nn.Module):
             self.initialize_queue()
 
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
+        eps_num_stab = 1e-10
         with torch.no_grad():
+            if self.clipping_value > 0:
+                # clips Q matrix because too large values lead to numerical instability
+                clipping_mask = Q > self.clipping_value
+                Q *= (Q <= self.clipping_value)
+                Q += self.clipping_value * clipping_mask
+
             sum_Q = torch.sum(Q, dtype=Q.dtype)
             all_reduce_sum(sum_Q)
             Q /= sum_Q
@@ -107,8 +117,6 @@ class SwAVCriterion(nn.Module):
             n = Q.shape[1]
             N = self.world_size * Q.shape[1]
 
-            # we follow the u, r, c and Q notations from
-            # https://arxiv.org/abs/1911.05371
             r = torch.ones(k) / k
             c = torch.ones(n) / N
             if self.use_double_prec:
@@ -118,15 +126,18 @@ class SwAVCriterion(nn.Module):
                 r = r.cuda(non_blocking=True)
                 c = c.cuda(non_blocking=True)
 
-            curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
-            all_reduce_sum(curr_sum)
-
             for _ in range(self.nmb_sinkhornknopp_iters):
-                u = curr_sum
+                u = torch.sum(Q, dim=1, dtype=Q.dtype)
+                all_reduce_sum(u)
+                # for numerical stability
+                if len(torch.nonzero(u==0)) == 0:
+                    Q += eps_num_stab
+                    u = torch.sum(Q, dim=1)
+                    dist.all_reduce(u)
+
                 Q *= (r / u).unsqueeze(1)
                 Q *= (c / torch.sum(Q, dim=0, dtype=Q.dtype)).unsqueeze(0)
-                curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
-                all_reduce_sum(curr_sum)
+
             Q = (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
 
             # hard assignment
