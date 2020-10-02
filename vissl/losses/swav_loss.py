@@ -140,7 +140,7 @@ class SwAVCriterion(nn.Module):
                 u = torch.sum(Q, dim=1, dtype=Q.dtype)
                 all_reduce_sum(u)
                 # for numerical stability
-                if len(torch.nonzero(u==0)) == 0:
+                if len(torch.nonzero(u==0)) > 0:
                     Q += eps_num_stab
                     u = torch.sum(Q, dim=1)
                     dist.all_reduce(u)
