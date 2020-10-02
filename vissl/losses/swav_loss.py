@@ -103,6 +103,16 @@ class SwAVCriterion(nn.Module):
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
         eps_num_stab = 1e-10
         with torch.no_grad():
+            # removes inf
+            mask_inf = torch.isinf(Q)
+            ind = torch.nonzero(mask_inf)
+            if len(ind) > 0:
+                for i in ind:
+                    Q[i[0], i[1]] = 0
+                m = torch.max(Q)
+                for i in ind:
+                    Q[i[0], i[1]] = m
+
             if self.clipping_value > 0:
                 # clips Q matrix because too large values lead to numerical instability
                 clipping_mask = Q > self.clipping_value
