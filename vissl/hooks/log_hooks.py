@@ -166,7 +166,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         is_checkpointing_phase = is_checkpoint_phase(
             mode_num, mode_frequency, train_phase_idx, num_epochs, mode
         )
-        checkpoint_folder = get_checkpoint_folder(task.config)
         is_final_train_phase = (
             (train_phase_idx == (num_epochs - 1)) and task.train and mode == "phase"
         )
@@ -174,9 +173,11 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         if (
             is_primary()
             and task.train
-            and (checkpoint_folder is not None)
             and (is_final_train_phase or is_checkpointing_phase)
         ):
+            checkpoint_folder = get_checkpoint_folder(task.config)
+            if checkpoint_folder is None:
+                return
             logging.info(
                 f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
             )
