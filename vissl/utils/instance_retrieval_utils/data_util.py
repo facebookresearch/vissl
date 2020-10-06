@@ -125,9 +125,11 @@ class MultigrainResize(transforms.Resize):
 class WhiteningTrainingImageDataset:
     """ A set of training images for whitening """
 
-    def __init__(self, base_dir: str, image_list_file: str):
+    def __init__(self, base_dir: str, image_list_file: str, num_samples: int = 0):
         with PathManager.open(image_list_file) as fopen:
             self.image_list = fopen.readlines()
+        if num_samples > 0:
+            self.image_list = self.image_list[:num_samples]
         self.root = base_dir
         self.N_images = len(self.image_list)
         logging.info(f"Loaded whitening data: {self.N_images}...")
@@ -140,12 +142,17 @@ class WhiteningTrainingImageDataset:
 
 
 class InstreDataset:
-    def __init__(self, dataset_path: str):
+    def __init__(self, dataset_path: str, num_samples: int = 0):
         self.base_dir = dataset_path
         gnd_instre = scipy.io.loadmat(f"{self.base_dir}/gnd_instre.mat")
         self.gnd = gnd_instre["gnd"][0]
         self.qimlist = [fname[0] for fname in gnd_instre["qimlist"][0]]
         self.db_imlist = [fname[0] for fname in gnd_instre["imlist"][0]]
+
+        if num_samples > 0:
+            self.qimlist = self.qimlist[:num_samples]
+            self.db_imlist = self.db_imlist[:num_samples]
+
         self.N_images = len(self.db_imlist)
         self.N_queries = len(self.qimlist)
 
@@ -337,7 +344,7 @@ class InstanceRetrievalImageLoader:
     def load_and_prepare_image(self, fname, roi=None):
         # Read image, get aspect ratio, and resize such as the largest side equals S
         with PathManager.open(fname, "rb") as f:
-            im = Image.open(f)
+            im = Image.open(f).convert(mode="RGB")
         im_resized, ratio = self.apply_img_transform(im)
         # If there is a roi, adapt the roi to the new size and crop. Do not rescale
         # the image once again
@@ -363,7 +370,7 @@ class InstanceRetrievalImageLoader:
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
 # Adapted by: Priya Goyal (prigoyal@fb.com)
 class InstanceRetrievalDataset:
-    def __init__(self, path, eval_binary_path):
+    def __init__(self, path, eval_binary_path, num_samples=None):
         self.path = path
         self.eval_binary_path = eval_binary_path
         # Some images from the Paris dataset are corrupted. Standard practice is
@@ -397,7 +404,7 @@ class InstanceRetrievalDataset:
         self.N_images = None
         self.N_queries = None
         self.q_roi = None
-        self.load()
+        self.load(num_samples=num_samples)
 
     def get_num_images(self):
         return self.N_images
@@ -405,7 +412,7 @@ class InstanceRetrievalDataset:
     def get_num_query_images(self):
         return self.N_queries
 
-    def load(self):
+    def load(self, num_samples=None):
         # Load the dataset GT
         self.lab_root = f"{self.path}/lab/"
         self.img_root = f"{self.path}/jpg/"
@@ -472,24 +479,28 @@ class InstanceRetrievalDataset:
         self.q_index = np.array(
             [self.img_filenames.index(self.name_to_filename[qn]) for qn in self.q_names]
         )
+
         self.N_images = len(self.img_filenames)
         self.N_queries = len(self.q_index)
+
+        if num_samples is not None:
+            self.N_queries = min(self.N_queries, num_samples)
+            self.N_images = min(self.N_images, num_samples)
 
     def score(self, sim, temp_dir):
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
         idx = np.argsort(sim, axis=1)[:, ::-1]
         maps = [
-            self.score_rnk_partial(i, idx[i], temp_dir)
-            for i in range(len(self.q_names))
+            self.score_rnk_partial(i, idx[i], temp_dir) for i in range(self.N_queries)
         ]
-        for i in range(len(self.q_names)):
+        for i in range(self.N_queries):
             logging.info("{0}: {1:.2f}".format(self.q_names[i], 100 * maps[i]))
         logging.info(20 * "-")
         logging.info("Mean: {0:.2f}".format(100 * np.mean(maps)))
 
     def score_rnk_partial(self, i, idx, temp_dir):
-        rnk = np.array(self.img_filenames)[idx]
+        rnk = np.array(self.img_filenames[: self.N_images])[idx]
         with PathManager.open(f"{temp_dir}/{self.q_names[i]}.rnk", "w") as f:
             f.write("\n".join(rnk) + "\n")
         cmd = (

@@ -249,6 +249,8 @@ def get_queries_features(
 ):
     features_queries = []
     num_queries = eval_dataset.get_num_query_images()
+    if cfg.IMG_RETRIEVAL.DEBUG_MODE:
+        num_queries = 50
     logging.info(f"Getting features for queries: {num_queries}")
     q_fname_out_dir = "{}/{}_S{}_q".format(temp_dir, eval_dataset_name, resize_img)
     makedir(q_fname_out_dir)
@@ -322,16 +324,23 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
     if cfg.IMG_RETRIEVAL.SHOULD_TRAIN_PCA_OR_WHITENING:
         train_data_path = f"{root_dataset_path}/{train_dataset_name}"
         assert PathManager.exists(train_data_path), f"Unknown path: {train_data_path}"
+
+        num_samples = 10 if cfg.IMG_RETRIEVAL.DEBUG_MODE else None
+
         if is_revisited_dataset(train_dataset_name):
             train_dataset = RevisitedInstanceRetrievalDataset(
                 train_dataset_name, root_dataset_path
             )
         elif is_whiten_dataset(train_dataset_name):
             train_dataset = WhiteningTrainingImageDataset(
-                train_data_path, cfg.IMG_RETRIEVAL.WHITEN_IMG_LIST
+                train_data_path,
+                cfg.IMG_RETRIEVAL.WHITEN_IMG_LIST,
+                num_samples=num_samples,
             )
         else:
-            train_dataset = InstanceRetrievalDataset(train_data_path, eval_binary_path)
+            train_dataset = InstanceRetrievalDataset(
+                train_data_path, eval_binary_path, num_samples=num_samples
+            )
     else:
         train_dataset = None
     return train_dataset
@@ -340,14 +349,19 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
 def get_eval_dataset(cfg, root_dataset_path, eval_dataset_name, eval_binary_path):
     eval_data_path = f"{root_dataset_path}/{eval_dataset_name}"
     assert PathManager.exists(eval_data_path), f"Unknown path: {eval_data_path}"
+
+    num_samples = 20 if cfg.IMG_RETRIEVAL.DEBUG_MODE else None
+
     if is_revisited_dataset(eval_dataset_name):
         eval_dataset = RevisitedInstanceRetrievalDataset(
             eval_dataset_name, root_dataset_path
         )
     elif is_instre_dataset(eval_dataset_name):
-        eval_dataset = InstreDataset(eval_data_path)
+        eval_dataset = InstreDataset(eval_data_path, num_samples=num_samples)
     else:
-        eval_dataset = InstanceRetrievalDataset(eval_data_path, eval_binary_path)
+        eval_dataset = InstanceRetrievalDataset(
+            eval_data_path, eval_binary_path, num_samples=num_samples
+        )
     return eval_dataset
 
 
