@@ -10,6 +10,7 @@ from vissl.utils.hydra_config import AttrDict
 class AlexNetBvlc(nn.Module):
     def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
+
         conv1_relu = nn.Sequential(
             nn.Conv2d(3, 96, kernel_size=11, stride=4, padding=0), nn.ReLU(inplace=True)
         )
@@ -76,6 +77,10 @@ class AlexNetBvlc(nn.Module):
     def forward(self, x, out_feat_keys=None):
         feat = x
         out_feats = get_trunk_forward_outputs(
-            feat, out_feat_keys, self._feature_blocks, self.all_feat_names
+            feat,
+            out_feat_keys,
+            self._feature_blocks,
+            self.all_feat_names,
+            use_checkpointing=False,
         )
         return out_feats

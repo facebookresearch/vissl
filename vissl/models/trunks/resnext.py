@@ -51,6 +51,13 @@ class ResNeXt(nn.Module):
     def __init__(self, model_config: AttrDict, model_name: str):
         super(ResNeXt, self).__init__()
         self.model_config = model_config
+        logging.info(
+            "ResNeXT trunk, supports activation checkpointing. {}".format(
+                "Activated"
+                if self.model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
+                else "Deactivated"
+            )
+        )
 
         self.trunk_config = self.model_config.TRUNK.TRUNK_PARAMS.RESNETS
         self.depth = SUPPORTED_DEPTHS(self.trunk_config.DEPTH)
@@ -155,4 +162,6 @@ class ResNeXt(nn.Module):
             out_feat_keys=out_feat_keys,
             feature_blocks=self._feature_blocks,
             feature_mapping=self.feat_eval_mapping,
+            use_checkpointing=self.model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING,
+            checkpointing_splits=self.model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS,
         )

@@ -84,6 +84,10 @@ class AlexNetColorization(nn.Module):
         # along the channel dimension into [L, AB] and keep only L channel.
         feat = torch.split(feat, [1, 2], dim=1)[0]
         out_feats = get_trunk_forward_outputs(
-            feat, out_feat_keys, self._feature_blocks, self.all_feat_names
+            feat,
+            out_feat_keys,
+            self._feature_blocks,
+            self.all_feat_names,
+            use_checkpointing=False,
         )
         return out_feats

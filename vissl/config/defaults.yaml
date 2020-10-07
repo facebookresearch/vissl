@@ -13,16 +13,16 @@ config:
   # ----------------------------------------------------------------------------------- #
   # GLOBAL DEFAULTS
   # ----------------------------------------------------------------------------------- #
-  VERBOSE: false
+  VERBOSE: False
   LOG_FREQUENCY: 10
-  TEST_ONLY: false
+  TEST_ONLY: False
   TEST_EVERY_NUM_EPOCH: 1
   SEED_VALUE: 0
-  TEST_MODEL: true
+  TEST_MODEL: True
   # Use the forkserver or spawn
   # https://github.com/pytorch/pytorch/blob/master/torch/nn/parallel/distributed.py#L142
   MULTI_PROCESSING_METHOD: "forkserver"
-  MONITOR_PERF_STATS: false
+  MONITOR_PERF_STATS: False
   # we print perf stats (if enabled) after every phase. If we want to print every few
   # batches, set the frequency here.
   PERF_STAT_FREQUENCY: -1
@@ -36,14 +36,14 @@ config:
   DATA:
     # Common data options
     NUM_DATALOADER_WORKERS: 4 # Set this depending on the number of CPUs you have
-    PIN_MEMORY: true # Makes CPU->GPU copy of the data faster
-    ENABLE_ASYNC_GPU_COPY: true
+    PIN_MEMORY: True # Makes CPU->GPU copy of the data faster
+    ENABLE_ASYNC_GPU_COPY: True
     # Training Data Options
     TRAIN:
       # if we want to resume the data sampler as well from a previous iteration
-      USE_STATEFUL_DISTRIBUTED_SAMPLER: false
+      USE_STATEFUL_DISTRIBUTED_SAMPLER: False
       # whether to drop the last incomplete batch per process
-      DROP_LAST: false
+      DROP_LAST: False
       # Sources for reading data.
       # Currently supports: disk_folder and disk_filelist
       # Parallel aligned with DATA_PATHS argument.
@@ -51,14 +51,14 @@ config:
       DATA_PATHS: []
       LABEL_SOURCES: []
       LABEL_PATHS: []
-      MMAP_MODE: true
+      MMAP_MODE: True
       DEFAULT_GRAY_IMG_SIZE: 224
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
-      COPY_TO_LOCAL_DISK: false
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index
       LABEL_TYPE: "standard"
@@ -72,20 +72,20 @@ config:
       ENABLE_QUEUE_DATASET: False
     TEST:
       # if we want to resume the data sampler as well from a previous iteration
-      USE_STATEFUL_DISTRIBUTED_SAMPLER: false
-      DROP_LAST: false
+      USE_STATEFUL_DISTRIBUTED_SAMPLER: False
+      DROP_LAST: False
       DATA_SOURCES: []
       DATA_PATHS: []
       LABEL_SOURCES: []
       LABEL_PATHS: []
-      MMAP_MODE: true
+      MMAP_MODE: True
       DEFAULT_GRAY_IMG_SIZE: 224
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
-      COPY_TO_LOCAL_DISK: false
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index
       LABEL_TYPE: "standard"
@@ -134,24 +134,28 @@ config:
     # uses them for example, input contains "images" and "patches" and there
     # is one separate head applied to images and another to patches
     MULTI_INPUT_HEAD_MAPPING: []
+    # Use activation checkpointing in the training phase
+    ACTIVATION_CHECKPOINTING:
+      USE_ACTIVATION_CHECKPOINTING: false
+      NUM_ACTIVATION_CHECKPOINTING_SPLITS: 2
     # ----------------------------------------------------------------------------------- #
     # Feature evaluation settings
     # ----------------------------------------------------------------------------------- #
     FEATURE_EVAL_SETTINGS:
       # for evaluating the features on any evaluation task/benchmark, set this to True
-      EVAL_MODE_ON: false
+      EVAL_MODE_ON: False
       # if you want to evaluate several feature layers of the pre-trained model on
       # benchmark tasks like linear classification, set this to True. This freezes the model
       # trunk for feature evaluation.
-      FREEZE_TRUNK_ONLY: false
+      FREEZE_TRUNK_ONLY: False
       # if you want to evaluate the full self-supervised model including the trunk and heads,
       # and want to freeze trunk and head both, set this to True
-      FREEZE_TRUNK_AND_HEAD: false
+      FREEZE_TRUNK_AND_HEAD: False
       # if you want to extract features of trunk only, set this to True
-      EXTRACT_TRUNK_FEATURES_ONLY: false
+      EXTRACT_TRUNK_FEATURES_ONLY: False
       # if we want to evaluate the full model, this requires loading the head weights as well
       # from model weights file. In this case, set the following to True.
-      EVAL_TRUNK_AND_HEAD: false
+      EVAL_TRUNK_AND_HEAD: False
       # whether features should be flattened to result in N x D feature shape
       SHOULD_FLATTEN_FEATS: True
       # model features that should be evaluated for linear classification and what
@@ -247,7 +251,7 @@ config:
     # if we want to convert all the batch norm layers in the model to use SyncBN.
     # There are two options: APEX syncBN and PyTorch SyncBN.
     SYNC_BN_CONFIG:
-      CONVERT_BN_TO_SYNC_BN: false
+      CONVERT_BN_TO_SYNC_BN: False
       SYNC_BN_TYPE: "pytorch"  # apex | pytorch
       # if group_size=-1, will set group_size=num_gpus
       # if group_size>0, will set group_size=value set by user
@@ -257,10 +261,10 @@ config:
     # MIXED PRECISION SETUP
     # ----------------------------------------------------------------------------------- #
     AMP_PARAMS:
-      USE_AMP: false
+      USE_AMP: False
       # Use O1 as it is robust and stable than O3. If you want to use O3, we recommend
       # the following setting:
-      # {"opt_level": "O3", "keep_batchnorm_fp32": true, "master_weights": true, "loss_scale": "dynamic"}
+      # {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
       AMP_ARGS: {"opt_level": "O1"}
     MODEL_COMPLEXITY:
       # set this to True if you want to compute flops, params, activations in your model.
@@ -322,7 +326,7 @@ config:
       ignore_index: -1
       # generic flag to enable L2 normalization in a loss function. Currently supported
       # for cross_entropy_multiple_output_single_target loss only.
-      normalize_output: false
+      normalize_output: False
 
     # ----------------------------------------------------------------------------------- #
     # NCE LOSS (Noise Contrastive Estimator)
@@ -330,7 +334,7 @@ config:
     nce_loss_with_memory:
       # setting below to "cross_entropy" yields the InfoNCE loss
       loss_type: "nce"
-      norm_embedding: true
+      norm_embedding: True
       temperature: 0.07
       # if the NCE loss is computed between multiple pairs, we can set a loss weight per term
       # can be used to weight different pair contributions differently.
@@ -344,8 +348,8 @@ config:
         memory_size: -1
         embedding_dim: 128
         momentum: 0.5
-        norm_init: true
-        update_mem_on_forward: true
+        norm_init: True
+        update_mem_on_forward: True
       # following parameters are auto-filled before the loss is created.
       num_train_samples: -1    # @auto-filled
 
@@ -377,8 +381,8 @@ config:
     swav_loss:
       embedding_dim: 128
       temperature: 0.1
-      use_double_precision: false
-      normalize_last_layer: true
+      use_double_precision: False
+      normalize_last_layer: True
       num_iters: 3
       epsilon: 0.05
       num_crops: 2
@@ -393,7 +397,7 @@ config:
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#
     deepclusterv2_loss:
-      DROP_LAST: true
+      DROP_LAST: True
       BATCHSIZE_PER_REPLICA: 256
       num_crops: 2
       temperature: 0.1
@@ -419,21 +423,21 @@ config:
   # ----------------------------------------------------------------------------------- #
   OPTIMIZER:
     name: "sgd"
-    use_larc: false  # supported for SGD only for now
+    use_larc: False  # supported for SGD only for now
     larc_config:
-      clip: false
+      clip: False
       eps: 1e-08
       trust_coefficient: 0.001
     weight_decay: 0.0001
     momentum: 0.9
-    nesterov: false
+    nesterov: False
     num_epochs: 90
-    regularize_bn: false
-    regularize_bias: true
+    regularize_bn: False
+    regularize_bias: True
     param_schedulers:
       lr:
         auto_lr_scaling:
-          auto_scale: false
+          auto_scale: False
           base_value: 0.1
           base_lr_batch_size: 256
         name: "multistep"
@@ -477,15 +481,15 @@ config:
   CHECKPOINT:
     DIR: "."
     # for the checkpoinint, we can append the RUN_ID if we want
-    APPEND_DISTR_RUN_ID: false
+    APPEND_DISTR_RUN_ID: False
     BACKEND: "disk"
     # In case of distributed multi-node training, simply use the same RUN_ID and DIR
-    AUTO_RESUME: true
+    AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
     # if we want to checkpoint model at various iterations as well and not just phase
     CHECKPOINT_ITER_FREQUENCY: -1
     # if we want to restart a training even if it has already succeeded on this machine
-    OVERWRITE_EXISTING: false
+    OVERWRITE_EXISTING: False
     # we can specify what "latest" checkpoint to use to resume training. This is only valid
     # in case a training that needs to be resumed. If the training that has already finished
     # this parameter is useless.  Sometimes the latest checkpoints could be corrupt so this
@@ -503,9 +507,9 @@ config:
     # backend for communication across gpus. Use nccl by default. For cpu training, set
     # gloo as the backend.
     BACKEND: "nccl"
-    NCCL_DEBUG: false
+    NCCL_DEBUG: False
     # whether model buffers are BN buffers are broadcast in every forward pass
-    BROADCAST_BUFFERS: true
+    BROADCAST_BUFFERS: True
     # number of machines to use in training
     NUM_NODES: 1
     # set this to the number of gpus per machine. This ensrures that each gpu of the
@@ -525,18 +529,18 @@ config:
   # SVM (benchmark)
   # ----------------------------------------------------------------------------------- #
   SVM:
-    normalize: true
+    normalize: True
     cls_list: []
     loss: "squared_hinge"
     penalty: "l2"
-    dual: true
+    dual: True
     max_iter: 2000
     cross_val_folds: 3
     costs:
       costs_list: [0.1, 0.01]
       base: -1.0
       power_range: [4, 20]
-    force_retrain: false
+    force_retrain: False
     low_shot:
       dataset_name: "voc"
       sample_inds: [1, 2, 3, 4, 5]
@@ -561,7 +565,7 @@ config:
     # Path to a temporary directory to store features and scores
     TEMP_DIR: "/tmp/instance_retrieval/"
     # Whether to apply PCA/whitening or not
-    SHOULD_TRAIN_PCA_OR_WHITENING: true
+    SHOULD_TRAIN_PCA_OR_WHITENING: True
     # gem | rmac | l2_norm
     FEATS_PROCESSING_TYPE: ""
     # valid only for GeM pooling of features
@@ -576,14 +580,14 @@ config:
     # temperature value to use
     SIGMA: 0.1
     TOPK: 200
-    # if the features should be l2 normalized, set this to true
-    L2_NORM_FEATS: false
+    # if the features should be l2 normalized, set this to True
+    L2_NORM_FEATS: False
 
   # ----------------------------------------------------------------------------------- #
   # TENSORBOARD (visualization)
   # ----------------------------------------------------------------------------------- #
   TENSORBOARD_SETUP:
-    USE_TENSORBOARD: false
+    USE_TENSORBOARD: False
     LOG_DIR: "."
     EXPERIMENT_LOG_DIR: ""
     LOG_ACTIVATIONS: True

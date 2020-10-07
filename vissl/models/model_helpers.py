@@ -6,11 +6,18 @@ from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
+from torch.utils.checkpoint import checkpoint
 from vissl.utils.misc import is_apex_available
+
+
+# Tuple of classes of BN layers.
+_bn_cls = (nn.BatchNorm2d, torch.nn.modules.batchnorm.SyncBatchNorm)
 
 
 if is_apex_available():
     import apex
+
+    _bn_cls = _bn_cls + (apex.parallel.optimized_sync_batchnorm.SyncBatchNorm,)
 
 
 def is_feature_extractor_model(model_config):
@@ -199,6 +206,8 @@ def get_trunk_forward_outputs(
     out_feat_keys: List[str],
     feature_blocks: nn.ModuleDict,
     feature_mapping: Dict[str, str] = None,
+    use_checkpointing: bool = True,
+    checkpointing_splits: int = 2,
 ) -> List[torch.Tensor]:
     """
     Args:
@@ -223,13 +232,72 @@ def get_trunk_forward_outputs(
         out_feat_keys, list(feature_blocks.keys())
     )
 
-    unique_out_feat_keys = list(set(out_feat_keys))
+    # Forward pass over the trunk
     unique_out_feats = {}
+    unique_out_feat_keys = list(set(out_feat_keys))
+
+    # FIXME: Ideally this should only be done once at construction time
+    if use_checkpointing:
+        # If checkpointing, split the model appropriately. The number of features requested
+        # can be a limiting factor and override the number of activation chunks requested
+        feature_blocks_bucketed = []
+
+        # The features define the splits, first pass
+        bucket = []
+
+        for feature_name, feature_block in feature_blocks.items():
+            bucket.append(feature_block)
+
+            if feature_name in unique_out_feat_keys:
+                # Boundary, add to current bucket and move to next
+                feature_blocks_bucketed.append([feature_name, bucket])
+                bucket = []
+
+        # If there are not enough splits, split again
+        while len(feature_blocks_bucketed) < checkpointing_splits:
+            # Find the biggest block
+            lengths = [len(v) for _, v in feature_blocks_bucketed]
+            i_max = lengths.index(max(lengths))
+
+            # Split the biggest block in two, keep the rest unchanged
+            n_split_layers = len(feature_blocks_bucketed[i_max][1]) // 2
+            biggest_block = feature_blocks_bucketed[i_max]
+            feature_blocks_bucketed = (
+                feature_blocks_bucketed[:i_max]
+                + [["activation_split", biggest_block[1][:n_split_layers]]]
+                + [[biggest_block[0], biggest_block[1][n_split_layers:]]]
+                + feature_blocks_bucketed[(i_max + 1) :]
+            )
+
+        # Replace the model with the bucketed version, checkpoint friendly
+        feature_blocks = {
+            block[0]: nn.Sequential(*block[1]) for block in feature_blocks_bucketed
+        }
+
+    # If feat is the first input to the network, it doesn't have requires_grad,
+    # which will make checkpoint's backward function not being called. So we need
+    # to set it to true here.
+    if use_checkpointing:
+        feat.requires_grad = True
+
     # Go through the blocks, and save the features as we go
     # NOTE: we are not doing several forward passes but instead just checking
     # whether the feature should is requested to be returned.
     for i, (feature_name, feature_block) in enumerate(feature_blocks.items()):
-        feat = feature_block(feat)
+        # The last chunk has to be non-volatile
+        if use_checkpointing and i < len(feature_blocks) - 1:
+            # Un-freeze the running stats in any BN layer
+            for m in filter(lambda x: isinstance(x, _bn_cls), feature_block.modules()):
+                m.track_running_stats = m.training
+
+            feat = checkpoint(feature_block, feat)
+
+            # Freeze the running stats in any BN layer
+            # the checkpointing process will have to do another FW pass
+            for m in filter(lambda x: isinstance(x, _bn_cls), feature_block.modules()):
+                m.track_running_stats = False
+        else:
+            feat = feature_block(feat)
 
         # This feature is requested, store. If the same feature is requested several
         # times, we return the feature several times.
@@ -237,7 +305,7 @@ def get_trunk_forward_outputs(
             unique_out_feats[feature_name] = feat
 
         # Early exit if all the features have been collected
-        if i == max_out_feat:
+        if i == max_out_feat and not use_checkpointing:
             break
 
     # now return the features as requested by the user. If there are no duplicate keys,

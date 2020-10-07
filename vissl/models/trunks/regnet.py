@@ -25,6 +25,18 @@ class RegNet(nn.Module):
     def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
 
+        self.use_activation_checkpointing = (
+            model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
+        )
+        self.activation_checkpointing_splits = (
+            model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS
+        )
+
+        if self.use_activation_checkpointing:
+            logging.info(
+                f"Activation checkpointing in use. {self.activation_checkpointing_splits} chunks"
+            )
+
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
         trunk_config = model_config.TRUNK.TRUNK_PARAMS.REGNET
 
@@ -62,5 +74,9 @@ class RegNet(nn.Module):
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:
         return get_trunk_forward_outputs(
-            feat=x, out_feat_keys=out_feat_keys, feature_blocks=self._feature_blocks
+            feat=x,
+            out_feat_keys=out_feat_keys,
+            feature_blocks=self._feature_blocks,
+            use_checkpointing=self.use_activation_checkpointing,
+            checkpointing_splits=self.activation_checkpointing_splits,
         )
