@@ -530,3 +530,13 @@ class SelfSupervisionTask(ClassificationTask):
         if self.device.type == "cuda":
             self.base_model = copy_model_to_gpu(self.base_model)
         return self
+
+    def manual_gradient_reduction(self) -> bool:
+        """
+        Return if we should use manual gradient reduction or not.
+
+        We should use manual DDP if config says so and model is wrapped by DDP.
+        """
+        return self.config["DISTRIBUTED"]["MANUAL_GRADIENT_REDUCTION"] and hasattr(
+            self.model, "no_sync"
+        )

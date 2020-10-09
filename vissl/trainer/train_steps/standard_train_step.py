@@ -4,9 +4,11 @@
 This is the train step that"s most commonly used in most of the model trainings.
 """
 
+import contextlib
 from types import SimpleNamespace
 
 import torch
+import torch.distributed as dist
 from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.tasks import ClassyTask
 from vissl.hooks import SSLClassyHookFunctions
@@ -91,10 +93,22 @@ def standard_train_step(task):
     sample = construct_sample_for_model(sample, task)
 
     # Only need gradients during training
-    context = torch.enable_grad() if task.train else torch.no_grad()
-    with context:
+    grad_context = torch.enable_grad() if task.train else torch.no_grad()
+    ddp_context = (
+        task.model.no_sync()
+        if task.manual_gradient_reduction()
+        else contextlib.nullcontext()
+    )
+    with grad_context, ddp_context:
         # Forward pass of the model
         with PerfTimer("forward", perf_stats):
+            if task.manual_gradient_reduction():
+                # Manually sync params and buffers for DDP.
+                _orig = task.model.require_forward_param_sync
+                task.model.require_forward_param_sync = True
+                task.model._sync_params()
+                task.model.require_forward_param_sync = _orig
+
             model_output = task.model(sample["input"])
 
         # if the model outputs only one tensor, we take it out of the list.
@@ -139,14 +153,35 @@ def standard_train_step(task):
     # run backward now and update the optimizer
     if task.train:
         with PerfTimer("backward", perf_stats):
+
+            def _gradient_reduction():
+                """ Gradient reduction function used after backward is done.
+                """
+                w = []
+                for p in task.model.parameters():
+                    if p.grad is not None:
+                        work = dist.all_reduce(
+                            p.grad.data, group=task.model.process_group, async_op=True
+                        )
+                        w.append(work)
+                for work in w:
+                    work.wait()
+                for p in task.model.parameters():
+                    if p.grad is not None:
+                        p.grad.data.div_(dist.get_world_size())
+
             task.optimizer.zero_grad()
             if task.amp_args is not None and is_apex_available():
                 with apex.amp.scale_loss(
                     local_loss, task.optimizer.optimizer
                 ) as scaled_loss:
                     scaled_loss.backward()
+                    if task.manual_gradient_reduction():
+                        _gradient_reduction()
             else:
                 local_loss.backward()
+                if task.manual_gradient_reduction():
+                    _gradient_reduction()
 
         task.run_hooks(SSLClassyHookFunctions.on_backward.name)
         # Stepping the optimizer also updates learning rate, momentum etc

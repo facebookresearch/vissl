@@ -254,25 +254,62 @@ def get_trunk_forward_outputs(
                 bucket = []
 
         # If there are not enough splits, split again
+        split_times = 0
         while len(feature_blocks_bucketed) < checkpointing_splits:
             # Find the biggest block
             lengths = [len(v) for _, v in feature_blocks_bucketed]
-            i_max = lengths.index(max(lengths))
+            assert max(lengths) > 0, "Something wrong, we shouldn't have an empty list"
+            if max(lengths) == 1:
+                # Everything is already split.
+                break
+            if max(lengths) == 2:
+                # Check if the 2-element blocks have in-place relu, which is not
+                # checkpoint-able.
+                found = False
+                for i, (_, v) in enumerate(feature_blocks_bucketed):
+                    if len(v) == 2 and str(v[1]) != "ReLU(inplace=True)":
+                        found = True
+                        i_max = i
+                        break
+                if not found:
+                    # Didn't find good 2-element block, we are done.
+                    break
+            else:
+                i_max = lengths.index(max(lengths))
 
             # Split the biggest block in two, keep the rest unchanged
+            # Avoid inplace-relu.
             n_split_layers = len(feature_blocks_bucketed[i_max][1]) // 2
             biggest_block = feature_blocks_bucketed[i_max]
+            if str(biggest_block[1][n_split_layers]) == "ReLU(inplace=True)":
+                assert len(biggest_block[1]) > 2
+                if n_split_layers == len(biggest_block[1]) - 1:
+                    n_split_layers -= 1
+                else:
+                    n_split_layers += 1
+            assert n_split_layers > 0 and n_split_layers < len(
+                biggest_block[1]
+            ), "Should never split into an empty list and the rest"
+
             feature_blocks_bucketed = (
                 feature_blocks_bucketed[:i_max]
-                + [["activation_split", biggest_block[1][:n_split_layers]]]
+                + [
+                    [
+                        f"activation_split_{split_times}",
+                        biggest_block[1][:n_split_layers],
+                    ]
+                ]
                 + [[biggest_block[0], biggest_block[1][n_split_layers:]]]
                 + feature_blocks_bucketed[(i_max + 1) :]
             )
+            split_times += 1
 
         # Replace the model with the bucketed version, checkpoint friendly
         feature_blocks = {
             block[0]: nn.Sequential(*block[1]) for block in feature_blocks_bucketed
         }
+        # Make sure we didn't loss anything
+        assert len(feature_blocks) == len(feature_blocks_bucketed)
 
     # If feat is the first input to the network, it doesn't have requires_grad,
     # which will make checkpoint's backward function not being called. So we need
