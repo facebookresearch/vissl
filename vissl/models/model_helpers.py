@@ -41,7 +41,7 @@ def get_trunk_output_feature_names(model_config):
 
 
 class Wrap(nn.Module):
-    """ Wrap a free function into a nn.Module
+    """Wrap a free function into a nn.Module
     Can be useful to build a model block, and include activations or
     light tensor alterations
     """

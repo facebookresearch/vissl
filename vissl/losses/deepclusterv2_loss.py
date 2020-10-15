@@ -20,8 +20,7 @@ from vissl.utils.misc import get_indices_sparse
 
 @register_loss("deepclusterv2_loss")
 class DeepClusterV2Loss(ClassyLoss):
-    """
-    """
+    """"""
 
     def __init__(self, loss_config: AttrDict):
         super().__init__()

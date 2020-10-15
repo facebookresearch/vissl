@@ -198,8 +198,7 @@ class SelfSupervisionTask(ClassificationTask):
         return loaders
 
     def get_global_batchsize(self):
-        """Return global batchsize across all trainers
-        """
+        """Return global batchsize across all trainers"""
         for phase_type in self.datasets:
             if phase_type.lower() == self.phase_type.lower():
                 return self.datasets[phase_type].get_global_batchsize()
@@ -324,11 +323,11 @@ class SelfSupervisionTask(ClassificationTask):
         return model
 
     def recreate_data_iterator(self, phase_type, epoch, compute_start_iter):
-        """ Recreate data iterator (including multiprocessing workers)
+        """Recreate data iterator (including multiprocessing workers)
 
-            This is called when we load a new checkpoint or when phase changes.
-            Sampler may need to be informed on those events, so we call them
-            here.
+        This is called when we load a new checkpoint or when phase changes.
+        Sampler may need to be informed on those events, so we call them
+        here.
         """
         if hasattr(self.dataloaders[phase_type], "sampler"):
             sampler = self.dataloaders[phase_type].sampler
