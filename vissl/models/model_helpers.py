@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
+from vissl.utils.activation_checkpointing import checkpoint_trunk
 from vissl.utils.misc import is_apex_available
 
 
@@ -238,46 +239,13 @@ def get_trunk_forward_outputs(
 
     # FIXME: Ideally this should only be done once at construction time
     if use_checkpointing:
-        # If checkpointing, split the model appropriately. The number of features requested
-        # can be a limiting factor and override the number of activation chunks requested
-        feature_blocks_bucketed = []
+        feature_blocks = checkpoint_trunk(
+            feature_blocks, unique_out_feat_keys, checkpointing_splits
+        )
 
-        # The features define the splits, first pass
-        bucket = []
-
-        for feature_name, feature_block in feature_blocks.items():
-            bucket.append(feature_block)
-
-            if feature_name in unique_out_feat_keys:
-                # Boundary, add to current bucket and move to next
-                feature_blocks_bucketed.append([feature_name, bucket])
-                bucket = []
-
-        # If there are not enough splits, split again
-        while len(feature_blocks_bucketed) < checkpointing_splits:
-            # Find the biggest block
-            lengths = [len(v) for _, v in feature_blocks_bucketed]
-            i_max = lengths.index(max(lengths))
-
-            # Split the biggest block in two, keep the rest unchanged
-            n_split_layers = len(feature_blocks_bucketed[i_max][1]) // 2
-            biggest_block = feature_blocks_bucketed[i_max]
-            feature_blocks_bucketed = (
-                feature_blocks_bucketed[:i_max]
-                + [["activation_split", biggest_block[1][:n_split_layers]]]
-                + [[biggest_block[0], biggest_block[1][n_split_layers:]]]
-                + feature_blocks_bucketed[(i_max + 1) :]
-            )
-
-        # Replace the model with the bucketed version, checkpoint friendly
-        feature_blocks = {
-            block[0]: nn.Sequential(*block[1]) for block in feature_blocks_bucketed
-        }
-
-    # If feat is the first input to the network, it doesn't have requires_grad,
-    # which will make checkpoint's backward function not being called. So we need
-    # to set it to true here.
-    if use_checkpointing:
+        # If feat is the first input to the network, it doesn't have requires_grad,
+        # which will make checkpoint's backward function not being called. So we need
+        # to set it to true here.
         feat.requires_grad = True
 
     # Go through the blocks, and save the features as we go

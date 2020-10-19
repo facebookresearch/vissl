@@ -524,6 +524,8 @@ config:
     #      - If using 1 machine, set RUN_ID=auto and a free port will be automatically selected
     #   3. IF using INIT_METHOD=file, RUN_ID={file_path}
     RUN_ID: "auto"
+    # if True, does the gradient reduction in DDP
+    MANUAL_GRADIENT_REDUCTION: False
 
   # ----------------------------------------------------------------------------------- #
   # SVM (benchmark)

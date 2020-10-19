@@ -4,6 +4,7 @@
 This is the train step that"s most commonly used in most of the model trainings.
 """
 
+import contextlib
 from types import SimpleNamespace
 
 import torch
@@ -11,6 +12,10 @@ from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.tasks import ClassyTask
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.trainer.train_steps import register_train_step
+from vissl.utils.activation_checkpointing import (
+    manual_gradient_all_reduce,
+    manual_sync_params,
+)
 from vissl.utils.misc import is_apex_available
 from vissl.utils.perf_stats import PerfTimer
 
@@ -91,10 +96,19 @@ def standard_train_step(task):
     sample = construct_sample_for_model(sample, task)
 
     # Only need gradients during training
-    context = torch.enable_grad() if task.train else torch.no_grad()
-    with context:
+    grad_context = torch.enable_grad() if task.train else torch.no_grad()
+    ddp_context = (
+        task.model.no_sync()
+        if task.enable_manual_gradient_reduction
+        else contextlib.nullcontext()
+    )
+    with grad_context, ddp_context:
         # Forward pass of the model
         with PerfTimer("forward", perf_stats):
+            if task.enable_manual_gradient_reduction:
+                # Manually sync params and buffers for DDP.
+                manual_sync_params(task.model)
+
             model_output = task.model(sample["input"])
 
         # if the model outputs only one tensor, we take it out of the list.
@@ -139,14 +153,19 @@ def standard_train_step(task):
     # run backward now and update the optimizer
     if task.train:
         with PerfTimer("backward", perf_stats):
+
             task.optimizer.zero_grad()
             if task.amp_args is not None and is_apex_available():
                 with apex.amp.scale_loss(
                     local_loss, task.optimizer.optimizer
                 ) as scaled_loss:
                     scaled_loss.backward()
+                    if task.enable_manual_gradient_reduction:
+                        manual_gradient_all_reduce(task.model)
             else:
                 local_loss.backward()
+                if task.enable_manual_gradient_reduction:
+                    manual_gradient_all_reduce(task.model)
 
         task.run_hooks(SSLClassyHookFunctions.on_backward.name)
         # Stepping the optimizer also updates learning rate, momentum etc

@@ -14,6 +14,7 @@ from fvcore.common.file_io import PathManager
 from vissl.data import build_dataset, get_loader, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_regularized_params
+from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import is_apex_available
@@ -42,6 +43,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.amp_args = None
         self.data_and_label_keys = []
         self.set_amp_args()
+        self._enable_manual_gradient_reduction = None
         # total number of parameter updates applied to the model by optimizer
         self.num_updates = 0
         # measure time of several training components (data, forward, backward etc..)
@@ -529,3 +531,21 @@ class SelfSupervisionTask(ClassificationTask):
         if self.device.type == "cuda":
             self.base_model = copy_model_to_gpu(self.base_model)
         return self
+
+    @property
+    def enable_manual_gradient_reduction(self) -> bool:
+        """ Lazily initial the enable flag once when model is not None. """
+        if self._enable_manual_gradient_reduction is None and self.model is not None:
+            self.set_manual_gradient_reduction()
+        if self._enable_manual_gradient_reduction:
+            return True
+        return False
+
+    def set_manual_gradient_reduction(self) -> None:
+        """ Called during __init__ to set a flag if manual gradient reduction is enabled. """
+        assert self.model is not None
+        self._enable_manual_gradient_reduction = manual_gradient_reduction(
+            self.model, self.config["DISTRIBUTED"]["MANUAL_GRADIENT_REDUCTION"]
+        )
+        if self._enable_manual_gradient_reduction:
+            logging.info("Enabling manual gradient reduction")
