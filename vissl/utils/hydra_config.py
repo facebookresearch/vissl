@@ -255,6 +255,22 @@ def assert_hydra_conf(cfg):
         cfg.LOSS.swav_loss.queue.queue_length = queue_length
         cfg.LOSS.swav_loss.queue.local_queue_length = queue_length // world_size
 
+    # some inference for the SwAV momentum loss.
+    if cfg.LOSS.name == "swav_momentum_loss":
+        assert len(cfg.MODEL.HEAD.PARAMS) == 1
+        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        cfg.LOSS.swav_momentum_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"]
+        cfg.LOSS.swav_momentum_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
+        cfg.LOSS.swav_momentum_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        batch_size *= world_size
+        queue_length = cfg.LOSS.swav_momentum_loss.queue.queue_length
+        queue_length -= queue_length % batch_size
+        cfg.LOSS.swav_momentum_loss.queue.queue_length = queue_length
+        cfg.LOSS.swav_momentum_loss.queue.local_queue_length = queue_length // world_size
+
     # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
     # to turn this automatic scaling off,
     # set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
