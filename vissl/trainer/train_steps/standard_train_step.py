@@ -100,55 +100,56 @@ def standard_train_step(task):
     ddp_context = (
         task.model.no_sync()
         if task.enable_manual_gradient_reduction
-        else contextlib.nullcontext()
+        else contextlib.suppress()
     )
-    with grad_context, ddp_context:
-        # Forward pass of the model
-        with PerfTimer("forward", perf_stats):
-            if task.enable_manual_gradient_reduction:
-                # Manually sync params and buffers for DDP.
-                manual_sync_params(task.model)
+    with grad_context:
+        with ddp_context:
+            # Forward pass of the model
+            with PerfTimer("forward", perf_stats):
+                if task.enable_manual_gradient_reduction:
+                    # Manually sync params and buffers for DDP.
+                    manual_sync_params(task.model)
 
-            model_output = task.model(sample["input"])
+                model_output = task.model(sample["input"])
 
-        # if the model outputs only one tensor, we take it out of the list.
-        if len(model_output) == 1:
-            model_output = model_output[0]
+            # if the model outputs only one tensor, we take it out of the list.
+            if len(model_output) == 1:
+                model_output = model_output[0]
 
-        task.last_batch.sample = sample
-        target = sample["target"]
+            task.last_batch.sample = sample
+            target = sample["target"]
 
-        # run hooks on forward pass
-        task.run_hooks(SSLClassyHookFunctions.on_forward.name)
+            # run hooks on forward pass
+            task.run_hooks(SSLClassyHookFunctions.on_forward.name)
 
-        # compute loss
-        with PerfTimer("loss_compute", perf_stats):
-            local_loss = task.loss(model_output, target)
+            # compute loss
+            with PerfTimer("loss_compute", perf_stats):
+                local_loss = task.loss(model_output, target)
 
-        # Reduce the loss value across all nodes and gpus.
-        with PerfTimer("loss_all_reduce", perf_stats):
-            loss = local_loss.detach().clone()
-            task.last_batch.loss = all_reduce_mean(loss)
+            # Reduce the loss value across all nodes and gpus.
+            with PerfTimer("loss_all_reduce", perf_stats):
+                loss = local_loss.detach().clone()
+                task.last_batch.loss = all_reduce_mean(loss)
 
-        task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
+            task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
 
-        # update meters
-        if len(task.meters) > 0:
-            with PerfTimer("meters_update", perf_stats):
-                if isinstance(model_output, list):
-                    model_output_cpu = [x.cpu() for x in model_output]
-                else:
-                    model_output_cpu = model_output.cpu()
+            # update meters
+            if len(task.meters) > 0:
+                with PerfTimer("meters_update", perf_stats):
+                    if isinstance(model_output, list):
+                        model_output_cpu = [x.cpu() for x in model_output]
+                    else:
+                        model_output_cpu = model_output.cpu()
 
-                for meter in task.meters:
-                    meter.update(model_output_cpu, target.detach().cpu())
+                    for meter in task.meters:
+                        meter.update(model_output_cpu, target.detach().cpu())
 
-        task.last_batch.model_output = model_output
-        task.last_batch.target = target
+            task.last_batch.model_output = model_output
+            task.last_batch.target = target
 
-        # update the iteration number, check loss is not NaN and measure batch time
-        # now if it's a test phase since test phase doesn't have update step.
-        task.run_hooks(SSLClassyHookFunctions.on_loss_and_meter.name)
+            # update the iteration number, check loss is not NaN and measure batch time
+            # now if it's a test phase since test phase doesn't have update step.
+            task.run_hooks(SSLClassyHookFunctions.on_loss_and_meter.name)
 
     # run backward now and update the optimizer
     if task.train:
