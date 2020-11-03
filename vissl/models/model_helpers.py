@@ -18,7 +18,11 @@ _bn_cls = (nn.BatchNorm2d, torch.nn.modules.batchnorm.SyncBatchNorm)
 if is_apex_available():
     import apex
 
-    _bn_cls = _bn_cls + (apex.parallel.optimized_sync_batchnorm.SyncBatchNorm,)
+    try:
+        # try importing the optimized version directly
+        _bn_cls = _bn_cls + (apex.parallel.optimized_sync_batchnorm.SyncBatchNorm,)
+    except AttributeError:
+        _bn_cls = _bn_cls + (apex.parallel.SyncBatchNorm,)
 
 
 def is_feature_extractor_model(model_config):
