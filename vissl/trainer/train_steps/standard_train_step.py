@@ -4,7 +4,7 @@
 This is the train step that"s most commonly used in most of the model trainings.
 """
 
-import contextlib
+# import contextlib
 from types import SimpleNamespace
 
 import torch
@@ -97,12 +97,12 @@ def standard_train_step(task):
 
     # Only need gradients during training
     grad_context = torch.enable_grad() if task.train else torch.no_grad()
-    ddp_context = (
-        task.model.no_sync()
-        if task.enable_manual_gradient_reduction
-        else contextlib.nullcontext()
-    )
-    with grad_context, ddp_context:
+    # ddp_context = (
+    #    task.model.no_sync()
+    #    if task.enable_manual_gradient_reduction
+    #    else contextlib.nullcontext()
+    # )
+    with grad_context:
         # Forward pass of the model
         with PerfTimer("forward", perf_stats):
             if task.enable_manual_gradient_reduction:
