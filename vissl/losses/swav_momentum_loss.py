@@ -28,16 +28,17 @@ class SwAVMomentumLoss(ClassyLoss):
         self.checkpoint = None
         self.momentum_scores = None
         self.momentum_embeddings = None
-
-        # keep track of number of iterations
-        self.register_buffer("num_iteration", torch.zeros(1, dtype=int))
-        self.use_queue = False
-        if self.loss_config.queue.local_queue_length > 0:
-            self.initialize_queue()
-
         self.is_distributed = is_distributed_training_run()
         self.use_gpu = get_cuda_device_index() > -1
         self.softmax = nn.Softmax(dim=1)
+
+        # keep track of number of iterations
+        self.register_buffer("num_iteration", torch.zeros(1, dtype=int))
+
+        # for queue
+        self.use_queue = False
+        if self.loss_config.queue.local_queue_length > 0:
+            self.initialize_queue()
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
@@ -85,8 +86,14 @@ class SwAVMomentumLoss(ClassyLoss):
     def forward(self, output: torch.Tensor, *args, **kwargs):
         self.use_queue = (
             self.loss_config.queue.local_queue_length > 0
-            and self.num_iteration >= self.loss_config.queue.queue_start_iter
+            and self.num_iteration >= self.loss_config.queue.start_iter
         )
+        if self.use_queue:
+            if self.is_distributed:
+                self.compute_queue_scores(self.momentum_encoder.module.heads[0])
+            else:
+                self.compute_queue_scores(self.momentum_encoder.heads[0])
+
         loss = 0
         for head_id, proto_scores in enumerate(output[1:]):
 
@@ -158,20 +165,18 @@ class SwAVMomentumLoss(ClassyLoss):
                 all_reduce_sum(curr_sum)
             return (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
 
-
     def update_emb_queue(self):
         with torch.no_grad():
-            bs = len(emb) // self.loss_config.num_crops
-            for i in range(len(self.crops_for_assign)):
+            bs = len(self.momentum_embeddings) // self.loss_config.num_crops
+            for i in range(len(self.loss_config.crops_for_assign)):
                 queue = self.local_emb_queue[i]
                 queue[bs:] = queue[:-bs].clone()
-                queue[:bs] = momentum_embeddings[i * bs : (i + 1) * bs]
+                queue[:bs] = self.momentum_embeddings[i * bs : (i + 1) * bs]
                 self.local_emb_queue[i] = queue
 
-
-    def compute_queue_scores(self):
+    def compute_queue_scores(self, head):
         with torch.no_grad():
-            for i in range(len(self.crops_for_assign)):
-                for h in range(self.momentum_encoder.head.nmb_heads):
-                    scores = getattr(self.momentum_encoder.head, "prototypes" + str(h))(self.local_emb_queue[i])
+            for i in range(len(self.loss_config.crops_for_assign)):
+                for h in range(head.nmb_heads):
+                    scores = getattr(head, "prototypes" + str(h))(self.local_emb_queue[i])
                     getattr(self, "local_queue" + str(h))[i] = scores
