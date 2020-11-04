@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
+import math
 from enum import Enum
 from typing import Dict, List, Tuple
 
@@ -303,3 +304,8 @@ def get_trunk_forward_outputs(
         output_feats.append(unique_out_feats[key_name])
 
     return output_feats
+
+
+def lecun_normal_init(tensor, fan_in):
+    nn.init.trunc_normal_(tensor, std=math.sqrt(1 / fan_in))
+
