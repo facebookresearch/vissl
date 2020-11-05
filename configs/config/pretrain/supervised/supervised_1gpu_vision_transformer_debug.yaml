@@ -5,7 +5,7 @@ config:
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
   DATA:
-    NUM_DATALOADER_WORKERS: 5
+    NUM_DATALOADER_WORKERS: 0
     TRAIN:
       DATA_SOURCES: [disk_folder]
 #      DATA_PATHS: ["<path to train folder>"]
@@ -48,7 +48,7 @@ config:
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 1024, "hidden_dim": 4096,
-                                   "num_classes": 1000}]
+                                   "num_classes": 1000}],
       ]
   LOSS:
     name: cross_entropy_multiple_output_single_target
