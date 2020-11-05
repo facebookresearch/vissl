@@ -12,12 +12,13 @@ import copy
 import math
 from collections import OrderedDict
 from functools import partial
+from typing import List
 
 import torch
 import torch.nn as nn
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict
-from vissl.models.model_helpers import lecun_normal_init
+from vissl.models.model_helpers import lecun_normal_init, get_trunk_forward_outputs
 
 LayerNorm = partial(nn.LayerNorm, eps=1e-6)
 
@@ -69,7 +70,7 @@ class Encoder1DBlock(nn.Module):
 
 
 class Encoder(nn.Module):
-    """Transformer Model Encoder for sequence to sequence translation."""
+    """Transformer Model Encoder."""
 
     def __init__(
             self,
@@ -105,7 +106,7 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         # Todo: Interpolate position embeddings if sequence length of x ≠
-        # sequence length position embeddings
+        #  sequence length position embeddings
         x = x + self.pos_embedding  # should broadcast to the same shape
         return self.ln(self.layers(self.dropout(x)))
 
@@ -133,6 +134,7 @@ class VisionTransformer(nn.Module):
             # classifier="token",
     ):
         super().__init__()
+        self.model_config = model_config
         self.trunk_config = model_config.TRUNK.TRUNK_PARAMS.VISION_TRANSFORMERS
         self.image_size = self.trunk_config.IMAGE_SIZE
         self.patch_size = self.trunk_config.PATCH_SIZE
@@ -175,6 +177,17 @@ class VisionTransformer(nn.Module):
 
         self.init_weights()
 
+        self._feature_blocks = nn.ModuleDict(
+            [("patch_embedding", self.conv_proj)]
+        )
+
+        # Todo: Modify model so every attention & MLP layer are part of
+        #  _feature_blocks
+        # for layer_n, layer in enumerate(self.encoder.layers):
+        #     self._feature_blocks[f'attention{layer_n}'] = layer.self_attention
+        #     self._feature_blocks[f'mlp{layer_n}'] = layer.mlp
+
+
     def init_weights(self):
         lecun_normal_init(
             self.conv_proj.weight,
@@ -191,7 +204,8 @@ class VisionTransformer(nn.Module):
         config.pop("heads", None)
         return cls(**config)
 
-    def forward(self, x: torch.Tensor, out_feat_keys=None):
+    def forward(self, x: torch.Tensor, out_feat_keys: List[str] = None
+                ) -> List[torch.Tensor]:
         # Todo: check image size divisble by patch size
         assert x.ndim == 4, "Unexpected input shape"
         n, c, h, w = x.shape
@@ -224,4 +238,14 @@ class VisionTransformer(nn.Module):
         else:
             x = x.mean(dim=0)
 
-        return self.trunk_output(x)
+        x = self.trunk_output(x)
+
+        # return get_trunk_forward_outputs(
+        #     x,
+        #     out_feat_keys=out_feat_keys,
+        #     # feature_blocks=self._feature_blocks,
+        #     # feature_mapping=self.feat_eval_mapping,
+        #     use_checkpointing=self.model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING,
+        #     checkpointing_splits=self.model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS,
+        # )
+        return x
