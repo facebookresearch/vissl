@@ -121,6 +121,7 @@ class VisionTransformer(nn.Module):
     def __init__(
             self,
             model_config: AttrDict,
+            model_name: str
             # image_size,
             # patch_size,
             # num_layers,
@@ -141,7 +142,7 @@ class VisionTransformer(nn.Module):
         self.mlp_dim = self.trunk_config.MLP_DIM
         self.attention_dropout_rate = self.trunk_config.ATTENTION_DROPOUT_RATE
         self.dropout_rate = self.trunk_config.DROPOUT_RATE
-        self.classifier = self.trunk_config.CLASSIFIER
+        self.classifier = self.trunk_config.CLASSIFIER.lower()
 
         assert self.image_size % self.patch_size == 0, "Input shape " \
                                                        "indivisble by patch size"
@@ -156,10 +157,10 @@ class VisionTransformer(nn.Module):
             stride=self.patch_size
         )
 
-        seq_length = (self.image_size // self.patch_size) ** 2
+        self.seq_length = (self.image_size // self.patch_size) ** 2
         if self.classifier == "token":
             self.class_token = nn.Parameter(torch.zeros(1, 1, self.hidden_dim))
-            seq_length += 1
+            self.seq_length += 1
 
         self.encoder = Encoder(
             self.seq_length,
@@ -190,7 +191,7 @@ class VisionTransformer(nn.Module):
         config.pop("heads", None)
         return cls(**config)
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor, out_feat_keys=None):
         # Todo: check image size divisble by patch size
         assert x.ndim == 4, "Unexpected input shape"
         n, c, h, w = x.shape
