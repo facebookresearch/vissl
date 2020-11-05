@@ -197,12 +197,6 @@ class VisionTransformer(nn.Module):
         )
         nn.init.zeros_(self.conv_proj.bias)
 
-    @classmethod
-    def from_config(cls, config):
-        config = copy.deepcopy(config)
-        config.pop("name")
-        config.pop("heads", None)
-        return cls(**config)
 
     def forward(self, x: torch.Tensor, out_feat_keys: List[str] = None
                 ) -> List[torch.Tensor]:
@@ -248,4 +242,8 @@ class VisionTransformer(nn.Module):
         #     use_checkpointing=self.model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING,
         #     checkpointing_splits=self.model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS,
         # )
+        # TODO: Unsqueeze is because models.base_ssl_model.heads_forward()
+        #  assumes dimension 0 is feature dimension. Is there somewhere else
+        #  the unsqueezing of dimension 0 should be handled?
+        x = x.unsqueeze(0)
         return x
