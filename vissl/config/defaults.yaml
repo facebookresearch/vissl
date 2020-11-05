@@ -271,7 +271,7 @@ config:
           MLP_DIM: 4096
           DROPOUT_RATE: 0.1
           ATTENTION_DROPOUT_RATE: 0
-          CLASSIFIER: TOKEN
+          CLASSIFIER: token
 
 
     # ----------------------------------------------------------------------------------- #

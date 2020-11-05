@@ -1,7 +1,7 @@
 # @package _global_
 config:
   CHECKPOINT:
-    DIR: "checkpoints"
+    DIR: "/checkpoint/ito/vision_transformer"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
   DATA:
@@ -11,7 +11,7 @@ config:
 #      DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 4
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -30,7 +30,7 @@ config:
 #      DATA_PATHS: ["<path to test folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 4
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -63,17 +63,22 @@ config:
 #    regularize_bn: False
 #    regularize_bias: True
     param_schedulers:
-      lr: 0.001
+      lr:
 #        auto_lr_scaling: # learning rate is automatically scaled based on batch size
 #          auto_scale: true
 #          base_value: 0.1
 #          base_lr_batch_size: 256 # learning rate of 0.1 is used for batch size of 256
-        name: multistep
-        # We want the learning rate to drop by 1/10
-        # at epochs [30, 60, 90, 100]
-        milestones: [30, 60, 90, 100] # epochs at which to drop the learning rate (N vals)
-        values: [0.1, 0.01, 0.001, 0.0001, 0.00001] # the exact values of learning rate (N+1 vals)
-        update_interval: epoch
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.00001
+            end_value: 0.001
+          - name: linear
+            start_value: 0.001
+            end_value: 0.000001
+        interval_scaling: [rescaled, fixed]
+        update_interval: step
+        lengths: [0.1, 0.9]                 # 100ep, 10% of training is used for warmup.
   METERS:
     accuracy_list_meter:
       num_meters: 1
