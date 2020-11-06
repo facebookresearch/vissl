@@ -16,7 +16,7 @@ config:
       #      DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 8
+      BATCHSIZE_PER_REPLICA: 16
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -35,7 +35,7 @@ config:
       #      DATA_PATHS: ["<path to test folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 8
+      BATCHSIZE_PER_REPLICA: 16
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -92,7 +92,8 @@ config:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 32
+    NCCL_DEBUG: True
+    NUM_NODES: 2
     NUM_PROC_PER_NODE: 8 # 1 GPU
     RUN_ID: "localhost:50398"
   MACHINE:

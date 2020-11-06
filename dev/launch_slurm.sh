@@ -2,14 +2,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 ######################### INPUT PARAMS ##################################
-NODES=${NODES-1}    # number of machines to distribute training on
-NUM_GPU=${NUM_GPU-8}
+NODES=${NODES-2}    # number of machines to distribute training on
+GPUS_PER_NODE=${GPUS_PER_NODE-8}
 GPU_TYPE=${GPU_TYPE-V100}
 EXPT_NAME=${EXPT_NAME}
-MEM=${MEM-250g}
-CPU=${CPU-8}
+MEM=${MEM-64g}
+CPU=${CPU-10}
 OUTPUT_DIR=${OUTPUT_DIR}
-PARTITION=${PARTITION-learnfair}
+PARTITION=${PARTITION-dev}
 COMMENT=${COMMENT-ggl4i_gcd}
 GITHUB_REPO=${GITHUB_REPO-ssl_scaling}
 BRANCH=${BRANCH-master}
@@ -19,7 +19,7 @@ MULTI_PROCESSING_METHOD=${MULTI_PROCESSING_METHOD-forkserver}
 
 CFG=( "$@" )
 
-
+echo "$CFG"
 if [ "$NODES" = "1" ]; then
   SLURM_START_IDX=9
 else
@@ -35,12 +35,12 @@ HEADER="/private/home/$USER/temp_header"
 cat > ${HEADER} <<- EOM
 #!/bin/bash
 #SBATCH --nodes=$NODES
-#SBATCH --gres=gpu:$NUM_GPU
+#SBATCH --gpus-per-node=$GPUS_PER_NODE
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=$CPU
 #SBATCH --partition=$PARTITION
 #SBATCH --comment="$COMMENT"
-#SBATCH --time=72:00:00
+#SBATCH --time=1:00:00
 #SBATCH --signal=USR1@600
 #SBATCH --open-mode=append
 #SBATCH --mem=$MEM
@@ -52,6 +52,7 @@ echo \$master_node
 dist_run_id=\$master_node
 EOM
 
+echo "Master node: ${master_node}"
 echo "HEADER: $HEADER"
 
 ####################### setup experiment dir ###################################
@@ -91,7 +92,9 @@ srun --label python -u $RUN_SCRIPT \
   config.DATA.NUM_DATALOADER_WORKERS=$NUM_DATA_WORKERS \
   config.MULTI_PROCESSING_METHOD=$MULTI_PROCESSING_METHOD \
   config.DISTRIBUTED.INIT_METHOD=tcp \
+  hydra.verbose=True \
   config.DISTRIBUTED.RUN_ID=\$dist_run_id " >> "$SCRIPT_PATH"
+
 chmod +x "$SCRIPT_PATH"
 ((dist_port++))
 
