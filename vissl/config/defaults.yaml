@@ -659,7 +659,7 @@ config:
     BROADCAST_BUFFERS: True
     # number of machines to use in training
     NUM_NODES: 1
-    # set this to the number of gpus per machine. This ensrures that each gpu of the
+    # set this to the number of gpus per machine. This ensures that each gpu of the
     # node has a process attached to it.
     NUM_PROC_PER_NODE: 8
     # this could be: tcp | env | file or any other pytorch supported methods

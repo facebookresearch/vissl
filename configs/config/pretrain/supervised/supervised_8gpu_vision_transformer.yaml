@@ -2,37 +2,37 @@
 config:
   TENSORBOARD_SETUP:
     USE_TENSORBOARD: True
-    EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/1gpu_test"
+    EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/8gpu_test"
     LOG_ACTIVATIONS: False
     FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
-    DIR: "/checkpoint/ito/vision_transformer/1gpu_test"
+    DIR: "/checkpoint/ito/vision_transformer/8gpu_test"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
   DATA:
-    NUM_DATALOADER_WORKERS: 0
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
-#      DATA_PATHS: ["<path to train folder>"]
+      #      DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 16
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
-#        - name: RandomHorizontalFlip
-#        - name: ColorJitter
-#          brightness: 0.4
-#          contrast: 0.4
-#          saturation: 0.4
-#          hue: 0.4
+        #        - name: RandomHorizontalFlip
+        #        - name: ColorJitter
+        #          brightness: 0.4
+        #          contrast: 0.4
+        #          saturation: 0.4
+        #          hue: 0.4
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
     TEST:
       DATA_SOURCES: [disk_folder]
-#      DATA_PATHS: ["<path to test folder>"]
+      #      DATA_PATHS: ["<path to test folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 16
@@ -48,8 +48,8 @@ config:
   MODEL:
     TRUNK:
       NAME: vision_transformer
-#      TRUNK_PARAMS:
-#        VISION_TRANSFORMERS:
+    #      TRUNK_PARAMS:
+    #        VISION_TRANSFORMERS:
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 1024, "hidden_dim": 4096,
@@ -62,17 +62,17 @@ config:
   OPTIMIZER:
     name: adam
     weight_decay: 0.3
-#    momentum: 0.9
+    #    momentum: 0.9
     num_epochs: 90
-#    nesterov: True
-#    regularize_bn: False
-#    regularize_bias: True
+    #    nesterov: True
+    #    regularize_bn: False
+    #    regularize_bias: True
     param_schedulers:
       lr:
-#        auto_lr_scaling: # learning rate is automatically scaled based on batch size
-#          auto_scale: true
-#          base_value: 0.1
-#          base_lr_batch_size: 256 # learning rate of 0.1 is used for batch size of 256
+        #        auto_lr_scaling: # learning rate is automatically scaled based on batch size
+        #          auto_scale: true
+        #          base_value: 0.1
+        #          base_lr_batch_size: 256 # learning rate of 0.1 is used for batch size of 256
         name: composite
         schedulers:
           - name: linear
@@ -83,7 +83,7 @@ config:
             end_value: 0.000001
         interval_scaling: [rescaled, fixed]
         update_interval: step
-        lengths: [0.1, 0.9]      # 100ep, 10% of training is used for warmup.
+        lengths: [0.1, 0.9]                 # 100ep, 10% of training is used for warmup.
   METERS:
     accuracy_list_meter:
       num_meters: 1
@@ -93,7 +93,7 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 2 # 1 GPU
+    NUM_PROC_PER_NODE: 8 # 1 GPU
     RUN_ID: auto
   MACHINE:
     DEVICE: gpu
