@@ -81,6 +81,7 @@ config:
           interval_scaling: [rescaled, fixed]
           lengths: [0.05, 0.95]         # 5ep
   METERS:
+    name: accuracy_list_meter
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1, 5]

@@ -288,15 +288,14 @@ def assert_hydra_conf(cfg):
     if cfg.METERS is not None:
         from vissl.models import is_feature_extractor_model
 
-        meter_items = cfg.METERS.items()
-        for meter_name, meter_args in meter_items:
-            if meter_name == "accuracy_list_meter" and is_feature_extractor_model(
-                cfg.MODEL
-            ):
-                meter_args["num_meters"] = len(
+        meter_name = cfg.METERS.get("name", "")
+        valid_meters = ["accuracy_list_meter", "mean_ap_list_meter"]
+        if meter_name:
+            if meter_name in valid_meters and is_feature_extractor_model(cfg.MODEL):
+                cfg.METERS[meter_name]["num_meters"] = len(
                     cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 )
-                meter_args["meter_names"] = [
+                cfg.METERS[meter_name]["meter_names"] = [
                     item[0]
                     for item in cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 ]

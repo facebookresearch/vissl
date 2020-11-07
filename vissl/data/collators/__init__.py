@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+from functools import partial
 from pathlib import Path
 
 from classy_vision.generic.registry_utils import import_all_modules
@@ -45,12 +46,13 @@ def register_collator(name):
     return register_collator_fn
 
 
-def get_collator(collator_name):
+def get_collator(collator_name, collate_params):
     if collator_name == "default_collate":
         return default_collate
     else:
         assert collator_name in COLLATOR_REGISTRY, "Unknown collator"
-        return COLLATOR_REGISTRY[collator_name]
+        # return COLLATOR_REGISTRY[collator_name]
+        return partial(COLLATOR_REGISTRY[collator_name], **collate_params)
 
 
 # automatically import any Python files in the collators/ directory

@@ -56,6 +56,7 @@ config:
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
+      COLLATE_FUNCTION_PARAMS: {}
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
@@ -83,6 +84,7 @@ config:
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
+      COLLATE_FUNCTION_PARAMS: {}
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
@@ -103,6 +105,10 @@ config:
   # ----------------------------------------------------------------------------------- #
   # what meters to attach. All the mentioned meters will be calculated.
   METERS:
+    name: ""
+    # whether to calculate the meter during training as well. Sometimes, if the training
+    # data size is too big, it could be hard to compute the meter on training set.
+    enable_training_meter: True
     accuracy_list_meter:
       # number of accuracy meters. In cases like linear evaluation of feature, we perform
       # evaluation of several layers and there's a separate meter for each layer.
@@ -114,6 +120,16 @@ config:
       # names of the meter. Useful in cases where we have several meters. For the linear
       # feature evaluation workflows, meter name is automatically inferred.
       meter_names: []
+    mean_ap_list_meter:
+      # number of classes
+      num_classes: 9605
+      # number of accuracy meters. In cases like linear evaluation of feature, we perform
+      # evaluation of several layers and there's a separate meter for each layer.
+      # num_meters basically specifices number of meters.
+      num_meters: 1
+      # maximum number of samples to have in the meter. This is a global variable. Ideally
+      # set it to number of examples in test set.
+      max_cpu_capacity: -1
 
   # ----------------------------------------------------------------------------------- #
   # MACHINE (cpu, gpu)
@@ -326,6 +342,16 @@ config:
       ignore_index: -1
       # generic flag to enable L2 normalization in a loss function. Currently supported
       # for cross_entropy_multiple_output_single_target loss only.
+      normalize_output: False
+
+    # ----------------------------------------------------------------------------------- #
+    # Soft Target Cross-Entropy Loss for multiple input and same target.
+    # Applicable for multi-label classification problems.
+    # ----------------------------------------------------------------------------------- #
+    soft_target_cross_entropy_multiple_output_single_target:
+      reduction: mean
+      ignore_index: -1
+      normalize_targets: null   # option: count_based
       normalize_output: False
 
     # ----------------------------------------------------------------------------------- #

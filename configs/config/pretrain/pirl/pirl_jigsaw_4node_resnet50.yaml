@@ -39,7 +39,8 @@ config:
       COPY_TO_LOCAL_DISK: False
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
-  METERS: null
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -113,6 +114,6 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "." 
+    DIR: "."
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 100
