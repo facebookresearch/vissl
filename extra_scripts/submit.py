@@ -81,7 +81,7 @@ if __name__ == '__main__':
     overrides.append(f'config={args.config_file}')
 
     job = executor.submit(run_distributed_engines.hydra_main, overrides)
-
+    en = submitit.JobEnvironment()
     print(f'Job ID: {job.job_id}\n', overrides)
     print('See log file for details')
 
