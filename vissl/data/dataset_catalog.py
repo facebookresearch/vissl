@@ -210,6 +210,10 @@ def get_data_files(split, dataset_config):
     assert len(dataset_config[split].DATASET_NAMES) == len(
         dataset_config[split].DATA_SOURCES
     ), "len(data_sources) != len(dataset_names)"
+    if len(dataset_config[split].DATA_PATHS) > 0:
+        assert len(dataset_config[split].DATA_SOURCES) == len(
+            dataset_config[split].DATA_PATHS
+        ), "len(data_sources) != len(data_paths)"
     data_files, label_files = [], []
     data_names = dataset_config[split].DATASET_NAMES
     data_sources = dataset_config[split].DATA_SOURCES
@@ -219,15 +223,25 @@ def get_data_files(split, dataset_config):
         if data_sources[idx] == "synthetic":
             data_files.append("")
             continue
-        data_info = VisslDatasetCatalog.get(data_names[idx])
-        assert len(data_info[data_split]) > 0, "data paths list is empty"
-        check_data_exists(
-            data_info[data_split][0]
-        ), f"Some data files dont exist: {data_info[data_split][0]}"
-        data_files.append(data_info[data_split][0])
+        # if user has specified the data path explicitly, we use it
+        elif len(dataset_config[split].DATA_PATHS) > 0:
+            data_files.append(dataset_config[split].DATA_PATHS[idx])
+        # otherwise retrieve from the cataloag based on the dataset name
+        else:
+            data_info = VisslDatasetCatalog.get(data_names[idx])
+            assert len(data_info[data_split]) > 0, "data paths list is empty"
+            check_data_exists(
+                data_info[data_split][0]
+            ), f"Some data files dont exist: {data_info[data_split][0]}"
+            data_files.append(data_info[data_split][0])
         # labels are optional and hence we append if we find them
-        if check_data_exists(data_info[data_split][1]):
-            label_files.append(data_info[data_split][1])
+        if len(dataset_config[split].LABEL_PATHS) > 0:
+            if check_data_exists(dataset_config[split].LABEL_PATHS[idx]):
+                label_files.append(dataset_config[split].LABEL_PATHS[idx])
+        else:
+            label_data_info = VisslDatasetCatalog.get(data_names[idx])
+            if check_data_exists(label_data_info[data_split][1]):
+                label_files.append(label_data_info[data_split][1])
 
     output = [data_files, label_files]
     if dataset_config[split].COPY_TO_LOCAL_DISK:

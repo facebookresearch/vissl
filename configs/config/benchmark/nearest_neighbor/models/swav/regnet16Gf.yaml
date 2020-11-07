@@ -1,0 +1,12 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_16gf
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [3024, 3024, 128], "use_bn": False, "num_clusters": []}],
+      ]

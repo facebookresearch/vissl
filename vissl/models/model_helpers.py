@@ -45,6 +45,14 @@ def get_trunk_output_feature_names(model_config):
     return feature_names
 
 
+def is_fully_frozen_model(model, cfg):
+    params_list = model.parameters()
+    trainable_params = list(filter(lambda x: x.requires_grad, params_list))
+    if len(trainable_params) == 0:
+        return True
+    return False
+
+
 class Wrap(nn.Module):
     """Wrap a free function into a nn.Module
     Can be useful to build a model block, and include activations or
