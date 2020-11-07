@@ -1,0 +1,25 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 16
+    TEST:
+      BATCHSIZE_PER_REPLICA: 16
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        ######## resnext101-32x16d #######
+        RESNETS:
+          DEPTH: 101
+          GROUPS: 32
+          WIDTH_PER_GROUP: 16
+    HEAD:
+      PARAMS: [['mlp', {'dims': [2048, 205]}]]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+  DISTRIBUTED:
+    NUM_NODES: 2  # we can't fit the model on 16GB machine so instead use 2 nodes
+    INIT_METHOD: tcp

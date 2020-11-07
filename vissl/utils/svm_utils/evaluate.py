@@ -20,26 +20,35 @@ def calculate_ap(rec, prec):
     return ap
 
 
-def get_precision_recall(targets, preds):
+def get_precision_recall(targets, scores, weights=None):
     """
-    [P, R, score, ap] = get_precision_recall(targets, preds)
+    [P, R, score, ap] = get_precision_recall(targets, scores, weights)
     Input    :
         targets  : number of occurrences of this class in the ith image
-        preds    : score for this image
+        scores   : score for this image
+        weights  : 0 or 1 whether where 0 means we should ignore the sample
     Output   :
         P, R   : precision and recall
         score  : score which corresponds to the particular precision and recall
         ap     : average precision
     """
+    if weights is not None:
+        sortweights = weights
+    else:
+        sortweights = np.ones((targets.shape[0],), dtype=np.float)
+    valid_inds = np.where(sortweights == 1)
+    targets = targets[valid_inds]
+    scores = scores[valid_inds]
+
     # binarize targets
     targets = np.array(targets > 0, dtype=np.float32)
     tog = np.hstack(
         (
             targets[:, np.newaxis].astype(np.float64),
-            preds[:, np.newaxis].astype(np.float64),
+            scores[:, np.newaxis].astype(np.float64),
         )
     )
-    ind = np.argsort(preds)
+    ind = np.argsort(scores)
     ind = ind[::-1]
     score = np.array([tog[i, 1] for i in ind])
     sortcounts = np.array([tog[i, 0] for i in ind])

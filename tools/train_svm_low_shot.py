@@ -77,6 +77,9 @@ def train_sample_places_low_shot(
     layername: str,
     cfg: AttrDict,
 ):
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=cfg)
+
     for low_shot_kvalue in k_values:
         checkpoint_dir = f"{output_dir}/sample{sample_num}_k{low_shot_kvalue}"
         train_data = merge_features(checkpoint_dir, "train", layername, cfg)
@@ -123,22 +126,6 @@ def train_places_low_shot(
         running_task.start()
     for running_task in running_tasks:
         running_task.join()
-    # for sample_num in sample_inds:
-    #     for low_shot_kvalue in k_values:
-    #         checkpoint_dir = f"{output_dir}/sample{sample_num}_k{low_shot_kvalue}"
-    #         train_data = merge_features(checkpoint_dir, "train", layername, cfg)
-    #         train_features = train_data["features"]
-    #         train_targets = train_data["targets"]
-    #         checkpoint_dir = f"{output_dir}/sample{sample_inds[0]}_k{k_values[0]}"
-    #         test_data = merge_features(checkpoint_dir, "test", layername, cfg)
-    #         test_features = test_data["features"]
-    #         test_targets = test_data["targets"]
-    #         low_shot_trainer.train(
-    #             train_features, train_targets, sample_num, low_shot_kvalue
-    #         )
-    #         low_shot_trainer.test(
-    #             test_features, test_targets, sample_num, low_shot_kvalue
-    #         )
     results = low_shot_trainer.aggregate_stats(k_values, sample_inds)
     logging.info(f"All Done for layer: {layername}")
     return results

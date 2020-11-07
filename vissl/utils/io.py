@@ -12,6 +12,15 @@ from fvcore.common.file_io import PathManager
 from vissl.utils.slurm import get_slurm_dir
 
 
+def create_file_symlink(file1, file2):
+    try:
+        if PathManager.exists(file2):
+            PathManager.rm(file2)
+        PathManager.symlink(file1, file2)
+    except Exception as e:
+        logging.info(f"Could NOT create symlink. Error: {e}")
+
+
 def save_file(data, filename):
     logging.info(f"Saving data to file: {filename}")
     file_ext = os.path.splitext(filename)[1]
@@ -30,15 +39,30 @@ def save_file(data, filename):
     logging.info(f"Saved data to file: {filename}")
 
 
-def load_file(filename):
+def load_file(filename, mmap_mode=None):
     logging.info(f"Loading data from file: {filename}")
     file_ext = os.path.splitext(filename)[1]
     if file_ext in [".pkl", ".pickle"]:
         with PathManager.open(filename, "rb") as fopen:
             data = pickle.load(fopen, encoding="latin1")
     elif file_ext == ".npy":
-        with PathManager.open(filename, "rb") as fopen:
-            data = np.load(fopen, encoding="latin1")
+        if mmap_mode:
+            try:
+                with PathManager.open(filename, "rb") as fopen:
+                    data = np.load(fopen, encoding="latin1", mmap_mode=mmap_mode)
+            except ValueError as e:
+                logging.info(
+                    f"Could not mmap {filename}: {e}. Trying without PathManager"
+                )
+                data = np.load(filename, encoding="latin1", mmap_mode=mmap_mode)
+                logging.info("Successfully loaded without PathManager")
+            except Exception:
+                logging.info("Could not mmap without PathManager. Trying without mmap")
+                with PathManager.open(filename, "rb") as fopen:
+                    data = np.load(fopen, encoding="latin1")
+        else:
+            with PathManager.open(filename, "rb") as fopen:
+                data = np.load(fopen, encoding="latin1")
     elif file_ext == ".json":
         with PathManager.open(filename, "r") as fopen:
             data = json.loads(fopen)
@@ -75,13 +99,20 @@ def get_file_size(filename):
     return size_in_mb
 
 
-def copy_file(input_file, destination_dir):
+def copy_file(input_file, destination_dir, tmp_destination_dir):
     # we first extract the local path for the files. PathManager
     # determines the local path itself and copies data there.
     logging.info(f"Copying {input_file} to local path...")
     out = PathManager.get_local_path(input_file)
     output_dir = os.path.dirname(out)
     logging.info(f"File coped to: {out}")
+
+    if (out == input_file) and not destination_dir:
+        destination_dir = tmp_destination_dir
+        logging.info(
+            f"The file wasn't copied. Copying again to temp "
+            f"destination directory: {destination_dir}"
+        )
     # if the user wants to copy the files to a specific location,
     # we simply move the files from the PathManager cached directory
     # to the user specified directory.
@@ -93,7 +124,7 @@ def copy_file(input_file, destination_dir):
         output_file = f"{destination_dir}/{os.path.basename(input_file)}"
         if PathManager.exists(output_file):
             logging.info(f"File already copied: {output_file}")
-            return output_file
+            return output_file, destination_dir
 
         logging.info(f"Copying file: {input_file} to destination: {destination_dir}")
         stime = time.perf_counter()
@@ -133,7 +164,7 @@ def copy_dir(input_dir, destination_dir, num_threads):
     return destination_dir, destination_dir
 
 
-def copy_data(input_file, destination_dir, num_threads):
+def copy_data(input_file, destination_dir, num_threads, tmp_destination_dir):
     # return whatever the input is: whether "", None or anything else.
     logging.info(f"Creating directory: {destination_dir}")
     if not (destination_dir is None or destination_dir == ""):
@@ -141,7 +172,9 @@ def copy_data(input_file, destination_dir, num_threads):
     else:
         destination_dir = None
     if PathManager.isfile(input_file):
-        output_file, output_dir = copy_file(input_file, destination_dir)
+        output_file, output_dir = copy_file(
+            input_file, destination_dir, tmp_destination_dir
+        )
     elif PathManager.isdir(input_file):
         output_file, output_dir = copy_dir(input_file, destination_dir, num_threads)
     else:
@@ -149,7 +182,9 @@ def copy_data(input_file, destination_dir, num_threads):
     return output_file, output_dir
 
 
-def copy_data_to_local(input_files, destination_dir, num_threads=40):
+def copy_data_to_local(
+    input_files, destination_dir, num_threads=40, tmp_destination_dir=None
+):
     # it might be possible that we don't use the labels and hence don't have
     # label files. In that case, we return the input_files itself as we have
     # nothing to copy.
@@ -157,9 +192,13 @@ def copy_data_to_local(input_files, destination_dir, num_threads=40):
         output_files = []
         for item in input_files:
             if isinstance(item, list):
-                copied_file, output_dir = copy_data_to_local(item, destination_dir)
+                copied_file, output_dir = copy_data_to_local(
+                    item, destination_dir, num_threads, tmp_destination_dir
+                )
             else:
-                copied_file, output_dir = copy_data(item, destination_dir, num_threads)
+                copied_file, output_dir = copy_data(
+                    item, destination_dir, num_threads, tmp_destination_dir
+                )
             output_files.append(copied_file)
         return output_files, output_dir
     return input_files, destination_dir

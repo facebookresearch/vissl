@@ -1,5 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-
+import atexit
 import functools
 import logging
 import subprocess
@@ -49,7 +49,9 @@ def setup_logging(name, output_dir=None, rank=0):
 # with the same file name can safely write to the same file.
 @functools.lru_cache(maxsize=None)
 def _cached_log_stream(filename):
-    return PathManager.open(filename, "a")
+    io = PathManager.open(filename, "a")
+    atexit.register(io.close)
+    return io
 
 
 def shutdown_logging():

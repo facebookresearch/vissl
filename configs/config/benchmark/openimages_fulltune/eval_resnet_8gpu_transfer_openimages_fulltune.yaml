@@ -1,0 +1,107 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_EVERY_NUM_EPOCH: 5
+  TEST_MODEL: True
+  SEED_VALUE: 1
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 3
+    TRAIN:
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [openimages_v6]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/openimages_v6/
+      COLLATE_FUNCTION: targets_one_hot_default_collator
+      COLLATE_FUNCTION_PARAMS: {"num_classes": 9605}
+    TEST:
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [openimages_v6]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/openimages_v6/
+      COLLATE_FUNCTION: default_collate
+  METERS:
+    name: mean_ap_list_meter
+    # training data size is 5.6M , we just disable the training meter
+    enable_training_meter: False
+    mean_ap_list_meter:
+      num_classes: 9605
+      num_meters: 1
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 9605]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify model weights"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      APPEND_PREFIX: trunk.
+  LOSS:
+    name: soft_target_cross_entropy_multiple_output_single_target
+    soft_target_cross_entropy_multiple_output_single_target:
+      reduction: mean
+      normalize_targets: "count_based"
+      ignore_index: -1
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.0001
+      momentum: 0.9
+      num_epochs: 35
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.1
+            base_lr_batch_size: 256
+          values: [0.1, 0.01, 0.001, 0.0001]
+          milestones: [10, 20, 30]
+          name: multistep
+          update_interval: epoch
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 1

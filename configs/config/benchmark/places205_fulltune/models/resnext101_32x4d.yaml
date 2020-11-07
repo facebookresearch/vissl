@@ -1,0 +1,19 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        ######## resnext101-32x4d #######
+        RESNETS:
+          DEPTH: 101
+          GROUPS: 32
+          WIDTH_PER_GROUP: 4
+    HEAD:
+      PARAMS: [['mlp', {'dims': [2048, 205]}]]
+  DATA:
+    # to reduce the training time, we use 64img/gpu (16GB machine)
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+    TEST:
+      BATCHSIZE_PER_REPLICA: 64

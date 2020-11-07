@@ -1,0 +1,7 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: ["google-imagenet1k-per01"]
