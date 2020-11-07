@@ -4,15 +4,15 @@
 ######################### INPUT PARAMS ##################################
 NODES=${NODES-2}    # number of machines to distribute training on
 GPUS_PER_NODE=${GPUS_PER_NODE-8}
-GPU_TYPE=${GPU_TYPE-V100}
+#GPU_TYPE=${GPU_TYPE-V100}
 EXPT_NAME=${EXPT_NAME}
-MEM=${MEM-64g}
-CPU=${CPU-10}
+MEM=${MEM-512g}
+CPU=${CPU-80}
 OUTPUT_DIR=${OUTPUT_DIR}
-PARTITION=${PARTITION-dev}
+PARTITION=${PARTITION-learnfair}
 COMMENT=${COMMENT-ggl4i_gcd}
-GITHUB_REPO=${GITHUB_REPO-ssl_scaling}
-BRANCH=${BRANCH-master}
+GITHUB_REPO=${GITHUB_REPO-vissl}
+BRANCH=${BRANCH-vision_transformer}
 RUN_ID=$(date +'%Y%m%d')
 NUM_DATA_WORKERS=${NUM_DATA_WORKERS-8}
 MULTI_PROCESSING_METHOD=${MULTI_PROCESSING_METHOD-forkserver}
@@ -30,7 +30,7 @@ EXP_ROOT_DIR="/checkpoint/$USER/${GITHUB_REPO}/${RUN_ID}_${BRANCH}/$EXPT_NAME/"
 
 echo $SLURM_START_IDX
 ####################### SBATCH settings ####################################
-URL="git@github.com:fairinternal/ssl_scaling.git"
+URL="git@github.com:facebookresearch/vissl.git"
 HEADER="/private/home/$USER/temp_header"
 cat > ${HEADER} <<- EOM
 #!/bin/bash
@@ -40,7 +40,7 @@ cat > ${HEADER} <<- EOM
 #SBATCH --cpus-per-task=$CPU
 #SBATCH --partition=$PARTITION
 #SBATCH --comment="$COMMENT"
-#SBATCH --time=1:00:00
+#SBATCH --time=48:00:00
 #SBATCH --signal=USR1@600
 #SBATCH --open-mode=append
 #SBATCH --mem=$MEM
@@ -87,7 +87,7 @@ dist_run_id+=":$dist_port"
 echo \$dist_run_id
 srun --label python -u $RUN_SCRIPT \
   hydra.run.dir=$CHECKPOINT_DIR \
-  ${CFG[*]} \
+  config=${CFG[*]} \
   config.CHECKPOINT.DIR=$CHECKPOINT_DIR \
   config.DATA.NUM_DATALOADER_WORKERS=$NUM_DATA_WORKERS \
   config.MULTI_PROCESSING_METHOD=$MULTI_PROCESSING_METHOD \
