@@ -7,6 +7,7 @@ from typing import List
 import numpy as np
 import torch
 from classy_vision.generic.distributed_util import (
+    all_reduce_max,
     all_reduce_sum,
     get_cuda_device_index,
     get_rank,
@@ -109,7 +110,17 @@ class SwAVCriterion(nn.Module):
             self.initialize_queue()
 
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
+        eps_num_stab = 1e-12
         with torch.no_grad():
+            # remove potential infs in Q
+            mask = torch.isinf(Q)
+            ind = torch.nonzero(mask)
+            if len(ind) > 0:
+                for i in ind:
+                    Q[i[0], i[1]] = 0
+                m = torch.max(Q)
+                for i in ind:
+                    Q[i[0], i[1]] = m
             sum_Q = torch.sum(Q, dtype=Q.dtype)
             all_reduce_sum(sum_Q)
             Q /= sum_Q
@@ -120,26 +131,36 @@ class SwAVCriterion(nn.Module):
 
             # we follow the u, r, c and Q notations from
             # https://arxiv.org/abs/1911.05371
-            u = torch.zeros(k)
             r = torch.ones(k) / k
             c = torch.ones(n) / N
             if self.use_double_prec:
-                u, r, c = u.double(), r.double(), c.double()
+                r, c = r.double(), c.double()
 
             if self.use_gpu:
-                u = u.cuda(non_blocking=True)
                 r = r.cuda(non_blocking=True)
                 c = c.cuda(non_blocking=True)
 
-            curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
-            all_reduce_sum(curr_sum)
-
             for _ in range(self.nmb_sinkhornknopp_iters):
-                u = curr_sum
-                Q *= (r / u).unsqueeze(1)
+                u = torch.sum(Q, dim=1, dtype=Q.dtype)
+                all_reduce_sum(u)
+
+                # for numerical stability
+                if len(torch.nonzero(u == 0)) > 0:
+                    Q += eps_num_stab
+                    u = torch.sum(Q, dim=1, dtype=Q.dtype)
+                    all_reduce_sum(u)
+                u = r / u
+                mask = torch.isinf(u)
+                ind = torch.nonzero(mask)
+                if len(ind) > 0:
+                    for i in ind:
+                        u[i[0]] = 0
+                    m = torch.max(u)
+                    for i in ind:
+                        u[i[0]] = m
+
+                Q *= u.unsqueeze(1)
                 Q *= (c / torch.sum(Q, dim=0, dtype=Q.dtype)).unsqueeze(0)
-                curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
-                all_reduce_sum(curr_sum)
             Q = (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
 
             # hard assignment
@@ -167,7 +188,11 @@ class SwAVCriterion(nn.Module):
                     ).t()
                     assignments = assignments.double()
                 else:
-                    assignments = torch.exp(scores_this_crop / self.epsilon).t()
+                    assignments = scores_this_crop / self.epsilon
+                    M = torch.max(assignments)
+                    all_reduce_max(M)
+                    assignments -= M
+                    assignments = torch.exp(assignments).t()
                 assignments = self.distributed_sinkhornknopp(assignments)[:bs]
                 idx_crop_pred = np.delete(np.arange(self.num_crops), crop_id)
             loss = 0
