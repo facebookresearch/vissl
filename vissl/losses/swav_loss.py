@@ -34,6 +34,7 @@ class SwAVLoss(ClassyLoss):
             self.loss_config.num_prototypes,
             self.loss_config.queue.local_queue_length,
             self.loss_config.embedding_dim,
+            self.loss_config.temp_hard_assignment_iters,
         )
 
     @classmethod
@@ -65,6 +66,7 @@ class SwAVLoss(ClassyLoss):
             "num_crops": self.loss_config.num_crops,
             "nmb_sinkhornknopp_iters": self.loss_config.num_iters,
             "embedding_dim": self.loss_config.embedding_dim,
+            "temp_hard_assignment_iters": self.loss_config.temp_hard_assignment_iters,
         }
         return pprint.pformat(repr_dict, indent=2)
 
@@ -81,6 +83,7 @@ class SwAVCriterion(nn.Module):
         num_prototypes: List[int],
         local_queue_length: int,
         embedding_dim: int,
+        temp_hard_assignment_iters: int,
     ):
         super(SwAVCriterion, self).__init__()
 
@@ -95,6 +98,7 @@ class SwAVCriterion(nn.Module):
         self.num_prototypes = num_prototypes
         self.nmb_heads = len(self.num_prototypes)
         self.embedding_dim = embedding_dim
+        self.temp_hard_assignment_iters = temp_hard_assignment_iters
         self.local_queue_length = local_queue_length
         self.dist_rank = get_rank()
         self.world_size = get_world_size()
@@ -136,7 +140,14 @@ class SwAVCriterion(nn.Module):
                 Q *= (c / torch.sum(Q, dim=0, dtype=Q.dtype)).unsqueeze(0)
                 curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
                 all_reduce_sum(curr_sum)
-            return (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
+            Q = (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
+
+            # hard assignment
+            if self.num_iteration < self.temp_hard_assignment_iters:
+                index_max = torch.max(Q, dim=1)[1]
+                Q.zero_()
+                Q.scatter_(1, index_max.unsqueeze(1), 1)
+            return Q
 
     def forward(self, scores: torch.Tensor, head_id: int):
         assert scores.shape[0] % self.num_crops == 0
@@ -228,5 +239,6 @@ class SwAVCriterion(nn.Module):
             "num_crops": self.num_crops,
             "nmb_sinkhornknopp_iters": self.nmb_sinkhornknopp_iters,
             "embedding_dim": self.embedding_dim,
+            "temp_hard_assignment_iters": self.temp_hard_assignment_iters,
         }
         return pprint.pformat(repr_dict, indent=2)

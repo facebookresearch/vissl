@@ -76,24 +76,36 @@ def get_file_size(filename):
 
 
 def copy_file(input_file, destination_dir):
+    # we first extract the local path for the files. PathManager
+    # determines the local path itself and copies data there.
+    logging.info(f"Copying {input_file} to local path...")
+    out = PathManager.get_local_path(input_file)
+    output_dir = os.path.dirname(out)
+    logging.info(f"File coped to: {out}")
+    # if the user wants to copy the files to a specific location,
+    # we simply move the files from the PathManager cached directory
+    # to the user specified directory.
     destination_dir = get_slurm_dir(destination_dir)
     if "SLURM_JOBID" in os.environ:
         destination_dir = get_slurm_dir(destination_dir)
-    makedir(destination_dir)
-    output_file = f"{destination_dir}/{os.path.basename(input_file)}"
-    if PathManager.exists(output_file):
-        logging.info(f"File already copied: {output_file}")
-        return output_file
+    if destination_dir is not None:
+        makedir(destination_dir)
+        output_file = f"{destination_dir}/{os.path.basename(input_file)}"
+        if PathManager.exists(output_file):
+            logging.info(f"File already copied: {output_file}")
+            return output_file
 
-    logging.info(f"Copying file: {input_file} to destination: {destination_dir}")
-    stime = time.perf_counter()
-    os.system(f"rsync -a --progress {input_file} {destination_dir}")
-    etime = time.perf_counter()
-    logging.info(
-        f"Copied file | time (sec): {round(etime - stime, 4)} "
-        f"size: {get_file_size(output_file)}"
-    )
-    return output_file
+        logging.info(f"Copying file: {input_file} to destination: {destination_dir}")
+        stime = time.perf_counter()
+        os.system(f"rsync -a --progress {out} {destination_dir}")
+        etime = time.perf_counter()
+        logging.info(
+            f"Copied file | time (sec): {round(etime - stime, 4)} "
+            f"size: {get_file_size(output_file)}"
+        )
+        return output_file, destination_dir
+    else:
+        return out, output_dir
 
 
 def copy_dir(input_dir, destination_dir, num_threads):
@@ -118,18 +130,23 @@ def copy_dir(input_dir, destination_dir, num_threads):
     os.system(cmd)
     PathManager.open(complete_flag, "a").close()
     logging.info("Copied to local directory")
-    return destination_dir
+    return destination_dir, destination_dir
 
 
 def copy_data(input_file, destination_dir, num_threads):
     # return whatever the input is: whether "", None or anything else.
     logging.info(f"Creating directory: {destination_dir}")
-    makedir(destination_dir)
+    if not (destination_dir is None or destination_dir == ""):
+        makedir(destination_dir)
+    else:
+        destination_dir = None
     if PathManager.isfile(input_file):
-        output_file = copy_file(input_file, destination_dir)
+        output_file, output_dir = copy_file(input_file, destination_dir)
     elif PathManager.isdir(input_file):
-        output_file = copy_dir(input_file, destination_dir, num_threads)
-    return output_file
+        output_file, output_dir = copy_dir(input_file, destination_dir, num_threads)
+    else:
+        raise RuntimeError("The input_file is neither a file nor a directory")
+    return output_file, output_dir
 
 
 def copy_data_to_local(input_files, destination_dir, num_threads=40):
@@ -140,9 +157,9 @@ def copy_data_to_local(input_files, destination_dir, num_threads=40):
         output_files = []
         for item in input_files:
             if isinstance(item, list):
-                copied_file = copy_data_to_local(item, destination_dir)
+                copied_file, output_dir = copy_data_to_local(item, destination_dir)
             else:
-                copied_file = copy_data(item, destination_dir, num_threads)
+                copied_file, output_dir = copy_data(item, destination_dir, num_threads)
             output_files.append(copied_file)
-        return output_files
-    return input_files
+        return output_files, output_dir
+    return input_files, destination_dir

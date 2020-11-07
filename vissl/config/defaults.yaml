@@ -388,6 +388,7 @@ config:
       num_crops: 2
       crops_for_assign: [0, 1]
       num_prototypes: [3000]
+      temp_hard_assignment_iters: 0
       queue:
         queue_length: 0
         start_iter: 0

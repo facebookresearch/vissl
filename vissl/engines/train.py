@@ -65,12 +65,12 @@ def train_main(
         logging.info("System config:\n{}".format(collect_env_info()))
 
     # given the checkpoint folder, we check that there's not already a final checkpoint
-    if is_training_finished(cfg, checkpoint_folder=output_dir):
+    if dist_rank == 0 and is_training_finished(cfg, checkpoint_folder=output_dir):
         logging.info("Training already succeeded on this machine, bailing out")
         return
 
     # Get the checkpoint where to load from. The load_checkpoints function will
-    # automatically take care of detecting whether it's a resume or not
+    # automatically take care of detecting whether it's a resume or not.
     checkpoint_path = get_resume_checkpoint(cfg, checkpoint_folder=output_dir)
 
     # get the hooks - these hooks are executed per replica
