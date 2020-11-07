@@ -31,6 +31,7 @@ class SelfSupervisionTrainer(object):
         cfg: AttrDict,
         dist_run_id: str,
         checkpoint_path: str = None,
+        checkpoint_folder: str = None,
         hooks: List[ClassyHook] = None,
     ):
         self.cfg = cfg
@@ -41,6 +42,7 @@ class SelfSupervisionTrainer(object):
         # also contain all the other information like optimizers, etc
         self.task = self.build_task()
         self.task.set_checkpoint_path(checkpoint_path)
+        self.task.set_checkpoint_folder(checkpoint_folder)
         if hooks is None:
             hooks = []
         self.task.set_hooks(hooks)
@@ -190,9 +192,17 @@ class SelfSupervisionTrainer(object):
         # so that all dataloader processes are cleaned up
         phase_type = "train" if phase["train"] else "test"
         # we are advancing to next epoch, so no need to compute start_iter,
-        # just let it to be 0 inside of recreate_data_iterator.
+        # just let it to be 0 inside of recreate_data_iterator. However, if we are just
+        # starting from the resumed training, we want to compute_start_iter
+        # again (if applicable) since we recreate the data iterator and delete
+        # the old ones.
+        compute_start_iter = False
+        if task.checkpoint is not None and task.checkpoint["train_phase_idx"] == (
+            task.train_phase_idx - 1
+        ):
+            compute_start_iter = True
         task.recreate_data_iterator(
-            phase_type, epoch=task.phase_idx, compute_start_iter=False
+            phase_type, epoch=task.phase_idx, compute_start_iter=compute_start_iter
         )
 
         # set the model to train or eval depending on what phase we are in

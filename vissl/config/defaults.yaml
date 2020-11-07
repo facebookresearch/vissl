@@ -389,6 +389,7 @@ config:
       crops_for_assign: [0, 1]
       num_prototypes: [3000]
       temp_hard_assignment_iters: 0
+      output_dir: ""  # for dumping the debugging info in case loss becomes NaN
       queue:
         queue_length: 0
         start_iter: 0
@@ -592,10 +593,13 @@ config:
   TENSORBOARD_SETUP:
     USE_TENSORBOARD: False
     LOG_DIR: "."
-    EXPERIMENT_LOG_DIR: ""
-    LOG_ACTIVATIONS: True
+    EXPERIMENT_LOG_DIR: "tensorboard"
     # flush logs every n minutes
     FLUSH_EVERY_N_MIN: 5
+    # if we want to log the model parameters every few iterations, set the iteration
+    # frequency. -1 means the params will be logger only at the end of epochs.
+    LOG_ACTIVATIONS: True
+    LOG_PARAMS_EVERY_N_ITERS: -1
 
 # VISSL uses hydra for configuration management. The usage looks like:
 #    python tools/<binary-name>.py config=<config path>

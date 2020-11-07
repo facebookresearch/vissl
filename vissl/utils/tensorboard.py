@@ -38,7 +38,9 @@ def get_tensorboard_hook(cfg):
     tensorboard_dir = get_tensorboard_dir(cfg)
     flush_secs = cfg.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
     log_activations = cfg.TENSORBOARD_SETUP.LOG_ACTIVATIONS
+    log_params_every_n_iterations = cfg.TENSORBOARD_SETUP.LOG_PARAMS_EVERY_N_ITERS
     return SSLTensorboardHook(
         tb_writer=SummaryWriter(log_dir=tensorboard_dir, flush_secs=flush_secs),
         log_activations=log_activations,
+        log_params_every_n_iterations=log_params_every_n_iterations,
     )
