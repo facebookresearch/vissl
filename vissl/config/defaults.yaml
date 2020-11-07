@@ -424,6 +424,25 @@ config:
         start_iter: 0
         local_queue_length: 0
 
+    # ----------------------------------------------------------------------------------- #
+    # SwAV MOMENTUM LOSS
+    # ----------------------------------------------------------------------------------- #
+    swav_momentum_loss:
+      momentum: 0.99
+      embedding_dim: 128
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      num_crops: 2
+      crops_for_assign: [0, 1]
+      num_prototypes: [3000]
+      queue:
+        queue_length: 0
+        start_iter: 0
+        local_queue_length: 0
+
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#

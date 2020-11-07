@@ -26,6 +26,7 @@ config:
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]

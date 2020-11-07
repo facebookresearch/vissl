@@ -115,10 +115,9 @@ class DiskImageDataset(QueueDataset):
             if is_success and self.enable_queue_dataset:
                 self.on_sucess(img)
         except Exception as e:
-            if self.cfg.VERBOSE:
-                logging.warn(
-                    f"Couldn't load: {self.image_dataset[idx]}. Exception: \n{e}"
-                )
+            logging.warning(
+                f"Couldn't load: {self.image_dataset[idx]}. Exception: \n{e}"
+            )
             is_success = False
             # if we have queue dataset class enabled, we try to use it to get
             # the seen valid images
