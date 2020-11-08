@@ -61,7 +61,7 @@ config:
       ignore_index: -1
   OPTIMIZER:
     name: adam
-    weight_decay: 0.1
+    weight_decay: 0.3
     #    momentum: 0.9
     num_epochs: 300
     #    nesterov: True
@@ -76,11 +76,11 @@ config:
         name: composite
         schedulers:
           - name: linear
-            start_value: 0.00001
-            end_value: 0.001
-          - name: linear
-            start_value: 0.001
-            end_value: 0.000001
+            start_value: 0
+            end_value: 0.003
+          - name: cosine
+            start_value: 0.003
+            end_value: 0
         interval_scaling: [rescaled, fixed]
         update_interval: step
         lengths: [0.1, 0.9]                 # 100ep, 10% of training is used for warmup.
@@ -92,8 +92,7 @@ config:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
     BACKEND: nccl
-    NCCL_DEBUG: True
-    NUM_NODES: 2
+    NUM_NODES: 32
     NUM_PROC_PER_NODE: 8 # 1 GPU
     RUN_ID: "50398"
     SLURM_ENV: True
