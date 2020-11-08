@@ -13,20 +13,21 @@ if __name__ == '__main__':
                                                  'will override those in '
                                                  'vissl config file.')
     parser.add_argument('--config_file', type=str,
-                        default='pretrain/supervised/supervised_256gpu_vision_transformer',
+                        default='pretrain/supervised/supervised_2gpu_vision_transformer_test',
                         help='vissl config file')
     parser.add_argument('--job_name', type=str, default='vision_transformer')
     parser.add_argument('--time', default=1680, type=int, help='job time ' \
                                                             'request, in minutes')
-    parser.add_argument('--nodes', type=int, default=32)
-    parser.add_argument('--gpus_per_node', type=int, default=8)
+    parser.add_argument('--nodes', type=int, default=2)
+    parser.add_argument('--gpus_per_task', type=int, default=8)
     parser.add_argument('--cpus_per_task', type=int, default=80)
+    parser.add_argument('--ntasks_per_node', type=int, default=1)
     parser.add_argument('--mem', type=str, default='512GB', help='gigabytes '
                                                                  'of GPU ram per node')
     parser.add_argument('--partition', type=str, default='learnfair', \
                                                   help='learnfair, dev, or priority')
     parser.add_argument('--comment', type=str, default=None, help='Needed for priority')
-    parser.add_argument('--run_id', type=str, default='localhost:50398',
+    parser.add_argument('--run_id', type=str, default='60215',
                         help='Needed for multi-node jobs.')
     # Note that a new subdirectory will be created for each job. See the
     # format below.
@@ -45,8 +46,10 @@ if __name__ == '__main__':
         'partition': args.partition,
         'time': args.time,
         'nodes': args.nodes,
-        'gpus_per_node': args.gpus_per_node,
+        # 'gpus_per_node': args.gpus_per_node,
         'mem': args.mem,
+        'gpus_per_task': args.gpus_per_task,
+        'ntasks_per_node': args.ntasks_per_node,
         'cpus_per_task': args.cpus_per_task
     }
     if args.comment:
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     override_dict = {
         'CHECKPOINT.DIR': checkpoint_directory,
         'DISTRIBUTED.NUM_NODES': slurm_params['nodes'],
-        'DISTRIBUTED.NUM_PROC_PER_NODE': slurm_params['gpus_per_node'],
+        # 'DISTRIBUTED.NUM_PROC_PER_NODE': slurm_params['gpus_per_node'],
         'DISTRIBUTED.RUN_ID': args.run_id
     }
     # Create list of overrides to be passed as args
@@ -81,8 +84,8 @@ if __name__ == '__main__':
     overrides.append(f'config={args.config_file}')
 
     job = executor.submit(run_distributed_engines.hydra_main, overrides)
-    en = submitit.JobEnvironment()
-    print(f'Job ID: {job.job_id}\n', overrides)
+    # en = submitit.JobEnvironment()
+    # print(f'Job ID: {job.job_id}\n', overrides)
     print('See log file for details')
 
     print(job.results())

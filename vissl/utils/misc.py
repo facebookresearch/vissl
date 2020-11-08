@@ -3,6 +3,9 @@
 import logging
 import random
 import tempfile
+import os
+import re
+import sys
 
 import numpy as np
 import pkg_resources
@@ -38,6 +41,8 @@ def get_dist_run_id(cfg, num_nodes):
     """
     for 1node: use init_method=tcp and run_id=auto
     for multi-node, use init_method=tcp and specify run_id={master_node}:{port}
+    For multi-node on FAIR cluster, use init_method=slurm_env and specify
+    run_id=port
     """
     init_method = cfg.DISTRIBUTED.INIT_METHOD
     run_id = cfg.DISTRIBUTED.RUN_ID
@@ -59,6 +64,16 @@ def get_dist_run_id(cfg, num_nodes):
         assert cfg.DISTRIBUTED.RUN_ID, "please specify RUN_ID for tcp"
     elif init_method == "env":
         assert num_nodes == 1, "can not use 'env' init method for multi-node. Use tcp"
+    if cfg.DISTRIBUTED.SLURM_ENV:
+        assert num_nodes > 1, "Use 'tcp' for single node"
+        port = cfg.DISTRIBUTED.RUN_ID
+        # assert isinstance(port, int), "integer port should be specified in RUN_ID"
+        try:
+            node_string = os.environ['SLURM_JOB_NODELIST']
+            node_list = re.split("\\[|\\]|,|-", node_string)
+            run_id = f'{node_list[0]}{node_list[1]}:{port}'
+        except KeyError:
+            sys.exit('You do not seem to be in a slurm environment')
     return run_id
 
 
