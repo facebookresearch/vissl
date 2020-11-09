@@ -8,7 +8,7 @@ config:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
-      DATA_PATHS: ["<path to train folder>"]
+#      DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
