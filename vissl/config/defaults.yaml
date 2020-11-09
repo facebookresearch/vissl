@@ -471,6 +471,15 @@ config:
         end_value: 0.0
         # =====constant learning rate specific =======
         value: 0.1
+
+  # ----------------------------------------------------------------------------------- #
+  # GRADIENT CLIPPING. Important for Vision Transformer.
+  # ----------------------------------------------------------------------------------- #
+  GRAD_CLIP: # See TORCH.NN.UTILS.CLIP_GRAD_NORM_
+    USE_GRAD_CLIP: False
+    NORM_TYPE: 2 # Float, int, or 'inf'
+    MAX_NORM: 1
+
   # ----------------------------------------------------------------------------------- #
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #
