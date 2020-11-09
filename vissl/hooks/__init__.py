@@ -29,6 +29,8 @@ from vissl.hooks.swav_momentum_hooks import (
     SwAVMomentumNormalizePrototypesHook,
 )
 from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
+from vissl.hooks.grad_clip_hooks import GradClipHook #noqa
+
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
 
@@ -88,6 +90,9 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         assert is_tensorboard_available(), "Tensorboard must be installed to use it."
         tb_hook = get_tensorboard_hook(cfg)
         hooks.extend([tb_hook])
+    if cfg.GRAD_CLIP.USE_GRAD_CLIP:
+        hooks.extend([GradClipHook(norm_type=cfg.GRAD_CLIP.NORM_TYPE,
+                                   max_norm=cfg.GRAD_CLIP.MAX_NORM)])
 
     # hooks that are used irrespective of workflow type
     rolling_btime_freq = cfg.ROLLING_BTIME_FREQ if cfg.ROLLING_BTIME_FREQ > 0 else None

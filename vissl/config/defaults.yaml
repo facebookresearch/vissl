@@ -573,28 +573,14 @@ config:
         end_value: 0.0
         # =====constant learning rate specific =======
         value: 0.1
-      # if we want to use a different LR scheduler for the head, then specify
-      # the lr_head similar to "lr"
-      lr_head:
-        auto_lr_scaling:
-          auto_scale: False
-          base_value: 0.1
-          base_lr_batch_size: 256
-        name: "multistep"
-        update_interval: "epoch"
-        values: [0.1, 0.01, 0.001]
-        milestones: [30, 60]
-        # The below parameters are valid for lr.name = "composite". Various schedulers
-        # can then be composed together for the training. For example: linear warmup +
-        # multistep schedule after warmup.
-        schedulers: []
-        interval_scaling: []
-        lengths: []
-        # =====cosine learning rate specific =======
-        start_value: 0.1
-        end_value: 0.0
-        # =====constant learning rate specific =======
-        value: 0.1
+  # ----------------------------------------------------------------------------------- #
+  # GRADIENT CLIPPING. Important for Vision Transformer.
+  # ----------------------------------------------------------------------------------- #
+  GRAD_CLIP: # See TORCH.NN.UTILS.CLIP_GRAD_NORM_
+    USE_GRAD_CLIP: False
+    NORM_TYPE: 2 # Float, int, or 'inf'
+    MAX_NORM: 1
+
   # ----------------------------------------------------------------------------------- #
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #
