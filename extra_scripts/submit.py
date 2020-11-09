@@ -13,12 +13,12 @@ if __name__ == '__main__':
                                                  'will override those in '
                                                  'vissl config file.')
     parser.add_argument('--config_file', type=str,
-                        default='pretrain/supervised/supervised_2gpu_vision_transformer_test',
+                        default='pretrain/supervised/supervised_256gpu_vision_transformer_imagenet',
                         help='vissl config file')
     parser.add_argument('--job_name', type=str, default='vision_transformer')
     parser.add_argument('--time', default=1680, type=int, help='job time ' \
                                                             'request, in minutes')
-    parser.add_argument('--nodes', type=int, default=2)
+    parser.add_argument('--nodes', type=int, default=32)
     parser.add_argument('--gpus_per_task', type=int, default=8)
     parser.add_argument('--cpus_per_task', type=int, default=80)
     parser.add_argument('--ntasks_per_node', type=int, default=1)
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--partition', type=str, default='learnfair', \
                                                   help='learnfair, dev, or priority')
     parser.add_argument('--comment', type=str, default=None, help='Needed for priority')
-    parser.add_argument('--run_id', type=str, default='60215',
+    parser.add_argument('--run_id', type=str, default='60012',
                         help='Needed for multi-node jobs.')
     # Note that a new subdirectory will be created for each job. See the
     # format below.
