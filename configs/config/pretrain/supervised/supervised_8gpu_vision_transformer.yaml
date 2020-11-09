@@ -77,9 +77,9 @@ config:
         schedulers:
           - name: linear
             start_value: 0.00001
-            end_value: 0.001
+            end_value: 0.003
           - name: linear
-            start_value: 0.001
+            start_value: 0.003
             end_value: 0.000001
         interval_scaling: [rescaled, fixed]
         update_interval: step

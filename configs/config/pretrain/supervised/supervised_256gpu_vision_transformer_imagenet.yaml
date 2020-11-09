@@ -96,7 +96,7 @@ config:
     BACKEND: nccl
     NUM_NODES: 32
     NUM_PROC_PER_NODE: 8 # 1 GPU
-    RUN_ID: "50398"
+    RUN_ID: "60215"
     SLURM_ENV: True
   MACHINE:
     DEVICE: gpu
