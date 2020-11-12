@@ -2,9 +2,22 @@ import submitit
 import os
 import datetime
 import argparse
+import typing
 from pathlib import Path
 
 from tools import run_distributed_engines
+
+
+class CheckpointWrapper:
+
+    def __init__(self):
+        pass
+
+    def __call__(self, overrides):
+        run_distributed_engines.hydra_main(overrides)
+
+    def __submitit_checkpoint__(self, *args: typing.Any, **kwargs: typing.Any) -> submitit.helpers.DelayedSubmission:
+        return submitit.helpers.DelayedSubmission(self, *args, **kwargs)
 
 
 if __name__ == '__main__':
@@ -16,7 +29,7 @@ if __name__ == '__main__':
                         default='pretrain/supervised/supervised_256gpu_vision_transformer_imagenet',
                         help='vissl config file')
     parser.add_argument('--job_name', type=str, default='vision_transformer')
-    parser.add_argument('--time', default=1680, type=int, help='job time ' \
+    parser.add_argument('--time', default=2160, type=int, help='job time ' \
                                                             'request, in minutes')
     parser.add_argument('--nodes', type=int, default=32)
     parser.add_argument('--gpus_per_task', type=int, default=8)
@@ -36,6 +49,12 @@ if __name__ == '__main__':
                                                                'will default '
                                                                'to current '
                                                                 'directory.')
+
+    parser.add_argument('--checkpoint_stem', type=str, default=None, help='If '
+                                                                       'none '
+                                                                          'provided, '
+                                                                          'will default '
+                                                                          'to current date and time')
 
     args = parser.parse_args()
 
@@ -59,9 +78,12 @@ if __name__ == '__main__':
     checkpoint_root = ''
     if args.checkpoint_root:
         checkpoint_root = args.checkpoint_root
-    now = datetime.datetime.now()
-    date_time_folder = now.strftime("%Y-%m-%d") + '/' + now.strftime("%H-%M-%S")
-    checkpoint_directory = f'{args.job_name}/{date_time_folder}'
+    if args.checkpoint_stem:
+        checkpoint_directory = args.checkpoint_stem
+    else:
+        now = datetime.datetime.now()
+        date_time_folder = now.strftime("%Y-%m-%d") + '/' + now.strftime("%H-%M-%S")
+        checkpoint_directory = f'{args.job_name}/{date_time_folder}'
     checkpoint_directory = os.path.join(checkpoint_root, checkpoint_directory)
     Path(checkpoint_directory).mkdir(parents=True, exist_ok=True)
 
@@ -83,7 +105,8 @@ if __name__ == '__main__':
     overrides.append('hydra.verbose=True')
     overrides.append(f'config={args.config_file}')
 
-    job = executor.submit(run_distributed_engines.hydra_main, overrides)
+    training_callable = CheckpointWrapper()
+    job = executor.submit(training_callable, overrides)
     # en = submitit.JobEnvironment()
     # print(f'Job ID: {job.job_id}\n', overrides)
     print('See log file for details')
@@ -102,4 +125,5 @@ if __name__ == '__main__':
     #
     # for job in jobs:
     #     print(job.results())
+
 
