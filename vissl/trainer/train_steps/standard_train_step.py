@@ -16,7 +16,7 @@ from vissl.utils.activation_checkpointing import (
     manual_gradient_all_reduce,
     manual_sync_params,
 )
-from vissl.utils.misc import is_apex_available
+from vissl.utils.misc import AmpType, is_apex_available
 from vissl.utils.perf_stats import PerfTimer
 
 
@@ -102,67 +102,77 @@ def standard_train_step(task):
         if task.enable_manual_gradient_reduction
         else contextlib.suppress()
     )
-    with grad_context:
-        with ddp_context:
-            # Forward pass of the model
-            with PerfTimer("forward", perf_stats):
-                if task.enable_manual_gradient_reduction:
-                    # Manually sync params and buffers for DDP.
-                    manual_sync_params(task.model)
+    torch_amp_context = (
+        torch.cuda.amp.autocast()
+        if task.amp_type == AmpType.pytorch
+        else contextlib.suppress()
+    )
 
-                model_output = task.model(sample["input"])
+    with grad_context, ddp_context, torch_amp_context:
+        # Forward pass of the model
+        with PerfTimer("forward", perf_stats):
+            if task.enable_manual_gradient_reduction:
+                # Manually sync params and buffers for DDP.
+                manual_sync_params(task.model)
 
-            # if the model outputs only one tensor, we take it out of the list.
-            if len(model_output) == 1:
-                model_output = model_output[0]
+            model_output = task.model(sample["input"])
 
-            task.last_batch.sample = sample
-            target = sample["target"]
+        # if the model outputs only one tensor, we take it out of the list.
+        if len(model_output) == 1:
+            model_output = model_output[0]
 
-            # run hooks on forward pass
-            task.run_hooks(SSLClassyHookFunctions.on_forward.name)
+        task.last_batch.sample = sample
+        target = sample["target"]
 
-            # compute loss
-            with PerfTimer("loss_compute", perf_stats):
-                local_loss = task.loss(model_output, target)
+        # run hooks on forward pass
+        task.run_hooks(SSLClassyHookFunctions.on_forward.name)
 
-            # Reduce the loss value across all nodes and gpus.
-            with PerfTimer("loss_all_reduce", perf_stats):
-                loss = local_loss.detach().clone()
-                task.last_batch.loss = all_reduce_mean(loss)
+        # compute loss
+        with PerfTimer("loss_compute", perf_stats):
+            local_loss = task.loss(model_output, target)
 
-            task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
+        # Reduce the loss value across all nodes and gpus.
+        with PerfTimer("loss_all_reduce", perf_stats):
+            loss = local_loss.detach().clone()
+            task.last_batch.loss = all_reduce_mean(loss)
 
-            # update meters
-            if len(task.meters) > 0:
-                with PerfTimer("meters_update", perf_stats):
-                    if isinstance(model_output, list):
-                        model_output_cpu = [x.cpu() for x in model_output]
-                    else:
-                        model_output_cpu = model_output.cpu()
+        task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
 
-                    for meter in task.meters:
-                        meter.update(model_output_cpu, target.detach().cpu())
+        # update meters
+        if len(task.meters) > 0:
+            with PerfTimer("meters_update", perf_stats):
+                if isinstance(model_output, list):
+                    model_output_cpu = [x.cpu() for x in model_output]
+                else:
+                    model_output_cpu = model_output.cpu()
 
-            task.last_batch.model_output = model_output
-            task.last_batch.target = target
+                for meter in task.meters:
+                    meter.update(model_output_cpu, target.detach().cpu())
 
-            # update the iteration number, check loss is not NaN and measure batch time
-            # now if it's a test phase since test phase doesn't have update step.
-            task.run_hooks(SSLClassyHookFunctions.on_loss_and_meter.name)
+        task.last_batch.model_output = model_output
+        task.last_batch.target = target
+
+        # update the iteration number, check loss is not NaN and measure batch time
+        # now if it's a test phase since test phase doesn't have update step.
+        task.run_hooks(SSLClassyHookFunctions.on_loss_and_meter.name)
 
     # run backward now and update the optimizer
     if task.train:
         with PerfTimer("backward", perf_stats):
 
             task.optimizer.zero_grad()
-            if task.amp_args is not None and is_apex_available():
+            if task.amp_type == AmpType.apex:
                 with apex.amp.scale_loss(
                     local_loss, task.optimizer.optimizer
                 ) as scaled_loss:
                     scaled_loss.backward()
                     if task.enable_manual_gradient_reduction:
                         manual_gradient_all_reduce(task.model)
+
+            elif task.amp_type == AmpType.pytorch:
+                task.amp_grad_scaler.scale(local_loss).backward()
+                if task.enable_manual_gradient_reduction:
+                    manual_gradient_all_reduce(task.model)
             else:
                 local_loss.backward()
                 if task.enable_manual_gradient_reduction:
@@ -172,7 +182,11 @@ def standard_train_step(task):
         # Stepping the optimizer also updates learning rate, momentum etc
         # according to the schedulers (if any).
         with PerfTimer("optimizer_step", perf_stats):
-            task.optimizer.step(where=task.where)
+            if task.amp_type == AmpType.pytorch:
+                task.amp_grad_scaler.step(task.optimizer, where=task.where)
+                task.amp_grad_scaler.update()
+            else:
+                task.optimizer.step(where=task.where)
         task.run_hooks(SSLClassyHookFunctions.on_update.name)
         task.num_updates += task.get_global_batchsize()
 
