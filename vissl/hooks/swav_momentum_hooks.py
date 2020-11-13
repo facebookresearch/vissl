@@ -22,13 +22,13 @@ class SwAVMomentumHook(ClassyHook):
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
 
-    def __init__(self, momentum: float, momentum_eval_mode: bool, crops_for_assign: List[int]):
+    def __init__(self, momentum: float, momentum_eval_mode_iter_start: int, crops_for_assign: List[int]):
         super().__init__()
         self.momentum = momentum
         self.inv_momentum = 1.0 - momentum
         self.crops_for_assign = crops_for_assign
         self.is_distributed = False
-        self.momentum_eval_mode = momentum_eval_mode
+        self.momentum_eval_mode_iter_start = momentum_eval_mode_iter_start
 
     def _build_momentum_network(self, task: tasks.ClassyTask) -> None:
         # Create the encoder, which will slowly track the model
@@ -40,8 +40,7 @@ class SwAVMomentumHook(ClassyHook):
         task.loss.momentum_encoder = build_model(
             task.config["MODEL"], task.config["OPTIMIZER"]
         )
-        if not self.momentum_eval_mode:
-            task.loss.momentum_encoder = nn.SyncBatchNorm.convert_sync_batchnorm(task.loss.momentum_encoder)
+        task.loss.momentum_encoder = nn.SyncBatchNorm.convert_sync_batchnorm(task.loss.momentum_encoder)
         task.loss.momentum_encoder.to(torch.device("cuda" if task.use_gpu else "cpu"))
 
         # Initialize from the model
@@ -50,22 +49,17 @@ class SwAVMomentumHook(ClassyHook):
                 task.base_model.parameters(), task.loss.momentum_encoder.parameters()
             ):
                 param_k.data.copy_(param_q.data)
-            if self.momentum_eval_mode:
-                for buff_q, buff_k in zip(
-                    task.base_model.named_buffers(), task.loss.momentum_encoder.named_buffers()
-                ):
-                    if not "running_" in buff_k[0]:
-                        continue
-                    buff_k[1].data.copy_(buff_q[1].data)
-        if task.loss.is_distributed and not self.momentum_eval_mode:
-            task.loss.momentum_encoder = init_distributed_data_parallel_model(task.loss.momentum_encoder)
+            for buff_q, buff_k in zip(
+                task.base_model.named_buffers(), task.loss.momentum_encoder.named_buffers()
+            ):
+                if not "running_" in buff_k[0]:
+                    continue
+                buff_k[1].data.copy_(buff_q[1].data)
+        task.loss.momentum_encoder = init_distributed_data_parallel_model(task.loss.momentum_encoder)
 
         # Restore an hypothetical checkpoint
         if task.loss.checkpoint is not None:
             task.loss.load_state_dict(task.loss.checkpoint)
-
-        if self.momentum_eval_mode:
-            task.loss.momentum_encoder.eval()
 
     @torch.no_grad()
     def _update_momentum_network(self, task: tasks.ClassyTask) -> None:
@@ -83,13 +77,12 @@ class SwAVMomentumHook(ClassyHook):
                 param_k.data * self.momentum + param_q.data * self.inv_momentum
             )
 
-        if self.momentum_eval_mode:
-            for buff_q, buff_k in zip(
-                task.base_model.named_buffers(), task.loss.momentum_encoder.named_buffers()
-            ):
-                if not "running_" in buff_k[0]:
-                    continue
-                buff_k[1].data.copy_(buff_q[1].data)
+        for buff_q, buff_k in zip(
+            task.base_model.named_buffers(), task.loss.momentum_encoder.named_buffers()
+        ):
+            if not "running_" in buff_k[0]:
+                continue
+            buff_k[1].data.copy_(buff_q[1].data)
 
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
@@ -102,6 +95,14 @@ class SwAVMomentumHook(ClassyHook):
             self._build_momentum_network(task)
         else:
             self._update_momentum_network(task)
+
+        if task.loss.num_iteration > self.momentum_eval_mode_iter_start:
+            task.loss.momentum_encoder.eval()
+        elif task.loss.num_iteration == self.momentum_eval_mode_iter_start:
+            task.loss.momentum_encoder.eval()
+            logging.info("Momentum network will be used in eval mode from now on.")
+        else:
+            task.loss.momentum_encoder.train()
 
         # Compute momentum features. We do not backpropagate in this codepath
         im_k = [task.last_batch.sample["input"][i] for i in self.crops_for_assign]
