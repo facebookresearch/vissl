@@ -22,12 +22,13 @@ class SwAVMomentumHook(ClassyHook):
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
 
-    def __init__(self, momentum: float, crops_for_assign: List[int]):
+    def __init__(self, momentum: float, momentum_eval_mode: bool, crops_for_assign: List[int]):
         super().__init__()
         self.momentum = momentum
         self.inv_momentum = 1.0 - momentum
         self.crops_for_assign = crops_for_assign
         self.is_distributed = False
+        self.momentum_eval_mode = momentum_eval_mode
 
     def _build_momentum_network(self, task: tasks.ClassyTask) -> None:
         # Create the encoder, which will slowly track the model
@@ -39,7 +40,8 @@ class SwAVMomentumHook(ClassyHook):
         task.loss.momentum_encoder = build_model(
             task.config["MODEL"], task.config["OPTIMIZER"]
         )
-        task.loss.momentum_encoder = nn.SyncBatchNorm.convert_sync_batchnorm(task.loss.momentum_encoder)
+        if not self.momentum_eval_mode:
+            task.loss.momentum_encoder = nn.SyncBatchNorm.convert_sync_batchnorm(task.loss.momentum_encoder)
         task.loss.momentum_encoder.to(torch.device("cuda" if task.use_gpu else "cpu"))
 
         # Initialize from the model
@@ -48,12 +50,22 @@ class SwAVMomentumHook(ClassyHook):
                 task.base_model.parameters(), task.loss.momentum_encoder.parameters()
             ):
                 param_k.data.copy_(param_q.data)
-        if task.loss.is_distributed:
+            if self.momentum_eval_mode:
+                for buff_q, buff_k in zip(
+                    task.base_model.named_buffers(), task.loss.momentum_encoder.named_buffers()
+                ):
+                    if not "running_" in buff_k[0]:
+                        continue
+                    buff_k[1].data.copy_(buff_q[1].data)
+        if task.loss.is_distributed and not self.momentum_eval_mode:
             task.loss.momentum_encoder = init_distributed_data_parallel_model(task.loss.momentum_encoder)
 
         # Restore an hypothetical checkpoint
         if task.loss.checkpoint is not None:
             task.loss.load_state_dict(task.loss.checkpoint)
+
+        if self.momentum_eval_mode:
+            task.loss.momentum_encoder.eval()
 
     @torch.no_grad()
     def _update_momentum_network(self, task: tasks.ClassyTask) -> None:
@@ -70,6 +82,14 @@ class SwAVMomentumHook(ClassyHook):
             param_k.data = (
                 param_k.data * self.momentum + param_q.data * self.inv_momentum
             )
+
+        if self.momentum_eval_mode:
+            for buff_q, buff_k in zip(
+                task.base_model.named_buffers(), task.loss.momentum_encoder.named_buffers()
+            ):
+                if not "running_" in buff_k[0]:
+                    continue
+                buff_k[1].data.copy_(buff_q[1].data)
 
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
@@ -109,21 +129,14 @@ class SwAVMomentumNormalizePrototypesHook(ClassyHook):
         if not task.config.LOSS["swav_momentum_loss"].normalize_last_layer:
             return
         with torch.no_grad():
-            if not task.loss.is_distributed:
-                assert len(task.model.heads) == 1
+            try:
                 for j in range(task.model.heads[0].nmb_heads):
                     w = getattr(
                         task.model.heads[0], "prototypes" + str(j)
                     ).weight.data.clone()
                     w = nn.functional.normalize(w, dim=1, p=2)
                     getattr(task.model.heads[0], "prototypes" + str(j)).weight.copy_(w)
-                    w = getattr(
-                        task.loss.momentum_encoder.heads[0], "prototypes" + str(j)
-                    ).weight.data.clone()
-                    w = nn.functional.normalize(w, dim=1, p=2)
-                    getattr(task.loss.momentum_encoder.heads[0], "prototypes" + str(j)).weight.copy_(w)
-            else:
-                assert len(task.model.module.heads) == 1
+            except AttributeError:
                 for j in range(task.model.module.heads[0].nmb_heads):
                     w = getattr(
                         task.model.module.heads[0], "prototypes" + str(j)
@@ -132,6 +145,15 @@ class SwAVMomentumNormalizePrototypesHook(ClassyHook):
                     getattr(
                         task.model.module.heads[0], "prototypes" + str(j)
                     ).weight.copy_(w)
+            try:
+                for j in range(task.loss.momentum_encoder.heads[0].nmb_heads):
+                    w = getattr(
+                        task.loss.momentum_encoder.heads[0], "prototypes" + str(j)
+                    ).weight.data.clone()
+                    w = nn.functional.normalize(w, dim=1, p=2)
+                    getattr(task.loss.momentum_encoder.heads[0], "prototypes" + str(j)).weight.copy_(w)
+            except AttributeError:
+                for j in range(task.loss.momentum_encoder.module.heads[0].nmb_heads):
                     w = getattr(
                         task.loss.momentum_encoder.module.heads[0], "prototypes" + str(j)
                     ).weight.data.clone()
