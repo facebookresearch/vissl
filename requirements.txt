@@ -10,3 +10,4 @@ numpy>=1.15
 tabulate
 pycocotools>=2.0.1
 fvcore
+fairscale

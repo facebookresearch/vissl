@@ -3,6 +3,7 @@
 import logging
 import random
 import tempfile
+from enum import Enum
 
 import numpy as np
 import pkg_resources
@@ -10,6 +11,11 @@ import torch
 import torch.multiprocessing as mp
 from scipy.sparse import csr_matrix
 from vissl.utils.io import load_file
+
+
+class AmpType(Enum):
+    apex = "apex"
+    pytorch = "pytorch"
 
 
 def is_apex_available():

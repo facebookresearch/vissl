@@ -10,14 +10,16 @@ from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
+from fairscale.optim.grad_scaler import ShardedGradScaler
 from fvcore.common.file_io import PathManager
+from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.data import build_dataset, get_loader, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_regularized_params
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
-from vissl.utils.misc import is_apex_available
+from vissl.utils.misc import AmpType, is_apex_available
 
 
 if is_apex_available():
@@ -31,6 +33,9 @@ class SelfSupervisionTask(ClassificationTask):
         self.config = config
         self.checkpoint_path = None
 
+        # Register the task to the proper device (cpu, gpu, ...)
+        self.set_device()
+
         self.checkpoint = None
         self.available_splits = []
         self.base_loss = None
@@ -41,6 +46,8 @@ class SelfSupervisionTask(ClassificationTask):
         self.base_model = None
         self.optimizer = None
         self.amp_args = None
+        self.amp_type = None
+        self.amp_grad_scaler = None
         self.data_and_label_keys = []
         self.set_amp_args()
         self._enable_manual_gradient_reduction = None
@@ -86,9 +93,6 @@ class SelfSupervisionTask(ClassificationTask):
         # loss curve. Reset at start of each phase/epoch by SetDataSamplerEpochHook hook.
         self.losses = []  # set by the hook at start of each epoch or phase
 
-        # Register the task to the proper device (cpu, gpu, ...)
-        self.set_device()
-
     def set_device(self):
         try:
             self.device = torch.device(
@@ -107,18 +111,39 @@ class SelfSupervisionTask(ClassificationTask):
 
     def set_amp_args(self):
         """
-        amp_args is a dictionary containing arguments to be passed to
-        amp.initialize. Set to None to disable amp.  To enable mixed
-        precision training, pass amp_args={"opt_level": "O1"} here.
+        Two automatic mixed precision implementations are available: Apex's and Pytorch's.
+
+        - If Apex's AMP is enabled, amp_args is a dictionary containing arguments
+        to be passed to amp.initialize. Set to None to disable amp.
+        To enable mixed precision training, pass amp_args={"opt_level": "O1"} here.
         See https://nvidia.github.io/apex/amp.html for more info.
+
+        - If Pytorch's AMP is enabled, no arguments are needed
         """
-        amp_args = None
+
         if self.config.MODEL.AMP_PARAMS.USE_AMP:
-            if not is_apex_available():
-                raise RuntimeError("Apex is not available. Can't use mixed precision")
-            amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
-        self.amp_args = amp_args
-        logging.info(f"Setting amp args: {self.amp_args}")
+            assert (
+                self.device.type == "cuda"
+            ), "Mixed precision is only available on CUDA devices for now"
+
+            # This will rightly fail if the setting is not correct
+            self.amp_type = AmpType(self.config.MODEL.AMP_PARAMS.AMP_TYPE)
+
+            # Check Apex availability
+            if self.amp_type == AmpType.apex:
+                if not is_apex_available():
+                    raise RuntimeError(
+                        "Apex is not available. Can't use mixed precision"
+                    )
+
+                # "amp_args" are actually Apex Amp args
+                self.amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
+
+            logging.info(f"Setting AMP: {self.amp_type} - args: {self.amp_args}")
+
+        else:
+            self.amp_args, self.amp_type = None, None
+            logging.info("Not using Automatic Mixed Precision")
 
     def set_checkpoint_path(self, checkpoint_path: str):
         # assert (
@@ -497,8 +522,10 @@ class SelfSupervisionTask(ClassificationTask):
         # initialize the pytorch optimizer now since the model has been moved to
         # the appropriate device.
         self.prepare_optimizer()
-        if self.amp_args is not None and is_apex_available():
-            # Allow Amp to perform casts as specified by the amp_args.
+
+        # Enable mixed precision grad scalers
+        if self.amp_type == AmpType.apex:
+            # Allow Apex Amp to perform casts as specified by the amp_args.
             # This updates the model and the PyTorch optimizer (which is wrapped
             # by the ClassyOptimizer in self.optimizer).
             # NOTE: this must happen before loading the checkpoint. See
@@ -507,6 +534,15 @@ class SelfSupervisionTask(ClassificationTask):
                 self.base_model, self.optimizer.optimizer, **self.amp_args
             )
 
+        # If the optimizer is sharded, then the GradScaler needs to be shard-aware
+        elif self.amp_type == AmpType.pytorch:
+            self.amp_grad_scaler = (
+                ShardedGradScaler()
+                if self.config["OPTIMIZER"]["name"] == "zero"
+                else TorchGradScaler()
+            )
+
+        # Restore an hypothetical checkpoint
         vissl_state_dict = None
         if self.checkpoint_path is not None:
             self.checkpoint = load_and_broadcast_checkpoint(
