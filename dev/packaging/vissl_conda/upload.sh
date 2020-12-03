@@ -9,7 +9,7 @@ retry () {
     $*  || (echo && sleep 8 && echo retrying && $*)
 }
 
-for file in inside/packaging/*.bz2
+for file in out/linux-64/*.tar.bz2
 do
     echo
     echo "${file}"

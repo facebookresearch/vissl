@@ -6,8 +6,8 @@ set -ex
 # cu$CU_VERSION          # non-conda
 # cu$CU_VERSION-conda    # conda
 # Examples:
-#   -> cu101 ./build_docker.sh
-#   -> cu101-conda  ./build_docker.sh
+#   -> image=cu101 ./build_docker.sh
+#   -> image=cu101-conda  ./build_docker.sh
 image=${image}
 if [ -z "${image}" ]; then
   echo "Usage: $0 IMAGE"
