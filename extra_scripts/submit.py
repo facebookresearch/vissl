@@ -26,7 +26,7 @@ if __name__ == '__main__':
                                                  'will override those in '
                                                  'vissl config file.')
     parser.add_argument('--config_file', type=str,
-                        default='pretrain/supervised/supervised_256gpu_vision_transformer_imagenet',
+                        default='pretrain/supervised/supervised_128gpu_vit_b16_imagenet',
                         help='vissl config file')
     parser.add_argument('--job_name', type=str, default='vision_transformer')
     parser.add_argument('--time', default=2160, type=int, help='job time ' \

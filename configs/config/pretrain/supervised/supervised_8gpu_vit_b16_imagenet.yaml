@@ -2,11 +2,11 @@
 config:
   TENSORBOARD_SETUP:
     USE_TENSORBOARD: True
-    EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/256gpu"
+    EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/8gpu_test"
     LOG_ACTIVATIONS: False
     FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
-    DIR: "/checkpoint/ito/vision_transformer/256gpu"
+    DIR: "/checkpoint/ito/vision_transformer/8gpu_test"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
   DATA:
@@ -48,11 +48,18 @@ config:
   MODEL:
     TRUNK:
       NAME: vision_transformer
-    #      TRUNK_PARAMS:
-    #        VISION_TRANSFORMERS:
+      TRUNK_PARAMS:
+        VISION_TRANSFORMERS:
+          NUM_LAYERS: 12
+          NUM_HEADS: 12
+          HIDDEN_DIM: 768
+          MLP_DIM: 3072
+          DROPOUT_RATE: 0.1
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
     HEAD:
       PARAMS: [
-      ["vision_transformer_head", {"in_plane": 1024, "hidden_dim": 4096,
+      ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,
                                    "num_classes": 1000}],
       ]
   LOSS:
@@ -78,7 +85,7 @@ config:
           - name: linear
             start_value: 0.00001
             end_value: 0.003
-          - name: cosine
+          - name: linear
             start_value: 0.003
             end_value: 0.000001
         interval_scaling: [rescaled, fixed]
@@ -94,10 +101,9 @@ config:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 32
+    NUM_NODES: 1
     NUM_PROC_PER_NODE: 8 # 1 GPU
-    RUN_ID: "50398"
-    SLURM_ENV: True
+    RUN_ID: auto
   MACHINE:
     DEVICE: gpu
   VERBOSE: True
@@ -106,4 +112,4 @@ config:
   TEST_EVERY_NUM_EPOCH: 1
   TEST_MODEL: True
   SEED_VALUE: 0
-  MULTI_PROCESSING_METHOD: forkserver
+  MULTI_PROCESSING_METHOD: fork

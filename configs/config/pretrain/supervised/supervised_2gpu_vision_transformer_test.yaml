@@ -95,10 +95,10 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NCCL_DEBUG: True
-    NUM_NODES: 2
-    NUM_PROC_PER_NODE: 8 # 1 GPU
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 2 # 1 GPU
     RUN_ID: "50398"
-    SLURM_ENV: True
+#    SLURM_ENV: True
   MACHINE:
     DEVICE: gpu
   VERBOSE: True
