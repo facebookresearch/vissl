@@ -70,7 +70,7 @@ config:
     name: adamw
     weight_decay: 0.3
     #    momentum: 0.9
-    num_epochs: 90
+    num_epochs: 300
     #    nesterov: True
     #    regularize_bn: False
     #    regularize_bias: True
