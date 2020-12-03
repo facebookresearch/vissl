@@ -23,8 +23,8 @@ PYTHON_VERSIONS="3.6 3.7 3.8"
 
 for python_version in $PYTHON_VERSIONS
 do
-    outdir="dev/packaging/vissl_pip/output/$python_version"
     tag="py$python_version"
+    outdir="dev/packaging/vissl_pip/output/$tag"
     conda create -y -n "$tag" "python=$python_version"
     conda activate "$tag"
     echo "python version" "$python_version" "tag" "$tag"

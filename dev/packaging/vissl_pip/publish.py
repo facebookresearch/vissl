@@ -7,7 +7,7 @@ def write_html_wrappers():
     <a href="$">$</a><br>
     """
 
-    output = Path("inside/output")
+    output = Path("output")
     for directory in sorted(output.iterdir()):
         files = list(directory.glob("*.whl"))
         assert len(files)==1, files
@@ -27,9 +27,9 @@ def fs3cmd(args):
     subprocess.check_call(["/public/apps/fairusers_aws/bin/fs3cmd"]+args)
 
 def to_aws():
-    dest = "s3://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/"
+    dest = "s3://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/"
 
-    output = Path("inside/output")
+    output = Path("output")
     for directory in sorted(output.iterdir()):
         for file in directory.iterdir():
             print(file)
