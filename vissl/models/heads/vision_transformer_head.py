@@ -5,7 +5,7 @@ Code modified from https://github.com/google-research/vision_transformer
 and https://www.internalfb.com/D24714842, as per https://arxiv.org/abs/2010.11929
 """
 
-from typing import List
+# from typing import List
 import copy
 from collections import OrderedDict
 
