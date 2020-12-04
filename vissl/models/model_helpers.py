@@ -299,7 +299,6 @@ def lecun_normal_init(tensor, fan_in):
 
 
 def trunc_normal_(tensor, mean=0., std=1., a=-2., b=2.):
-    # type: (Tensor, float, float, float, float) -> Tensor
     r"""LIFTED DIRECTLY FROM PYTORCH 1.7. Can remove when vissl is
     compatible with PyTorch 1.7.
     Fills the input Tensor with values drawn
