@@ -263,6 +263,7 @@ config:
         # Vision Transformer params. Default = ViT-L/16
         # ------------------------------------------------------------- #
         VISION_TRANSFORMERS:
+          name: vit_l_16
           IMAGE_SIZE: 224
           PATCH_SIZE: 16
           NUM_LAYERS: 24

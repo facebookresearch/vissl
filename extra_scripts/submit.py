@@ -42,6 +42,7 @@ if __name__ == '__main__':
     parser.add_argument('--comment', type=str, default=None, help='Needed for priority')
     parser.add_argument('--run_id', type=str, default='60012',
                         help='Needed for multi-node jobs.')
+    parser.add_argument('--batchsize_per_replica', type=int, default=16)
     # Note that a new subdirectory will be created for each job. See the
     # format below.
     parser.add_argument('--checkpoint_root', type=str, default=None, help='If none '
@@ -96,7 +97,8 @@ if __name__ == '__main__':
         'CHECKPOINT.DIR': checkpoint_directory,
         'DISTRIBUTED.NUM_NODES': slurm_params['nodes'],
         # 'DISTRIBUTED.NUM_PROC_PER_NODE': slurm_params['gpus_per_node'],
-        'DISTRIBUTED.RUN_ID': args.run_id
+        'DISTRIBUTED.RUN_ID': args.run_id,
+        'DATA.TRAIN.BATCHSIZE_PER_REPLICA': args.batchsize_per_replica
     }
     # Create list of overrides to be passed as args
     overrides = []
