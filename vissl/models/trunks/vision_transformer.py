@@ -231,7 +231,8 @@ class VisionTransformer(nn.Module):
         nn.init.zeros_(self.conv_proj.bias)
 
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor, out_feat_keys: List[str] = None
+                ) -> List[torch.Tensor]:
         # Todo: check image size divisble by patch size
         assert x.ndim == 4, "Unexpected input shape"
         n, c, h, w = x.shape
