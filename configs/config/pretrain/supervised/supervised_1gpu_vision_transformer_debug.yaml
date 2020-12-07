@@ -16,7 +16,7 @@ config:
 #      DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 16
+      BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -35,7 +35,7 @@ config:
 #      DATA_PATHS: ["<path to test folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 16
+      BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -48,11 +48,15 @@ config:
   MODEL:
     TRUNK:
       NAME: vision_transformer
-#      TRUNK_PARAMS:
-#        VISION_TRANSFORMERS:
+      TRUNK_PARAMS:
+        VISION_TRANSFORMERS:
+          name: vit_b_32
+          DROPOUT_RATE: 0.1
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
     HEAD:
       PARAMS: [
-      ["vision_transformer_head", {"in_plane": 1024, "hidden_dim": 4096,
+      ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,
                                    "num_classes": 1000}],
       ]
   LOSS:
