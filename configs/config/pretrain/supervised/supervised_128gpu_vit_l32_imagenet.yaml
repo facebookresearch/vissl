@@ -16,7 +16,7 @@ config:
       #      DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 16
+      BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -35,7 +35,7 @@ config:
       #      DATA_PATHS: ["<path to test folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 16
+      BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -48,8 +48,11 @@ config:
   MODEL:
     TRUNK:
       NAME: vision_transformer
-    #      TRUNK_PARAMS:
-    #        VISION_TRANSFORMERS:
+        VISION_TRANSFORMERS:
+          name: vit_l_32
+          DROPOUT_RATE: 0.1
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 1024, "hidden_dim": 4096,
@@ -94,7 +97,7 @@ config:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 32
+    NUM_NODES: 16
     NUM_PROC_PER_NODE: 8 # 1 GPU
     RUN_ID: "60215"
     SLURM_ENV: True

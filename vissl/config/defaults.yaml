@@ -204,7 +204,9 @@ config:
         REGNETS: {}
 
         # ------------------------------------------------------------- #
-        # Vision Transformer params. Default = ViT-L/16
+        # Vision Transformer params. Default = ViT-L/16. Using a name will
+        # override PATCH_SIZE, NUM_LAYERS, NUM_HEADS, HIDDEN_DIM, and MLP_DIM.
+        # Named options include vit_b_32, vit_b_16, vit_l_32, vit_l_16, vit_h_14
         # ------------------------------------------------------------- #
         VISION_TRANSFORMERS:
           name: vit_l_16
