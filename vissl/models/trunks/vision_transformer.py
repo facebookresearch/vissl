@@ -6,8 +6,6 @@ and https://www.internalfb.com/D24577730, as per https://arxiv.org/abs/2010.1192
 """
 
 import logging
-from collections import OrderedDict
-from functools import partial
 from typing import List
 
 import torch
@@ -15,7 +13,6 @@ import torch.nn as nn
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict
 from classy_vision.models import VisionTransformer as ClassyViT, build_model
-from vissl.models.model_helpers import lecun_normal_init
 
 
 @register_model_trunk("vision_transformer")
