@@ -48,6 +48,7 @@ config:
   MODEL:
     TRUNK:
       NAME: vision_transformer
+      TRUNK_PARAMS:
         VISION_TRANSFORMERS:
           name: vit_l_16
           DROPOUT_RATE: 0.1
