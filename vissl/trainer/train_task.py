@@ -19,7 +19,7 @@ from vissl.optimizers import get_optimizer_regularized_params
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
-from vissl.utils.misc import AmpType, is_apex_available
+from vissl.utils.misc import is_apex_available, AmpType
 
 
 if is_apex_available():
@@ -130,7 +130,7 @@ class SelfSupervisionTask(ClassificationTask):
             self.amp_type = AmpType(self.config.MODEL.AMP_PARAMS.AMP_TYPE)
 
             # Check Apex availability
-            if self.amp_type == AmpType.apex:
+            if self.amp_type == AmpType.APEX:
                 if not is_apex_available():
                     raise RuntimeError(
                         "Apex is not available. Can't use mixed precision"
@@ -524,7 +524,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.prepare_optimizer()
 
         # Enable mixed precision grad scalers
-        if self.amp_type == AmpType.apex:
+        if self.amp_type == AmpType.APEX:
             # Allow Apex Amp to perform casts as specified by the amp_args.
             # This updates the model and the PyTorch optimizer (which is wrapped
             # by the ClassyOptimizer in self.optimizer).
@@ -535,7 +535,7 @@ class SelfSupervisionTask(ClassificationTask):
             )
 
         # If the optimizer is sharded, then the GradScaler needs to be shard-aware
-        elif self.amp_type == AmpType.pytorch:
+        elif self.amp_type == AmpType.PYTORCH:
             self.amp_grad_scaler = (
                 ShardedGradScaler()
                 if self.config["OPTIMIZER"]["name"] == "zero"
