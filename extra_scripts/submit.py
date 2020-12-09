@@ -17,7 +17,8 @@ class CheckpointWrapper:
         run_distributed_engines.hydra_main(overrides)
 
     def __submitit_checkpoint__(self, *args: typing.Any, **kwargs: typing.Any) -> submitit.helpers.DelayedSubmission:
-        return submitit.helpers.DelayedSubmission(self, *args, **kwargs)
+        training_callable = CheckpointWrapper()
+        return submitit.helpers.DelayedSubmission(training_callable, *args, **kwargs)
 
 
 if __name__ == '__main__':
@@ -29,7 +30,7 @@ if __name__ == '__main__':
                         default='pretrain/supervised/supervised_128gpu_vit_b16_imagenet',
                         help='vissl config file')
     parser.add_argument('--job_name', type=str, default='vision_transformer')
-    parser.add_argument('--time', default=2160, type=int, help='job time ' \
+    parser.add_argument('--time', default=2880, type=int, help='job time ' \
                                                             'request, in minutes')
     parser.add_argument('--nodes', type=int, default=32)
     parser.add_argument('--gpus_per_task', type=int, default=8)
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--comment', type=str, default=None, help='Needed for priority')
     parser.add_argument('--run_id', type=str, default='60012',
                         help='Needed for multi-node jobs.')
-    parser.add_argument('--batchsize_per_replica', type=int, default=16)
+    parser.add_argument('--batchsize_per_replica', type=int)
     # Note that a new subdirectory will be created for each job. See the
     # format below.
     parser.add_argument('--checkpoint_root', type=str, default=None, help='If none '
@@ -57,7 +58,19 @@ if __name__ == '__main__':
                                                                           'will default '
                                                                           'to current date and time')
 
-    args = parser.parse_args()
+    args, unparsed_overrides = parser.parse_known_args()
+    additional_overrides = {}
+
+    # Iterate over every unparsed parameter-argument pair and add them to a
+    # dictionary that will be added to the config overrides
+    for arg_ind in range(0, len(unparsed_overrides), 2):
+        arg = unparsed_overrides[arg_ind]
+        if arg.startswith(('--')):
+            curr_param = arg.split('--')[1]
+        elif arg.startswith(('-')):
+            curr_param = arg.split('-')[1]
+        additional_overrides[curr_param] = unparsed_overrides[arg_ind + 1]
+
 
     # See submitit slurm param options at:
     # https://github.com/facebookincubator/submitit/blob/e37fcf219e7aac0914a73f2642ada7a6d6c091c4/submitit/slurm/slurm.py#L387
@@ -88,7 +101,8 @@ if __name__ == '__main__':
     checkpoint_directory = os.path.join(checkpoint_root, checkpoint_directory)
     Path(checkpoint_directory).mkdir(parents=True, exist_ok=True)
 
-    executor = submitit.SlurmExecutor(folder=checkpoint_directory)
+    executor = submitit.SlurmExecutor(folder=checkpoint_directory,
+                                      max_num_timeout=7)
     executor.update_parameters(**slurm_params)
 
     # Create override parameter dictionary of format key = hierarchy in .yaml
@@ -97,9 +111,11 @@ if __name__ == '__main__':
         'CHECKPOINT.DIR': checkpoint_directory,
         'DISTRIBUTED.NUM_NODES': slurm_params['nodes'],
         # 'DISTRIBUTED.NUM_PROC_PER_NODE': slurm_params['gpus_per_node'],
-        'DISTRIBUTED.RUN_ID': args.run_id,
-        'DATA.TRAIN.BATCHSIZE_PER_REPLICA': args.batchsize_per_replica
+        'DISTRIBUTED.RUN_ID': args.run_id
     }
+    if args.batchsize_per_replica:
+        override_dict['DATA.TRAIN.BATCHSIZE_PER_REPLICA'] = args.batchsize_per_replica
+    override_dict.update(additional_overrides)
     # Create list of overrides to be passed as args
     overrides = []
     for k, v in override_dict.items():
@@ -111,7 +127,7 @@ if __name__ == '__main__':
     job = executor.submit(training_callable, overrides)
     # en = submitit.JobEnvironment()
     # print(f'Job ID: {job.job_id}\n', overrides)
-    print('See log file for details')
+    print(f'See log file for details: {checkpoint_directory}/log.txt')
 
     print(job.results())
 
