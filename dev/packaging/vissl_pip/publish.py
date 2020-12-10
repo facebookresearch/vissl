@@ -2,40 +2,72 @@ import os
 import subprocess
 from pathlib import Path
 
+dest = "s3://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/"
+
+
+def fs3cmd(args, allow_failure=False):
+    """
+    This function returns the args for subprocess to mimic the bash command
+    fs3cmd available in the fairusers_aws module on the FAIR cluster.
+    Works on H2.
+    Not tested on H1 - this is a guess based on the definition in H2.
+    """
+    os.environ["FAIR_CLUSTER_NAME"] = os.environ["FAIR_ENV_CLUSTER"].lower()
+    cmd_args = ["/public/apps/fairusers_aws/bin/fs3cmd"] + args
+    return cmd_args
+
+
+def fs3_exists(path):
+    """
+    Returns True if the path exists inside dest on S3.
+    In fact, will also return True if there is a file which has the given
+    path as a prefix, but we are careful about this.
+    """
+    # path="s3://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt151/download.html"
+    out = subprocess.check_output(fs3cmd(["ls", path]))
+    return len(out) != 0
+
+
+def get_html_wrappers():
+    output_wrapper = Path("output/download.html")
+    assert not output_wrapper.exists()
+    dest_wrapper = dest + "download.html"
+    if fs3_exists(dest_wrapper):
+        fs3cmd(["get", dest_wrapper, str(output_wrapper)])
+
+
 def write_html_wrappers():
     html = """
     <a href="$">$</a><br>
     """
 
     output = Path("output")
-    for directory in sorted(output.iterdir()):
-        files = list(directory.glob("*.whl"))
-        assert len(files)==1, files
-        [wheel]=files
+    files = list(output.glob("*.whl"))
+    assert len(files) == 1, files
+    [wheel] = files
 
-        this_html = html.replace("$", wheel.name)
-        (directory/"download.html").write_text(this_html)
+    this_html = html.replace("$", wheel.name)
+    output_wrapper = output / "download.html"
+    if output_wrapper.exists():
+        contents = output_wrapper.read_text()
+        if this_html not in contents:
+            with open(output_wrapper, "a") as f:
+                f.write(this_html)
+    else:
+        output_wrapper.write_text(this_html)
 
-def fs3cmd(args):
-    """
-    This function mimics the bash command fs3cmd available in the
-    fairusers_aws module on the FAIR cluster.
-    Works on H2.
-    Not tested on H1 - this is a guess based on the definition in H2.
-    """
-    os.environ["FAIR_CLUSTER_NAME"]=os.environ["FAIR_ENV_CLUSTER"].lower()
-    subprocess.check_call(["/public/apps/fairusers_aws/bin/fs3cmd"]+args)
 
 def to_aws():
-    dest = "s3://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/"
-
     output = Path("output")
-    for directory in sorted(output.iterdir()):
-        for file in directory.iterdir():
-            print(file)
+    for file in output.iterdir():
+        print(file)
+        subprocess.check_call(
             fs3cmd(["put", str(file), dest + str(file.relative_to(output))])
+        )
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
+    get_html_wrappers()
     write_html_wrappers()
     to_aws()
-    # fs3cmd(["--help"])
+    # subprocess.check_call(fs3cmd(["get", "--help"]))

@@ -16,7 +16,5 @@ commands.
 
 
 ```
-import sys
-tag=f"py3.{sys.version_info.minor}"
-!pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/{tag}/download.html
+!pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
 ```
