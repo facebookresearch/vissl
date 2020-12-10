@@ -4,6 +4,9 @@ from pathlib import Path
 
 dest = "s3://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/"
 
+# we build on python3.6 but it works for 3.7 and 3.8 too
+output = Path("output/py3.6")
+
 
 def fs3cmd(args, allow_failure=False):
     """
@@ -29,7 +32,7 @@ def fs3_exists(path):
 
 
 def get_html_wrappers():
-    output_wrapper = Path("output/download.html")
+    output_wrapper = output / "download.html"
     assert not output_wrapper.exists()
     dest_wrapper = dest + "download.html"
     if fs3_exists(dest_wrapper):
@@ -41,7 +44,6 @@ def write_html_wrappers():
     <a href="$">$</a><br>
     """
 
-    output = Path("output")
     files = list(output.glob("*.whl"))
     assert len(files) == 1, files
     [wheel] = files
@@ -58,7 +60,6 @@ def write_html_wrappers():
 
 
 def to_aws():
-    output = Path("output")
     for file in output.iterdir():
         print(file)
         subprocess.check_call(
