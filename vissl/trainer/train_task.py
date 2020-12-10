@@ -22,7 +22,7 @@ from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
-from vissl.utils.misc import AmpType, is_apex_available
+from vissl.utils.misc import is_apex_available, AmpType
 
 if is_apex_available():
     import apex

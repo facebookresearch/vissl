@@ -1,12 +1,16 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+import enum
 import logging
 import random
 import tempfile
+<<<<<<< HEAD
 import os
 import re
 import sys
 from enum import Enum
+=======
+>>>>>>> Pytorch AMP (#102)
 
 import numpy as np
 import pkg_resources
@@ -16,9 +20,11 @@ from scipy.sparse import csr_matrix
 from vissl.utils.io import load_file
 
 
-class AmpType(Enum):
-    apex = "apex"
-    pytorch = "pytorch"
+class AmpType(enum.Enum):
+    # Automatic Mixed Precision supported types
+    # The strict string definition is on purpose, anything not matching will error out
+    APEX = "apex"
+    PYTORCH = "pytorch"
 
 
 def is_apex_available():
