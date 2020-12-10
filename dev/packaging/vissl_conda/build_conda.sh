@@ -7,7 +7,7 @@ packaging=dev/packaging/vissl_conda
 mkdir -p "$packaging/out"
 
 version=$(python -c "exec(open('vissl/__init__.py').read()); print(__version__)")
-build_version=$version.post$(date +%Y%m%d)
+build_version=$version
 
 export BUILD_VERSION=$build_version
 
