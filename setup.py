@@ -43,7 +43,7 @@ setup(
     packages=packages,
     install_requires=fetch_requirements(),
     include_package_data=True,
-    python_requires=">=3.6",
+    python_requires=">=3.6.2",
     extras_require={
         "dev": [
             "black==19.3b0",

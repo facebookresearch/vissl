@@ -32,8 +32,8 @@ install_python: &install_python
       working_directory: ~/
       command: |
         pyenv versions
-        pyenv install 3.6.1
-        pyenv global 3.6.1
+        pyenv install 3.6.2
+        pyenv global 3.6.2
 
 update_gcc7: &update_gcc7
   - run:

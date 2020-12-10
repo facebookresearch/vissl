@@ -104,7 +104,7 @@ def standard_train_step(task):
     )
     torch_amp_context = (
         torch.cuda.amp.autocast()
-        if task.amp_type == AmpType.pytorch
+        if task.amp_type == AmpType.PYTORCH
         else contextlib.suppress()
     )
 
@@ -161,7 +161,7 @@ def standard_train_step(task):
         with PerfTimer("backward", perf_stats):
 
             task.optimizer.zero_grad()
-            if task.amp_type == AmpType.apex:
+            if task.amp_type == AmpType.APEX:
                 with apex.amp.scale_loss(
                     local_loss, task.optimizer.optimizer
                 ) as scaled_loss:
@@ -169,7 +169,7 @@ def standard_train_step(task):
                     if task.enable_manual_gradient_reduction:
                         manual_gradient_all_reduce(task.model)
 
-            elif task.amp_type == AmpType.pytorch:
+            elif task.amp_type == AmpType.PYTORCH:
                 task.amp_grad_scaler.scale(local_loss).backward()
                 if task.enable_manual_gradient_reduction:
                     manual_gradient_all_reduce(task.model)
@@ -183,7 +183,7 @@ def standard_train_step(task):
         # Stepping the optimizer also updates learning rate, momentum etc
         # according to the schedulers (if any).
         with PerfTimer("optimizer_step", perf_stats):
-            if task.amp_type == AmpType.pytorch:
+            if task.amp_type == AmpType.PYTORCH:
                 task.amp_grad_scaler.step(task.optimizer, where=task.where)
                 task.amp_grad_scaler.update()
             else:
