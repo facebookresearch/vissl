@@ -16,13 +16,24 @@ from classy_vision.generic.distributed_util import (
     set_cuda_device_index,
 )
 from classy_vision.hooks.classy_hook import ClassyHook
-from classy_vision.tasks import ClassyTask
+from classy_vision.tasks import ClassyTask, TASK_REGISTRY
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
-from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.hydra_config import AttrDict
+
+
+def build_task(config):
+    """Builds a ClassyTask from a config.
+
+    This assumes a 'name' key in the config which is used to determine what
+    task class to instantiate. For instance, a config `{"name": "my_task",
+    "foo": "bar"}` will find a class that was registered as "my_task"
+    (see :func:`register_task`) and call .from_config on it."""
+
+    task = TASK_REGISTRY[config.TRAINER.TASK_NAME].from_config(config)
+    return task
 
 
 class SelfSupervisionTrainer(object):
@@ -39,7 +50,7 @@ class SelfSupervisionTrainer(object):
         # now we should build the task. The task will also have the State attached
         # to it. It will have information about phases (train, test) both. It will
         # also contain all the other information like optimizers, etc
-        self.task = self.build_task()
+        self.task = build_task(self.cfg)
         self.task.set_checkpoint_path(checkpoint_path)
         if hooks is None:
             hooks = []
@@ -47,9 +58,6 @@ class SelfSupervisionTrainer(object):
 
         self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
         self.setup_distributed(self.task.use_gpu)
-
-    def build_task(self):
-        return SelfSupervisionTask.from_config(self.cfg)
 
     def setup_distributed(self, use_gpu: bool):
 
