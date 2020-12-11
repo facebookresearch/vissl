@@ -21,7 +21,6 @@ from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import is_apex_available, AmpType
 
-
 if is_apex_available():
     import apex
 
