@@ -1,10 +1,11 @@
+# Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
 import os
 import subprocess
 from pathlib import Path
 
 dest = "s3://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/"
 
-# we build on python3.6 but it works for 3.7 and 3.8 too
+# we build on python3.6 but it works for 3.7, 3.8 and 3.9 too
 output = Path("output/py3.6")
 
 

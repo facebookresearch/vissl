@@ -17,9 +17,9 @@ At a high level, project requires following system dependencies.
 This assumes you have conda 10.2.
 
 ```bash
-conda create -n pytorch3d python=3.8
-conda activate pytorch3d
-conda install -c pytorch pytorch=1.7.0 torchvision cudatoolkit=10.2
+conda create -n vissl python=3.8
+conda activate vissl
+conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
 conda install -c vissl apex vissl
 ```
 

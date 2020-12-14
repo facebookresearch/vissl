@@ -1,1 +1,1 @@
-sudo docker run --rm  -v $PWD/inside:/inside pytorch/conda-cuda bash inside/build.sh
+sudo docker run --rm  -v $PWD/inside:/inside pytorch/conda-cuda python3 inside/build.py

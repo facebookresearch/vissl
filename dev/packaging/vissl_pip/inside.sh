@@ -19,7 +19,6 @@ pip_install() {
 
 
 PYTHON_VERSIONS="3.6"
-# the keys are pytorch versions
 
 for python_version in $PYTHON_VERSIONS
 do

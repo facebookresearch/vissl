@@ -21,7 +21,7 @@ pip_install() {
 }
 
 
-PYTHON_VERSIONS="3.6 3.7 3.8"
+PYTHON_VERSIONS="3.6 3.7 3.8 3.9"
 # the keys are pytorch versions
 declare -A CONDA_CUDA_VERSIONS=(
     ["1.4.0"]="cu101"
@@ -29,6 +29,7 @@ declare -A CONDA_CUDA_VERSIONS=(
     ["1.5.1"]="cu101 cu102"
     ["1.6.0"]="cu101 cu102"
     ["1.7.0"]="cu101 cu102 cu110"
+    ["1.7.1"]="cu101 cu102 cu110"
 )
 
 #VERSION=$(python -c "exec(open('${script_dir}/apex/__init__.py').read()); print(__version__)")
@@ -37,6 +38,18 @@ for python_version in $PYTHON_VERSIONS
 do
     for pytorch_version in "${!CONDA_CUDA_VERSIONS[@]}"
     do
+        if [[ "3.6 3.7 3.8" != *$python_version* ]] && [[ "1.4.0 1.5.0 1.5.1 1.6.0 1.7.0" == *$pytorch_version* ]]
+        then
+            #python 3.9 and later not supported by pytorch 1.7.0 and before
+            continue
+        fi
+
+        if [[ "3.9" == "$python_version" ]]
+        then
+            extra_channel="-c conda-forge"
+        else
+            extra_channel=""
+        fi
 
         for cu_version in ${CONDA_CUDA_VERSIONS[$pytorch_version]}
         do
@@ -68,7 +81,7 @@ do
 
             conda create -y -n "$tag" "python=$python_version"
             conda activate "$tag"
-            conda install -y -c pytorch "pytorch=$pytorch_version" "cudatoolkit=$CUDA_TAG"
+            conda install -y -c pytorch $extra_channel "pytorch=$pytorch_version" "cudatoolkit=$CUDA_TAG"
             echo "python version" "$python_version" "pytorch version" "$pytorch_version" "cuda version" "$cu_version" "tag" "$tag"
 
             rm -rf dist
