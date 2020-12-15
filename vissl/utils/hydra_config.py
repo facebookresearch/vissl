@@ -243,10 +243,16 @@ def assert_hydra_conf(cfg):
     if cfg.LOSS.name == "swav_loss":
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
         assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        assert cfg.DATA.TRAIN.COLLATE_FUNCTION in [
+            "multicrop_collator",
+            "multicrop_mixup_collator",
+        ], (
+            "for swav loss, use either a collator from "
+            "[multicrop_collator, multicrop_mixup_collator]"
+        )
         cfg.LOSS.swav_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"]
         cfg.LOSS.swav_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
         cfg.LOSS.swav_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         batch_size *= world_size
