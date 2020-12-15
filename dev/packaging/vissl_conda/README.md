@@ -6,5 +6,6 @@ and conda-build installed.
 2. From the root of the repository run
 `bash dev/packaging/vissl_conda/build_all_conda.sh` to build the packages.
 
-3. You can upload the packages to anaconda cloud by running
+3. You can upload the packages to anaconda cloud by pasting your conda API
+token over the word `redacted` in `upload.sh` and then running
 `bash upload.sh` from this directory.

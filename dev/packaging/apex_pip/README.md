@@ -5,7 +5,8 @@ It is a standalone set of code to build wheels
 for apex.
 
 1. Make sure this directory is on a filesystem which docker can
-use - e.g. not NFS.
+use - e.g. not NFS. If you are using a local hard drive there is
+nothing to do here.
 
 2. Go into the `inside` directory and clone apex with
 `git clone https://github.com/NVIDIA/apex.git`.

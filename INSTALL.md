@@ -7,10 +7,10 @@ Our installation is simple and we provide pre-built binaries (pip, conda) and al
 At a high level, project requires following system dependencies.
 
 - Linux
-- Python>=3.6
-- PyTorch 1.4 or 1.5
+- Python>=3.6.2
+- PyTorch 1.4 or later
 - torchvision (matching PyTorch install)
-- CUDA at least 9.2 (optional)
+- CUDA (must be a version supported by the pytorch version)
 
 ## Install VISSL conda package
 
