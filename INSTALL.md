@@ -41,7 +41,7 @@ pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pyto
 ### Step 3: Install APEX
 
 ```bash
-!pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py38_cu101_pyt151/download.html
+pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py38_cu101_pyt151/download.html
 ```
 
 Note that you need to get the versions of CUDA, PyTorch, and Python correct in the URL.
@@ -49,7 +49,7 @@ Note that you need to get the versions of CUDA, PyTorch, and Python correct in t
 ### Step 4: Install VISSL
 
 ```bash
-!pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
 # verify installation
 python -c 'import vissl'
 ```

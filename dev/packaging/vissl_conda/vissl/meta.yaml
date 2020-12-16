@@ -14,8 +14,43 @@ requirements:
   run:
     - python
     - pytorch
-    - torchvision
     - apex
+    - torchvision>=0.5
+    - tensorboard>=1.15
+    - opencv
+    - scipy
+    - scikit-learn
+    - parameterized
+    - numpy >=1.11
+    - faiss
+    - fvcore
+    - iopath
+    - importlib_resources
+    - hydra-core
+    - classy_vision
+    - tabulate
+    - pycocotools>=2.0.1
+
+test:
+  imports:
+    - torch
+    - torch.cuda
+    - vissl
+    - classy_vision
+    - apex
+    - tensorboard
+    - hydra
+  source_files:
+    - tests
+    - tools
+    - dev/run_quick_tests.sh
+    - configs
+  requires:
+    - ca-certificates
+    - cudatoolkit=10.1
+  commands:
+    - python -m unittest discover -v -s tests
+    - ./dev/run_quick_tests.sh
 
 build:
   string: py{{py}}
