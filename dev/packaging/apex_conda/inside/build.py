@@ -1,8 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
 
-import subprocess
 import os
 import shutil
+import subprocess
 
 os.environ["SOURCE_ROOT_DIR"] = "/inside/apex"
 os.environ["CONDA_CPUONLY_FEATURE"] = ""
@@ -13,12 +13,12 @@ python_versions = ["3.6", "3.7", "3.8", "3.9"]
 # Pytorch 1.4 also supports cuda 10.0 but we no longer build for cuda 10.0 at all.
 # cu92 did work but may not be in the container any more
 CONDA_CUDA_VERSIONS = {
-   "1.4": ["cu92", "cu101"],
-   "1.5.0": ["cu92", "cu101", "cu102"],
-   "1.5.1": ["cu92", "cu101", "cu102"],
-   "1.6.0": ["cu92", "cu101", "cu102"],
-   "1.7.0": ["cu101", "cu102", "cu110"],
-   "1.7.1": ["cu101", "cu102", "cu110"],
+    "1.4": ["cu92", "cu101"],
+    "1.5.0": ["cu92", "cu101", "cu102"],
+    "1.5.1": ["cu92", "cu101", "cu102"],
+    "1.6.0": ["cu92", "cu101", "cu102"],
+    "1.7.0": ["cu101", "cu102", "cu110"],
+    "1.7.1": ["cu101", "cu102", "cu110"],
 }
 
 CUDA_HOMES = {
@@ -77,7 +77,7 @@ for python_version in python_versions:
                 python_version,
                 "inside/packaging/apex",
             ]
-            if python_version=="3.9":
+            if python_version == "3.9":
                 args.insert(4, "conda-forge")
                 args.insert(4, "-c")
             subprocess.check_call(args)

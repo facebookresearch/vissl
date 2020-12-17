@@ -27,7 +27,6 @@ def fs3_exists(path):
     In fact, will also return True if there is a file which has the given
     path as a prefix, but we are careful about this.
     """
-    # path="s3://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt151/download.html"
     out = subprocess.check_output(fs3cmd(["ls", path]))
     return len(out) != 0
 
