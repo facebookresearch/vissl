@@ -93,7 +93,7 @@ install_vissl_dep: &install_vissl_dep
       name: Install Dependencies
       working_directory: ~/vissl
       command: |
-        pip install --progress-bar off torch==1.5.0 torchvision==0.6.0 opencv-python
+        pip install --progress-bar off torch==1.5.0 torchvision==0.6.0 opencv-python==3.4.2.17
         pip install --progress-bar off -r requirements.txt
 
 install_apex_gpu: &install_apex_gpu
