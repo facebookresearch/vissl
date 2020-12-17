@@ -4,13 +4,10 @@ import enum
 import logging
 import random
 import tempfile
-<<<<<<< HEAD
 import os
 import re
 import sys
 from enum import Enum
-=======
->>>>>>> Pytorch AMP (#102)
 
 import numpy as np
 import pkg_resources
