@@ -38,13 +38,32 @@ python3 -m venv ~/venv
 pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
+### Step 3: Install OpenCV
+There are several ways to do this, one possibility is as follows.
+
+```bash
+pip install opencv-python
+```
+
 ### Step 3: Install APEX
 
 ```bash
 pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py38_cu101_pyt151/download.html
 ```
-
 Note that you need to get the versions of CUDA, PyTorch, and Python correct in the URL.
+
+On Google Colab, everything until this point is already set up.
+You install APEX there as follows.
+```
+import sys
+import torch
+version_str="".join([
+    f"py3{sys.version_info.minor}_cu",
+    torch.version.cuda.replace(".",""),
+    f"_pyt{torch.__version__[0:5:2]}"
+])
+!pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
+```
 
 ### Step 4: Install VISSL
 

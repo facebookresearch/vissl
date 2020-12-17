@@ -5,7 +5,7 @@ set -ex
 
 #root=$PWD/../../../..
 f(){
-    echo -v $(realpath $PWD/../../../../$1):/loc1/$1
+    echo -v $PWD/../../../../$1:/loc1/$1
 }
 
-sudo docker run --runtime=nvidia -it --rm $(f dev) $(f configs) $(f tools) $(f tests) -v $PWD:/loc pytorch/conda-cuda bash /loc/test.sh
+sudo docker run --runtime=nvidia --shm-size 4000000000 -it --rm $(f dev) $(f configs) $(f tools) $(f tests) -v $PWD:/loc pytorch/conda-cuda bash /loc/test.sh

@@ -5,7 +5,6 @@ faiss==1.5.3
 cython
 scikit-learn
 parameterized==0.7.4
-opencv-python
 numpy>=1.15
 tabulate
 pycocotools>=2.0.1
