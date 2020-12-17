@@ -11,6 +11,7 @@ At a high level, project requires following system dependencies.
 - PyTorch 1.4 or later
 - torchvision (matching PyTorch install)
 - CUDA (must be a version supported by the pytorch version)
+- OpenCV
 
 ## Install VISSL conda package
 
@@ -45,7 +46,7 @@ There are several ways to do this, one possibility is as follows.
 pip install opencv-python
 ```
 
-### Step 3: Install APEX
+### Step 4: Install APEX
 
 ```bash
 pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py38_cu101_pyt151/download.html
@@ -65,7 +66,7 @@ version_str="".join([
 !pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
 ```
 
-### Step 4: Install VISSL
+### Step 5: Install VISSL
 
 ```bash
 pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
@@ -86,7 +87,14 @@ python3 -m venv ~/venv
 pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
-### Step 3: Install VISSL
+### Step 3: Install OpenCV
+There are several ways to do this, one possibility is as follows.
+
+```bash
+pip install opencv-python
+```
+
+### Step 4: Install VISSL
 
 ```bash
 cd $HOME && git clone --recursive https://github.com/facebookresearch/vissl.git && cd $HOME/vissl/
