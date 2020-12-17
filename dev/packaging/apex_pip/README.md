@@ -16,7 +16,7 @@ nothing to do here.
 4. Run `bash go.sh` in this directory. This takes ages
 and writes packages to `inside/output`.
 
-5. You can upload the packages to s3, along with mini html files
+5. You can upload the packages to s3, along with basic html files
 which enable them to be used, with `bash after.sh`.
 
 

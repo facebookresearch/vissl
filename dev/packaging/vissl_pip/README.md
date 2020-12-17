@@ -8,16 +8,17 @@ nothing to do here.
 
 3. Run `bash go.sh` in this directory.
 
-4. You can upload the packages to s3, along with mini html files
+4. You can upload the packages to s3, along with basic html files
 which enable them to be used, and to PyPI, with `bash after.sh`.
 First paste your PyPI API token in place of the word `redacted`
 in `to_pypi.sh`.
 
 In particular, if you are in a jupyter/colab notebook you can
-then install using these wheels with the following series of
-commands.
-
+then install using these wheels with the following.
 
 ```
 !pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
 ```
+
+5. In the test directory here you can find a tool to run the tests against
+the PyPI upload.
