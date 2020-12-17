@@ -9,7 +9,7 @@ from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
-from classy_vision.tasks.classification_task import BroadcastBuffersMode
+from classy_vision.tasks.classification_task import BroadcastBuffersMode, AmpType
 from fairscale.optim.grad_scaler import ShardedGradScaler
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
@@ -19,7 +19,7 @@ from vissl.optimizers import get_optimizer_regularized_params
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
-from vissl.utils.misc import is_apex_available, AmpType
+from vissl.utils.misc import is_apex_available
 
 if is_apex_available():
     import apex
@@ -126,7 +126,7 @@ class SelfSupervisionTask(ClassificationTask):
             ), "Mixed precision is only available on CUDA devices for now"
 
             # This will rightly fail if the setting is not correct
-            self.amp_type = AmpType(self.config.MODEL.AMP_PARAMS.AMP_TYPE)
+            self.amp_type = AmpType[self.config.MODEL.AMP_PARAMS.AMP_TYPE.upper()]
 
             # Check Apex availability
             if self.amp_type == AmpType.APEX:
@@ -138,6 +138,13 @@ class SelfSupervisionTask(ClassificationTask):
                 # "amp_args" are actually Apex Amp args
                 self.amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
 
+            elif self.amp_type == AmpType.PYTORCH:
+                # If the optimizer is sharded, then the GradScaler needs to be shard-aware
+                self.amp_grad_scaler = (
+                    ShardedGradScaler()
+                    if self.config["OPTIMIZER"]["name"] == "zero"
+                    else TorchGradScaler()
+                )
             logging.info(f"Setting AMP: {self.amp_type} - args: {self.amp_args}")
 
         else:
@@ -407,12 +414,15 @@ class SelfSupervisionTask(ClassificationTask):
 
         # restore amp state. It's called after amp.initialize is done.
         if "amp" in state:
-            if is_apex_available():
-                apex.amp.load_state_dict(state["amp"])
+            if self.amp_type == AmpType.APEX:
+                if is_apex_available():
+                    apex.amp.load_state_dict(state["amp"])
+                else:
+                    logging.warning(
+                        "Loading a checkpoint which has amp state but apex isn't available now"
+                    )
             else:
-                logging.warning(
-                    "Loading a checkpoint which has amp state but apex isn't available now"
-                )
+                self.amp_grad_scaler.load_state_dict(state["amp"])
 
         self.phase_idx = state["phase_idx"]
         self.train_phase_idx = state["train_phase_idx"]
@@ -531,14 +541,6 @@ class SelfSupervisionTask(ClassificationTask):
             # https://nvidia.github.io/apex/amp.html#checkpointing for more details.
             self.base_model, self.optimizer.optimizer = apex.amp.initialize(
                 self.base_model, self.optimizer.optimizer, **self.amp_args
-            )
-
-        # If the optimizer is sharded, then the GradScaler needs to be shard-aware
-        elif self.amp_type == AmpType.PYTORCH:
-            self.amp_grad_scaler = (
-                ShardedGradScaler()
-                if self.config["OPTIMIZER"]["name"] == "zero"
-                else TorchGradScaler()
             )
 
         # Restore an hypothetical checkpoint

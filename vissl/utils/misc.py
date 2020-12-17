@@ -1,6 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-import enum
 import logging
 import random
 import tempfile
@@ -11,13 +10,6 @@ import torch
 import torch.multiprocessing as mp
 from scipy.sparse import csr_matrix
 from vissl.utils.io import load_file
-
-
-class AmpType(enum.Enum):
-    # Automatic Mixed Precision supported types
-    # The strict string definition is on purpose, anything not matching will error out
-    APEX = "apex"
-    PYTORCH = "pytorch"
 
 
 def is_apex_available():
