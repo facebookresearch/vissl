@@ -24,7 +24,6 @@ In particular, if you are in a jupyter/colab notebook you can
 then install using these wheels with the following series of
 commands.
 
-
 ```
 import sys
 import torch
