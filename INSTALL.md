@@ -7,10 +7,72 @@ Our installation is simple and we provide pre-built binaries (pip, conda) and al
 At a high level, project requires following system dependencies.
 
 - Linux
-- Python>=3.6
-- PyTorch 1.4 or 1.5
+- Python>=3.6.2
+- PyTorch 1.4 or later
 - torchvision (matching PyTorch install)
-- CUDA at least 9.2 (optional)
+- CUDA (must be a version supported by the pytorch version)
+- OpenCV
+
+## Install VISSL conda package
+
+This assumes you have conda 10.2.
+
+```bash
+conda create -n vissl python=3.8
+conda activate vissl
+conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
+conda install -c vissl apex vissl
+```
+
+## Install VISSL pip package
+
+This example is with pytorch 1.5.1 and cuda 10.1.
+
+### Step 1: Create Virtual environment (pip)
+```bash
+python3 -m venv ~/venv
+. ~/venv/bin/activate
+```
+
+### Step 2: Install PyTorch (pip)
+```bash
+pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+### Step 3: Install OpenCV
+There are several ways to do this, one possibility is as follows.
+
+```bash
+pip install opencv-python
+```
+
+### Step 4: Install APEX
+
+```bash
+pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py38_cu101_pyt151/download.html
+```
+Note that you need to get the versions of CUDA, PyTorch, and Python correct in the URL.
+
+On Google Colab, everything until this point is already set up.
+You install APEX there as follows.
+```
+import sys
+import torch
+version_str="".join([
+    f"py3{sys.version_info.minor}_cu",
+    torch.version.cuda.replace(".",""),
+    f"_pyt{torch.__version__[0:5:2]}"
+])
+!pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
+```
+
+### Step 5: Install VISSL
+
+```bash
+pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+# verify installation
+python -c 'import vissl'
+```
 
 ## Installation from source in PIP environment
 
@@ -25,7 +87,14 @@ python3 -m venv ~/venv
 pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
-## Step 3: Install VISSL
+### Step 3: Install OpenCV
+There are several ways to do this, one possibility is as follows.
+
+```bash
+pip install opencv-python
+```
+
+### Step 4: Install VISSL
 
 ```bash
 cd $HOME && git clone --recursive https://github.com/facebookresearch/vissl.git && cd $HOME/vissl/
@@ -45,18 +114,18 @@ python -c 'import vissl'
 source activate vissl_env
 ```
 
-## Step 2: Install PyTorch (conda)
+### Step 2: Install PyTorch (conda)
 
 ```bash
 conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
 ```
 
-## Step 3: Install VISSL
+### Step 3: Install VISSL
 Follow step3 from the PIP installation.
 
 That's it! You are now ready to use this code.
 
-## Optional Dependency: Install Apex (common for both pip and conda)
+### Optional Dependency: Install Apex (common for both pip and conda)
 
 Apex installation requires that you have a latest nvcc so the c++ extensions can be compiled with latest gcc (>=7.4). Check the APEX website for more instructions.
 

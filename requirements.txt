@@ -1,11 +1,10 @@
 tensorboard==1.15.0
-hydra-core@https://github.com/facebookresearch/hydra/tarball/8ac24
-classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
+hydra-core>=1.0
+classy-vision
 faiss==1.5.3
 cython
 scikit-learn
 parameterized==0.7.4
-opencv-python==3.4.2.17
 numpy>=1.15
 tabulate
 pycocotools>=2.0.1
