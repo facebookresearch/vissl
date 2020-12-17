@@ -49,7 +49,7 @@ class MoCoHook(ClassyHook):
             task.config["MODEL"], task.config["OPTIMIZER"]
         )
 
-        task.loss.moco_encoder.to(torch.device("cuda" if task.use_gpu else "cpu"))
+        task.loss.moco_encoder.to(task.device)
 
         # Restore an hypothetical checkpoint, else initialize from the model
         if task.loss.checkpoint is not None:
@@ -78,7 +78,7 @@ class MoCoHook(ClassyHook):
             )
 
     @torch.no_grad()
-    def _batch_shuffle_ddp(self, x):
+    def _batch_shuffle_ddp(self, x, task: tasks.ClassyTask):
         """
         Batch shuffle, for making use of BatchNorm.
         *** Only support DistributedDataParallel (DDP) model. ***
@@ -91,7 +91,10 @@ class MoCoHook(ClassyHook):
         num_gpus = batch_size_all // batch_size_this
 
         # random shuffle index
-        idx_shuffle = torch.randperm(batch_size_all).cuda()
+        if task.device.type == "cuda":
+            idx_shuffle = torch.randperm(batch_size_all).cuda()
+        else:
+            idx_shuffle = torch.randperm(batch_size_all)
 
         # broadcast to all gpus
         torch.distributed.broadcast(idx_shuffle, src=0)
@@ -143,7 +146,7 @@ class MoCoHook(ClassyHook):
 
         if self.is_distributed and self.shuffle_batch:
             # shuffle for making use of BN
-            im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
+            im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k, task)
 
         k = task.loss.moco_encoder(im_k)[0]
         k = torch.nn.functional.normalize(k, dim=1)

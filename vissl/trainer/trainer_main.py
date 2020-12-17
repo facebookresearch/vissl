@@ -57,7 +57,7 @@ class SelfSupervisionTrainer(object):
         self.task.set_hooks(hooks)
 
         self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
-        self.setup_distributed(self.task.use_gpu)
+        self.setup_distributed(self.task.device.type == "cuda")
 
     def setup_distributed(self, use_gpu: bool):
 
@@ -214,7 +214,7 @@ class SelfSupervisionTrainer(object):
 
     def extract(self):
         # support feature extraction on gpu only.
-        assert self.task.use_gpu, "Set MACHINE.DEVICE = gpu"
+        assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
         self.task.init_distributed_data_parallel_model()
 
