@@ -31,14 +31,18 @@ class LogGpuStatsHook(ClassyHook):
     on_update = ClassyHook._noop
 
     def on_start(self, task: "tasks.ClassyTask") -> None:
-        if is_primary() and task.use_gpu:
+        if is_primary() and (task.device.type == "cuda"):
             # print the nvidia-smi stats
             log_gpu_stats()
 
     def on_step(self, task: "tasks.ClassyTask") -> None:
         # print the nvidia-smi stats again to get more accurate nvidia-smi
         # useful for monitoring memory usage.
-        if is_primary() and task.use_gpu and task.local_iteration_num == 50:
+        if (
+            is_primary()
+            and (task.device.type == "cuda")
+            and task.local_iteration_num == 50
+        ):
             log_gpu_stats()
 
 
