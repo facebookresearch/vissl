@@ -45,7 +45,7 @@ class MLP(nn.Module):
             use_dropout (bool): whether to attach Dropout after
                                 (Linear (-> BN -> relu optional))
             use_bias (bool): whether the Linear layer should have bias or not
-            dims (int): dimensions of the linear layer. Example [8192, 1000] which means
+            dims (int): dimensions of the linear layer. Example [8192, 1000] which
                         attaches `nn.Linear(8192, 1000, bias=True)`
         """
         super().__init__()

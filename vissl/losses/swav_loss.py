@@ -55,7 +55,17 @@ class SwAVLoss(ClassyLoss):
         return loss
 
     def __repr__(self):
-        repr_dict = {"name": self._get_name()}
+        repr_dict = {
+            "name": self._get_name(),
+            "epsilon": self.loss_config.epsilon,
+            "use_double_precision": self.loss_config.use_double_precision,
+            "local_queue_length": self.loss_config.queue.local_queue_length,
+            "temperature": self.loss_config.temperature,
+            "num_prototypes": self.loss_config.num_prototypes,
+            "num_crops": self.loss_config.num_crops,
+            "nmb_sinkhornknopp_iters": self.loss_config.num_iters,
+            "embedding_dim": self.loss_config.embedding_dim,
+        }
         return pprint.pformat(repr_dict, indent=2)
 
 
@@ -209,5 +219,14 @@ class SwAVCriterion(nn.Module):
         self.register_buffer("local_emb_queue", init_queue)
 
     def __repr__(self):
-        repr_dict = {"name": self._get_name()}
+        repr_dict = {
+            "name": self._get_name(),
+            "use_queue": self.use_queue,
+            "local_queue_length": self.local_queue_length,
+            "temperature": self.temperature,
+            "num_prototypes": self.num_prototypes,
+            "num_crops": self.num_crops,
+            "nmb_sinkhornknopp_iters": self.nmb_sinkhornknopp_iters,
+            "embedding_dim": self.embedding_dim,
+        }
         return pprint.pformat(repr_dict, indent=2)
