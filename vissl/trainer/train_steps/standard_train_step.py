@@ -114,7 +114,6 @@ def standard_train_step(task):
             if task.enable_manual_gradient_reduction:
                 # Manually sync params and buffers for DDP.
                 manual_sync_params(task.model)
-
             model_output = task.model(sample["input"])
 
         # If the model outputs only one tensor, we take it out of the list.

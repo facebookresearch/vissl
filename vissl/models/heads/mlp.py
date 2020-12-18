@@ -67,6 +67,17 @@ class MLP(nn.Module):
             if use_dropout:
                 layers.append(nn.Dropout())
         self.clf = nn.Sequential(*layers)
+        # we use the default normal or uniform initialization for the layers
+        # and allow users to scale the initialization.
+        self.scale_weights(model_config)
+
+    def scale_weights(self, model_config):
+        params_multiplier = model_config.HEAD.PARAMS_MULTIPLIER
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                m.weight.data *= params_multiplier
+                if m.bias is not None:
+                    m.bias.data *= params_multiplier
 
     def forward(self, batch: torch.Tensor):
         """

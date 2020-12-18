@@ -269,6 +269,9 @@ config:
       PARAMS: []
       BATCHNORM_EPS: 1e-5
       BATCHNORM_MOMENTUM: 0.1
+      # if we want to multiply the initialization of the head parameters by a factor,
+      # specify the multiplier. By default, set to 1.0
+      PARAMS_MULTIPLIER: 1.0
     # ----------------------------------------------------------------------------------- #
     # Synchronized BatchNorm Setup
     # ----------------------------------------------------------------------------------- #
