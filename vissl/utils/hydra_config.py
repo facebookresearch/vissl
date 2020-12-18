@@ -205,7 +205,57 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
     return param_schedulers
 
 
-def assert_hydra_conf(cfg):
+def assert_learning_rate(cfg):
+    # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
+    # to turn this automatic scaling off,
+    # set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
+    if cfg.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale:
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
+        param_schedulers = cfg.OPTIMIZER.param_schedulers.lr
+        base_lr = param_schedulers.auto_lr_scaling.base_value
+        base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scale_factor = float(batch_size) / base_lr_batch_size
+        scaled_lr = base_lr * scale_factor
+        cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
+            cfg, param_schedulers, scaled_lr
+        )
+
+    if not cfg.OPTIMIZER.head_optimizer_params.use_different_lr:
+        # if not using the different value for the head, we set the weight decay and LR
+        # param scheduler same as the trunk.
+        cfg.OPTIMIZER.param_schedulers.lr_head = cfg.OPTIMIZER.param_schedulers.lr
+    elif (
+        cfg.OPTIMIZER.head_optimizer_params.use_different_lr
+        and cfg.OPTIMIZER.param_schedulers.lr_head
+        and cfg.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.auto_scale
+    ):
+        # if the user wants a different LR value for the head, then we automatically
+        # infer the LR values for the head as well (similar to trunk above)
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
+        param_schedulers = cfg.OPTIMIZER.param_schedulers.lr_head
+        base_lr = param_schedulers.auto_lr_scaling.base_value
+        base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scale_factor = float(batch_size) / base_lr_batch_size
+        scaled_lr = base_lr * scale_factor
+        cfg.OPTIMIZER.param_schedulers.lr_head = get_scaled_lr_scheduler(
+            cfg, param_schedulers, scaled_lr
+        )
+
+    # for the head, if we want to use a different weight decay value, we verify that
+    # the specified weight decay value is valid. Otherwise, we do the inference
+    # and set the weight decay value same as the trunk.
+    if not cfg.OPTIMIZER.head_optimizer_params.use_different_wd:
+        cfg.OPTIMIZER.head_optimizer_params.weight_decay = cfg.OPTIMIZER.weight_decay
+    else:
+        assert (
+            cfg.OPTIMIZER.head_optimizer_params.weight_decay >= 0.0
+        ), "weight decay for head should be >=0"
+    return cfg
+
+
+def assert_losses(cfg):
     # some inference for the Info-NCE loss.
     if "simclr_info_nce_loss" in cfg.LOSS.name:
         cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"] = (
@@ -289,21 +339,12 @@ def assert_hydra_conf(cfg):
         cfg.LOSS.swav_momentum_loss.queue.local_queue_length = (
             queue_length // world_size
         )
+    return cfg
 
-    # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
-    # to turn this automatic scaling off,
-    # set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
-    if cfg.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale:
-        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
-        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
-        param_schedulers = cfg.OPTIMIZER.param_schedulers.lr
-        base_lr = param_schedulers.auto_lr_scaling.base_value
-        base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
-        scale_factor = float(batch_size) / base_lr_batch_size
-        scaled_lr = base_lr * scale_factor
-        cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
-            cfg, param_schedulers, scaled_lr
-        )
+
+def assert_hydra_conf(cfg):
+    cfg = assert_losses(cfg)
+    cfg = assert_learning_rate(cfg)
 
     # in case of linear evaluation, we often evaluate several layers at a time. For each
     # layer, there's a separate accuracy meter. In such case, we want to output the layer

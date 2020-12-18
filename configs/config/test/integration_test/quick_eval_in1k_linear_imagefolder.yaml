@@ -90,10 +90,19 @@ config:
       nesterov: True
       regularize_bn: False
       regularize_bias: True
+      head_optimizer_params:
+        use_different_lr: True
+        use_different_wd: True
+        weight_decay: 0.0001
       param_schedulers:
         lr:
           name: multistep
           values: [0.01, 0.001]
+          milestones: [1]
+          update_interval: epoch
+        lr_head:
+          name: multistep
+          values: [0.2, 0.02]
           milestones: [1]
           update_interval: epoch
   DISTRIBUTED:

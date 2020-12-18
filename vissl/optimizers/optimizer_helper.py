@@ -44,25 +44,71 @@ def _filter_trainable(param_list: List[Any]) -> List[Any]:
     return list(filter(lambda x: x.requires_grad, param_list))
 
 
-def get_optimizer_regularized_params(model, model_config, optimizer_config):
+def get_optimizer_param_groups(
+    model, model_config, optimizer_config, optimizer_schedulers
+):
     """
-    Go through all the layers, sort out which parameters should be regularized
+    Go through all the layers, sort out which parameters should be regularized,
+    unregularized and optimization settings for the head/trunk.
 
-    Returns:
-        Dict -- Regularized and un-regularized params
+    Returns: tuple
+        - param_groups (list): [
+            {"params": head_params, "lr": lr_value, "weight_decay": wd_value},
+            {"params": regularized_params},
+            {"params": unregularized_params, "weight_decay": 0.0}
+        ]
     """
-    regularized_params, unregularized_params = [], []
-    for module in model.modules():
-        if isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES):
-            regularized_params.append(module.weight)
+    # if the different LR, weight decay value for head is not specified, we use the
+    # same LR/wd as trunk.
+    if not optimizer_config.head_optimizer_params.use_different_lr:
+        assert "lr_head" in optimizer_schedulers
+
+    # we create 4 params groups: trunk regularized, trunk unregularized, head regularized
+    # and head unregularized. Unregularized can contain BN layers.
+    trunk_regularized_params, trunk_unregularized_params = [], []
+    head_regularized_params, head_unregularized_params = [], []
+    # for anything else
+    regularized_params = []
+    for name, module in model.named_modules():
+        # head, Linear/Conv layer
+        if "head" in name and (
+            isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES)
+        ):
+            head_regularized_params.append(module.weight)
             if module.bias is not None:
                 if optimizer_config["regularize_bias"]:
-                    regularized_params.append(module.bias)
+                    head_regularized_params.append(module.bias)
                 else:
-                    unregularized_params.append(module.bias)
+                    head_unregularized_params.append(module.bias)
+        # head, BN layer
+        elif "head" in name and isinstance(module, _BN_TYPES):
+            (
+                head_regularized_params,
+                head_unregularized_params,
+            ) = _get_bn_optimizer_params(
+                module,
+                head_regularized_params,
+                head_unregularized_params,
+                optimizer_config,
+            )
+        # trunk, Linear/Conv
+        elif isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES):
+            trunk_regularized_params.append(module.weight)
+            if module.bias is not None:
+                if optimizer_config["regularize_bias"]:
+                    trunk_regularized_params.append(module.bias)
+                else:
+                    trunk_regularized_params.append(module.bias)
+        # trunk, BN layer
         elif isinstance(module, _BN_TYPES):
-            (regularized_params, unregularized_params) = _get_bn_optimizer_params(
-                module, regularized_params, unregularized_params, optimizer_config
+            (
+                trunk_regularized_params,
+                trunk_unregularized_params,
+            ) = _get_bn_optimizer_params(
+                module,
+                trunk_regularized_params,
+                trunk_unregularized_params,
+                optimizer_config,
             )
         elif len(list(module.children())) >= 0:
             # for any other layers not bn_types, conv_types or nn.Linear, if
@@ -72,7 +118,7 @@ def get_optimizer_regularized_params(model, model_config, optimizer_config):
             for params in module.parameters(recurse=False):
                 regularized_params.append(params)
 
-    # set the requires_grad to False
+    # for non-trainable params, set the requires_grad to False
     non_trainable_params = []
     for name, param in model.named_parameters():
         if name in model_config.NON_TRAINABLE_PARAMS:
@@ -80,16 +126,46 @@ def get_optimizer_regularized_params(model, model_config, optimizer_config):
             non_trainable_params.append(param)
 
     trainable_params = _filter_trainable(model.parameters())
+    trunk_regularized_params = _filter_trainable(trunk_regularized_params)
+    trunk_unregularized_params = _filter_trainable(trunk_unregularized_params)
+    head_regularized_params = _filter_trainable(head_regularized_params)
+    head_unregularized_params = _filter_trainable(head_unregularized_params)
     regularized_params = _filter_trainable(regularized_params)
-    unregularized_params = _filter_trainable(unregularized_params)
     logging.info(
-        f"Traininable params: {len(trainable_params)}, "
-        f"Non-Traininable params: {len(non_trainable_params)}, "
-        f"Regularized Parameters: {len(regularized_params)}, "
-        f"Unregularized Parameters {len(unregularized_params)}"
+        f"\nTrainable params: {len(trainable_params)}, \n"
+        f"Non-Trainable params: {len(non_trainable_params)}, \n"
+        f"Trunk Regularized Parameters: {len(trunk_regularized_params)}, \n"
+        f"Trunk Unregularized Parameters {len(trunk_unregularized_params)}, \n"
+        f"Head Regularized Parameters: {len(head_regularized_params)}, \n"
+        f"Head Unregularized Parameters: {len(head_unregularized_params)} \n"
+        f"Remaining Regularized Parameters: {len(regularized_params)} "
     )
 
-    return {
-        "regularized_params": regularized_params,
-        "unregularized_params": unregularized_params,
-    }
+    param_groups = [
+        {
+            "params": trunk_regularized_params,
+            "lr": optimizer_schedulers["lr"],
+            "weight_decay": optimizer_config.weight_decay,
+        },
+        {
+            "params": trunk_unregularized_params,
+            "lr": optimizer_schedulers["lr"],
+            "weight_decay": 0.0,
+        },
+        {
+            "params": head_regularized_params,
+            "lr": optimizer_schedulers["lr_head"],
+            "weight_decay": optimizer_config.head_optimizer_params.weight_decay,
+        },
+        {
+            "params": head_unregularized_params,
+            "lr": optimizer_schedulers["lr_head"],
+            "weight_decay": 0.0,
+        },
+    ]
+    if len(regularized_params) > 0:
+        param_groups.append(
+            {"params": regularized_params, "lr": optimizer_schedulers["lr"]}
+        )
+
+    return param_groups

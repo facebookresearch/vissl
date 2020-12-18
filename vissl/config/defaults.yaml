@@ -494,8 +494,38 @@ config:
     num_epochs: 90
     regularize_bn: False
     regularize_bias: True
+    # we support using a different LR and weight decay for head and trunk.
+    # one needs to set the flag "use_different_values: True" in order to enable
+    # this functionality. We use the same type of param scheduler for the trunk and head
+    # but allow different LR and weight decay values.
+    head_optimizer_params:
+      use_different_lr: False
+      use_different_wd: False
+      weight_decay: 0.0001
     param_schedulers:
       lr:
+        auto_lr_scaling:
+          auto_scale: False
+          base_value: 0.1
+          base_lr_batch_size: 256
+        name: "multistep"
+        update_interval: "epoch"
+        values: [0.1, 0.01, 0.001]
+        milestones: [30, 60]
+        # The below parameters are valid for lr.name = "composite". Various schedulers
+        # can then be composed together for the training. For example: linear warmup +
+        # multistep schedule after warmup.
+        schedulers: []
+        interval_scaling: []
+        lengths: []
+        # =====cosine learning rate specific =======
+        start_value: 0.1
+        end_value: 0.0
+        # =====constant learning rate specific =======
+        value: 0.1
+      # if we want to use a different LR scheduler for the head, then specify
+      # the lr_head similar to "lr"
+      lr_head:
         auto_lr_scaling:
           auto_scale: False
           base_value: 0.1
