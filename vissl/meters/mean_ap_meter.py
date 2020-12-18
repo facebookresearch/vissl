@@ -146,17 +146,8 @@ class MeanAPMeter(ClassyMeter):
         ), "Target values should be either 0 OR 1 OR -1"
 
     def update(self, model_output, target):
+        self.validate(model_output, target)
         self.verify_target(target)
-        assert len(model_output.shape) == 2, "model_output should be a 2D tensor"
-        assert len(target.shape) == 2, "target should be a 2D tensor"
-        assert (
-            model_output.shape[0] == target.shape[0]
-        ), "Expect same shape in model output and target"
-        assert (
-            model_output.shape[1] == target.shape[1]
-        ), "Expect same shape in model output and target"
-        num_classes = target.shape[1]
-        assert num_classes == self.num_classes, "number of classes is not consistent"
 
         self._curr_sample_count += model_output.shape[0]
 
@@ -176,20 +167,14 @@ class MeanAPMeter(ClassyMeter):
         self._targets[sample_count_so_far:, :] = target
         del curr_scores, curr_targets
 
-    def validate(self, model_output_shape, target_shape):
-        assert len(model_output_shape) == 2, (
-            "model_output_shape must be (num_samples, num_classes) Found shape %s"
-            % str(model_output_shape)
-        )
+    def validate(self, model_output, target):
+        assert len(model_output.shape) == 2, "model_output should be a 2D tensor"
+        assert len(target.shape) == 2, "target should be a 2D tensor"
         assert (
-            len(target_shape) == 2
-        ), "target_shape must be (num_samples, num_classes) Found shape %s" % str(
-            target_shape
-        )
+            model_output.shape[0] == target.shape[0]
+        ), "Expect same shape in model output and target"
         assert (
-            model_output_shape[0] == target_shape[0]
-            and model_output_shape[1] == target_shape[1]
-        ), "model output and target should have same shape. Found shape %s Vs %s" % (
-            str(model_output_shape),
-            str(target_shape),
-        )
+            model_output.shape[1] == target.shape[1]
+        ), "Expect same shape in model output and target"
+        num_classes = target.shape[1]
+        assert num_classes == self.num_classes, "number of classes is not consistent"

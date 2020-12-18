@@ -86,44 +86,50 @@ class GenericSSLDataset(Dataset):
             f"Rank: {local_rank} split: {split} Label files:\n{self.label_paths}"
         )
 
+    def load_single_label_file(self, path):
+        assert PathManager.isfile(path), f"Path to labels {path} is not a file"
+        assert path.endswith("npy"), "Please specify a numpy file for labels"
+        if self.cfg["DATA"][self.split].MMAP_MODE:
+            try:
+                with PathManager.open(path, "rb") as fopen:
+                    labels = np.load(fopen, allow_pickle=True, mmap_mode="r")
+            except ValueError as e:
+                logging.info(f"Could not mmap {path}: {e}. Trying without PathManager")
+                labels = np.load(path, allow_pickle=True, mmap_mode="r")
+                logging.info("Successfully loaded without PathManager")
+            except Exception:
+                logging.info("Could not mmap without PathManager. Trying without mmap")
+                with PathManager.open(path, "rb") as fopen:
+                    labels = np.load(fopen, allow_pickle=True)
+        else:
+            with PathManager.open(path, "rb") as fopen:
+                labels = np.load(fopen, allow_pickle=True)
+        return labels
+
     def _load_labels(self):
         local_rank, _ = get_machine_local_and_dist_rank()
         for idx, label_source in enumerate(self.label_sources):
             if label_source == "disk_filelist":
-                path = self.label_paths[idx]
-                # Labels are stored in a file
-                assert PathManager.isfile(path), f"Path to labels {path} is not a file"
-                assert path.endswith("npy"), "Please specify a numpy file for labels"
-                if self.cfg["DATA"][self.split].MMAP_MODE:
-                    try:
-                        with PathManager.open(path, "rb") as fopen:
-                            labels = np.load(fopen, allow_pickle=True, mmap_mode="r")
-                    except ValueError as e:
-                        logging.info(
-                            f"Could not mmap {path}: {e}. Trying without PathManager"
-                        )
-                        labels = np.load(path, allow_pickle=True, mmap_mode="r")
-                        logging.info("Successfully loaded without PathManager")
-                    except Exception:
-                        logging.info(
-                            "Could not mmap without PathManager. Trying without mmap"
-                        )
-                        with PathManager.open(path, "rb") as fopen:
-                            labels = np.load(fopen, allow_pickle=True)
-
+                paths = self.label_paths[idx]
+                # in case of filelist, we support multiple label files.
+                # we rely on the user to have a proper collator to handle
+                # the multiple labels
+                logging.info(f"Loading labels: {paths}")
+                if isinstance(paths, list):
+                    labels = []
+                    for path in paths:
+                        path_labels = self.load_single_label_file(path)
+                        labels.append(path_labels)
                 else:
-                    with PathManager.open(path, "rb") as fopen:
-                        labels = np.load(fopen, allow_pickle=True)
+                    labels = self.load_single_label_file(paths)
             elif label_source == "disk_folder":
                 # In this case we use the labels inferred from the directory structure
                 # We enforce that the data source also be a disk folder in this case
                 assert self.data_sources[idx] == self.label_sources[idx]
-
                 if local_rank == 0:
                     logging.info(
                         f"Using {label_source} labels from {self.data_paths[idx]}"
                     )
-
                 # Use the ImageFolder object created when loading images.
                 # We do not create it again since it can be an expensive operation.
                 labels = [x[1] for x in self.data_objs[idx].image_dataset.samples]
@@ -149,7 +155,10 @@ class GenericSSLDataset(Dataset):
         if (len(self.label_objs) > 0) or self.label_type == "standard":
             item["label"] = []
             for source in self.label_objs:
-                lbl = _convert_lbl_to_long(source[idx])
+                if isinstance(source, list):
+                    lbl = [entry[idx] for entry in source]
+                else:
+                    lbl = _convert_lbl_to_long(source[idx])
                 item["label"].append(lbl)
         elif self.label_type == "sample_index":
             item["label"] = []

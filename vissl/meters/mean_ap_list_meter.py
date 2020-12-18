@@ -3,7 +3,6 @@ import pprint
 from typing import List, Union
 
 import torch
-import torch.nn.functional as F
 from classy_vision.generic.util import is_pos_int
 from classy_vision.meters import ClassyMeter, register_meter
 from vissl.meters.mean_ap_meter import MeanAPMeter
@@ -117,7 +116,7 @@ class MeanAPListMeter(ClassyMeter):
         assert isinstance(model_output, list)
         assert len(model_output) == self._num_meters
         for (meter, output) in zip(self._meters, model_output):
-            probs = F.softmax(output, dim=-1)
+            probs = torch.nn.Sigmoid()(output)
             meter.update(probs, target)
 
     def reset(self):

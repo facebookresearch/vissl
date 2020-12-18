@@ -385,13 +385,12 @@ config:
       temperature: 1.0
 
     # ----------------------------------------------------------------------------------- #
-    # Soft Target Cross-Entropy Loss for multiple input and same target.
+    # BCELogits for multiple input and same target.
     # Applicable for multi-label classification problems.
     # ----------------------------------------------------------------------------------- #
-    soft_target_cross_entropy_multiple_output_single_target:
-      reduction: mean
-      ignore_index: -1
-      normalize_targets: null   # option: count_based
+    bce_logits_multiple_output_single_target:
+      reduction: "none"
+      world_size: 1
       normalize_output: False
 
     # ----------------------------------------------------------------------------------- #

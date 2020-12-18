@@ -3,18 +3,18 @@ config:
   VERBOSE: True
   LOG_FREQUENCY: 10
   TEST_ONLY: False
-  TEST_EVERY_NUM_EPOCH: 5
+  TEST_EVERY_NUM_EPOCH: 1
   TEST_MODEL: True
   SEED_VALUE: 1
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: True
   DATA:
-    NUM_DATALOADER_WORKERS: 5
+    NUM_DATALOADER_WORKERS: 2
     TRAIN:
       DATA_SOURCES: [everstore]
       LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [openimages_v6]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 16
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -32,7 +32,7 @@ config:
       DATA_SOURCES: [everstore]
       LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [openimages_v6]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 16
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -45,7 +45,8 @@ config:
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/openimages_v6/
-      COLLATE_FUNCTION: default_collate
+      COLLATE_FUNCTION: targets_one_hot_default_collator
+      COLLATE_FUNCTION_PARAMS: {"num_classes": 9605}
   METERS:
     name: mean_ap_list_meter
     # training data size is 5.6M , we just disable the training meter
@@ -91,33 +92,32 @@ config:
       SYNC_BN_TYPE: apex
       GROUP_SIZE: 8
   LOSS:
-    name: soft_target_cross_entropy_multiple_output_single_target
-    soft_target_cross_entropy_multiple_output_single_target:
-      reduction: mean
-      normalize_targets: "count_based"
-      ignore_index: -1
+    name: bce_logits_multiple_output_single_target
+    bce_logits_multiple_output_single_target:
+      reduction: "none"
+      world_size: 64
   OPTIMIZER:
       name: sgd
       # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
-      weight_decay: 0.0005
+      weight_decay: 0.0001
       momentum: 0.9
-      num_epochs: 28
+      num_epochs: 16
       nesterov: True
-      regularize_bn: False
+      regularize_bn: True
       regularize_bias: True
       param_schedulers:
         lr:
           auto_lr_scaling:
-            auto_scale: true
-            base_value: 0.01
-            base_lr_batch_size: 256
+            auto_scale: false
+            base_value: 0.003
+            base_lr_batch_size: 32
           name: multistep
-          values: [0.01, 0.001, 0.0001, 0.00001]
-          milestones: [8, 16, 24]
+          values: [0.003, 0.0003, 0.00003, 0.000003]
+          milestones: [2, 4, 6]
           update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 1
+    NUM_NODES: 8
     NUM_PROC_PER_NODE: 8
     INIT_METHOD: tcp
     RUN_ID: auto

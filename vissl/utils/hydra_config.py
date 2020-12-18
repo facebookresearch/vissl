@@ -269,6 +269,11 @@ def assert_losses(cfg):
             num_positives * batch_size * world_size
         )
 
+    # bce_logits_multiple_output_single_target
+    if cfg.LOSS.name == "bce_logits_multiple_output_single_target":
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        cfg.LOSS.bce_logits_multiple_output_single_target.world_size = world_size
+
     # multicrop version of simclr loss
     if cfg.LOSS.name == "multicrop_simclr_info_nce_loss":
         world_size = cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.world_size
