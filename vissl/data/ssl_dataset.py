@@ -11,6 +11,18 @@ from vissl.data.ssl_transforms import get_transform
 from vissl.utils.env import get_machine_local_and_dist_rank
 
 
+def _convert_lbl_to_long(lbl):
+    # if the labels are int32, we convert them to int64 since pytorch
+    # needs a long (int64) type for labels to index. See
+    # https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
+    out_lbl = lbl
+    if isinstance(lbl, np.ndarray) and (lbl.dtype == np.int32):
+        out_lbl = lbl.astype(np.int64)
+    elif isinstance(lbl, list):
+        out_lbl = [_convert_lbl_to_long(item) for item in lbl]
+    return out_lbl
+
+
 class GenericSSLDataset(Dataset):
     """
     Base Self Supervised Learning Dataset Class.
@@ -75,19 +87,19 @@ class GenericSSLDataset(Dataset):
                 path = self.label_paths[idx]
                 # Labels are stored in a file
                 assert PathManager.isfile(path), f"Path to labels {path} is not a file"
-
                 assert path.endswith("npy"), "Please specify a numpy file for labels"
                 if self.cfg["DATA"][self.split].MMAP_MODE:
-                    # Memory map the labels if the file is too large.
-                    # This is useful to save RAM.
-                    labels = np.load(path, mmap_mode="r")
+                    try:
+                        # Memory map the labels if the file is too large.
+                        # This is useful to save RAM.
+                        labels = np.load(path, allow_pickle=True, mmap_mode="r")
+                    except Exception as e:
+                        logging.info(
+                            f"Could not mmap {self.split} labels: {e}. Loading without mmap"
+                        )
+                        labels = np.load(path, allow_pickle=True)
                 else:
-                    labels = np.load(path)
-                # if the labels are int32, we convert them to int64 since pytorch
-                # needs a long (int64) type for labels to index. See
-                # https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
-                if labels.dtype == np.int32:
-                    labels = labels.astype(np.int64)
+                    labels = np.load(path, allow_pickle=True)
             elif label_source == "disk_folder":
                 # In this case we use the labels inferred from the directory structure
                 # We enforce that the data source also be a disk folder in this case
@@ -123,7 +135,8 @@ class GenericSSLDataset(Dataset):
         if (len(self.label_objs) > 0) or self.label_type == "standard":
             item["label"] = []
             for source in self.label_objs:
-                item["label"].append(source[idx])
+                lbl = _convert_lbl_to_long(source[idx])
+                item["label"].append(lbl)
         elif self.label_type == "sample_index":
             item["label"] = []
             for _ in range(len(self.data_objs)):

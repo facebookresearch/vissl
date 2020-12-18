@@ -262,12 +262,16 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         save_metrics["phase_idx"] = task.phase_idx
         save_metrics["train_phase_idx"] = train_phase_idx
         for meter in task.meters:
-            metric_key = f"{phase_type}_{meter.name}"
-            if metric_key not in task.metrics:
-                task.metrics[metric_key] = []
-            task.metrics[metric_key].append(meter.value)
-            save_metrics[metric_key] = meter.value
-            logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter.value}")
+            if len(task.meters) > 0 and (
+                (task.train and task.config["METERS"]["enable_training_meter"])
+                or (not task.train)
+            ):
+                metric_key = f"{phase_type}_{meter.name}"
+                if metric_key not in task.metrics:
+                    task.metrics[metric_key] = []
+                task.metrics[metric_key].append(meter.value)
+                save_metrics[metric_key] = meter.value
+                logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter.value}")
         meter_file = f"{checkpoint_folder}/metrics.json"
         save_file(save_metrics, meter_file)
 

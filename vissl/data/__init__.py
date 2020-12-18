@@ -85,7 +85,9 @@ def get_loader(
     # we don't need to set the rank, replicas as the Sampler already does so in
     # it's init function
     data_sampler = get_sampler(dataset, dataset_config)
-    collate_function = get_collator(dataset_config["COLLATE_FUNCTION"])
+    collate_function = get_collator(
+        dataset_config["COLLATE_FUNCTION"], dataset_config["COLLATE_FUNCTION_PARAMS"]
+    )
     dataloader = DataLoader(
         dataset=dataset,
         num_workers=num_dataloader_workers,
