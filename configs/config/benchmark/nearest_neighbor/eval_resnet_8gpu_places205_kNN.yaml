@@ -3,9 +3,9 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [disk_folder]
-      LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [places205_everstore]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -20,9 +20,9 @@ config:
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
-      DATA_SOURCES: [disk_folder]
-      LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [places205_everstore]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize

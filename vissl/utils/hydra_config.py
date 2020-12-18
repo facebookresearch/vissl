@@ -316,19 +316,6 @@ def assert_hydra_conf(cfg):
     ):
         cfg.MODEL.HEAD.PARAMS = [["mlp", {"dims": [2048, 1000]}]]
 
-    # in case of feature evaluation mode, if we are freezing both trunk and head, DDP won't
-    # work as there are no parameters in the model. Adding the dummy head will lead to
-    # features being not right.
-    if (
-        cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-        and cfg.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_AND_HEAD
-        and cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
-    ):
-        assert world_size == 1, (
-            "VISSL doesn't support distributed extraction for a completely frozen model. "
-            "Please use 1 gpu."
-        )
-
     # in SSL, during pre-training we don't want to use annotated labels or during feature
     # extraction, we don't have annotated labels for some datasets. In such cases, we set
     # the label type to be just the image index in the dataset.
