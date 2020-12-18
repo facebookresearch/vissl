@@ -183,6 +183,11 @@ config:
     # uses them for example, input contains "images" and "patches" and there
     # is one separate head applied to images and another to patches
     MULTI_INPUT_HEAD_MAPPING: []
+    # In case of mult-resolution inputs, we combine the same resolution inputs and
+    # run forward pass. However, for a very large model where gpu memory is bottleneck,
+    # we can optimize memory a bit by running forward pass through each crop
+    # separately.
+    SINGLE_PASS_EVERY_CROP: False
     # Use activation checkpointing in the training phase
     ACTIVATION_CHECKPOINTING:
       USE_ACTIVATION_CHECKPOINTING: false
