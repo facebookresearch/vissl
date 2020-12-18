@@ -77,6 +77,9 @@ def train_sample_places_low_shot(
     layername: str,
     cfg: AttrDict,
 ):
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=cfg)
+
     for low_shot_kvalue in k_values:
         checkpoint_dir = f"{output_dir}/sample{sample_num}_k{low_shot_kvalue}"
         train_data = merge_features(checkpoint_dir, "train", layername, cfg)

@@ -6,11 +6,10 @@ This script is used to create the low-shot data for Places svm trainings.
 import argparse
 import logging
 import random
-import sys
 
 import numpy as np
 from fvcore.common.file_io import PathManager
-from vissl.utils.io import load_file
+from vissl.utils.io import load_file, save_file
 
 
 def sample_symbol(input_targets, output_target, symbol, num):
@@ -42,12 +41,12 @@ def generate_voc07_low_shot_samples(
             output = sample_symbol(targets, output, 0, (num_classes - 1) * k)
             output_file = f"{output_path}/{layername}_sample{idx}_k{k}.npy"
             logging.info(f"Saving file: {output_file}")
-            np.save(output_file, output)
+            save_file(output, output_file)
     logging.info("Done!!")
 
 
 def find_num_positives(input_targets):
-    logging.info(f"Finding max number of positives per class...")
+    logging.info("Finding max number of positives per class...")
     num_classes = int(max(input_targets) + 1)
     num_pos = []
     for idx in range(num_classes):
@@ -75,7 +74,7 @@ def generate_places_low_shot_samples(
     k_values = [int(val) for val in k_values]
 
     logging.info(f"Loading images data file: {images_data_file}")
-    images = np.load(images_data_file)
+    images = load_file(images_data_file)
     # get the maximum and minumum number of positives per class
     num_pos = find_num_positives(targets)
     logging.info(f"min #num_pos: {min(num_pos)}, max #num_pos: {max(num_pos)}")
@@ -99,10 +98,8 @@ def generate_places_low_shot_samples(
             out_lbls_file = f"{output_path}/train_labels_sample{idx}_k{k}.npy"
             logging.info(f"Saving imgs file: {out_img_file} {len(out_imgs)}")
             logging.info(f"Saving lbls file: {out_lbls_file} {len(out_lbls)}")
-            with PathManager.open(out_lbls_file, "wb") as fwrite:
-                np.save(fwrite, out_lbls)
-            with PathManager.open(out_img_file, "wb") as fwrite:
-                np.save(fwrite, out_imgs)
+            save_file(out_lbls, out_lbls_file)
+            save_file(out_imgs, out_img_file)
     logging.info("Done!!")
 
 

@@ -285,8 +285,9 @@ class SelfSupervisionTask(ClassificationTask):
         logging.info(f"Initializing model from: {init_weights_path}")
 
         if PathManager.exists(init_weights_path):
-            with PathManager.open(init_weights_path, "rb") as fopen:
-                weights = torch.load(fopen, map_location=torch.device("cpu"))
+            from classy_vision.generic.util import load_checkpoint
+
+            weights = load_checkpoint(init_weights_path, device=torch.device("cpu"))
             skip_layers = params_from_file.get("SKIP_LAYERS", [])
             replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
             append_prefix = params_from_file.get("APPEND_PREFIX", None)

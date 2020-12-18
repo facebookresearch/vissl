@@ -17,7 +17,7 @@ from classy_vision.hooks.classy_hook import ClassyHook
 from fvcore.common.file_io import PathManager
 from vissl.utils.checkpoint import is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.io import save_file
+from vissl.utils.io import create_file_symlink, save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
 
@@ -252,6 +252,14 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 checkpoint_folder, checkpoint_task, checkpoint_file=ckpt_name
             )
             logging.info(f"Saved checkpoint: {checkpoint_folder}/{ckpt_name}")
+            # we create the checkpoint symlink and use this symlink to load
+            # checkpoints. This helps ensure that the checkpoint we load from
+            # are valid. It's a particularly useful feature for resuming trainings.
+            logging.info("Creating symlink...")
+            symlink_dest_file = f"{checkpoint_folder}/checkpoint.torch"
+            source_file = f"{checkpoint_folder}/{ckpt_name}"
+            create_file_symlink(source_file, symlink_dest_file)
+            logging.info(f"Created symlink: {symlink_dest_file}")
 
     def _print_and_save_meters(self, task, train_phase_idx):
         phase_type = "train" if task.train else "test"
@@ -266,12 +274,13 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 (task.train and task.config["METERS"]["enable_training_meter"])
                 or (not task.train)
             ):
+                meter_value = meter.value
                 metric_key = f"{phase_type}_{meter.name}"
                 if metric_key not in task.metrics:
                     task.metrics[metric_key] = []
-                task.metrics[metric_key].append(meter.value)
-                save_metrics[metric_key] = meter.value
-                logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter.value}")
+                task.metrics[metric_key].append(meter_value)
+                save_metrics[metric_key] = meter_value
+                logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
         meter_file = f"{checkpoint_folder}/metrics.json"
         save_file(save_metrics, meter_file)
 
