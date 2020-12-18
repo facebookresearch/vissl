@@ -11,7 +11,7 @@ config:
   TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
       EXPERIMENT_LOG_DIR: "moco_v2_reference"
-      LOG_ACTIVATIONS: False
+      LOG_PARAMS: False
       FLUSH_EVERY_N_MIN: 20
   DATA:
     NUM_DATALOADER_WORKERS: 5
