@@ -17,7 +17,7 @@ config:
         # ["res5", ["AdaptiveAvgPool2d", [[1, 4]]]],
         # ["res5", ["AdaptiveAvgPool2d", [[2, 2]]]],
         ["avgpool", ["Identity", []]],
-        # ["avgpool", ["Identity", []]],
+        ["avgpool", ["Identity", []]],
       ]
     TRUNK:
       NAME: regnet
@@ -35,5 +35,5 @@ config:
         # ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
         # ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
         ["eval_mlp", {"in_channels": 3024, "dims": [3024, 1000]}],
-        # ["mlp", {"dims": [3024, 1000]}],
+        ["mlp", {"dims": [3024, 1000]}],
       ]

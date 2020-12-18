@@ -32,6 +32,7 @@ class SwAVPrototypesHead(nn.Module):
         use_bias: bool = True,
         return_embeddings: bool = True,
         skip_last_bn: bool = True,
+        normalize_feats: bool = True,
     ):
         """
         Args:
@@ -58,6 +59,7 @@ class SwAVPrototypesHead(nn.Module):
         """
 
         super().__init__()
+        self.normalize_feats = normalize_feats
         # build the projection head
         layers = []
         last_dim = dims[0]
@@ -97,7 +99,8 @@ class SwAVPrototypesHead(nn.Module):
         """
         batch = self.projection_head(batch)
 
-        batch = nn.functional.normalize(batch, dim=1, p=2)
+        if self.normalize_feats:
+            batch = nn.functional.normalize(batch, dim=1, p=2)
 
         out = []
         if self.return_embeddings:

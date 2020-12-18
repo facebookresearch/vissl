@@ -1,0 +1,11 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_32gf
+    HEAD:
+      PARAMS: [["eval_mlp", {"in_channels": 3712, "dims": [3712, 1000]}]]
+      # PARAMS: [['mlp', {'dims': [3712, 1000]}]]
