@@ -126,6 +126,14 @@ class SelfSupervisionTrainer(object):
             task.run_hooks(SSLClassyHookFunctions.on_phase_start.name)
             while True:
                 try:
+                    if self.cfg.MODEL.CUDA_CACHE.CLEAR_CUDA_CACHE and (
+                        iteration_num % self.cfg.MODEL.CUDA_CACHE.CLEAR_FREQ == 0
+                    ):
+                        logging.info(
+                            f"Emptying CUDA cache at step count: {iteration_num}"
+                        )
+                        torch.cuda.empty_cache()
+                        logging.info("CUDA cache cleared")
                     task = train_step_fn(task)
                     iteration_num += 1
                     task.local_iteration_num = iteration_num

@@ -144,6 +144,11 @@ config:
   # MODEL
   # ----------------------------------------------------------------------------------- #
   MODEL:
+    # sometimes we can avoid CUDA OOM issues by clearing out the cache. Clearing out cache
+    # is slow so chose wisely.
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: False
+      CLEAR_FREQ: 100
     # the model parameter names that should not be trained
     NON_TRAINABLE_PARAMS: []
     TEMP_FROZEN_PARAMS_ITER_MAP: []
@@ -272,7 +277,7 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: False
       SYNC_BN_TYPE: "pytorch"  # apex | pytorch
-      # if group_size=-1, will set group_size=num_gpus
+      # if group_size=-1, will set group_size=num_gpus per node
       # if group_size>0, will set group_size=value set by user
       # if group_size=0, will set process_group=None
       GROUP_SIZE: -1
@@ -420,6 +425,25 @@ config:
       num_prototypes: [3000]
       temp_hard_assignment_iters: 0
       output_dir: ""  # for dumping the debugging info in case loss becomes NaN
+      queue:
+        queue_length: 0
+        start_iter: 0
+        local_queue_length: 0
+
+    # ----------------------------------------------------------------------------------- #
+    # SwAV MOMENTUM LOSS
+    # ----------------------------------------------------------------------------------- #
+    swav_momentum_loss:
+      momentum: 0.99
+      embedding_dim: 128
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      num_crops: 2
+      crops_for_assign: [0, 1]
+      num_prototypes: [3000]
       queue:
         queue_length: 0
         start_iter: 0
