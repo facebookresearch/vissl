@@ -571,6 +571,7 @@ config:
     # gloo as the backend.
     BACKEND: "nccl"
     NCCL_DEBUG: False
+    NCCL_SOCKET_NTHREADS: ""
     # whether model buffers are BN buffers are broadcast in every forward pass
     BROADCAST_BUFFERS: True
     # number of machines to use in training
