@@ -22,12 +22,14 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
             "weight": weight of sample, optional
             "ignore_index": sample should be ignored for loss, optional
             "reduction": specifies reduction to apply to the output, optional
+            "temperature": specify temperature for softmax. Default 1.0
         """
         super(CrossEntropyMultipleOutputSingleTargetLoss, self).__init__()
         self._weight = None
         self._ignore_index = -1
         self._losses = torch.nn.modules.ModuleList([])
         self._normalize_output = False
+        self._temperature = loss_config["temperature"]
         if "weight" in loss_config:
             self._weight = loss_config["weight"]
         if "ignore_index" in loss_config:
@@ -72,5 +74,5 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
             ), f"pred.shape[1]={pred.shape[1]} and target.max().item()={target.max().item()}"
             if idx >= len(self._losses):
                 self._create_loss_function()
-            loss += self._losses[idx](normalized_pred, target)
+            loss += self._losses[idx](normalized_pred / self._temperature, target)
         return loss
