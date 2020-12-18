@@ -14,7 +14,8 @@ from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
 from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
-from vissl.utils.checkpoint import get_checkpoint_folder, is_checkpoint_phase
+from fvcore.common.file_io import PathManager
+from vissl.utils.checkpoint import is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
@@ -132,6 +133,46 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
 
+    # TODO: make this a standalone hook and make it optional to save runtime
+    # although the overhead is minimal when the model is training fine (no nans)
+    def on_forward(self, task: "tasks.ClassyTask") -> None:
+        """
+        Called each time a model forward is done and make sure that
+        the model forward output is not NaN
+        """
+        # check the model output is not NaN.
+        has_nan = False
+        model_output = task.last_batch.model_output
+        if isinstance(model_output, list):
+            has_nan = not torch.tensor(
+                [torch.isfinite(x).all() for x in model_output]
+            ).all()
+        else:
+            has_nan = not torch.isfinite(model_output).all()
+
+        if has_nan:
+            _, dist_rank = get_machine_local_and_dist_rank()
+            logging.info(f"Infinite Model output or NaN at iteration={task.iteration}.")
+            self._checkpoint_model(
+                task,
+                task.train_phase_idx,
+                mode_frequency=1,
+                mode_num=task.iteration,
+                mode="iteration",
+            )
+            model_output_file = (
+                f"{task.checkpoint_folder}/rank{dist_rank}_model_output.pth"
+            )
+            input_sample_file = (
+                f"{task.checkpoint_folder}/rank{dist_rank}_input_sample.pth"
+            )
+            with PathManager.open(model_output_file, "wb") as fwrite:
+                torch.save(model_output, fwrite)
+            with PathManager.open(input_sample_file, "wb") as fwrite:
+                torch.save(task.last_batch.sample, fwrite)
+            logging.info(f"Saved model output: {model_output_file}")
+            logging.info(f"Saved model input: {input_sample_file}")
+
     def on_step(self, task: "tasks.ClassyTask") -> None:
         # in some cases, we might want to checkpoint after certain number of
         # iterations.
@@ -179,7 +220,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             and task.train
             and (is_final_train_phase or is_checkpointing_phase)
         ):
-            checkpoint_folder = get_checkpoint_folder(task.config)
+            checkpoint_folder = task.checkpoint_folder
             logging.info(
                 f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
             )
@@ -215,7 +256,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     def _print_and_save_meters(self, task, train_phase_idx):
         phase_type = "train" if task.train else "test"
         rank, _ = get_machine_local_and_dist_rank()
-        checkpoint_folder = get_checkpoint_folder(task.config)
+        checkpoint_folder = task.checkpoint_folder
         save_metrics = {}
         save_metrics["iteration"] = task.iteration
         save_metrics["phase_idx"] = task.phase_idx

@@ -122,6 +122,7 @@ def standard_train_step(task):
             model_output = model_output[0]
 
         task.last_batch.sample = sample
+        task.last_batch.model_output = model_output
         target = sample["target"]
 
         # Run hooks on forward pass
@@ -183,6 +184,14 @@ def standard_train_step(task):
         # Stepping the optimizer also updates learning rate, momentum etc
         # according to the schedulers (if any).
         with PerfTimer("optimizer_step", perf_stats):
+            assert task.where < 1.0, (
+                "Optimizer being called with where=1.0. This should not happen "
+                "as where=1.0 means training is already finished. Please debug your "
+                "training setup. A common issue is the data sampler resuming "
+                "where you are checkpointing model at every iterations but not using "
+                "the stateful data sampler OR there's an issue in properly resuming the "
+                "data sampler."
+            )
             if task.amp_type == AmpType.PYTORCH:
                 task.amp_grad_scaler.step(task.optimizer, where=task.where)
                 task.amp_grad_scaler.update()

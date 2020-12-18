@@ -8,11 +8,6 @@ import torch
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.hooks import default_hook_generator
 from vissl.trainer import SelfSupervisionTrainer
-from vissl.utils.checkpoint import (
-    get_checkpoint_folder,
-    get_resume_checkpoint,
-    is_training_finished,
-)
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import (
     get_machine_local_and_dist_rank,
@@ -27,6 +22,8 @@ from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 def train_main(
     cfg: AttrDict,
     dist_run_id: str,
+    checkpoint_path: str,
+    checkpoint_folder: str,
     local_rank: int = 0,
     node_id: int = 0,
     hook_generator: Callable[[Any], List[ClassyHook]] = default_hook_generator,
@@ -36,8 +33,7 @@ def train_main(
     dist_rank = int(os.environ["RANK"])
 
     # setup logging
-    output_dir = get_checkpoint_folder(cfg)
-    setup_logging(__name__, output_dir=output_dir, rank=dist_rank)
+    setup_logging(__name__, output_dir=checkpoint_folder, rank=dist_rank)
 
     logging.info(f"Env set for rank: {local_rank}, dist_rank: {dist_rank}")
     # print the environment info for the current node
@@ -64,15 +60,6 @@ def train_main(
         print_cfg(cfg)
         logging.info("System config:\n{}".format(collect_env_info()))
 
-    # given the checkpoint folder, we check that there's not already a final checkpoint
-    if dist_rank == 0 and is_training_finished(cfg, checkpoint_folder=output_dir):
-        logging.info("Training already succeeded on this machine, bailing out")
-        return
-
-    # Get the checkpoint where to load from. The load_checkpoints function will
-    # automatically take care of detecting whether it's a resume or not.
-    checkpoint_path = get_resume_checkpoint(cfg, checkpoint_folder=output_dir)
-
     # get the hooks - these hooks are executed per replica
     hooks = hook_generator(cfg)
 
@@ -81,7 +68,9 @@ def train_main(
     # dataloader, optimizers, losses, hooks, etc. "Task" will also have information
     # about phases (train, test) both. The trainer then sets up distributed
     # training.
-    trainer = SelfSupervisionTrainer(cfg, dist_run_id, checkpoint_path, hooks)
+    trainer = SelfSupervisionTrainer(
+        cfg, dist_run_id, checkpoint_path, checkpoint_folder, hooks
+    )
     trainer.train()
     logging.info("All Done!")
     # close the logging streams including the filehandlers
