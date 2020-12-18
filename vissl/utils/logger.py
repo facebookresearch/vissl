@@ -2,7 +2,6 @@
 
 import functools
 import logging
-import os
 import subprocess
 import sys
 
@@ -11,14 +10,12 @@ from vissl.utils.io import makedir
 
 
 def setup_logging(name, output_dir=None, rank=0):
-    # get the filename if we want to log to the files as well
+    # get the filename if we want to log to the file as well
     log_filename = None
     if output_dir:
         makedir(output_dir)
-        log_filename = f"{output_dir}/log.txt"
-        if rank > 0:
-            log_filename = f"{log_filename}.rank{rank}"
-        PathManager.mkdirs(os.path.dirname(log_filename))
+        if rank == 0:
+            log_filename = f"{output_dir}/log.txt"
 
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
@@ -39,7 +36,7 @@ def setup_logging(name, output_dir=None, rank=0):
     logger.addHandler(console_handler)
 
     # we log to file as well if user wants
-    if log_filename:
+    if log_filename and rank == 0:
         file_handler = logging.StreamHandler(_cached_log_stream(log_filename))
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
