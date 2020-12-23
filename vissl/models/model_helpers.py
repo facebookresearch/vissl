@@ -25,6 +25,18 @@ if is_apex_available():
         _bn_cls = _bn_cls + (apex.parallel.SyncBatchNorm,)
 
 
+def transform_model_input_data_type(model_input, model_config):
+    model_output = model_input
+    # In case the model takes BGR input type, we convert the RGB to BGR
+    if model_config.INPUT_TYPE == "bgr":
+        model_output = model_input[:, [2, 1, 0], :, :]
+    # In case of LAB image, we take only "L" channel as input. Split the data
+    # along the channel dimension into [L, AB] and keep only L channel.
+    if model_config.INPUT_TYPE == "lab":
+        model_output = torch.split(model_input, [1, 2], dim=1)[0]
+    return model_output
+
+
 def is_feature_extractor_model(model_config):
     if (
         model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
@@ -108,6 +120,7 @@ def convert_sync_bn(config, model):
             )
             process_group = None
             # TODO (prigoyal): process groups don't work well with pytorch.
+            # import os
             # num_gpus_per_node = config.DISTRIBUTED.NUM_PROC_PER_NODE
             # node_id = int(os.environ["RANK"]) // num_gpus_per_node
             # assert (

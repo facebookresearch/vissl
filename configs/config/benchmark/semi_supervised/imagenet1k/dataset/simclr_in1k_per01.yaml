@@ -3,3 +3,4 @@ config:
   DATA:
     TRAIN:
       DATASET_NAMES: ["google-imagenet1k-per01"]
+      DROP_LAST: True
