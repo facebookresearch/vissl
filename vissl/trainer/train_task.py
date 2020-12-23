@@ -18,7 +18,7 @@ from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.data import build_dataset, get_loader, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
-from vissl.optimizers import get_optimizer_regularized_params
+from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
@@ -486,31 +486,12 @@ class SelfSupervisionTask(ClassificationTask):
             getattr(hook, hook_function_name)(self)
 
     def prepare_optimizer(self):
-        optim_params = get_optimizer_regularized_params(
+        param_groups = get_optimizer_param_groups(
             model=self.base_model,
             model_config=self.config["MODEL"],
             optimizer_config=self.config["OPTIMIZER"],
+            optimizer_schedulers=self.optimizer_schedulers,
         )
-        param_groups = []
-        # regularized params. Users can append other options here
-        # like different LR for the params
-        if len(optim_params["regularized_params"]) != 0:
-            param_groups.append(
-                {
-                    "params": optim_params["regularized_params"],
-                    **self.optimizer_schedulers,
-                }
-            )
-
-        # params which are not regularized i.e have weight_decay=0. common for BN
-        if len(optim_params["unregularized_params"]) != 0:
-            frozen_param_group = {
-                "params": optim_params["unregularized_params"],
-                **self.optimizer_schedulers,
-            }
-            frozen_param_group["weight_decay"] = 0.0
-            param_groups.append(frozen_param_group)
-
         self.optimizer.set_param_groups(param_groups)
 
     def prepare(self, pin_memory: bool = False):
