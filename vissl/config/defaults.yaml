@@ -355,6 +355,9 @@ config:
       # generic flag to enable L2 normalization in a loss function. Currently supported
       # for cross_entropy_multiple_output_single_target loss only.
       normalize_output: False
+      # if we want to use softmax with temperature i.e. the NLL(log_softmax(input/temperature))
+      # then set the desired temperature value.
+      temperature: 1.0
 
     # ----------------------------------------------------------------------------------- #
     # Soft Target Cross-Entropy Loss for multiple input and same target.
