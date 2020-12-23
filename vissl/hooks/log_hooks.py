@@ -180,8 +180,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             and (is_final_train_phase or is_checkpointing_phase)
         ):
             checkpoint_folder = get_checkpoint_folder(task.config)
-            if checkpoint_folder is None:
-                return
             logging.info(
                 f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
             )
@@ -207,7 +205,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             ckpt_name = f"model_{mode}{mode_num}.torch"
             if is_final_train_phase:
                 ckpt_name = f"model_final_checkpoint_{mode}{mode_num}.torch"
-            # TODO (prigoyal): add support for more backends: manifold etc.
             backend = task.config["CHECKPOINT"]["BACKEND"]
             assert backend == "disk", "Only disk BACKEND supported"
             save_checkpoint(

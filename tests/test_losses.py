@@ -63,6 +63,7 @@ class TestLossesForward(unittest.TestCase):
             num_prototypes=[3000],
             local_queue_length=0,
             embedding_dim=EMBEDDING_DIM,
+            temp_hard_assignment_iters=0,
         )
         _ = loss_layer(scores=self._get_embedding(), head_id=0)
 

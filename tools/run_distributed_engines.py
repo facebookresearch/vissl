@@ -15,6 +15,7 @@ from vissl.data.dataset_catalog import get_data_files
 from vissl.engines.extract_features import extract_main
 from vissl.engines.train import train_main
 from vissl.hooks import ClassyHook, default_hook_generator
+from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.io import cleanup_dir, copy_data_to_local
 from vissl.utils.logger import setup_logging, shutdown_logging
@@ -31,12 +32,10 @@ def copy_to_local(cfg: AttrDict):
     for split in available_splits:
         if cfg.DATA[split].COPY_TO_LOCAL_DISK:
             dest_dir = cfg.DATA[split]["COPY_DESTINATION_DIR"]
-            assert not (dest_dir == "None") and (
-                len(dest_dir) > 0
-            ), f"Unknown copy location: {dest_dir}"
             data_files, label_files = get_data_files(split, cfg.DATA)
             data_files.extend(label_files)
-            copy_data_to_local(data_files, dest_dir)
+            _, output_dir = copy_data_to_local(data_files, dest_dir)
+            cfg.DATA[split]["COPY_DESTINATION_DIR"] = output_dir
 
 
 def cleanup_local_dir(cfg: AttrDict):
@@ -62,10 +61,11 @@ def launch_distributed(
         engine_name -- what engine to run: train or extract_features
         hook_generator -- Callback to generate all the ClassyVision hooks for this engine
     """
-    copy_to_local(cfg)
     node_id = get_node_id(node_id)
     dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
     world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+    copy_to_local(cfg)
 
     try:
         if world_size > 1:
