@@ -1,5 +1,30 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+# VISSL uses hydra for configuration management. The usage looks like:
+#    python tools/<binary-name>.py config=<config path>
+# Example:
+#    python tools/run_distributed_engines.py config=pretrain/simclr/simclr_8node_resnet
+#
+#
+# If you create sub-folders in config folder to override parameters, you can use the
+# config files in the subfolder by adding at a "+" sign to the command line input.
+# For example:
+#    python tools/run_distributed_engines.py \
+#        config=pretrain/simclr/simclr_8node_resnet \
+#        +config/pretrain/simclr/optimization=bs32_16nodes \
+#        +config/pretrain/simclr/my_new_subfolder=my_file_in_subfolder \
+#
+#
+# If you want to override single values in the config, you can achieve that with:
+#    python tools/run_distributed_engines.py \
+#        config=pretrain/simclr/simclr_8node_resnet \
+#        +config/pretrain/simclr/my_sub_folder=my_file_name \
+#        config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<weights_path.torch>
+#
+defaults:
+  # you must specify the base config you want to run
+  - config: ???
+
 ######################### versioning ###################################
 # this version is checked with the VISSL latest config version in
 # vissl/config/__init__.py
@@ -694,32 +719,10 @@ config:
     EXPERIMENT_LOG_DIR: "tensorboard"
     # flush logs every n minutes
     FLUSH_EVERY_N_MIN: 5
+    # whether the log the model parameters to tensorboard
+    LOG_PARAMS: True
+    # whether the log the model parameters gradients to tensorboard
+    LOG_PARAMS_GRADIENTS: True
     # if we want to log the model parameters every few iterations, set the iteration
-    # frequency. -1 means the params will be logger only at the end of epochs.
-    LOG_ACTIVATIONS: True
-    LOG_PARAMS_EVERY_N_ITERS: -1
-
-# VISSL uses hydra for configuration management. The usage looks like:
-#    python tools/<binary-name>.py config=<config path>
-# Example:
-#    python tools/run_distributed_engines.py config=pretrain/simclr/simclr_8node_resnet
-#
-#
-# If you create sub-folders in config folder to override parameters, you can use the
-# config files in the subfolder by adding at a "+" sign to the command line input.
-# For example:
-#    python tools/run_distributed_engines.py \
-#        config=pretrain/simclr/simclr_8node_resnet \
-#        +config/pretrain/simclr/optimization=bs32_16nodes \
-#        +config/pretrain/simclr/my_new_subfolder=my_file_in_subfolder \
-#
-#
-# If you want to override single values in the config, you can achieve that with:
-#    python tools/run_distributed_engines.py \
-#        config=pretrain/simclr/simclr_8node_resnet \
-#        +config/pretrain/simclr/my_sub_folder=my_file_name \
-#        config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<weights_path.torch>
-#
-defaults:
-  # you must specify the base config you want to run
-  - config: ???
+    # frequency. -1 means the params will be logged only at the end of epochs.
+    LOG_PARAMS_EVERY_N_ITERS: 310
