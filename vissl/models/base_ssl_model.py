@@ -86,6 +86,10 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
         feats = []
         start_idx = 0
+        # in order to optimize memory usage, we can do single pass per
+        # crop as well. Set the flag to be true.
+        if self.model_config.SINGLE_PASS_EVERY_CROP:
+            idx_crops = torch.Tensor(list(range(1, 1 + len(batch)))).int()
         for end_idx in idx_crops:
             feat = self.trunk(torch.cat(batch[start_idx:end_idx]), feature_names)
             start_idx = end_idx
