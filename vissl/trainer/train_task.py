@@ -7,7 +7,6 @@ import torch
 from classy_vision.generic.util import (
     copy_model_to_gpu,
     load_and_broadcast_checkpoint,
-    load_checkpoint,
 )
 from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
@@ -289,7 +288,9 @@ class SelfSupervisionTask(ClassificationTask):
         logging.info(f"Initializing model from: {init_weights_path}")
 
         if PathManager.exists(init_weights_path):
-            weights = load_checkpoint(init_weights_path, device=torch.device("cpu"))
+            weights = load_and_broadcast_checkpoint(
+                init_weights_path, device=torch.device("cpu")
+            )
             skip_layers = params_from_file.get("SKIP_LAYERS", [])
             replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
             append_prefix = params_from_file.get("APPEND_PREFIX", None)
