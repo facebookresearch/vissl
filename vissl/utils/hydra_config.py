@@ -194,6 +194,8 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
             resolve_linear_schedule(cfg, param_schedulers)
     elif param_schedulers["name"] == "linear":
         param_schedulers["end_value"] = scaled_lr
+    elif param_schedulers["name"] == "inverse_sqrt":
+        param_schedulers["start_value"] = scaled_lr
     elif param_schedulers["name"] == "constant":
         param_schedulers["value"] = scaled_lr
     else:
