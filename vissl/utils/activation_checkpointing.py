@@ -67,7 +67,13 @@ def checkpoint_trunk(
     bucket = []
 
     for feature_name, feature_block in feature_blocks.items():
-        bucket.append(feature_block)
+        # expand the res2,res3, res4, res5 kind of stages into sub-blocks so that we can
+        # checkpoint them.
+        if feature_name.startswith("res"):
+            for b in feature_block:
+                bucket.append(b)
+        else:
+            bucket.append(feature_block)
 
         if feature_name in unique_out_feat_keys:
             # Boundary, add to current bucket and move to next
