@@ -139,7 +139,10 @@ def standard_train_step(task):
         task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
 
         # Update meters
-        if len(task.meters) > 0:
+        if len(task.meters) > 0 and (
+            (task.train and task.config["METERS"]["enable_training_meter"])
+            or (not task.train)
+        ):
             with PerfTimer("meters_update", perf_stats):
                 if isinstance(model_output, list):
                     model_output_cpu = [x.cpu() for x in model_output]

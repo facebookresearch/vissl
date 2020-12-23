@@ -1,0 +1,38 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  MASK_ON: False
+  RPN:
+    PRE_NMS_TOPK_TEST: 6000
+    POST_NMS_TOPK_TEST: 1000
+  WEIGHTS: ""
+  ROI_HEADS:
+    NAME: "Res5ROIHeads"
+    NUM_CLASSES: 20
+  BACKBONE:
+    FREEZE_AT: 0
+  RESNETS:
+    DEPTH: 101
+    NUM_GROUPS: 32
+    WIDTH_PER_GROUP: 8
+    STRIDE_IN_1X1: False
+INPUT:
+  MIN_SIZE_TRAIN: (480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800)
+  MIN_SIZE_TEST: 800
+DATASETS:
+  TRAIN: ('voc_2007_trainval', 'voc_2012_trainval')
+  TEST: ('voc_2007_test',)
+TEST:
+  PRECISE_BN:
+    ENABLED: True
+SOLVER:
+  STEPS: (18000, 22000)
+  MAX_ITER: 24000
+  WARMUP_ITERS: 100
+  IMS_PER_BATCH: 16
+
+  ############## eval_voc0712_BGR_sBNextraNorm_precBN_lrpt1_warm50_it24k_st-18k-22k ##############
+  STEPS: (18000, 22000)
+  MAX_ITER: 24000
+  WARMUP_ITERS: 50
+  IMS_PER_BATCH: 16
+  BASE_LR: 0.1
