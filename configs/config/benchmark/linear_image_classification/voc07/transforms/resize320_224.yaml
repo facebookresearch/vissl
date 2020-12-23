@@ -1,0 +1,27 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      TRANSFORMS:
+        - name: Resize
+          size: 320
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      TRANSFORMS:
+        - name: Resize
+          size: 320
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]

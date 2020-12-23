@@ -1,0 +1,51 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[3, 3]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[9, 1]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[1, 9]]]],
+
+        # ["res4", ["AdaptiveAvgPool2d", [[2, 5]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[5, 2]]]],
+
+        # ["res5", ["AdaptiveAvgPool2d", [[4, 1]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 4]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[2, 2]]]],
+
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 5]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[5, 1]]]],
+
+        # ["res5", ["AdaptiveAvgPool2d", [[2, 3]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[3, 2]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[6, 1]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 6]]]],
+
+        ["avgpool", ["Identity", []]],
+        # ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_8gf
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 896, "dims": [8064, 205]}],
+        # ["eval_mlp", {"in_channels": 896, "dims": [8064, 205]}],
+        # ["eval_mlp", {"in_channels": 896, "dims": [8064, 205]}],
+        # ["eval_mlp", {"in_channels": 896, "dims": [8960, 205]}],
+        # ["eval_mlp", {"in_channels": 896, "dims": [8960, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [8064, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [8064, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [8064, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [10080, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [10080, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [12096, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [12096, 205]}],
+        ["eval_mlp", {"in_channels": 2016, "dims": [12096, 205]}],
+        # ["eval_mlp", {"in_channels": 2016, "dims": [12096, 205]}],
+        ["eval_mlp", {"in_channels": 2016, "dims": [2016, 205]}],
+        # ["mlp", {"dims": [2016, 205]}],
+      ]

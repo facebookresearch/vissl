@@ -7,9 +7,11 @@ Supports two engines: train and extract_features
 
 import logging
 import sys
+import tempfile
 from typing import Any, Callable, List
 
 import torch
+from fvcore.common.file_io import PathManager
 from hydra.experimental import compose, initialize_config_module
 from vissl.data.dataset_catalog import get_data_files
 from vissl.engines.extract_features import extract_main
@@ -37,9 +39,12 @@ def copy_to_local(cfg: AttrDict):
     for split in available_splits:
         if cfg.DATA[split].COPY_TO_LOCAL_DISK:
             dest_dir = cfg.DATA[split]["COPY_DESTINATION_DIR"]
+            tmp_dest_dir = tempfile.mkdtemp()
             data_files, label_files = get_data_files(split, cfg.DATA)
             data_files.extend(label_files)
-            _, output_dir = copy_data_to_local(data_files, dest_dir)
+            _, output_dir = copy_data_to_local(
+                data_files, dest_dir, tmp_destination_dir=tmp_dest_dir
+            )
             cfg.DATA[split]["COPY_DESTINATION_DIR"] = output_dir
 
 
@@ -80,7 +85,15 @@ def launch_distributed(
 
     # Get the checkpoint where to load from. The load_checkpoints function will
     # automatically take care of detecting whether it's a resume or not.
-    checkpoint_path = get_resume_checkpoint(cfg, checkpoint_folder=checkpoint_folder)
+    symlink_checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
+    if cfg.CHECKPOINT.USE_SYMLINK_CHECKPOINT_FOR_RESUME and PathManager.exists(
+        symlink_checkpoint_path
+    ):
+        checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
+    else:
+        checkpoint_path = get_resume_checkpoint(
+            cfg, checkpoint_folder=checkpoint_folder
+        )
 
     try:
         if world_size > 1:

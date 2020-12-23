@@ -20,6 +20,8 @@ def _convert_lbl_to_long(lbl):
         out_lbl = lbl.astype(np.int64)
     elif isinstance(lbl, list):
         out_lbl = [_convert_lbl_to_long(item) for item in lbl]
+    elif isinstance(lbl, np.int32):
+        out_lbl = out_lbl.astype(np.int64)
     return out_lbl
 
 
@@ -77,8 +79,12 @@ class GenericSSLDataset(Dataset):
             split, dataset_config=self.cfg["DATA"]
         )
 
-        logging.info(f"Rank: {local_rank} Data files:\n{self.data_paths}")
-        logging.info(f"Rank: {local_rank} Label files:\n{self.label_paths}")
+        logging.info(
+            f"Rank: {local_rank} split: {split} Data files:\n{self.data_paths}"
+        )
+        logging.info(
+            f"Rank: {local_rank} split: {split} Label files:\n{self.label_paths}"
+        )
 
     def _load_labels(self):
         local_rank, _ = get_machine_local_and_dist_rank()
@@ -90,16 +96,24 @@ class GenericSSLDataset(Dataset):
                 assert path.endswith("npy"), "Please specify a numpy file for labels"
                 if self.cfg["DATA"][self.split].MMAP_MODE:
                     try:
-                        # Memory map the labels if the file is too large.
-                        # This is useful to save RAM.
-                        labels = np.load(path, allow_pickle=True, mmap_mode="r")
-                    except Exception as e:
+                        with PathManager.open(path, "rb") as fopen:
+                            labels = np.load(fopen, allow_pickle=True, mmap_mode="r")
+                    except ValueError as e:
                         logging.info(
-                            f"Could not mmap {self.split} labels: {e}. Loading without mmap"
+                            f"Could not mmap {path}: {e}. Trying without PathManager"
                         )
-                        labels = np.load(path, allow_pickle=True)
+                        labels = np.load(path, allow_pickle=True, mmap_mode="r")
+                        logging.info("Successfully loaded without PathManager")
+                    except Exception:
+                        logging.info(
+                            "Could not mmap without PathManager. Trying without mmap"
+                        )
+                        with PathManager.open(path, "rb") as fopen:
+                            labels = np.load(fopen, allow_pickle=True)
+
                 else:
-                    labels = np.load(path, allow_pickle=True)
+                    with PathManager.open(path, "rb") as fopen:
+                        labels = np.load(fopen, allow_pickle=True)
             elif label_source == "disk_folder":
                 # In this case we use the labels inferred from the directory structure
                 # We enforce that the data source also be a disk folder in this case

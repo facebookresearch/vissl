@@ -67,7 +67,9 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
             if self._normalize_output:
                 normalized_pred = nn.functional.normalize(pred, dim=1, p=2)
 
-            assert target.max().item() < pred.shape[1]
+            assert (
+                target.max().item() < pred.shape[1]
+            ), f"pred.shape[1]={pred.shape[1]} and target.max().item()={target.max().item()}"
             if idx >= len(self._losses):
                 self._create_loss_function()
             loss += self._losses[idx](normalized_pred, target)

@@ -1,0 +1,38 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[3, 1]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[1, 3]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[4, 1]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[1, 4]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
+        ["avgpool", ["Identity", []]],
+        # ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_128gf
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 2904, "dims": [8712, 8142]}],
+        # ["eval_mlp", {"in_channels": 2904, "dims": [8712, 8142]}],
+        # ["eval_mlp", {"in_channels": 2904, "dims": [11616, 8142]}],
+        # ["eval_mlp", {"in_channels": 2904, "dims": [11616, 8142]}],
+        ["eval_mlp", {"in_channels": 7392, "dims": [14784, 8142]}],
+        # ["eval_mlp", {"in_channels": 7392, "dims": [14784, 8142]}],
+        ["eval_mlp", {"in_channels": 7392, "dims": [7392, 8142]}],
+        # ["mlp", {"dims": [7392, 8142]}],
+      ]
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 16
+    TEST:
+      BATCHSIZE_PER_REPLICA: 16
+  DISTRIBUTED:
+    NUM_NODES: 2  # we can't fit the model on 16GB machine so instead use 2 nodes
+    INIT_METHOD: tcp

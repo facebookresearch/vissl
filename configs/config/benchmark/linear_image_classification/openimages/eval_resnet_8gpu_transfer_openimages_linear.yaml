@@ -3,7 +3,7 @@ config:
   VERBOSE: True
   LOG_FREQUENCY: 10
   TEST_ONLY: False
-  TEST_EVERY_NUM_EPOCH: 1
+  TEST_EVERY_NUM_EPOCH: 5
   TEST_MODEL: True
   SEED_VALUE: 1
   MULTI_PROCESSING_METHOD: forkserver
@@ -52,8 +52,7 @@ config:
     enable_training_meter: False
     mean_ap_list_meter:
       num_classes: 9605
-      num_meters: 2
-      max_cpu_capacity: 140000  # openimages test has 114646 so we keep that much only for train to avoid OOM
+      num_meters: 1
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
@@ -95,7 +94,7 @@ config:
     name: soft_target_cross_entropy_multiple_output_single_target
     soft_target_cross_entropy_multiple_output_single_target:
       reduction: mean
-      normalize_targets: null
+      normalize_targets: "count_based"
       ignore_index: -1
   OPTIMIZER:
       name: sgd
