@@ -435,6 +435,7 @@ config:
     # ----------------------------------------------------------------------------------- #
     swav_momentum_loss:
       momentum: 0.99
+      momentum_eval_mode_iter_start: 0
       embedding_dim: 128
       temperature: 0.1
       use_double_precision: False

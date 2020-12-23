@@ -65,6 +65,7 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             [
                 SwAVMomentumHook(
                     cfg.LOSS["swav_momentum_loss"]["momentum"],
+                    cfg.LOSS["swav_momentum_loss"]["momentum_eval_mode_iter_start"],
                     cfg.LOSS["swav_momentum_loss"]["crops_for_assign"],
                 ),
                 SwAVMomentumNormalizePrototypesHook(),
