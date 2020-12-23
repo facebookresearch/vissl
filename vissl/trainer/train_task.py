@@ -35,6 +35,7 @@ class SelfSupervisionTask(ClassificationTask):
         # Register the task to the proper device (cpu, gpu, ...)
         self.set_device()
 
+        self.checkpoint_folder = None
         self.checkpoint = None
         self.available_splits = []
         self.base_loss = None
@@ -152,10 +153,10 @@ class SelfSupervisionTask(ClassificationTask):
             logging.info("Not using Automatic Mixed Precision")
 
     def set_checkpoint_path(self, checkpoint_path: str):
-        # assert (
-        #     checkpoint_path is None or "classy_state_dict" in checkpoint
-        # ), "Checkpoint does not contain classy_state_dict"
         self.checkpoint_path = checkpoint_path
+
+    def set_checkpoint_folder(self, checkpoint_folder: str):
+        self.checkpoint_folder = checkpoint_folder
 
     def set_iteration(self, iteration):
         assert iteration >= 0, "Iteration number must be positive"

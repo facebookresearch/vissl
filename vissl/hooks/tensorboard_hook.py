@@ -28,14 +28,18 @@ class SSLTensorboardHook(ClassyHook):
     SSL Specific variant of the Classy Vision tensorboard hook
     """
 
-    on_forward = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
     on_backward = ClassyHook._noop
     on_start = ClassyHook._noop
     on_end = ClassyHook._noop
     on_step = ClassyHook._noop
 
-    def __init__(self, tb_writer: SummaryWriter, log_activations: bool = False) -> None:
+    def __init__(
+        self,
+        tb_writer: SummaryWriter,
+        log_activations: bool = False,
+        log_params_every_n_iterations: int = -1,
+    ) -> None:
         """The constructor method of SSLTensorboardHook.
 
         Args:
@@ -52,6 +56,18 @@ class SSLTensorboardHook(ClassyHook):
         logging.info("Setting up SSL Tensorboard Hook...")
         self.tb_writer = tb_writer
         self.log_activations = log_activations
+        self.log_params_every_n_iterations = log_params_every_n_iterations
+        logging.info(
+            f"Tensorboard config: log_activations: {self.log_activations}, "
+            f"log_params_freq: {self.log_params_every_n_iterations}"
+        )
+
+    def on_forward(self, task: "tasks.ClassyTask") -> None:
+        if self.log_params_every_n_iterations > 0 and is_primary() and task.train:
+            for name, parameter in task.base_model.named_parameters():
+                self.tb_writer.add_histogram(
+                    f"Parameters/{name}", parameter, global_step=task.iteration
+                )
 
     def on_phase_start(self, task: "tasks.ClassyTask") -> None:
         if not self.log_activations:

@@ -1,6 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+import logging
 import math
+import os
 import pprint
 from typing import List
 
@@ -14,6 +16,7 @@ from classy_vision.generic.distributed_util import (
     get_world_size,
 )
 from classy_vision.losses import ClassyLoss, register_loss
+from fvcore.common.file_io import PathManager
 from torch import nn
 from vissl.utils.hydra_config import AttrDict
 
@@ -36,6 +39,7 @@ class SwAVLoss(ClassyLoss):
             self.loss_config.queue.local_queue_length,
             self.loss_config.embedding_dim,
             self.loss_config.temp_hard_assignment_iters,
+            self.loss_config.output_dir,
         )
 
     @classmethod
@@ -85,6 +89,7 @@ class SwAVCriterion(nn.Module):
         local_queue_length: int,
         embedding_dim: int,
         temp_hard_assignment_iters: int,
+        output_dir: str,
     ):
         super(SwAVCriterion, self).__init__()
 
@@ -103,11 +108,13 @@ class SwAVCriterion(nn.Module):
         self.local_queue_length = local_queue_length
         self.dist_rank = get_rank()
         self.world_size = get_world_size()
+        self.log_softmax = nn.LogSoftmax(dim=1).cuda()
         self.softmax = nn.Softmax(dim=1).cuda()
         self.register_buffer("num_iteration", torch.zeros(1, dtype=int))
         self.use_queue = False
         if local_queue_length > 0:
             self.initialize_queue()
+        self.output_dir = output_dir
 
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
         eps_num_stab = 1e-12
@@ -180,6 +187,8 @@ class SwAVCriterion(nn.Module):
 
         total_loss = 0
         n_term_loss = 0
+
+        # 2 big crops are normally used for the assignment
         for i, crop_id in enumerate(self.crops_for_assign):
             with torch.no_grad():
                 scores_this_crop = scores[bs * crop_id : bs * (crop_id + 1)]
@@ -200,22 +209,57 @@ class SwAVCriterion(nn.Module):
                     assignments = torch.exp(assignments).t()
                 assignments = self.distributed_sinkhornknopp(assignments)[:bs]
                 idx_crop_pred = np.delete(np.arange(self.num_crops), crop_id)
+
             loss = 0
             for p in idx_crop_pred:
-                loss -= torch.mean(
-                    torch.sum(
-                        assignments
-                        * torch.log(
-                            self.softmax(
-                                scores[bs * p : bs * (p + 1)] / self.temperature
-                            )
-                        ),
-                        dim=1,
+                if self.use_double_prec:
+                    loss -= torch.mean(
+                        torch.sum(
+                            assignments
+                            * self.log_softmax(
+                                scores[bs * p : bs * (p + 1)].double()
+                                / np.float64(self.temperature)
+                            ),
+                            dim=1,
+                            dtype=assignments.dtype,
+                        )
                     )
-                )
+                else:
+                    loss -= torch.mean(
+                        torch.sum(
+                            assignments
+                            * self.log_softmax(
+                                scores[bs * p : bs * (p + 1)] / self.temperature
+                            ),
+                            dim=1,
+                            dtype=assignments.dtype,
+                        )
+                    )
             loss /= len(idx_crop_pred)
             total_loss += loss
             n_term_loss += 1
+
+            # stop training if NaN appears and log the output to help debugging
+            # TODO (prigoyal): extract the logic to be common for all losses
+            # debug_state() method that all losses can override
+            if torch.isnan(loss):
+                logging.info(
+                    f"Infinite Loss or NaN. Loss value: {loss}, rank: {self.dist_rank}"
+                )
+                scores_output_file = os.path.join(
+                    self.output_dir,
+                    "rank" + str(self.dist_rank) + "_scores" + str(i) + ".pth",
+                )
+                assignments_out_file = os.path.join(
+                    self.output_dir,
+                    "rank" + str(self.dist_rank) + "_assignments" + str(i) + ".pth",
+                )
+                with PathManager.open(scores_output_file, "wb") as fwrite:
+                    torch.save(scores, fwrite)
+                with PathManager.open(assignments_out_file, "wb") as fwrite:
+                    torch.save(assignments, fwrite)
+                logging.info(f"Saved the scores matrix to: {scores_output_file}")
+                logging.info(f"Saved the assignment matrix to: {assignments_out_file}")
         total_loss /= n_term_loss
         return total_loss
 
