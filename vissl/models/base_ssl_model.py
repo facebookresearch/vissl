@@ -162,6 +162,19 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         self.freeze_trunk()
         self.freeze_head()
 
+    def is_fully_frozen_model(self):
+        trunk_params_list = self.trunk.parameters()
+        heads_params_list = self.heads.parameters()
+        trunk_trainable_params = list(
+            filter(lambda x: x.requires_grad, trunk_params_list)
+        )
+        heads_trainable_params = list(
+            filter(lambda x: x.requires_grad, heads_params_list)
+        )
+        if len(trunk_trainable_params) == 0 and len(heads_trainable_params) == 0:
+            return True
+        return False
+
     def get_features(self, batch):
         # we don't run the heads and only the trunk. The trunk will already
         # have the feature extractor AvgPool layers and flattened features

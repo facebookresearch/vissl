@@ -15,6 +15,7 @@ from classy_vision.generic.distributed_util import (
     set_cpu_device,
     set_cuda_device_index,
 )
+from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import ClassyTask, TASK_REGISTRY
 from vissl.hooks import SSLClassyHookFunctions
@@ -226,6 +227,17 @@ class SelfSupervisionTrainer(object):
         # support feature extraction on gpu only.
         assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
+
+        # in case of feature evaluation mode, if we are freezing both trunk and
+        # head, DDP won't work as there are no parameters in the model. Adding
+        # the dummy head will lead to features being not right. So we rather
+        # add the dummy layer to the model and use DDP. We copy the model to
+        # gpu (if using gpus) after the new dummy layer addition.
+        fully_frozen_model = self.task.base_model.is_fully_frozen_model()
+        if fully_frozen_model:
+            self.task.base_model.dummy_layer = torch.nn.Linear(4, 4)
+            if self.task.device.type == "cuda":
+                self.task.base_model = copy_model_to_gpu(self.task.base_model)
         self.task.init_distributed_data_parallel_model()
 
         if is_primary():
