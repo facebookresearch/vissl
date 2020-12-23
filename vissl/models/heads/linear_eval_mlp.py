@@ -21,7 +21,14 @@ class LinearEvalMLP(nn.Module):
     use the "mlp" head directly.
     """
 
-    def __init__(self, model_config: AttrDict, in_channels: int, dims: List[int]):
+    def __init__(
+        self,
+        model_config: AttrDict,
+        in_channels: int,
+        dims: List[int],
+        use_bn: bool = False,
+        use_relu: bool = False,
+    ):
         """
         Args:
             model_config (AttrDict): dictionary config.MODEL in the config file
@@ -38,7 +45,7 @@ class LinearEvalMLP(nn.Module):
             momentum=model_config.HEAD.BATCHNORM_MOMENTUM,
         )
 
-        self.clf = MLP(model_config, dims)
+        self.clf = MLP(model_config, dims, use_bn=use_bn, use_relu=use_relu)
 
     def forward(self, batch: torch.Tensor):
         """
