@@ -73,6 +73,7 @@ config:
           values: [0.1, 0.01, 0.001, 0.0001, 0.00001] # the exact values of learning rate (N+1 vals)
           update_interval: epoch
   METERS:
+    name: accuracy_list_meter
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1, 5]

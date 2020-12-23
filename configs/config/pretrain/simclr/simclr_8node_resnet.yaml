@@ -39,7 +39,8 @@ config:
       DROP_LAST: True
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
-  METERS: null
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
