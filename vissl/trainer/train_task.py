@@ -95,6 +95,9 @@ class SelfSupervisionTask(ClassificationTask):
         self.batches = -1  # set by the hook at start of each epoch or phase
         # loss curve. Reset at start of each phase/epoch by SetDataSamplerEpochHook hook.
         self.losses = []  # set by the hook at start of each epoch or phase
+        # set the bucket_cap_mb for gradient reduction. This can be tuned to overlap
+        # communication as much as possible
+        self.set_ddp_bucket_cap_mb()
 
     def set_device(self):
         try:
@@ -103,6 +106,10 @@ class SelfSupervisionTask(ClassificationTask):
             )
         except AttributeError:
             self.device = torch.device("cuda")
+
+    def set_ddp_bucket_cap_mb(self):
+        self.ddp_bucket_cap_mb = self.config.DATA.DDP_BUCKET_CAP_MB
+        assert self.ddp_bucket_cap_mb > 0, "bucket_cap_mb must be positive"
 
     def set_available_splits(self):
         # self.available_splits = list(self.config["DATA"].keys())
