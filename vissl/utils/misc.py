@@ -64,8 +64,8 @@ def get_dist_run_id(cfg, num_nodes):
         assert cfg.DISTRIBUTED.RUN_ID, "please specify RUN_ID for tcp"
     elif init_method == "env":
         assert num_nodes == 1, "can not use 'env' init method for multi-node. Use tcp"
-    if cfg.DISTRIBUTED.SLURM_ENV:
-        assert num_nodes > 1, "Use 'tcp' for single node"
+    if cfg.DISTRIBUTED.SLURM_ENV and num_nodes > 1:
+        # assert num_nodes > 1, "Use 'tcp' for single node"
         port = cfg.DISTRIBUTED.RUN_ID
         # assert isinstance(port, int), "integer port should be specified in RUN_ID"
         try:
