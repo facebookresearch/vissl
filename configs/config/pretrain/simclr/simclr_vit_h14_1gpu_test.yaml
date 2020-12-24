@@ -13,19 +13,19 @@ config:
   #  TEST_MODEL: True
   TENSORBOARD_SETUP:
     USE_TENSORBOARD: True
-    EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/simclr/2gpu_test"
+    EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/simclr/1gpu_test"
     LOG_ACTIVATIONS: False
     FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
-    DIR: "/checkpoint/ito/vision_transformer/simclr/2gpu_test"
+    DIR: "/checkpoint/ito/vision_transformer/simclr/1gpu_test"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
   DATA:
-    NUM_DATALOADER_WORKERS: 0
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 2
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgReplicatePil
@@ -69,20 +69,17 @@ config:
       NAME: vision_transformer
       TRUNK_PARAMS:
         VISION_TRANSFORMERS:
-          name: vit_b_32
+          name: vit_h_14
           DROPOUT_RATE: 0.1
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token
     HEAD:
       PARAMS: [
-      ["mlp", {"dims": [768, 3072], "use_relu": True, "use_bn": True, "use_bias": False}],
-      ["mlp", {"dims": [3072, 3072], "use_relu": True, "use_bn": True, "use_bias": False}],
-      ["mlp", {"dims": [3072, 128]}],
+      ["mlp", {"dims": [1280, 5120], "use_relu": True, "use_bn": True,
+               "use_bias": False}],
+      ["mlp", {"dims": [5120, 5120], "use_relu": True, "use_bn": True, "use_bias": False}],
+      ["mlp", {"dims": [5120, 128]}],
       ]
-    SYNC_BN_CONFIG:
-      CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
-      GROUP_SIZE: -1
   LOSS:
     name: simclr_info_nce_loss
     simclr_info_nce_loss:
@@ -117,15 +114,15 @@ config:
   GRAD_CLIP:
     USE_GRAD_CLIP: True
   METERS: null
-#    accuracy_list_meter:
-#      num_meters: 1
-#      topk_values: [1, 5]
+  #    accuracy_list_meter:
+  #      num_meters: 1
+  #      topk_values: [1, 5]
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 2 # 1 GPU
+    NUM_PROC_PER_NODE: 1 # 1 GPU
     RUN_ID: auto
   MACHINE:
     DEVICE: gpu

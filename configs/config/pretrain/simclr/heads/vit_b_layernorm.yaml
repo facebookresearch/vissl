@@ -1,0 +1,10 @@
+# @package _global_
+config:
+  MODEL:
+    HEAD:
+      PARAMS: [
+      ["mlp", {"dims": [768, 3072], "use_relu": True, "use_ln": True, "use_bias": False}],
+      ["mlp", {"dims": [3072, 128]}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: False

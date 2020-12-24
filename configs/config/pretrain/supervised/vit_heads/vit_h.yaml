@@ -1,0 +1,8 @@
+# @package _global_
+config:
+  MODEL:
+    HEAD:
+      PARAMS: [
+      ["vision_transformer_head", {"in_plane": 1280, "hidden_dim": 5120,
+                                   "num_classes": 1000}],
+      ]
