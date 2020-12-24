@@ -3,6 +3,10 @@
         "train": ["/datasets01/imagenet_full_size/061417/train/", "<lbl_path>"],
         "val": ["/datasets01/imagenet_full_size/061417/val/", "<lbl_path>"]
     },
+    "imagenet1k_debug_folder": {
+        "train": ["/datasets01/imagenet_full_size/061417/val/", "<lbl_path>"],
+        "val": ["/datasets01/imagenet_full_size/061417/val/", "<lbl_path>"]
+    },
     "places205_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
