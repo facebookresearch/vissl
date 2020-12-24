@@ -451,6 +451,7 @@ config:
     momentum: 0.9
     nesterov: False
     num_epochs: 90
+    betas: [.9, .999] # For Adam/AdamW
     regularize_bn: False
     regularize_bias: True
     param_schedulers:
@@ -554,7 +555,7 @@ config:
     #   4. If using > 1 machine on the FAIR Cluster, set port yourself. RUN_ID={port}
     RUN_ID: "auto"
     # If using > 1 node (machine) on FAIR Cluster, set to True to use
-    # slurm environment info to determine apportioned learnfair nodes and
+    # slurm environment info to determine apportioned learnfair nodes
     SLURM_ENV: False
     # if True, does the gradient reduction in DDP
     MANUAL_GRADIENT_REDUCTION: False
