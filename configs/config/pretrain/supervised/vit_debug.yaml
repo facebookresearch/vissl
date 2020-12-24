@@ -1,0 +1,34 @@
+# @package _global_
+config:
+  VERBOSE: True
+  TENSORBOARD_SETUP:
+    EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/1gpu_test"
+  CHECKPOINT:
+    DIR: "/checkpoint/ito/vision_transformer/1gpu_test"
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 4
+  DATA:
+    NUM_DATALOADER_WORKERS: 0
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_debug_folder]
+      LABEL_SOURCES: [disk_folder]
+      BATCHSIZE_PER_REPLICA: 64
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      #      DATA_PATHS: ["<path to test folder>"]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_debug_folder]
+      BATCHSIZE_PER_REPLICA: 64
+    AMP_PARAMS:
+      USE_AMP: True
+      # USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1 # 1 GPU
+    RUN_ID: auto
+    SLURM_ENV: False
+  MACHINE:
+    DEVICE: gpu

@@ -1,0 +1,28 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    name: sgd
+    # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
+    weight_decay: 0.000001
+    momentum: 0.9
+    num_epochs: 100
+    nesterov: False
+    regularize_bn: True
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.3
+          base_lr_batch_size: 256
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.1
+            end_value: 0.3
+          - name: cosine
+            start_value: 0.3
+            end_value: 0
+        interval_scaling: [rescaled, rescaled]
+        update_interval: step
+        lengths: [0.1, .9]

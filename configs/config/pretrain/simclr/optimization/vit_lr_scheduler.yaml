@@ -1,0 +1,29 @@
+OPTIMIZER:
+  name: adamw
+  weight_decay: 0.3
+  #    momentum: 0.9
+  num_epochs: 300
+  #    nesterov: True
+  #    regularize_bn: False
+  #    regularize_bias: True
+  param_schedulers:
+    lr:
+      auto_lr_scaling:
+        auto_scale: True
+        base_value: 0.003
+        base_lr_batch_size: 2048
+      #        auto_lr_scaling: # learning rate is automatically scaled based on batch size
+      #          auto_scale: true
+      #          base_value: 0.1
+      #          base_lr_batch_size: 256 # learning rate of 0.1 is used for batch size of 256
+      name: composite
+      schedulers:
+        - name: linear
+          start_value: 0.0
+          end_value: 0.006
+        - name: cosine
+          start_value: 0.006
+          end_value: 0
+      interval_scaling: [rescaled, rescaled]
+      update_interval: step
+      lengths: [0.1, 0.9]
