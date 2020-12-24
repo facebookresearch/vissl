@@ -33,6 +33,7 @@ class MLP(nn.Module):
         model_config: AttrDict,
         dims: List[int],
         use_bn: bool = False,
+        use_ln: bool = False,
         use_relu: bool = False,
         use_dropout: bool = False,
         use_bias: bool = True,
@@ -41,6 +42,7 @@ class MLP(nn.Module):
         Args:
             model_config (AttrDict): dictionary config.MODEL in the config file
             use_bn (bool): whether to attach BatchNorm after Linear layer
+            use_ln (bool): whether to attach LayerNorm after Linear layer
             use_relu (bool): whether to attach ReLU after (Linear (-> BN optional))
             use_dropout (bool): whether to attach Dropout after
                                 (Linear (-> BN -> relu optional))
@@ -59,6 +61,12 @@ class MLP(nn.Module):
                         dim,
                         eps=model_config.HEAD.BATCHNORM_EPS,
                         momentum=model_config.HEAD.BATCHNORM_MOMENTUM,
+                    )
+                )
+            if use_ln:
+                layers.append(
+                    nn.LayerNorm(
+                        dim
                     )
                 )
             if use_relu:
