@@ -117,7 +117,7 @@ if __name__ == '__main__':
     Path(checkpoint_directory).mkdir(parents=True, exist_ok=True)
 
     executor = submitit.SlurmExecutor(folder=checkpoint_directory,
-                                      max_num_timeout=7)
+                                      max_num_timeout=12)
     executor.update_parameters(**slurm_params)
 
     # Create override parameter dictionary of format key = hierarchy in .yaml
