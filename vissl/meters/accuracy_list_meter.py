@@ -20,6 +20,8 @@ class AccuracyListMeter(ClassyMeter):
             num_meters: number of meters and hence we have same number of outputs
             topk_values: list of int `k` values.
         """
+        super().__init__()
+
         assert is_pos_int(num_meters), "num_meters must be positive"
         assert isinstance(topk_values, list), "topk_values must be a list"
         assert len(topk_values) > 0, "topk_values list should have at least one element"
