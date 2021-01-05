@@ -32,8 +32,8 @@ config:
           size_crops: [224]
           num_crops: [2]
           crop_scales: [[0.14, 1]]
-        - name: RandomResizedCrop
-          size: 224
+#        - name: RandomResizedCrop
+#          size: 224
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion

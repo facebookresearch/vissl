@@ -51,6 +51,9 @@ if __name__ == '__main__':
                                                                  'of GPU ram per node')
     parser.add_argument('--partition', type=str, default='learnfair', \
                                                   help='learnfair, dev, or priority')
+    parser.add_argument('--max_num_timeout', type=int, default=12,
+                        help='Maximum number of resubmissions on '
+                             'timeout/preemption')
     parser.add_argument('--comment', type=str, default=None, help='Needed for priority')
     parser.add_argument('--constraint', type=str, default=None, help='e.g. volta32gb')
     parser.add_argument('--run_id', type=str, default='60012',
@@ -117,7 +120,7 @@ if __name__ == '__main__':
     Path(checkpoint_directory).mkdir(parents=True, exist_ok=True)
 
     executor = submitit.SlurmExecutor(folder=checkpoint_directory,
-                                      max_num_timeout=12)
+                                      max_num_timeout=args.max_num_timeout)
     executor.update_parameters(**slurm_params)
 
     # Create override parameter dictionary of format key = hierarchy in .yaml
@@ -145,6 +148,7 @@ if __name__ == '__main__':
     job_params_to_print = []
     checkpoint_directories = []
     with executor.batch():
+        n_param_combinations = len(list(product_dict(**override_dict)))
         # Iterate through sets of parameters
         for i, param_dict in enumerate(product_dict(**override_dict)):
             # Create list of overrides to be passed as args
@@ -157,7 +161,8 @@ if __name__ == '__main__':
                 else:
                     # Create subdirectory for each job in array
                     if k == 'CHECKPOINT.DIR':
-                        v = f'{v}/{i}'
+                        if n_param_combinations > 1:
+                            v = f'{v}/{i}'
                         checkpoint_directories.append(v)
                     overrides.append(f'config.{k}={v}')
             overrides.append('hydra.verbose=True')
