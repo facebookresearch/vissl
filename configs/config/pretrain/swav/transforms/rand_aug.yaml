@@ -1,0 +1,24 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 2
+          size_crops: [224]
+          num_crops: [2]
+          crop_scales: [[0.14, 1]]
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: RandAugment
+          n: 5
+          m: 15
+          probabilistic: True

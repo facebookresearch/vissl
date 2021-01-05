@@ -40,6 +40,10 @@ config:
           p: 0.5
           radius_min: 0.1
           radius_max: 2.0
+        - name: RandAugment
+          n: 5
+          m: 15
+          probabilistic: True
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]

@@ -95,7 +95,7 @@ config:
       temperature: 0.2
   OPTIMIZER:
     name: adamw
-    weight_decay: 0.3
+    weight_decay: 0.05
     #    momentum: 0.9
     num_epochs: 300
     #    nesterov: True
@@ -105,7 +105,7 @@ config:
       lr:
         auto_lr_scaling:
           auto_scale: True
-          base_value: 0.003
+          base_value: 0.0015
           base_lr_batch_size: 4096
         #        auto_lr_scaling: # learning rate is automatically scaled based on batch size
         #          auto_scale: true
