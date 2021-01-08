@@ -49,12 +49,14 @@ class VisionTransformer(nn.Module):
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
         trunk_config = model_config.TRUNK.TRUNK_PARAMS.VISION_TRANSFORMERS
 
-        if "name" in trunk_config:
+        if "name" in trunk_config and trunk_config["name"]:
             name = trunk_config["name"]
             logging.info(f"Building model: Vision Transformer: {name}")
             model = build_model({"name": name})
         else:
             logging.info("Building model: Vision Transformer from yaml config")
+            # Hacky workaround
+            trunk_config = {k.lower(): v for k, v in trunk_config.items()}
             model = ClassyViT.from_config(trunk_config)
 
         # TODO: This is where we would collect the model's modules into a
