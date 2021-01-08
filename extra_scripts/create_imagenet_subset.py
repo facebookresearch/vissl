@@ -14,9 +14,9 @@ def file_len(fname):
 
 
 if __name__ == '__main__':
-    """Creates a subset of imagenet data for fine-tuning (a lá 
+    """Creates a subset of imagenet data for fine-tuning (a lá
     https://github.com/google-research/simclr) using the ImageNet train data
-    directory and a text file indicating the images to use. The text file is 
+    directory and a text file indicating the images to use. The text file is
     formatted such that each file name is on its own line, e.g.
     n04235860_14959.JPEG
     n04239074_7724.JPEG"""
