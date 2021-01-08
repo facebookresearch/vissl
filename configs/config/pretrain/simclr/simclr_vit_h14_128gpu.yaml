@@ -69,7 +69,12 @@ config:
       NAME: vision_transformer
       TRUNK_PARAMS:
         VISION_TRANSFORMERS:
-          name: vit_h_14
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 14
+          NUM_LAYERS: 32
+          NUM_HEADS: 16
+          HIDDEN_DIM: 1280
+          MLP_DIM: 5120
           DROPOUT_RATE: 0.1
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token

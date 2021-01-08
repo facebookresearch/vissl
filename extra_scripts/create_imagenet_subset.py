@@ -12,6 +12,7 @@ def file_len(fname):
             pass
     return i + 1
 
+
 if __name__ == '__main__':
     """
     Creates a subset of imagenet data for fine-tuning (a lá 

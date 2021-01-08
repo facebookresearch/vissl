@@ -205,11 +205,11 @@ config:
 
         # ------------------------------------------------------------- #
         # Vision Transformer params. Default = ViT-L/16. Using a name will
-        # override PATCH_SIZE, NUM_LAYERS, NUM_HEADS, HIDDEN_DIM, and MLP_DIM.
+        # override/ignore all other VISION_TRANSFORMERS parameters.
         # Named options include vit_b_32, vit_b_16, vit_l_32, vit_l_16, vit_h_14
         # ------------------------------------------------------------- #
         VISION_TRANSFORMERS:
-          name: vit_l_16
+          name:
           IMAGE_SIZE: 224
           PATCH_SIZE: 16
           NUM_LAYERS: 24
@@ -219,6 +219,18 @@ config:
           DROPOUT_RATE: 0.1
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token
+          # Parameters for attention modules. Default is vanilla
+          # self-attention for every layer.
+          ATTENTION_MODULES:
+            MODULE_TYPES: []
+            MODULE_COUNTS: []
+            # Example
+            # MODULE_TYPES: [AttentionLocalInit, MultiheadAttention]
+            # MODULE_COUNTS: [2, 10]
+            # Creates a model in which the first two layers have local-init
+            # attention modules (i.e. emulates convolution) and the remaining
+            # ten layers
+
 
 
     # ----------------------------------------------------------------------------------- #
