@@ -8,20 +8,18 @@ from tqdm import tqdm
 
 def file_len(fname):
     with open(fname) as f:
-        for i, l in enumerate(f):
+        for _i, _l in enumerate(f):
             pass
-    return i + 1
+    return _i + 1
 
 
 if __name__ == '__main__':
-    """
-    Creates a subset of imagenet data for fine-tuning (a lá 
+    """Creates a subset of imagenet data for fine-tuning (a lá 
     https://github.com/google-research/simclr) using the ImageNet train data
     directory and a text file indicating the images to use. The text file is 
     formatted such that each file name is on its own line, e.g.
     n04235860_14959.JPEG
-    n04239074_7724.JPEG
-    """
+    n04239074_7724.JPEG"""
     parser = argparse.ArgumentParser()
     parser.add_argument('--imagenet_source', type=str,
                         help='path to imagenet training data directory')
