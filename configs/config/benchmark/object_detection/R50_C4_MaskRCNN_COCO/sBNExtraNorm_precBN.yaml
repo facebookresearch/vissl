@@ -1,0 +1,46 @@
+MODEL:
+  PIXEL_MEAN: [123.675, 116.280, 103.530]
+  PIXEL_STD: [58.395, 57.120, 57.375]
+  MASK_ON: True
+  RESNETS:
+    DEPTH: 50
+    NORM: "SyncBN"
+    STRIDE_IN_1X1: False
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  RPN:
+    PRE_NMS_TOPK_TEST: 6000
+    POST_NMS_TOPK_TEST: 1000
+  ROI_HEADS:
+    NAME: "Res5ROIHeadsExtraNorm"
+DATASETS:
+  TRAIN: ("coco_2017_train",)
+  TEST: ("coco_2017_val",)
+SOLVER:
+  IMS_PER_BATCH: 16
+  ####################### sBNExtraNorm_precBN_lrpt02_warm50 #######################
+  BASE_LR: 0.02
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
+  WARMUP_ITERS: 50
+  ####################### sBNExtraNorm_precBN_lrpt02_warm50_2x ###################
+  BASE_LR: 0.02
+  STEPS: (120000, 160000)
+  MAX_ITER: 180000
+  WARMUP_ITERS: 50
+  ####################### sBNExtraNorm_precBN_lrpt1_warm50 ########################
+  BASE_LR: 0.1
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
+  WARMUP_ITERS: 50
+  ####################### sBNExtraNorm_precBN_lrpt1_warm50_2x ######################
+  BASE_LR: 0.1
+  STEPS: (120000, 160000)
+  MAX_ITER: 180000
+  WARMUP_ITERS: 50
+TEST:
+  PRECISE_BN:
+    ENABLED: True
+INPUT:
+  MIN_SIZE_TRAIN: (640, 672, 704, 736, 768, 800)
+  FORMAT: "RGB" # torchvision models take RGB input
+VERSION: 2

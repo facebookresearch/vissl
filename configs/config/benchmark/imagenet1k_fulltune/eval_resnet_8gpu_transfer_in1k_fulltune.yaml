@@ -3,7 +3,7 @@ config:
   VERBOSE: True
   LOG_FREQUENCY: 100
   TEST_ONLY: False
-  TEST_EVERY_NUM_EPOCH: 5
+  TEST_EVERY_NUM_EPOCH: 1
   TEST_MODEL: True
   SEED_VALUE: 1
   MULTI_PROCESSING_METHOD: forkserver
@@ -44,6 +44,7 @@ config:
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
   METERS:
+    name: accuracy_list_meter
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1, 5]

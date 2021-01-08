@@ -14,9 +14,10 @@ from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
 from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
-from vissl.utils.checkpoint import get_checkpoint_folder, is_checkpoint_phase
+from fvcore.common.file_io import PathManager
+from vissl.utils.checkpoint import is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.io import save_file
+from vissl.utils.io import create_file_symlink, save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
 
@@ -31,14 +32,18 @@ class LogGpuStatsHook(ClassyHook):
     on_update = ClassyHook._noop
 
     def on_start(self, task: "tasks.ClassyTask") -> None:
-        if is_primary() and task.use_gpu:
+        if is_primary() and (task.device.type == "cuda"):
             # print the nvidia-smi stats
             log_gpu_stats()
 
     def on_step(self, task: "tasks.ClassyTask") -> None:
         # print the nvidia-smi stats again to get more accurate nvidia-smi
         # useful for monitoring memory usage.
-        if is_primary() and task.use_gpu and task.local_iteration_num == 50:
+        if (
+            is_primary()
+            and (task.device.type == "cuda")
+            and task.local_iteration_num == 50
+        ):
             log_gpu_stats()
 
 
@@ -87,7 +92,10 @@ class LogLossLrEtaHook(ClassyHook):
 
                 eta_secs = avg_time * (task.max_iteration - iteration)
                 eta_string = str(datetime.timedelta(seconds=int(eta_secs)))
-                lr_val = round(task.optimizer.options_view.lr, 5)
+                if isinstance(task.optimizer.options_view.lr, set):
+                    lr_val = list(task.optimizer.options_view.lr)
+                else:
+                    lr_val = round(task.optimizer.options_view.lr, 5)
                 batch_time = int(1000.0 * avg_time)
                 rank = get_rank()
                 log_str = (
@@ -127,6 +135,46 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     on_backward = ClassyHook._noop
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
+
+    # TODO: make this a standalone hook and make it optional to save runtime
+    # although the overhead is minimal when the model is training fine (no nans)
+    def on_forward(self, task: "tasks.ClassyTask") -> None:
+        """
+        Called each time a model forward is done and make sure that
+        the model forward output is not NaN
+        """
+        # check the model output is not NaN.
+        has_nan = False
+        model_output = task.last_batch.model_output
+        if isinstance(model_output, list):
+            has_nan = not torch.tensor(
+                [torch.isfinite(x).all() for x in model_output]
+            ).all()
+        else:
+            has_nan = not torch.isfinite(model_output).all()
+
+        if has_nan:
+            _, dist_rank = get_machine_local_and_dist_rank()
+            logging.info(f"Infinite Model output or NaN at iteration={task.iteration}.")
+            self._checkpoint_model(
+                task,
+                task.train_phase_idx,
+                mode_frequency=1,
+                mode_num=task.iteration,
+                mode="iteration",
+            )
+            model_output_file = (
+                f"{task.checkpoint_folder}/rank{dist_rank}_model_output.pth"
+            )
+            input_sample_file = (
+                f"{task.checkpoint_folder}/rank{dist_rank}_input_sample.pth"
+            )
+            with PathManager.open(model_output_file, "wb") as fwrite:
+                torch.save(model_output, fwrite)
+            with PathManager.open(input_sample_file, "wb") as fwrite:
+                torch.save(task.last_batch.sample, fwrite)
+            logging.info(f"Saved model output: {model_output_file}")
+            logging.info(f"Saved model input: {input_sample_file}")
 
     def on_step(self, task: "tasks.ClassyTask") -> None:
         # in some cases, we might want to checkpoint after certain number of
@@ -175,9 +223,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             and task.train
             and (is_final_train_phase or is_checkpointing_phase)
         ):
-            checkpoint_folder = get_checkpoint_folder(task.config)
-            if checkpoint_folder is None:
-                return
+            checkpoint_folder = task.checkpoint_folder
             logging.info(
                 f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
             )
@@ -203,29 +249,41 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             ckpt_name = f"model_{mode}{mode_num}.torch"
             if is_final_train_phase:
                 ckpt_name = f"model_final_checkpoint_{mode}{mode_num}.torch"
-            # TODO (prigoyal): add support for more backends: manifold etc.
             backend = task.config["CHECKPOINT"]["BACKEND"]
             assert backend == "disk", "Only disk BACKEND supported"
             save_checkpoint(
                 checkpoint_folder, checkpoint_task, checkpoint_file=ckpt_name
             )
             logging.info(f"Saved checkpoint: {checkpoint_folder}/{ckpt_name}")
+            # we create the checkpoint symlink and use this symlink to load
+            # checkpoints. This helps ensure that the checkpoint we load from
+            # are valid. It's a particularly useful feature for resuming trainings.
+            logging.info("Creating symlink...")
+            symlink_dest_file = f"{checkpoint_folder}/checkpoint.torch"
+            source_file = f"{checkpoint_folder}/{ckpt_name}"
+            create_file_symlink(source_file, symlink_dest_file)
+            logging.info(f"Created symlink: {symlink_dest_file}")
 
     def _print_and_save_meters(self, task, train_phase_idx):
         phase_type = "train" if task.train else "test"
         rank, _ = get_machine_local_and_dist_rank()
-        checkpoint_folder = get_checkpoint_folder(task.config)
+        checkpoint_folder = task.checkpoint_folder
         save_metrics = {}
         save_metrics["iteration"] = task.iteration
         save_metrics["phase_idx"] = task.phase_idx
         save_metrics["train_phase_idx"] = train_phase_idx
         for meter in task.meters:
-            metric_key = f"{phase_type}_{meter.name}"
-            if metric_key not in task.metrics:
-                task.metrics[metric_key] = []
-            task.metrics[metric_key].append(meter.value)
-            save_metrics[metric_key] = meter.value
-            logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter.value}")
+            if len(task.meters) > 0 and (
+                (task.train and task.config["METERS"]["enable_training_meter"])
+                or (not task.train)
+            ):
+                meter_value = meter.value
+                metric_key = f"{phase_type}_{meter.name}"
+                if metric_key not in task.metrics:
+                    task.metrics[metric_key] = []
+                task.metrics[metric_key].append(meter_value)
+                save_metrics[metric_key] = meter_value
+                logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
         meter_file = f"{checkpoint_folder}/metrics.json"
         save_file(save_metrics, meter_file)
 

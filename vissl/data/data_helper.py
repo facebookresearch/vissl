@@ -115,7 +115,17 @@ class QueueDataset(Dataset):
     def _get_dequeue_buffer_size(self):
         return self.dequeue_images_queue.qsize()
 
+    def _is_large_image(self, sample):
+        h, w = sample.size
+        if h * w > 10000000:
+            return True
+        return False
+
     def on_sucess(self, sample):
+        # if the image is very large, we don't add it to the queue
+        # as otherwise the memory will grow a lot
+        if self._is_large_image(sample):
+            return
         self._enqueue_valid_image(sample)
         if self.enqueue_images_queue.full() and not self.dequeue_images_queue.full():
             self._refill_dequeue_buffer()

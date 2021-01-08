@@ -10,6 +10,7 @@ from types import SimpleNamespace
 import torch
 from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.tasks import ClassyTask
+from classy_vision.tasks.classification_task import AmpType
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.trainer.train_steps import register_train_step
 from vissl.utils.activation_checkpointing import (
@@ -18,7 +19,6 @@ from vissl.utils.activation_checkpointing import (
 )
 from vissl.utils.misc import is_apex_available
 from vissl.utils.perf_stats import PerfTimer
-
 
 if is_apex_available():
     import apex
@@ -102,77 +102,103 @@ def standard_train_step(task):
         if task.enable_manual_gradient_reduction
         else contextlib.suppress()
     )
-    with grad_context:
-        with ddp_context:
-            # Forward pass of the model
-            with PerfTimer("forward", perf_stats):
-                if task.enable_manual_gradient_reduction:
-                    # Manually sync params and buffers for DDP.
-                    manual_sync_params(task.model)
+    torch_amp_context = (
+        torch.cuda.amp.autocast()
+        if task.amp_type == AmpType.PYTORCH
+        else contextlib.suppress()
+    )
 
-                model_output = task.model(sample["input"])
+    with grad_context, ddp_context, torch_amp_context:
+        # Forward pass of the model
+        with PerfTimer("forward", perf_stats):
+            if task.enable_manual_gradient_reduction:
+                # Manually sync params and buffers for DDP.
+                manual_sync_params(task.model)
+            model_output = task.model(sample["input"])
 
-            # if the model outputs only one tensor, we take it out of the list.
-            if len(model_output) == 1:
-                model_output = model_output[0]
+        # If the model outputs only one tensor, we take it out of the list.
+        if len(model_output) == 1:
+            model_output = model_output[0]
 
-            task.last_batch.sample = sample
-            target = sample["target"]
+        task.last_batch.sample = sample
+        task.last_batch.model_output = model_output
+        target = sample["target"]
 
-            # run hooks on forward pass
-            task.run_hooks(SSLClassyHookFunctions.on_forward.name)
+        # Run hooks on forward pass
+        task.run_hooks(SSLClassyHookFunctions.on_forward.name)
 
-            # compute loss
-            with PerfTimer("loss_compute", perf_stats):
-                local_loss = task.loss(model_output, target)
+        # Compute loss
+        with PerfTimer("loss_compute", perf_stats):
+            local_loss = task.loss(model_output, target)
 
-            # Reduce the loss value across all nodes and gpus.
-            with PerfTimer("loss_all_reduce", perf_stats):
-                loss = local_loss.detach().clone()
-                task.last_batch.loss = all_reduce_mean(loss)
+        # Reduce the loss value across all nodes and gpus.
+        with PerfTimer("loss_all_reduce", perf_stats):
+            loss = local_loss.detach().clone()
+            task.last_batch.loss = all_reduce_mean(loss)
 
-            task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
+        task.losses.append(task.last_batch.loss.data.cpu().item() * target.size(0))
 
-            # update meters
-            if len(task.meters) > 0:
-                with PerfTimer("meters_update", perf_stats):
-                    if isinstance(model_output, list):
-                        model_output_cpu = [x.cpu() for x in model_output]
-                    else:
-                        model_output_cpu = model_output.cpu()
+        # Update meters
+        if len(task.meters) > 0 and (
+            (task.train and task.config["METERS"]["enable_training_meter"])
+            or (not task.train)
+        ):
+            with PerfTimer("meters_update", perf_stats):
+                if isinstance(model_output, list):
+                    model_output_cpu = [x.cpu() for x in model_output]
+                else:
+                    model_output_cpu = model_output.cpu()
 
-                    for meter in task.meters:
-                        meter.update(model_output_cpu, target.detach().cpu())
+                for meter in task.meters:
+                    meter.update(model_output_cpu, target.detach().cpu())
 
-            task.last_batch.model_output = model_output
-            task.last_batch.target = target
+        task.last_batch.model_output = model_output
+        task.last_batch.target = target
 
-            # update the iteration number, check loss is not NaN and measure batch time
-            # now if it's a test phase since test phase doesn't have update step.
-            task.run_hooks(SSLClassyHookFunctions.on_loss_and_meter.name)
+        # Update the iteration number, check loss is not NaN and measure batch time
+        # now if it's a test phase since test phase doesn't have update step.
+        task.run_hooks(SSLClassyHookFunctions.on_loss_and_meter.name)
 
-    # run backward now and update the optimizer
+    # Run backward now and update the optimizer
     if task.train:
         with PerfTimer("backward", perf_stats):
 
             task.optimizer.zero_grad()
-            if task.amp_args is not None and is_apex_available():
+            if task.amp_type == AmpType.APEX:
                 with apex.amp.scale_loss(
                     local_loss, task.optimizer.optimizer
                 ) as scaled_loss:
                     scaled_loss.backward()
                     if task.enable_manual_gradient_reduction:
                         manual_gradient_all_reduce(task.model)
+
+            elif task.amp_type == AmpType.PYTORCH:
+                task.amp_grad_scaler.scale(local_loss).backward()
+                if task.enable_manual_gradient_reduction:
+                    manual_gradient_all_reduce(task.model)
             else:
                 local_loss.backward()
                 if task.enable_manual_gradient_reduction:
                     manual_gradient_all_reduce(task.model)
 
         task.run_hooks(SSLClassyHookFunctions.on_backward.name)
+
         # Stepping the optimizer also updates learning rate, momentum etc
         # according to the schedulers (if any).
         with PerfTimer("optimizer_step", perf_stats):
-            task.optimizer.step(where=task.where)
+            assert task.where < 1.0, (
+                "Optimizer being called with where=1.0. This should not happen "
+                "as where=1.0 means training is already finished. Please debug your "
+                "training setup. A common issue is the data sampler resuming "
+                "where you are checkpointing model at every iterations but not using "
+                "the stateful data sampler OR there's an issue in properly resuming the "
+                "data sampler."
+            )
+            if task.amp_type == AmpType.PYTORCH:
+                task.amp_grad_scaler.step(task.optimizer, where=task.where)
+                task.amp_grad_scaler.update()
+            else:
+                task.optimizer.step(where=task.where)
         task.run_hooks(SSLClassyHookFunctions.on_update.name)
         task.num_updates += task.get_global_batchsize()
 

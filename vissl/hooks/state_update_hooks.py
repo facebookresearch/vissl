@@ -192,7 +192,7 @@ class CheckNanLossHook(ClassyHook):
         loss_val = task.last_batch.loss.data.cpu()
         if not torch.isfinite(loss_val).all():
             raise FloatingPointError(
-                f"Infinite Loss or NaN at iteration={task.iteration}"
+                f"Infinite Loss or NaN at iteration={task.iteration}. Loss value: {loss_val}"
             )
 
 

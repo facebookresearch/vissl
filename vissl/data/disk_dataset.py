@@ -2,11 +2,11 @@
 
 import logging
 
-import numpy as np
 from fvcore.common.file_io import PathManager
 from PIL import Image
 from torchvision.datasets import ImageFolder
 from vissl.data.data_helper import QueueDataset, get_mean_image
+from vissl.utils.io import load_file
 
 
 class DiskImageDataset(QueueDataset):
@@ -69,9 +69,9 @@ class DiskImageDataset(QueueDataset):
     def _load_data(self, path):
         if self.data_source == "disk_filelist":
             if self.cfg["DATA"][self.split].MMAP_MODE:
-                self.image_dataset = np.load(path, mmap_mode="r")
+                self.image_dataset = load_file(path, mmap_mode="r")
             else:
-                self.image_dataset = np.load(path)
+                self.image_dataset = load_file(path)
         elif self.data_source == "disk_folder":
             self.image_dataset = ImageFolder(path)
             logging.info(f"Loaded {len(self.image_dataset)} samples from folder {path}")
@@ -115,10 +115,9 @@ class DiskImageDataset(QueueDataset):
             if is_success and self.enable_queue_dataset:
                 self.on_sucess(img)
         except Exception as e:
-            if self.cfg.VERBOSE:
-                logging.warn(
-                    f"Couldn't load: {self.image_dataset[idx]}. Exception: \n{e}"
-                )
+            logging.warning(
+                f"Couldn't load: {self.image_dataset[idx]}. Exception: \n{e}"
+            )
             is_success = False
             # if we have queue dataset class enabled, we try to use it to get
             # the seen valid images

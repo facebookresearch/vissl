@@ -41,7 +41,8 @@ config:
       COPY_DESTINATION_DIR: "/tmp/imagenet1k"
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
-  METERS: null
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -77,6 +78,9 @@ config:
       num_epochs: 2
       regularize_bn: False
       regularize_bias: True
+      head_optimizer_params:
+        use_different_lr: False
+        use_different_wd: False
       param_schedulers:
         lr:
           auto_lr_scaling:

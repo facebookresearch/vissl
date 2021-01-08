@@ -28,14 +28,19 @@ class SSLTensorboardHook(ClassyHook):
     SSL Specific variant of the Classy Vision tensorboard hook
     """
 
-    on_forward = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
     on_backward = ClassyHook._noop
     on_start = ClassyHook._noop
     on_end = ClassyHook._noop
     on_step = ClassyHook._noop
 
-    def __init__(self, tb_writer: SummaryWriter, log_activations: bool = False) -> None:
+    def __init__(
+        self,
+        tb_writer: SummaryWriter,
+        log_params: bool = False,
+        log_params_every_n_iterations: int = -1,
+        log_params_gradients: bool = False,
+    ) -> None:
         """The constructor method of SSLTensorboardHook.
 
         Args:
@@ -51,10 +56,32 @@ class SSLTensorboardHook(ClassyHook):
             )
         logging.info("Setting up SSL Tensorboard Hook...")
         self.tb_writer = tb_writer
-        self.log_activations = log_activations
+        self.log_params = log_params
+        self.log_params_every_n_iterations = log_params_every_n_iterations
+        self.log_params_gradients = log_params_gradients
+        logging.info(
+            f"Tensorboard config: log_params: {self.log_params}, "
+            f"log_params_freq: {self.log_params_every_n_iterations}, "
+            f"log_params_gradients: {self.log_params_gradients}"
+        )
+
+    def on_forward(self, task: "tasks.ClassyTask") -> None:
+        if not self.log_params:
+            return
+
+        if (
+            self.log_params_every_n_iterations > 0
+            and is_primary()
+            and task.train
+            and task.iteration % self.log_params_every_n_iterations == 0
+        ):
+            for name, parameter in task.base_model.named_parameters():
+                self.tb_writer.add_histogram(
+                    f"Parameters/{name}", parameter, global_step=task.iteration
+                )
 
     def on_phase_start(self, task: "tasks.ClassyTask") -> None:
-        if not self.log_activations:
+        if not self.log_params:
             return
 
         # log the parameters just once, before training starts
@@ -79,16 +106,27 @@ class SSLTensorboardHook(ClassyHook):
                                 scalar_value=round(acc, 5),
                                 global_step=task.train_phase_idx
                             )
-
-        if not self.log_activations:
+        if not (self.log_params or self.log_params_gradients):
             return
 
-        # Log the weights and bias at the end of the epoch
         if is_primary() and task.train:
-            for name, parameter in task.base_model.named_parameters():
-                self.tb_writer.add_histogram(
-                    f"Parameters/{name}", parameter, global_step=task.train_phase_idx
-                )
+            # Log the weights and bias at the end of the epoch
+            if self.log_params:
+                for name, parameter in task.base_model.named_parameters():
+                    self.tb_writer.add_histogram(
+                        f"Parameters/{name}",
+                        parameter,
+                        global_step=task.train_phase_idx,
+                    )
+            # Log the parameter gradients at the end of the epoch
+            if self.log_params_gradients:
+                for name, parameter in task.base_model.named_parameters():
+                    if parameter.grad is not None:
+                        self.tb_writer.add_histogram(
+                            f"Gradients/{name}",
+                            parameter.grad,
+                            global_step=task.train_phase_idx,
+                        )
 
             # Reset the GPU Memory counter
             if torch.cuda.is_available():
@@ -100,6 +138,19 @@ class SSLTensorboardHook(ClassyHook):
             return
 
         iteration = task.iteration
+
+        if (
+            self.log_params_every_n_iterations > 0
+            and self.log_params_gradients
+            and task.train
+            and iteration % self.log_params_every_n_iterations == 0
+        ):
+            logging.info(f"Logging Parameter gradients. Iteration {iteration}")
+            for name, parameter in task.base_model.named_parameters():
+                if parameter.grad is not None:
+                    self.tb_writer.add_histogram(
+                        f"Gradients/{name}", parameter.grad, global_step=task.iteration
+                    )
 
         if iteration % task.config["LOG_FREQUENCY"] == 0 or (
             iteration <= 100 and iteration % 5 == 0

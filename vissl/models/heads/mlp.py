@@ -47,7 +47,7 @@ class MLP(nn.Module):
             use_dropout (bool): whether to attach Dropout after
                                 (Linear (-> BN -> relu optional))
             use_bias (bool): whether the Linear layer should have bias or not
-            dims (int): dimensions of the linear layer. Example [8192, 1000] which means
+            dims (int): dimensions of the linear layer. Example [8192, 1000] which
                         attaches `nn.Linear(8192, 1000, bias=True)`
         """
         super().__init__()
@@ -75,6 +75,17 @@ class MLP(nn.Module):
             if use_dropout:
                 layers.append(nn.Dropout())
         self.clf = nn.Sequential(*layers)
+        # we use the default normal or uniform initialization for the layers
+        # and allow users to scale the initialization.
+        self.scale_weights(model_config)
+
+    def scale_weights(self, model_config):
+        params_multiplier = model_config.HEAD.PARAMS_MULTIPLIER
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                m.weight.data *= params_multiplier
+                if m.bias is not None:
+                    m.bias.data *= params_multiplier
 
     def forward(self, batch: torch.Tensor):
         """

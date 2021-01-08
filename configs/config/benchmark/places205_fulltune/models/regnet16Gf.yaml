@@ -1,0 +1,16 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_16gf
+    HEAD:
+      PARAMS: [['mlp', {'dims': [3024, 205]}]]
+  DATA:
+    # to reduce the training time, we use 64img/gpu (16GB machine)
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+    TEST:
+      BATCHSIZE_PER_REPLICA: 64

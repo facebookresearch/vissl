@@ -24,6 +24,10 @@ from vissl.hooks.state_update_hooks import (  # noqa
 )
 from vissl.hooks.swav_hooks import NormalizePrototypesHook  # noqa
 from vissl.hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
+from vissl.hooks.swav_momentum_hooks import (
+    SwAVMomentumHook,
+    SwAVMomentumNormalizePrototypesHook,
+)
 from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
 from vissl.hooks.grad_clip_hooks import GradClipHook #noqa
 
@@ -58,6 +62,17 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         hooks.append(LogPerfTimeMetricsHook(perf_stat_freq))
     if cfg.LOSS.name == "swav_loss":
         hooks.extend([SwAVUpdateQueueScoresHook(), NormalizePrototypesHook()])
+    if cfg.LOSS.name == "swav_momentum_loss":
+        hooks.extend(
+            [
+                SwAVMomentumHook(
+                    cfg.LOSS["swav_momentum_loss"]["momentum"],
+                    cfg.LOSS["swav_momentum_loss"]["momentum_eval_mode_iter_start"],
+                    cfg.LOSS["swav_momentum_loss"]["crops_for_assign"],
+                ),
+                SwAVMomentumNormalizePrototypesHook(),
+            ]
+        )
     if cfg.LOSS.name == "deepclusterv2_loss":
         hooks.extend([InitMemoryHook(), ClusterMemoryHook()])
     if cfg.LOSS.name == "moco_loss":

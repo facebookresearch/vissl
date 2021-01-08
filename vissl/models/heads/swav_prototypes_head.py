@@ -30,7 +30,9 @@ class SwAVPrototypesHead(nn.Module):
         use_bn: bool,
         num_clusters: int,
         use_bias: bool = True,
+        return_embeddings: bool = True,
         skip_last_bn: bool = True,
+        normalize_feats: bool = True,
     ):
         """
         Args:
@@ -43,6 +45,7 @@ class SwAVPrototypesHead(nn.Module):
                                       Example dims=[3000] will attach 1 prototype head.
                                               dims=[3000, 3000] will attach 2 prototype heads
             use_bias (bool): whether the Linear layer should have bias or not
+            return_embeddings (bool): whether return the projected embeddings or not
             skip_last_bn (bool): whether to attach BN + Relu at the end of projection head.
                         Example:
                             [2048, 2048, 128] with skip_last_bn=True attaches linear layer
@@ -56,6 +59,7 @@ class SwAVPrototypesHead(nn.Module):
         """
 
         super().__init__()
+        self.normalize_feats = normalize_feats
         # build the projection head
         layers = []
         last_dim = dims[0]
@@ -84,6 +88,7 @@ class SwAVPrototypesHead(nn.Module):
                 )
         else:
             self.nmb_heads = 0
+        self.return_embeddings = return_embeddings
 
     def forward(self, batch: torch.Tensor):
         """
@@ -94,9 +99,12 @@ class SwAVPrototypesHead(nn.Module):
         """
         batch = self.projection_head(batch)
 
-        batch = nn.functional.normalize(batch, dim=1, p=2)
+        if self.normalize_feats:
+            batch = nn.functional.normalize(batch, dim=1, p=2)
 
-        out = [batch]
+        out = []
+        if self.return_embeddings:
+            out.append(batch)
         if self.nmb_heads > 0:
             for i in range(self.nmb_heads):
                 out.append(getattr(self, "prototypes" + str(i))(batch))

@@ -15,14 +15,26 @@ from classy_vision.generic.distributed_util import (
     set_cpu_device,
     set_cuda_device_index,
 )
+from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.hooks.classy_hook import ClassyHook
-from classy_vision.tasks import ClassyTask
+from classy_vision.tasks import ClassyTask, TASK_REGISTRY
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
-from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.hydra_config import AttrDict
+
+
+def build_task(config):
+    """Builds a ClassyTask from a config.
+
+    This assumes a 'name' key in the config which is used to determine what
+    task class to instantiate. For instance, a config `{"name": "my_task",
+    "foo": "bar"}` will find a class that was registered as "my_task"
+    (see :func:`register_task`) and call .from_config on it."""
+
+    task = TASK_REGISTRY[config.TRAINER.TASK_NAME].from_config(config)
+    return task
 
 
 class SelfSupervisionTrainer(object):
@@ -31,6 +43,7 @@ class SelfSupervisionTrainer(object):
         cfg: AttrDict,
         dist_run_id: str,
         checkpoint_path: str = None,
+        checkpoint_folder: str = None,
         hooks: List[ClassyHook] = None,
     ):
         self.cfg = cfg
@@ -39,17 +52,15 @@ class SelfSupervisionTrainer(object):
         # now we should build the task. The task will also have the State attached
         # to it. It will have information about phases (train, test) both. It will
         # also contain all the other information like optimizers, etc
-        self.task = self.build_task()
+        self.task = build_task(self.cfg)
         self.task.set_checkpoint_path(checkpoint_path)
+        self.task.set_checkpoint_folder(checkpoint_folder)
         if hooks is None:
             hooks = []
         self.task.set_hooks(hooks)
 
         self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
-        self.setup_distributed(self.task.use_gpu)
-
-    def build_task(self):
-        return SelfSupervisionTask.from_config(self.cfg)
+        self.setup_distributed(self.task.device.type == "cuda")
 
     def setup_distributed(self, use_gpu: bool):
 
@@ -112,6 +123,14 @@ class SelfSupervisionTrainer(object):
             task.run_hooks(SSLClassyHookFunctions.on_phase_start.name)
             while True:
                 try:
+                    if self.cfg.MODEL.CUDA_CACHE.CLEAR_CUDA_CACHE and (
+                        iteration_num % self.cfg.MODEL.CUDA_CACHE.CLEAR_FREQ == 0
+                    ):
+                        logging.info(
+                            f"Emptying CUDA cache at step count: {iteration_num}"
+                        )
+                        torch.cuda.empty_cache()
+                        logging.info("CUDA cache cleared")
                     task = train_step_fn(task)
                     iteration_num += 1
                     task.local_iteration_num = iteration_num
@@ -190,9 +209,17 @@ class SelfSupervisionTrainer(object):
         # so that all dataloader processes are cleaned up
         phase_type = "train" if phase["train"] else "test"
         # we are advancing to next epoch, so no need to compute start_iter,
-        # just let it to be 0 inside of recreate_data_iterator.
+        # just let it to be 0 inside of recreate_data_iterator. However, if we are just
+        # starting from the resumed training, we want to compute_start_iter
+        # again (if applicable) since we recreate the data iterator and delete
+        # the old ones.
+        compute_start_iter = False
+        if task.checkpoint is not None and task.checkpoint["train_phase_idx"] == (
+            task.train_phase_idx - 1
+        ):
+            compute_start_iter = True
         task.recreate_data_iterator(
-            phase_type, epoch=task.phase_idx, compute_start_iter=False
+            phase_type, epoch=task.phase_idx, compute_start_iter=compute_start_iter
         )
 
         # set the model to train or eval depending on what phase we are in
@@ -206,8 +233,19 @@ class SelfSupervisionTrainer(object):
 
     def extract(self):
         # support feature extraction on gpu only.
-        assert self.task.use_gpu, "Set MACHINE.DEVICE = gpu"
+        assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
+
+        # in case of feature evaluation mode, if we are freezing both trunk and
+        # head, DDP won't work as there are no parameters in the model. Adding
+        # the dummy head will lead to features being not right. So we rather
+        # add the dummy layer to the model and use DDP. We copy the model to
+        # gpu (if using gpus) after the new dummy layer addition.
+        fully_frozen_model = self.task.base_model.is_fully_frozen_model()
+        if fully_frozen_model:
+            self.task.base_model.dummy_layer = torch.nn.Linear(4, 4)
+            if self.task.device.type == "cuda":
+                self.task.base_model = copy_model_to_gpu(self.task.base_model)
         self.task.init_distributed_data_parallel_model()
 
         if is_primary():

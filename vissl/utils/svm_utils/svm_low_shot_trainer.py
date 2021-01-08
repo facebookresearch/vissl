@@ -24,6 +24,10 @@ class SVMLowShotTrainer(SVMTrainer):
         if self._dataset_name == "voc":
             num_classes = targets.shape[1]
             cls_list = range(num_classes)
+        elif "places" in self._dataset_name:
+            # each image in places205 has a target cls [0, .... ,204]
+            cls_list = list(set(targets[:, 0].tolist()))
+            num_classes = len(cls_list)
         else:
             logging.info("Dataset not recognized. Abort!")
         self.cls_list = cls_list
@@ -43,6 +47,21 @@ class SVMLowShotTrainer(SVMTrainer):
             # label 0 = not present, set it to -1 as svm train target.
             # Make the svm train target labels as -1, 1.
             out_cls_labels[np.where(out_cls_labels == 0)] = -1
+        elif "places" in self._dataset_name:
+            cls_labels = targets.astype(dtype=np.int32, copy=True)
+            # Remove the ignore label.
+            out_data_inds = targets[:, 0] != -1
+            out_feats = features[out_data_inds]
+            out_cls_labels = cls_labels[out_data_inds]
+
+            # for the given class, get the relevant positive/negative images and
+            # Make the svm train target labels as -1, 1.
+            cls_inds = np.where(out_cls_labels[:, 0] == cls)
+            non_cls_inds = out_cls_labels[:, 0] != cls
+            out_cls_labels[non_cls_inds] = -1
+            out_cls_labels[cls_inds] = 1
+            # finally reshape into the format taken by sklearn svm package.
+            out_cls_labels = out_cls_labels.reshape(-1)
         else:
             raise Exception("Dataset not recognized")
         return out_feats, out_cls_labels
@@ -190,11 +209,18 @@ class SVMLowShotTrainer(SVMTrainer):
             argmax_min.append(100.0 * output_min[idx, argmax_cls[idx]])
             argmax_max.append(100.0 * output_max[idx, argmax_cls[idx]])
             argmax_std.append(100.0 * output_std[idx, argmax_cls[idx]])
+        output_results = {}
         for idx in range(len(argmax_max)):
             logging.info(
-                f"mean/min/max/std: {round(argmax_mean[idx], 2)} "
+                f"k-value: {k_values[idx]} mean/min/max/std: {round(argmax_mean[idx], 2)} "
                 f"/ {round(argmax_min[idx], 2)} / "
                 f"{round(argmax_max[idx], 2)} / "
                 f"{round(argmax_std[idx], 2)}"
             )
+            output_results[f"k={k_values[idx]}"] = {}
+            output_results[f"k={k_values[idx]}"]["mean"] = round(argmax_mean[idx], 2)
+            output_results[f"k={k_values[idx]}"]["min"] = round(argmax_min[idx], 2)
+            output_results[f"k={k_values[idx]}"]["max"] = round(argmax_max[idx], 2)
+            output_results[f"k={k_values[idx]}"]["std"] = round(argmax_std[idx], 2)
         logging.info("All done!!")
+        return output_results

@@ -56,7 +56,7 @@ config:
       STATE_DICT_KEY_NAME: classy_state_dict
   DISTRIBUTED:
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 1
+    NUM_PROC_PER_NODE: 8
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:

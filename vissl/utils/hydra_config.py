@@ -194,6 +194,8 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
             resolve_linear_schedule(cfg, param_schedulers)
     elif param_schedulers["name"] == "linear":
         param_schedulers["end_value"] = scaled_lr
+    elif param_schedulers["name"] == "inverse_sqrt":
+        param_schedulers["start_value"] = scaled_lr
     elif param_schedulers["name"] == "constant":
         param_schedulers["value"] = scaled_lr
     else:
@@ -203,7 +205,57 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
     return param_schedulers
 
 
-def assert_hydra_conf(cfg):
+def assert_learning_rate(cfg):
+    # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
+    # to turn this automatic scaling off,
+    # set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
+    if cfg.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale:
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
+        param_schedulers = cfg.OPTIMIZER.param_schedulers.lr
+        base_lr = param_schedulers.auto_lr_scaling.base_value
+        base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scale_factor = float(batch_size) / base_lr_batch_size
+        scaled_lr = base_lr * scale_factor
+        cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
+            cfg, param_schedulers, scaled_lr
+        )
+
+    if not cfg.OPTIMIZER.head_optimizer_params.use_different_lr:
+        # if not using the different value for the head, we set the weight decay and LR
+        # param scheduler same as the trunk.
+        cfg.OPTIMIZER.param_schedulers.lr_head = cfg.OPTIMIZER.param_schedulers.lr
+    elif (
+        cfg.OPTIMIZER.head_optimizer_params.use_different_lr
+        and cfg.OPTIMIZER.param_schedulers.lr_head
+        and cfg.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.auto_scale
+    ):
+        # if the user wants a different LR value for the head, then we automatically
+        # infer the LR values for the head as well (similar to trunk above)
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
+        param_schedulers = cfg.OPTIMIZER.param_schedulers.lr_head
+        base_lr = param_schedulers.auto_lr_scaling.base_value
+        base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scale_factor = float(batch_size) / base_lr_batch_size
+        scaled_lr = base_lr * scale_factor
+        cfg.OPTIMIZER.param_schedulers.lr_head = get_scaled_lr_scheduler(
+            cfg, param_schedulers, scaled_lr
+        )
+
+    # for the head, if we want to use a different weight decay value, we verify that
+    # the specified weight decay value is valid. Otherwise, we do the inference
+    # and set the weight decay value same as the trunk.
+    if not cfg.OPTIMIZER.head_optimizer_params.use_different_wd:
+        cfg.OPTIMIZER.head_optimizer_params.weight_decay = cfg.OPTIMIZER.weight_decay
+    else:
+        assert (
+            cfg.OPTIMIZER.head_optimizer_params.weight_decay >= 0.0
+        ), "weight decay for head should be >=0"
+    return cfg
+
+
+def assert_losses(cfg):
     # some inference for the Info-NCE loss.
     if "simclr_info_nce_loss" in cfg.LOSS.name:
         cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"] = (
@@ -216,6 +268,11 @@ def assert_hydra_conf(cfg):
         cfg.LOSS[cfg.LOSS.name]["buffer_params"]["effective_batch_size"] = (
             num_positives * batch_size * world_size
         )
+
+    # bce_logits_multiple_output_single_target
+    if cfg.LOSS.name == "bce_logits_multiple_output_single_target":
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        cfg.LOSS.bce_logits_multiple_output_single_target.world_size = world_size
 
     # multicrop version of simclr loss
     if cfg.LOSS.name == "multicrop_simclr_info_nce_loss":
@@ -243,10 +300,19 @@ def assert_hydra_conf(cfg):
     if cfg.LOSS.name == "swav_loss":
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
         assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        assert cfg.DATA.TRAIN.COLLATE_FUNCTION in [
+            "multicrop_collator",
+            "multicrop_mixup_collator",
+        ], (
+            "for swav loss, use either a collator from "
+            "[multicrop_collator, multicrop_mixup_collator]"
+        )
         cfg.LOSS.swav_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"]
         cfg.LOSS.swav_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
         cfg.LOSS.swav_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
+        from vissl.utils.checkpoint import get_checkpoint_folder
+
+        cfg.LOSS.swav_loss.output_dir = get_checkpoint_folder(cfg)
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         batch_size *= world_size
@@ -255,20 +321,35 @@ def assert_hydra_conf(cfg):
         cfg.LOSS.swav_loss.queue.queue_length = queue_length
         cfg.LOSS.swav_loss.queue.local_queue_length = queue_length // world_size
 
-    # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
-    # to turn this automatic scaling off,
-    # set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
-    if cfg.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale:
+    # some inference for the SwAV momentum loss.
+    if cfg.LOSS.name == "swav_momentum_loss":
+        assert len(cfg.MODEL.HEAD.PARAMS) == 1
+        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        cfg.LOSS.swav_momentum_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1][
+            "num_clusters"
+        ]
+        cfg.LOSS.swav_momentum_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][
+            -1
+        ]
+        cfg.LOSS.swav_momentum_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0][
+            "total_num_crops"
+        ]
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
-        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
-        param_schedulers = cfg.OPTIMIZER.param_schedulers.lr
-        base_lr = param_schedulers.auto_lr_scaling.base_value
-        base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
-        scale_factor = float(batch_size) / base_lr_batch_size
-        scaled_lr = base_lr * scale_factor
-        cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
-            cfg, param_schedulers, scaled_lr
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        batch_size *= world_size
+        queue_length = cfg.LOSS.swav_momentum_loss.queue.queue_length
+        queue_length -= queue_length % batch_size
+        cfg.LOSS.swav_momentum_loss.queue.queue_length = queue_length
+        cfg.LOSS.swav_momentum_loss.queue.local_queue_length = (
+            queue_length // world_size
         )
+    return cfg
+
+
+def assert_hydra_conf(cfg):
+    cfg = assert_losses(cfg)
+    cfg = assert_learning_rate(cfg)
 
     # in case of linear evaluation, we often evaluate several layers at a time. For each
     # layer, there's a separate accuracy meter. In such case, we want to output the layer
@@ -277,15 +358,14 @@ def assert_hydra_conf(cfg):
     if cfg.METERS is not None:
         from vissl.models import is_feature_extractor_model
 
-        meter_items = cfg.METERS.items()
-        for meter_name, meter_args in meter_items:
-            if meter_name == "accuracy_list_meter" and is_feature_extractor_model(
-                cfg.MODEL
-            ):
-                meter_args["num_meters"] = len(
+        meter_name = cfg.METERS.get("name", "")
+        valid_meters = ["accuracy_list_meter", "mean_ap_list_meter"]
+        if meter_name:
+            if meter_name in valid_meters and is_feature_extractor_model(cfg.MODEL):
+                cfg.METERS[meter_name]["num_meters"] = len(
                     cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 )
-                meter_args["meter_names"] = [
+                cfg.METERS[meter_name]["meter_names"] = [
                     item[0]
                     for item in cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 ]
@@ -304,19 +384,6 @@ def assert_hydra_conf(cfg):
         and len(cfg.MODEL.HEAD.PARAMS) == 0
     ):
         cfg.MODEL.HEAD.PARAMS = [["mlp", {"dims": [2048, 1000]}]]
-
-    # in case of feature evaluation mode, if we are freezing both trunk and head, DDP won't
-    # work as there are no parameters in the model. Adding the dummy head will lead to
-    # features being not right.
-    if (
-        cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-        and cfg.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_AND_HEAD
-        and cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
-    ):
-        assert world_size == 1, (
-            "VISSL doesn't support distributed extraction for a completely frozen model. "
-            "Please use 1 gpu."
-        )
 
     # in SSL, during pre-training we don't want to use annotated labels or during feature
     # extraction, we don't have annotated labels for some datasets. In such cases, we set

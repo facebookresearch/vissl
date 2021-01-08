@@ -32,8 +32,8 @@ install_python: &install_python
       working_directory: ~/
       command: |
         pyenv versions
-        pyenv install 3.6.1
-        pyenv global 3.6.1
+        pyenv install 3.6.2
+        pyenv global 3.6.2
 
 update_gcc7: &update_gcc7
   - run:
@@ -93,7 +93,7 @@ install_vissl_dep: &install_vissl_dep
       name: Install Dependencies
       working_directory: ~/vissl
       command: |
-        pip install --progress-bar off torch==1.6.0 torchvision==0.7.0
+        pip install --progress-bar off torch==1.6.0 torchvision==0.7.0 opencv-python==3.4.2.17
         pip install --progress-bar off -r requirements.txt
 
 install_apex_gpu: &install_apex_gpu

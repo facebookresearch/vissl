@@ -41,7 +41,8 @@ config:
       COPY_DESTINATION_DIR: "/tmp/imagenet1k"
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
-  METERS: null
+  METERS:
+    name: ""
   MODEL:
     ACTIVATION_CHECKPOINTING:
       USE_ACTIVATION_CHECKPOINTING: false

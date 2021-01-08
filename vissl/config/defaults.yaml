@@ -1,5 +1,30 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+# VISSL uses hydra for configuration management. The usage looks like:
+#    python tools/<binary-name>.py config=<config path>
+# Example:
+#    python tools/run_distributed_engines.py config=pretrain/simclr/simclr_8node_resnet
+#
+#
+# If you create sub-folders in config folder to override parameters, you can use the
+# config files in the subfolder by adding at a "+" sign to the command line input.
+# For example:
+#    python tools/run_distributed_engines.py \
+#        config=pretrain/simclr/simclr_8node_resnet \
+#        +config/pretrain/simclr/optimization=bs32_16nodes \
+#        +config/pretrain/simclr/my_new_subfolder=my_file_in_subfolder \
+#
+#
+# If you want to override single values in the config, you can achieve that with:
+#    python tools/run_distributed_engines.py \
+#        config=pretrain/simclr/simclr_8node_resnet \
+#        +config/pretrain/simclr/my_sub_folder=my_file_name \
+#        config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<weights_path.torch>
+#
+defaults:
+  # you must specify the base config you want to run
+  - config: ???
+
 ######################### versioning ###################################
 # this version is checked with the VISSL latest config version in
 # vissl/config/__init__.py
@@ -36,8 +61,10 @@ config:
   DATA:
     # Common data options
     NUM_DATALOADER_WORKERS: 4 # Set this depending on the number of CPUs you have
-    PIN_MEMORY: True # Makes CPU->GPU copy of the data faster
-    ENABLE_ASYNC_GPU_COPY: True
+    PIN_MEMORY: true # Makes CPU->GPU copy of the data faster
+    ENABLE_ASYNC_GPU_COPY: true
+    # buffer size for gradient reduction
+    DDP_BUCKET_CAP_MB: 25
     # Training Data Options
     TRAIN:
       # if we want to resume the data sampler as well from a previous iteration
@@ -56,6 +83,7 @@ config:
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
+      COLLATE_FUNCTION_PARAMS: {}
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
@@ -83,6 +111,7 @@ config:
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
+      COLLATE_FUNCTION_PARAMS: {}
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
@@ -103,6 +132,10 @@ config:
   # ----------------------------------------------------------------------------------- #
   # what meters to attach. All the mentioned meters will be calculated.
   METERS:
+    name: ""
+    # whether to calculate the meter during training as well. Sometimes, if the training
+    # data size is too big, it could be hard to compute the meter on training set.
+    enable_training_meter: True
     accuracy_list_meter:
       # number of accuracy meters. In cases like linear evaluation of feature, we perform
       # evaluation of several layers and there's a separate meter for each layer.
@@ -111,6 +144,19 @@ config:
       # what topk values to calculate. Example topk_values = [1, 5] means top1 and top5
       # both will be calculated
       topk_values: [1]
+      # names of the meter. Useful in cases where we have several meters. For the linear
+      # feature evaluation workflows, meter name is automatically inferred.
+      meter_names: []
+    mean_ap_list_meter:
+      # number of classes
+      num_classes: 9605
+      # number of accuracy meters. In cases like linear evaluation of feature, we perform
+      # evaluation of several layers and there's a separate meter for each layer.
+      # num_meters basically specifices number of meters.
+      num_meters: 1
+      # maximum number of samples to have in the meter. This is a global variable. Ideally
+      # set it to number of examples in test set.
+      max_cpu_capacity: -1
       # names of the meter. Useful in cases where we have several meters. For the linear
       # feature evaluation workflows, meter name is automatically inferred.
       meter_names: []
@@ -125,6 +171,11 @@ config:
   # MODEL
   # ----------------------------------------------------------------------------------- #
   MODEL:
+    # sometimes we can avoid CUDA OOM issues by clearing out the cache. Clearing out cache
+    # is slow so chose wisely.
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: False
+      CLEAR_FREQ: 100
     # the model parameter names that should not be trained
     NON_TRAINABLE_PARAMS: []
     TEMP_FROZEN_PARAMS_ITER_MAP: []
@@ -134,6 +185,11 @@ config:
     # uses them for example, input contains "images" and "patches" and there
     # is one separate head applied to images and another to patches
     MULTI_INPUT_HEAD_MAPPING: []
+    # In case of mult-resolution inputs, we combine the same resolution inputs and
+    # run forward pass. However, for a very large model where gpu memory is bottleneck,
+    # we can optimize memory a bit by running forward pass through each crop
+    # separately.
+    SINGLE_PASS_EVERY_CROP: False
     # Use activation checkpointing in the training phase
     ACTIVATION_CHECKPOINTING:
       USE_ACTIVATION_CHECKPOINTING: false
@@ -201,6 +257,7 @@ config:
         # ------------------------------------------------------------- #
         # RegNet params
         # ------------------------------------------------------------- #
+        REGNET: {}
         REGNETS: {}
 
         # ------------------------------------------------------------- #
@@ -276,6 +333,9 @@ config:
       PARAMS: []
       BATCHNORM_EPS: 1e-5
       BATCHNORM_MOMENTUM: 0.1
+      # if we want to multiply the initialization of the head parameters by a factor,
+      # specify the multiplier. By default, set to 1.0
+      PARAMS_MULTIPLIER: 1.0
     # ----------------------------------------------------------------------------------- #
     # Synchronized BatchNorm Setup
     # ----------------------------------------------------------------------------------- #
@@ -284,7 +344,7 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: False
       SYNC_BN_TYPE: "pytorch"  # apex | pytorch
-      # if group_size=-1, will set group_size=num_gpus
+      # if group_size=-1, will set group_size=num_gpus per node
       # if group_size>0, will set group_size=value set by user
       # if group_size=0, will set process_group=None
       GROUP_SIZE: -1
@@ -297,6 +357,7 @@ config:
       # the following setting:
       # {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
       AMP_ARGS: {"opt_level": "O1"}
+      AMP_TYPE: "apex"  # apex | pytorch
     MODEL_COMPLEXITY:
       # set this to True if you want to compute flops, params, activations in your model.
       COMPUTE_COMPLEXITY: False
@@ -357,6 +418,18 @@ config:
       ignore_index: -1
       # generic flag to enable L2 normalization in a loss function. Currently supported
       # for cross_entropy_multiple_output_single_target loss only.
+      normalize_output: False
+      # if we want to use softmax with temperature i.e. the NLL(log_softmax(input/temperature))
+      # then set the desired temperature value.
+      temperature: 1.0
+
+    # ----------------------------------------------------------------------------------- #
+    # BCELogits for multiple input and same target.
+    # Applicable for multi-label classification problems.
+    # ----------------------------------------------------------------------------------- #
+    bce_logits_multiple_output_single_target:
+      reduction: "none"
+      world_size: 1
       normalize_output: False
 
     # ----------------------------------------------------------------------------------- #
@@ -419,6 +492,28 @@ config:
       num_crops: 2
       crops_for_assign: [0, 1]
       num_prototypes: [3000]
+      temp_hard_assignment_iters: 0
+      output_dir: ""  # for dumping the debugging info in case loss becomes NaN
+      queue:
+        queue_length: 0
+        start_iter: 0
+        local_queue_length: 0
+
+    # ----------------------------------------------------------------------------------- #
+    # SwAV MOMENTUM LOSS
+    # ----------------------------------------------------------------------------------- #
+    swav_momentum_loss:
+      momentum: 0.99
+      momentum_eval_mode_iter_start: 0
+      embedding_dim: 128
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      num_crops: 2
+      crops_for_assign: [0, 1]
+      num_prototypes: [3000]
       queue:
         queue_length: 0
         start_iter: 0
@@ -466,8 +561,38 @@ config:
     betas: [.9, .999] # For Adam/AdamW
     regularize_bn: False
     regularize_bias: True
+    # we support using a different LR and weight decay for head and trunk.
+    # one needs to set the flag "use_different_values: True" in order to enable
+    # this functionality. We use the same type of param scheduler for the trunk and head
+    # but allow different LR and weight decay values.
+    head_optimizer_params:
+      use_different_lr: False
+      use_different_wd: False
+      weight_decay: 0.0001
     param_schedulers:
       lr:
+        auto_lr_scaling:
+          auto_scale: False
+          base_value: 0.1
+          base_lr_batch_size: 256
+        name: "multistep"
+        update_interval: "epoch"
+        values: [0.1, 0.01, 0.001]
+        milestones: [30, 60]
+        # The below parameters are valid for lr.name = "composite". Various schedulers
+        # can then be composed together for the training. For example: linear warmup +
+        # multistep schedule after warmup.
+        schedulers: []
+        interval_scaling: []
+        lengths: []
+        # =====cosine learning rate specific =======
+        start_value: 0.1
+        end_value: 0.0
+        # =====constant learning rate specific =======
+        value: 0.1
+      # if we want to use a different LR scheduler for the head, then specify
+      # the lr_head similar to "lr"
+      lr_head:
         auto_lr_scaling:
           auto_scale: False
           base_value: 0.1
@@ -515,6 +640,8 @@ config:
   # ----------------------------------------------------------------------------------- #
   TRAINER:
     TRAIN_STEP_NAME: "standard_train_step"
+    TASK_NAME : "self_supervision_task"
+
 
   # ----------------------------------------------------------------------------------- #
   # CHECKPOINT
@@ -540,6 +667,10 @@ config:
     #   2) LATEST_CHECKPOINT_RESUME_FILE_NUM = 2 -> resume from the second latest checkpoint
     #   2) LATEST_CHECKPOINT_RESUME_FILE_NUM = N -> resume from the Nth latest checkpoint
     LATEST_CHECKPOINT_RESUME_FILE_NUM: 1
+    # by default, we create a symlink to the latest checkpoint file. One can use
+    # the symlink to resume the model trainings. This helps ensure that the training
+    # always resumes from a valid checkpoint.
+    USE_SYMLINK_CHECKPOINT_FOR_RESUME: False
 
   # ----------------------------------------------------------------------------------- #
   # DISTRIBUTED TRAINING (1-gpu, multi-gpu, multi-node)
@@ -549,6 +680,7 @@ config:
     # gloo as the backend.
     BACKEND: "nccl"
     NCCL_DEBUG: False
+    NCCL_SOCKET_NTHREADS: ""
     # whether model buffers are BN buffers are broadcast in every forward pass
     BROADCAST_BUFFERS: True
     # number of machines to use in training
@@ -636,32 +768,13 @@ config:
   TENSORBOARD_SETUP:
     USE_TENSORBOARD: False
     LOG_DIR: "."
-    EXPERIMENT_LOG_DIR: ""
-    LOG_ACTIVATIONS: True
+    EXPERIMENT_LOG_DIR: "tensorboard"
     # flush logs every n minutes
     FLUSH_EVERY_N_MIN: 5
-
-# VISSL uses hydra for configuration management. The usage looks like:
-#    python tools/<binary-name>.py config=<config path>
-# Example:
-#    python tools/run_distributed_engines.py config=pretrain/simclr/simclr_8node_resnet
-#
-#
-# If you create sub-folders in config folder to override parameters, you can use the
-# config files in the subfolder by adding at a "+" sign to the command line input.
-# For example:
-#    python tools/run_distributed_engines.py \
-#        config=pretrain/simclr/simclr_8node_resnet \
-#        +config/pretrain/simclr/optimization=bs32_16nodes \
-#        +config/pretrain/simclr/my_new_subfolder=my_file_in_subfolder \
-#
-#
-# If you want to override single values in the config, you can achieve that with:
-#    python tools/run_distributed_engines.py \
-#        config=pretrain/simclr/simclr_8node_resnet \
-#        +config/pretrain/simclr/my_sub_folder=my_file_name \
-#        config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<weights_path.torch>
-#
-defaults:
-  # you must specify the base config you want to run
-  - config: ???
+    # whether the log the model parameters to tensorboard
+    LOG_PARAMS: True
+    # whether the log the model parameters gradients to tensorboard
+    LOG_PARAMS_GRADIENTS: True
+    # if we want to log the model parameters every few iterations, set the iteration
+    # frequency. -1 means the params will be logged only at the end of epochs.
+    LOG_PARAMS_EVERY_N_ITERS: 310

@@ -1,18 +1,22 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+import logging
 import math
+import os
 import pprint
 from typing import List
 
 import numpy as np
 import torch
 from classy_vision.generic.distributed_util import (
+    all_reduce_max,
     all_reduce_sum,
     get_cuda_device_index,
     get_rank,
     get_world_size,
 )
 from classy_vision.losses import ClassyLoss, register_loss
+from fvcore.common.file_io import PathManager
 from torch import nn
 from vissl.utils.hydra_config import AttrDict
 
@@ -34,6 +38,8 @@ class SwAVLoss(ClassyLoss):
             self.loss_config.num_prototypes,
             self.loss_config.queue.local_queue_length,
             self.loss_config.embedding_dim,
+            self.loss_config.temp_hard_assignment_iters,
+            self.loss_config.output_dir,
         )
 
     @classmethod
@@ -55,7 +61,18 @@ class SwAVLoss(ClassyLoss):
         return loss
 
     def __repr__(self):
-        repr_dict = {"name": self._get_name()}
+        repr_dict = {
+            "name": self._get_name(),
+            "epsilon": self.loss_config.epsilon,
+            "use_double_precision": self.loss_config.use_double_precision,
+            "local_queue_length": self.loss_config.queue.local_queue_length,
+            "temperature": self.loss_config.temperature,
+            "num_prototypes": self.loss_config.num_prototypes,
+            "num_crops": self.loss_config.num_crops,
+            "nmb_sinkhornknopp_iters": self.loss_config.num_iters,
+            "embedding_dim": self.loss_config.embedding_dim,
+            "temp_hard_assignment_iters": self.loss_config.temp_hard_assignment_iters,
+        }
         return pprint.pformat(repr_dict, indent=2)
 
 
@@ -71,6 +88,8 @@ class SwAVCriterion(nn.Module):
         num_prototypes: List[int],
         local_queue_length: int,
         embedding_dim: int,
+        temp_hard_assignment_iters: int,
+        output_dir: str,
     ):
         super(SwAVCriterion, self).__init__()
 
@@ -85,17 +104,31 @@ class SwAVCriterion(nn.Module):
         self.num_prototypes = num_prototypes
         self.nmb_heads = len(self.num_prototypes)
         self.embedding_dim = embedding_dim
+        self.temp_hard_assignment_iters = temp_hard_assignment_iters
         self.local_queue_length = local_queue_length
         self.dist_rank = get_rank()
         self.world_size = get_world_size()
+        self.log_softmax = nn.LogSoftmax(dim=1).cuda()
         self.softmax = nn.Softmax(dim=1).cuda()
         self.register_buffer("num_iteration", torch.zeros(1, dtype=int))
         self.use_queue = False
         if local_queue_length > 0:
             self.initialize_queue()
+        self.output_dir = output_dir
 
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
+        eps_num_stab = 1e-12
         with torch.no_grad():
+            # remove potential infs in Q
+            # replace the inf entries with the max of the finite entries in Q
+            mask = torch.isinf(Q)
+            ind = torch.nonzero(mask)
+            if len(ind) > 0:
+                for i in ind:
+                    Q[i[0], i[1]] = 0
+                m = torch.max(Q)
+                for i in ind:
+                    Q[i[0], i[1]] = m
             sum_Q = torch.sum(Q, dtype=Q.dtype)
             all_reduce_sum(sum_Q)
             Q /= sum_Q
@@ -106,27 +139,47 @@ class SwAVCriterion(nn.Module):
 
             # we follow the u, r, c and Q notations from
             # https://arxiv.org/abs/1911.05371
-            u = torch.zeros(k)
             r = torch.ones(k) / k
             c = torch.ones(n) / N
             if self.use_double_prec:
-                u, r, c = u.double(), r.double(), c.double()
+                r, c = r.double(), c.double()
 
             if self.use_gpu:
-                u = u.cuda(non_blocking=True)
                 r = r.cuda(non_blocking=True)
                 c = c.cuda(non_blocking=True)
 
-            curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
-            all_reduce_sum(curr_sum)
-
             for _ in range(self.nmb_sinkhornknopp_iters):
-                u = curr_sum
-                Q *= (r / u).unsqueeze(1)
+                u = torch.sum(Q, dim=1, dtype=Q.dtype)
+                all_reduce_sum(u)
+
+                # for numerical stability, add a small epsilon value
+                # for non-zero Q values.
+                if len(torch.nonzero(u == 0)) > 0:
+                    Q += eps_num_stab
+                    u = torch.sum(Q, dim=1, dtype=Q.dtype)
+                    all_reduce_sum(u)
+                u = r / u
+                # remove potential infs in "u"
+                # replace the inf entries with the max of the finite entries in "u"
+                mask = torch.isinf(u)
+                ind = torch.nonzero(mask)
+                if len(ind) > 0:
+                    for i in ind:
+                        u[i[0]] = 0
+                    m = torch.max(u)
+                    for i in ind:
+                        u[i[0]] = m
+
+                Q *= u.unsqueeze(1)
                 Q *= (c / torch.sum(Q, dim=0, dtype=Q.dtype)).unsqueeze(0)
-                curr_sum = torch.sum(Q, dim=1, dtype=Q.dtype)
-                all_reduce_sum(curr_sum)
-            return (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
+            Q = (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
+
+            # hard assignment
+            if self.num_iteration < self.temp_hard_assignment_iters:
+                index_max = torch.max(Q, dim=1)[1]
+                Q.zero_()
+                Q.scatter_(1, index_max.unsqueeze(1), 1)
+            return Q
 
     def forward(self, scores: torch.Tensor, head_id: int):
         assert scores.shape[0] % self.num_crops == 0
@@ -134,6 +187,8 @@ class SwAVCriterion(nn.Module):
 
         total_loss = 0
         n_term_loss = 0
+
+        # 2 big crops are normally used for the assignment
         for i, crop_id in enumerate(self.crops_for_assign):
             with torch.no_grad():
                 scores_this_crop = scores[bs * crop_id : bs * (crop_id + 1)]
@@ -146,25 +201,65 @@ class SwAVCriterion(nn.Module):
                     ).t()
                     assignments = assignments.double()
                 else:
-                    assignments = torch.exp(scores_this_crop / self.epsilon).t()
+                    assignments = scores_this_crop / self.epsilon
+                    # use the log-sum-exp trick for numerical stability.
+                    M = torch.max(assignments)
+                    all_reduce_max(M)
+                    assignments -= M
+                    assignments = torch.exp(assignments).t()
                 assignments = self.distributed_sinkhornknopp(assignments)[:bs]
                 idx_crop_pred = np.delete(np.arange(self.num_crops), crop_id)
+
             loss = 0
             for p in idx_crop_pred:
-                loss -= torch.mean(
-                    torch.sum(
-                        assignments
-                        * torch.log(
-                            self.softmax(
-                                scores[bs * p : bs * (p + 1)] / self.temperature
-                            )
-                        ),
-                        dim=1,
+                if self.use_double_prec:
+                    loss -= torch.mean(
+                        torch.sum(
+                            assignments
+                            * self.log_softmax(
+                                scores[bs * p : bs * (p + 1)].double()
+                                / np.float64(self.temperature)
+                            ),
+                            dim=1,
+                            dtype=assignments.dtype,
+                        )
                     )
-                )
+                else:
+                    loss -= torch.mean(
+                        torch.sum(
+                            assignments
+                            * self.log_softmax(
+                                scores[bs * p : bs * (p + 1)] / self.temperature
+                            ),
+                            dim=1,
+                            dtype=assignments.dtype,
+                        )
+                    )
             loss /= len(idx_crop_pred)
             total_loss += loss
             n_term_loss += 1
+
+            # stop training if NaN appears and log the output to help debugging
+            # TODO (prigoyal): extract the logic to be common for all losses
+            # debug_state() method that all losses can override
+            if torch.isnan(loss):
+                logging.info(
+                    f"Infinite Loss or NaN. Loss value: {loss}, rank: {self.dist_rank}"
+                )
+                scores_output_file = os.path.join(
+                    self.output_dir,
+                    "rank" + str(self.dist_rank) + "_scores" + str(i) + ".pth",
+                )
+                assignments_out_file = os.path.join(
+                    self.output_dir,
+                    "rank" + str(self.dist_rank) + "_assignments" + str(i) + ".pth",
+                )
+                with PathManager.open(scores_output_file, "wb") as fwrite:
+                    torch.save(scores, fwrite)
+                with PathManager.open(assignments_out_file, "wb") as fwrite:
+                    torch.save(assignments, fwrite)
+                logging.info(f"Saved the scores matrix to: {scores_output_file}")
+                logging.info(f"Saved the assignment matrix to: {assignments_out_file}")
         total_loss /= n_term_loss
         return total_loss
 
@@ -209,5 +304,15 @@ class SwAVCriterion(nn.Module):
         self.register_buffer("local_emb_queue", init_queue)
 
     def __repr__(self):
-        repr_dict = {"name": self._get_name()}
+        repr_dict = {
+            "name": self._get_name(),
+            "use_queue": self.use_queue,
+            "local_queue_length": self.local_queue_length,
+            "temperature": self.temperature,
+            "num_prototypes": self.num_prototypes,
+            "num_crops": self.num_crops,
+            "nmb_sinkhornknopp_iters": self.nmb_sinkhornknopp_iters,
+            "embedding_dim": self.embedding_dim,
+            "temp_hard_assignment_iters": self.temp_hard_assignment_iters,
+        }
         return pprint.pformat(repr_dict, indent=2)

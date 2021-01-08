@@ -26,12 +26,12 @@ _SKIP_LAYERS = ["num_batches_tracked", "fc1", "fc2"]
 def convert_to_detectron2_names(layer_keys):
     output_keys = []
     for k in layer_keys:
-        k = k.replace("_feature_blocks.conv1.", "backbone.stem.conv1.")
-        k = k.replace("_feature_blocks.bn1.", "backbone.stem.conv1.norm.")
-        k = k.replace("_feature_blocks.layer1.", "backbone.res2.")
-        k = k.replace("_feature_blocks.layer2.", "backbone.res3.")
-        k = k.replace("_feature_blocks.layer3.", "backbone.res4.")
-        k = k.replace("_feature_blocks.layer4.", "roi_heads.res5.")
+        k = k.replace("_feature_blocks.conv1.", "stem.conv1.")
+        k = k.replace("_feature_blocks.bn1.", "stem.conv1.norm.")
+        k = k.replace("_feature_blocks.layer1.", "res2.")
+        k = k.replace("_feature_blocks.layer2.", "res3.")
+        k = k.replace("_feature_blocks.layer3.", "res4.")
+        k = k.replace("_feature_blocks.layer4.", "res5.")
 
         k = k.replace(".downsample.0.", ".shortcut.")
         k = k.replace(".downsample.1.", ".shortcut.norm.")
@@ -107,7 +107,7 @@ def main():
         vissl_state_dict = vissl_state_dict["base_model"]["model"]["trunk"]
 
     renamed_state_dict = _rename_weights_to_d2(vissl_state_dict, args.weights_type)
-    state = {"model": renamed_state_dict}
+    state = {"model": renamed_state_dict, "matching_heuristics": True}
     logger.info("Saving converted weights to: {}".format(args.output_model))
     torch.save(state, args.output_model)
     logger.info("Done!!")

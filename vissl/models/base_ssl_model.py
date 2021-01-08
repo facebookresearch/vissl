@@ -86,6 +86,10 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
         feats = []
         start_idx = 0
+        # in order to optimize memory usage, we can do single pass per
+        # crop as well. Set the flag to be true.
+        if self.model_config.SINGLE_PASS_EVERY_CROP:
+            idx_crops = torch.Tensor(list(range(1, 1 + len(batch)))).int()
         for end_idx in idx_crops:
             feat = self.trunk(torch.cat(batch[start_idx:end_idx]), feature_names)
             start_idx = end_idx
@@ -161,6 +165,19 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         logging.info("Freezing model...")
         self.freeze_trunk()
         self.freeze_head()
+
+    def is_fully_frozen_model(self):
+        trunk_params_list = self.trunk.parameters()
+        heads_params_list = self.heads.parameters()
+        trunk_trainable_params = list(
+            filter(lambda x: x.requires_grad, trunk_params_list)
+        )
+        heads_trainable_params = list(
+            filter(lambda x: x.requires_grad, heads_params_list)
+        )
+        if len(trunk_trainable_params) == 0 and len(heads_trainable_params) == 0:
+            return True
+        return False
 
     def get_features(self, batch):
         # we don't run the heads and only the trunk. The trunk will already

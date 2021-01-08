@@ -20,6 +20,8 @@ class AccuracyListMeter(ClassyMeter):
             num_meters: number of meters and hence we have same number of outputs
             topk_values: list of int `k` values.
         """
+        super().__init__()
+
         assert is_pos_int(num_meters), "num_meters must be positive"
         assert isinstance(topk_values, list), "topk_values must be a list"
         assert len(topk_values) > 0, "topk_values list should have at least one element"
@@ -64,9 +66,17 @@ class AccuracyListMeter(ClassyMeter):
                 meter_name = (
                     self._meter_names[ind] if (len(self._meter_names) > 0) else ind
                 )
-                output_dict[top_k_str][meter_name] = 100.0 * round(
-                    float(val_dict[ind]["val"][top_k_str]), 6
-                )
+                val = 100.0 * round(float(val_dict[ind]["val"][top_k_str]), 6)
+                # we could have several meters with the same name. We append the result
+                # to the dict.
+                if meter_name not in output_dict[top_k_str]:
+                    output_dict[top_k_str][meter_name] = [val]
+                else:
+                    output_dict[top_k_str][meter_name].append(val)
+        for topk in output_dict:
+            for k in output_dict[topk]:
+                if len(output_dict[topk][k]) == 1:
+                    output_dict[topk][k] = output_dict[topk][k][0]
         return output_dict
 
     def sync_state(self):

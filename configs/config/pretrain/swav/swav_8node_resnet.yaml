@@ -40,7 +40,8 @@ config:
       DROP_LAST: True
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
-  METERS: null
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -125,7 +126,7 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/
+    DIR: "."
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5           # every phase since data is big
     CHECKPOINT_ITER_FREQUENCY: -1    # equals 1epoch of imagenet-1k

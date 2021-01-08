@@ -21,6 +21,7 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
   MODEL:
     TRUNK:
       NAME: resnet

@@ -1,0 +1,13 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATASET_NAMES: ["places205_per05_random"]
+  OPTIMIZER:
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        values: [0.01, 0.001, 0.0001, 0.00001]

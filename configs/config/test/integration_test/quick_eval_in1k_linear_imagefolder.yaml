@@ -44,6 +44,7 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: 50
   METERS:
+    name: accuracy_list_meter
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1, 5]
@@ -68,6 +69,7 @@ config:
         ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
         ["eval_mlp", {"in_channels": 2048, "dims": [2048, 1000]}],
       ]
+      PARAMS_MULTIPLIER: 100.0
     WEIGHTS_INIT:
       PARAMS_FILE: ""
       STATE_DICT_KEY_NAME: classy_state_dict
@@ -88,10 +90,19 @@ config:
       nesterov: True
       regularize_bn: False
       regularize_bias: True
+      head_optimizer_params:
+        use_different_lr: True
+        use_different_wd: True
+        weight_decay: 0.0001
       param_schedulers:
         lr:
           name: multistep
           values: [0.01, 0.001]
+          milestones: [1]
+          update_interval: epoch
+        lr_head:
+          name: multistep
+          values: [0.2, 0.02]
           milestones: [1]
           update_interval: epoch
   DISTRIBUTED:
