@@ -127,7 +127,8 @@ config:
         lengths: [0.1, 0.9]
   GRAD_CLIP:
     USE_GRAD_CLIP: True
-  METERS: null
+  METERS:
+    name: ""
   #    accuracy_list_meter:
   #      num_meters: 1
   #      topk_values: [1, 5]
