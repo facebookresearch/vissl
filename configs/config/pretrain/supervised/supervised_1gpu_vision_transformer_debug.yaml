@@ -3,7 +3,6 @@ config:
   TENSORBOARD_SETUP:
     USE_TENSORBOARD: True
     EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/1gpu_test"
-    LOG_ACTIVATIONS: False
     FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
     DIR: "/checkpoint/ito/vision_transformer/1gpu_test"
@@ -91,6 +90,7 @@ config:
   GRAD_CLIP:
     USE_GRAD_CLIP: True
   METERS:
+    name: accuracy_list_meter
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1, 5]

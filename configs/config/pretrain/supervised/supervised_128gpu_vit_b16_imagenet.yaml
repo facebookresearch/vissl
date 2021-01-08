@@ -3,7 +3,6 @@ config:
   TENSORBOARD_SETUP:
     USE_TENSORBOARD: True
     EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/128gpu"
-    LOG_ACTIVATIONS: False
     FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
     DIR: "/checkpoint/ito/vision_transformer/128gpu"
