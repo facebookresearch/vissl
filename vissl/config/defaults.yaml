@@ -276,10 +276,10 @@ config:
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token
           # Parameters for attention modules. Default is vanilla
-          # self-attention for every layer.
-          ATTENTION_MODULES:
-            MODULE_TYPES: []
-            MODULE_COUNTS: []
+          # self-attention for every layer. To be implemented.
+#          ATTENTION_MODULES:
+#            MODULE_TYPES: []
+#            MODULE_COUNTS: []
             # Example
             # MODULE_TYPES: [AttentionLocalInit, MultiheadAttention]
             # MODULE_COUNTS: [2, 10]

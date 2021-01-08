@@ -47,7 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpus_per_task', type=int, default=8)
     parser.add_argument('--cpus_per_task', type=int, default=80)
     parser.add_argument('--ntasks_per_node', type=int, default=1)
-    parser.add_argument('--mem', type=str, default='512GB', help='gigabytes '
+    parser.add_argument('--mem', type=str, default='479GB', help='gigabytes '
                                                                  'of GPU ram per node')
     parser.add_argument('--partition', type=str, default='learnfair', \
                                                   help='learnfair, dev, or priority')
