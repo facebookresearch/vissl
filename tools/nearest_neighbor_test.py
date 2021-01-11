@@ -38,7 +38,7 @@ def nearest_neighbor_test(cfg: AttrDict, layer_name: str = "heads"):
     train_labels = torch.LongTensor(train_labels).cuda()
     num_classes = train_labels.max() + 1
     if cfg.NEAREST_NEIGHBOR.L2_NORM_FEATS:
-        train_features = nn.functional.normalize(train_features, dim=1, p=2)
+        train_features = nn.functional.normalize(train_features, dim=0, p=2)
 
     test_out = merge_features(output_dir, "test", layer_name, cfg)
     test_features, test_labels = test_out["features"], test_out["targets"]
