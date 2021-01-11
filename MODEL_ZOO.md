@@ -96,6 +96,7 @@ VISSL is 100% compatible with TorchVision ResNet models. You can benchmark these
 <!-- PIRL trained by Ishan -->
 - R50-200ep-62.85: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50_200ep/model_final_checkpoint_phase199.torch
 - R50-200ep-MLP-65.8: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50_200ep_mlp_gblur/model_final_checkpoint_phase199.torch
+- R50-800ep-Linear-63.8: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/pretext_rn50_4nodes_pirl_imagenet_ep800/model_final_checkpoint_phase799.torch
 - R50-800ep-MLP-69.9: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50_800ep_mlphead_gblur/model_final_checkpoint_phase799.torch
 - R50w2-400ep-Linear-69.3: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/w2_400ep/model_final_checkpoint_phase399.torch
 - R50w2-400ep-MLP-70.9: /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/imisra/ssl_framework/pirl/r50w2_400ep_mlphead_gblur/model_final_checkpoint_phase399.torch
