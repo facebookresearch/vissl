@@ -14,7 +14,7 @@ To train a model, use the configs specified [here](https://github.com/facebookre
 
 # Model Zoo
 
-To pre-trained SwAV ResNet-50 model, simply do:
+To use a pre-trained SwAV ResNet-50 model, simply do:
 ```python
 import torch
 model = torch.hub.load('facebookresearch/swav', 'resnet50')
