@@ -2,7 +2,7 @@
 config:
   DATA:
     TRAIN:
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 16
   MODEL:
     TRUNK:
       NAME: vision_transformer
