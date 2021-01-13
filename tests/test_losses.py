@@ -132,7 +132,7 @@ class TestSimClrCriterion(unittest.TestCase):
     def worker_fn(gpu_id: int, world_size: int, batch_size: int):
         dist.init_process_group(
             backend="nccl",
-            init_method=f"tcp://0.0.0.0:1234",
+            init_method="tcp://0.0.0.0:1234",
             world_size=world_size,
             rank=gpu_id,
         )
