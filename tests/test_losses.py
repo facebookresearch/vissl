@@ -5,6 +5,8 @@ import unittest
 from collections import namedtuple
 
 import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
 from classy_vision.generic.distributed_util import set_cpu_device
 from parameterized import parameterized
 from utils import ROOT_LOSS_CONFIGS, SSLHydraConfig
@@ -16,7 +18,6 @@ from vissl.utils.hydra_config import convert_to_attrdict
 
 
 logger = logging.getLogger("__name__")
-
 
 set_cpu_device()
 
@@ -67,6 +68,109 @@ class TestLossesForward(unittest.TestCase):
             output_dir="",
         )
         _ = loss_layer(scores=self._get_embedding(), head_id=0)
+
+
+class TestSimClrCriterion(unittest.TestCase):
+    """
+    Specific tests on SimCLR going further than just doing a forward pass
+    """
+
+    def test_simclr_info_nce_masks(self):
+        BATCH_SIZE = 4
+        WORLD_SIZE = 2
+        buffer_params = BUFFER_PARAMS_STRUCT(
+            BATCH_SIZE * WORLD_SIZE, WORLD_SIZE, EMBEDDING_DIM
+        )
+        criterion = SimclrInfoNCECriterion(buffer_params=buffer_params, temperature=0.1)
+        self.assertTrue(
+            criterion.pos_mask.equal(
+                torch.tensor(
+                    [
+                        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    ]
+                )
+            )
+        )
+        self.assertTrue(
+            criterion.neg_mask.equal(
+                torch.tensor(
+                    [
+                        [0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+                        [0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+                    ]
+                )
+            )
+        )
+
+    def test_simclr_backward(self):
+        EMBEDDING_DIM = 3
+        BATCH_SIZE = 4
+        WORLD_SIZE = 1
+        buffer_params = BUFFER_PARAMS_STRUCT(
+            BATCH_SIZE * WORLD_SIZE, WORLD_SIZE, EMBEDDING_DIM
+        )
+        criterion = SimclrInfoNCECriterion(buffer_params=buffer_params, temperature=0.1)
+        embeddings = torch.tensor(
+            [[1.0, 0.0, 1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
+            requires_grad=True,
+        )
+
+        self.assertTrue(embeddings.grad is None)
+        criterion(embeddings).backward()
+        self.assertTrue(embeddings.grad is not None)
+        print(embeddings.grad)
+        with torch.no_grad():
+            next_embeddings = embeddings - embeddings.grad  # gradient descent
+            self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
+
+    @staticmethod
+    def worker_fn(gpu_id: int, world_size: int, batch_size: int):
+        dist.init_process_group(
+            backend="nccl",
+            init_method=f"tcp://0.0.0.0:1234",
+            world_size=world_size,
+            rank=gpu_id,
+        )
+        embeddings = torch.full(
+            size=(batch_size, 3), fill_value=float(gpu_id), requires_grad=True
+        ).cuda(gpu_id)
+        gathered = SimclrInfoNCECriterion.gather_embeddings(embeddings)
+        if world_size == 1:
+            assert gathered.equal(
+                torch.tensor(
+                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], device=f"cuda:{gpu_id}"
+                )
+            )
+        if world_size == 2:
+            assert gathered.equal(
+                torch.tensor(
+                    [
+                        [0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0],
+                        [1.0, 1.0, 1.0],
+                        [1.0, 1.0, 1.0],
+                    ],
+                    device=f"cuda:{gpu_id}",
+                )
+            )
+        assert gathered.requires_grad
+
+    def test_gather_embeddings_word_size_1(self):
+        if torch.cuda.device_count() >= 1:
+            WORLD_SIZE = 1
+            BATCH_SIZE = 2
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+
+    def test_gather_embeddings_word_size_2(self):
+        if torch.cuda.device_count() >= 2:
+            WORLD_SIZE = 2
+            BATCH_SIZE = 2
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
 
 
 class TestRootConfigsLossesBuild(unittest.TestCase):

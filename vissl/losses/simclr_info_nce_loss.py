@@ -5,13 +5,10 @@ import pprint
 
 import numpy as np
 import torch
-from classy_vision.generic.distributed_util import (
-    gather_from_all,
-    get_cuda_device_index,
-    get_rank,
-)
+from classy_vision.generic.distributed_util import get_cuda_device_index, get_rank
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from vissl.utils.distributed_gradients import gather_from_all
 from vissl.utils.hydra_config import AttrDict
 
 
@@ -58,7 +55,7 @@ class SimclrInfoNCECriterion(nn.Module):
         logging.info(f"Creating Info-NCE loss on Rank: {self.dist_rank}")
 
     def precompute_pos_neg_mask(self):
-        # computed once at the begining of training
+        # computed once at the beginning of training
         total_images = self.buffer_params.effective_batch_size
         world_size = self.buffer_params.world_size
         batch_size = total_images // world_size
@@ -120,13 +117,13 @@ class SimclrInfoNCECriterion(nn.Module):
         }
         return pprint.pformat(repr_dict, indent=2)
 
-    def gather_embeddings(self, embedding: torch.Tensor):
+    @staticmethod
+    def gather_embeddings(embedding: torch.Tensor):
         """
         Do a gather over all embeddings, so we can compute the loss.
         Final shape is like: (batch_size * num_gpus) x embedding_dim
         """
         if torch.distributed.is_available() and torch.distributed.is_initialized():
-            # gather all embeddings.
             embedding_gathered = gather_from_all(embedding)
         else:
             embedding_gathered = embedding
