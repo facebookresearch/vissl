@@ -6,15 +6,59 @@ from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
+from torch.utils.checkpoint import checkpoint
+from vissl.utils.activation_checkpointing import checkpoint_trunk
 from vissl.utils.misc import is_apex_available
+
+
+# Tuple of classes of BN layers.
+_bn_cls = (nn.BatchNorm2d, torch.nn.modules.batchnorm.SyncBatchNorm)
 
 
 if is_apex_available():
     import apex
 
+    try:
+        # try importing the optimized version directly
+        _bn_cls = _bn_cls + (apex.parallel.optimized_sync_batchnorm.SyncBatchNorm,)
+    except AttributeError:
+        _bn_cls = _bn_cls + (apex.parallel.SyncBatchNorm,)
+
+
+def transform_model_input_data_type(model_input, model_config):
+    model_output = model_input
+    # In case the model takes BGR input type, we convert the RGB to BGR
+    if model_config.INPUT_TYPE == "bgr":
+        model_output = model_input[:, [2, 1, 0], :, :]
+    # In case of LAB image, we take only "L" channel as input. Split the data
+    # along the channel dimension into [L, AB] and keep only L channel.
+    if model_config.INPUT_TYPE == "lab":
+        model_output = torch.split(model_input, [1, 2], dim=1)[0]
+    return model_output
+
+
+def is_feature_extractor_model(model_config):
+    if (
+        model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+        and model_config.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
+        and len(model_config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP) > 0
+    ):
+        return True
+    return False
+
+
+def get_trunk_output_feature_names(model_config):
+    # get the feature names which we will output. If Feature eval mode is set, we
+    # get feature names from config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP.
+    feature_names = []
+    if is_feature_extractor_model(model_config):
+        feat_ops_map = model_config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+        feature_names = [item[0] for item in feat_ops_map]
+    return feature_names
+
 
 class Wrap(nn.Module):
-    """ Wrap a free function into a nn.Module
+    """Wrap a free function into a nn.Module
     Can be useful to build a model block, and include activations or
     light tensor alterations
     """
@@ -36,9 +80,13 @@ def convert_sync_bn(config, model):
     sync_bn_config = config.MODEL.SYNC_BN_CONFIG
 
     def get_group_size():
+        world_size = config.DISTRIBUTED.NUM_PROC_PER_NODE * config.DISTRIBUTED.NUM_NODES
         if sync_bn_config["GROUP_SIZE"] > 0:
             # if the user specifies group_size to create, we use that.
-            group_size = sync_bn_config["GROUP_SIZE"]
+            # we also make sure additionally that the group size doesn't exceed
+            # the world_size. This is beneficial to handle especially in case
+            # of 1 node training where num_gpu <= 8
+            group_size = min(world_size, sync_bn_config["GROUP_SIZE"])
         elif sync_bn_config["GROUP_SIZE"] == 0:
             # group_size=0 is considered as world_size and no process group is created.
             group_size = None
@@ -72,6 +120,7 @@ def convert_sync_bn(config, model):
             )
             process_group = None
             # TODO (prigoyal): process groups don't work well with pytorch.
+            # import os
             # num_gpus_per_node = config.DISTRIBUTED.NUM_PROC_PER_NODE
             # node_id = int(os.environ["RANK"]) // num_gpus_per_node
             # assert (
@@ -175,6 +224,8 @@ def get_trunk_forward_outputs(
     out_feat_keys: List[str],
     feature_blocks: nn.ModuleDict,
     feature_mapping: Dict[str, str] = None,
+    use_checkpointing: bool = True,
+    checkpointing_splits: int = 2,
 ) -> List[torch.Tensor]:
     """
     Args:
@@ -199,18 +250,56 @@ def get_trunk_forward_outputs(
         out_feat_keys, list(feature_blocks.keys())
     )
 
-    out_feats = [None] * len(out_feat_keys)
+    # Forward pass over the trunk
+    unique_out_feats = {}
+    unique_out_feat_keys = list(set(out_feat_keys))
+
+    # FIXME: Ideally this should only be done once at construction time
+    if use_checkpointing:
+        feature_blocks = checkpoint_trunk(
+            feature_blocks, unique_out_feat_keys, checkpointing_splits
+        )
+
+        # If feat is the first input to the network, it doesn't have requires_grad,
+        # which will make checkpoint's backward function not being called. So we need
+        # to set it to true here.
+        feat.requires_grad = True
 
     # Go through the blocks, and save the features as we go
+    # NOTE: we are not doing several forward passes but instead just checking
+    # whether the feature should is requested to be returned.
     for i, (feature_name, feature_block) in enumerate(feature_blocks.items()):
-        feat = feature_block(feat)
+        # The last chunk has to be non-volatile
+        if use_checkpointing and i < len(feature_blocks) - 1:
+            # Un-freeze the running stats in any BN layer
+            for m in filter(lambda x: isinstance(x, _bn_cls), feature_block.modules()):
+                m.track_running_stats = m.training
 
-        # This feature is requested, store
-        if feature_name in out_feat_keys:
-            out_feats[out_feat_keys.index(feature_name)] = feat
+            feat = checkpoint(feature_block, feat)
+
+            # Freeze the running stats in any BN layer
+            # the checkpointing process will have to do another FW pass
+            for m in filter(lambda x: isinstance(x, _bn_cls), feature_block.modules()):
+                m.track_running_stats = False
+        else:
+            feat = feature_block(feat)
+
+        # This feature is requested, store. If the same feature is requested several
+        # times, we return the feature several times.
+        if feature_name in unique_out_feat_keys:
+            unique_out_feats[feature_name] = feat
 
         # Early exit if all the features have been collected
-        if i == max_out_feat:
+        if i == max_out_feat and not use_checkpointing:
             break
 
-    return out_feats
+    # now return the features as requested by the user. If there are no duplicate keys,
+    # return as is.
+    if len(unique_out_feat_keys) == len(out_feat_keys):
+        return list(unique_out_feats.values())
+
+    output_feats = []
+    for key_name in out_feat_keys:
+        output_feats.append(unique_out_feats[key_name])
+
+    return output_feats

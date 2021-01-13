@@ -1,0 +1,101 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 100
+  TEST_ONLY: False
+  TEST_EVERY_NUM_EPOCH: 1
+  TEST_MODEL: True
+  SEED_VALUE: 1
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: False
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [places205_per01_balanced]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+    TEST:
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [places205_everstore]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1, 5]
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 205]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify model"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      APPEND_PREFIX: trunk.
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
+      ignore_index: -1
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.000
+      momentum: 0.9
+      num_epochs: 70
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.05
+            base_lr_batch_size: 256
+          name: multistep
+          values: [0.05, 0.005]
+          milestones: [30]
+          update_interval: epoch
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+    BROADCAST_BUFFERS: False
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 1

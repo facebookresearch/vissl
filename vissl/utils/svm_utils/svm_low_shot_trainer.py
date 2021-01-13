@@ -1,18 +1,19 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 import pickle
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 from sklearn.svm import LinearSVC
+from vissl.utils.io import load_file, save_file
 from vissl.utils.svm_utils.evaluate import get_precision_recall
 from vissl.utils.svm_utils.svm_trainer import SVMTrainer
 
 
 class SVMLowShotTrainer(SVMTrainer):
-    def __init__(self, config, layer):
-        super().__init__(config, layer)
+    def __init__(self, config, layer, output_dir):
+        super().__init__(config, layer, output_dir)
         self._dataset_name = config["low_shot"]["dataset_name"]
         self.cls_list = []
         self.num_classes = None
@@ -23,6 +24,10 @@ class SVMLowShotTrainer(SVMTrainer):
         if self._dataset_name == "voc":
             num_classes = targets.shape[1]
             cls_list = range(num_classes)
+        elif "places" in self._dataset_name:
+            # each image in places205 has a target cls [0, .... ,204]
+            cls_list = list(set(targets[:, 0].tolist()))
+            num_classes = len(cls_list)
         else:
             logging.info("Dataset not recognized. Abort!")
         self.cls_list = cls_list
@@ -42,6 +47,21 @@ class SVMLowShotTrainer(SVMTrainer):
             # label 0 = not present, set it to -1 as svm train target.
             # Make the svm train target labels as -1, 1.
             out_cls_labels[np.where(out_cls_labels == 0)] = -1
+        elif "places" in self._dataset_name:
+            cls_labels = targets.astype(dtype=np.int32, copy=True)
+            # Remove the ignore label.
+            out_data_inds = targets[:, 0] != -1
+            out_feats = features[out_data_inds]
+            out_cls_labels = cls_labels[out_data_inds]
+
+            # for the given class, get the relevant positive/negative images and
+            # Make the svm train target labels as -1, 1.
+            cls_inds = np.where(out_cls_labels[:, 0] == cls)
+            non_cls_inds = out_cls_labels[:, 0] != cls
+            out_cls_labels[non_cls_inds] = -1
+            out_cls_labels[cls_inds] = 1
+            # finally reshape into the format taken by sklearn svm package.
+            out_cls_labels = out_cls_labels.reshape(-1)
         else:
             raise Exception("Dataset not recognized")
         return out_feats, out_cls_labels
@@ -51,9 +71,7 @@ class SVMLowShotTrainer(SVMTrainer):
         # (sample{}) and vary low-shot amount (k{}). The input data should have
         # sample{}_k{} information that we extract in suffix below.
         cls_cost = str(cls_num) + "_cost" + str(float(cost))
-        out_file = os.path.join(
-            self.output_dir, "cls" + cls_cost + "_" + suffix + ".pickle"
-        )
+        out_file = f"{self.output_dir}/cls{cls_cost}_{suffix}.pickle"
         return out_file
 
     def train(self, features, targets, sample_num, low_shot_kvalue):
@@ -70,7 +88,7 @@ class SVMLowShotTrainer(SVMTrainer):
                 cost = self.costs_list[cost_idx]
                 suffix = f"sample{sample_num}_k{low_shot_kvalue}"
                 out_file = self._get_svm_low_shot_model_filename(cls_num, cost, suffix)
-                if os.path.exists(out_file) and not self.config.force_retrain:
+                if PathManager.exists(out_file) and not self.config.force_retrain:
                     logging.info(f"SVM model exists: {out_file}")
                     continue
                 logging.info(f"Training model with the cost: {cost}")
@@ -98,7 +116,7 @@ class SVMLowShotTrainer(SVMTrainer):
                 )
                 clf.fit(train_feats, train_cls_labels)
                 logging.info(f"Saving SVM model to: {out_file}")
-                with open(out_file, "wb") as fwrite:
+                with PathManager.open(out_file, "wb") as fwrite:
                     pickle.dump(clf, fwrite)
         logging.info(f"Done training: sample: {sample_num} k-value: {low_shot_kvalue}")
 
@@ -122,8 +140,7 @@ class SVMLowShotTrainer(SVMTrainer):
                 model_file = self._get_svm_low_shot_model_filename(
                     cls_num, cost, suffix
                 )
-                with open(model_file, "rb") as fopen:
-                    model = pickle.load(fopen, encoding="latin1")
+                model = load_file(model_file)
                 prediction = model.decision_function(features)
                 eval_preds, eval_cls_labels = self._get_cls_feats_labels(
                     cls_num, prediction, targets
@@ -132,19 +149,19 @@ class SVMLowShotTrainer(SVMTrainer):
                 local_cost_ap[cls_num][0] = ap
             mean_cost_ap = np.mean(local_cost_ap, axis=0)
             sample_ap_matrix[0][cost_idx] = mean_cost_ap
-        out_k_sample_file = os.path.join(
-            self.output_dir, f"test_ap_sample{sample_num}_k{low_shot_kvalue}.npy"
+        out_k_sample_file = (
+            f"{self.output_dir}/test_ap_sample{sample_num}_k{low_shot_kvalue}.npy"
         )
         save_data = sample_ap_matrix.reshape((1, -1))
-        np.save(out_k_sample_file, save_data)
+        save_file(save_data, out_k_sample_file)
         logging.info(
             f"Saved sample test k_idx AP: {out_k_sample_file} {save_data.shape}"
         )
 
     def _save_stats(self, output_dir, stat, output):
-        out_file = os.path.join(output_dir, f"test_ap_{stat}.npy")
+        out_file = f"{output_dir}/test_ap_{stat}.npy"
         logging.info(f"Saving {stat} to: {out_file} {output.shape}")
-        np.save(out_file, output)
+        save_file(output, out_file)
 
     def aggregate_stats(self, k_values, sample_inds):
         logging.info(
@@ -158,12 +175,11 @@ class SVMLowShotTrainer(SVMTrainer):
             for inds in range(len(sample_inds)):
                 sample_idx = sample_inds[inds]
                 file_name = f"test_ap_sample{sample_idx}_k{k_low}.npy"
-                filepath = os.path.join(self.output_dir, file_name)
-                if os.path.exists(filepath):
-                    k_val_output.append(np.load(filepath, encoding="latin1"))
+                filepath = f"{self.output_dir}/{file_name}"
+                if PathManager.exists(filepath):
+                    k_val_output.append(load_file(filepath))
                 else:
                     logging.info(f"file does not exist: {filepath}")
-            # import pdb; pdb.set_trace()
             k_val_output = np.concatenate(k_val_output, axis=0)
             k_low_max = np.max(k_val_output, axis=0).reshape(-1, k_val_output.shape[1])
             k_low_min = np.min(k_val_output, axis=0).reshape(-1, k_val_output.shape[1])
@@ -193,11 +209,18 @@ class SVMLowShotTrainer(SVMTrainer):
             argmax_min.append(100.0 * output_min[idx, argmax_cls[idx]])
             argmax_max.append(100.0 * output_max[idx, argmax_cls[idx]])
             argmax_std.append(100.0 * output_std[idx, argmax_cls[idx]])
+        output_results = {}
         for idx in range(len(argmax_max)):
             logging.info(
-                f"mean/min/max/std: {round(argmax_mean[idx], 2)} "
+                f"k-value: {k_values[idx]} mean/min/max/std: {round(argmax_mean[idx], 2)} "
                 f"/ {round(argmax_min[idx], 2)} / "
                 f"{round(argmax_max[idx], 2)} / "
                 f"{round(argmax_std[idx], 2)}"
             )
+            output_results[f"k={k_values[idx]}"] = {}
+            output_results[f"k={k_values[idx]}"]["mean"] = round(argmax_mean[idx], 2)
+            output_results[f"k={k_values[idx]}"]["min"] = round(argmax_min[idx], 2)
+            output_results[f"k={k_values[idx]}"]["max"] = round(argmax_max[idx], 2)
+            output_results[f"k={k_values[idx]}"]["std"] = round(argmax_std[idx], 2)
         logging.info("All done!!")
+        return output_results

@@ -1,0 +1,4 @@
+# @package _global_
+config:
+  OPTIMIZER:
+      num_epochs: 200

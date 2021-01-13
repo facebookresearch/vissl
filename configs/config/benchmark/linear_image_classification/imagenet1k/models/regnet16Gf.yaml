@@ -1,0 +1,39 @@
+# @package _global_
+config:
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 5
+      topk_values: [1, 5]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        # ["res4", ["AdaptiveAvgPool2d", [[4, 2]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[2, 4]]]],
+        ["res4", ["AdaptiveAvgPool2d", [[3, 3]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[3, 1]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 3]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[4, 1]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 4]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["avgpool", ["Identity", []]],
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_16gf
+    HEAD:
+      PARAMS: [
+        # ["eval_mlp", {"in_channels": 1232, "dims": [9856, 1000]}],
+        # ["eval_mlp", {"in_channels": 1232, "dims": [9856, 1000]}],
+        ["eval_mlp", {"in_channels": 1232, "dims": [11088, 1000]}],
+        # ["eval_mlp", {"in_channels": 3024, "dims": [9072, 1000]}],
+        # ["eval_mlp", {"in_channels": 3024, "dims": [9072, 1000]}],
+        ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
+        # ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
+        # ["eval_mlp", {"in_channels": 3024, "dims": [12096, 1000]}],
+        ["eval_mlp", {"in_channels": 3024, "dims": [3024, 1000]}],
+        ["mlp", {"dims": [3024, 1000]}],
+      ]

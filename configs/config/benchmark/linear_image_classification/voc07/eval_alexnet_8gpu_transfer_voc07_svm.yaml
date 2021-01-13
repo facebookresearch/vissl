@@ -1,8 +1,7 @@
 # @package _global_
-extract_features: True
-train_svm: True
 config:
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
@@ -38,32 +37,31 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/voc2007/
   MODEL:
-    FEATURE_EVAL_MODE: True
-    EXTRACT_FEATURES_ONLY: True
-    EVAL_FEATURES: ["conv1", "conv2", "conv3", "conv4", "conv5"]
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv1", ["AvgPool2d", [[19, 19], 4, 0]]],
+          ["conv2",["AvgPool2d", [[12, 12], 3, 0]]],
+          ["conv3",["AvgPool2d", [[9, 9], 1, 0]]],
+          ["conv4",["AvgPool2d", [[9, 9], 1, 0]]],
+          ["conv5",["AvgPool2d", [[8, 8], 1, 0]]],
+      ]
     TRUNK:
       NAME: alexnet_deepcluster
-      SHOULD_FLATTEN: True
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[19, 19], 4, 0]],
-          ["AvgPool2d", [[12, 12], 3, 0]],
-          ["AvgPool2d", [[9, 9], 1, 0]],
-          ["AvgPool2d", [[9, 9], 1, 0]],
-          ["AvgPool2d", [[8, 8], 1, 0]],
-      ]
-    HEAD:
-      PARAMS: [["mlp", {"dims": [9216, 20]}]]
-    PARAMS_FILE:
-      PATH: "specify path"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify path"
       STATE_DICT_KEY_NAME: model_state_dict
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
   SVM:
-    OUTPUT_DIR: .
     costs:
       costs_list: [0.01, 0.1, 1.0, 2, 5, 10, 15, 20, 50, 100, 1000]
     normalize: True

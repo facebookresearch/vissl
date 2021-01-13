@@ -18,6 +18,7 @@ _TRANSFORMS_WITH_COPIES = [
     "ImgPilToPatchesAndImage",
     "ImgPilToMultiCrop",
 ]
+_TRANSFORMS_WITH_GROUPING = ["ImgPilMultiCropRandomApply"]
 
 
 # we wrap around transforms so that they work with the multimodal input
@@ -38,16 +39,30 @@ class SSLTransformsWrapper(ClassyTransform):
             return True
         return False
 
+    def _is_grouping_transform(self):
+        if self.name in _TRANSFORMS_WITH_GROUPING:
+            return True
+        return False
+
     def __call__(self, sample):
         # Run on all indices if empty set is passed.
         indices = self.indices if self.indices else set(range(len(sample["data"])))
-        for idx in indices:
-            output = self.transform(sample["data"][idx])
-            if self._is_transform_with_labels():
-                sample["data"][idx] = output[0]
-                sample["label"].append(output[1])
-            else:
-                sample["data"][idx] = output
+
+        if self._is_grouping_transform():
+            # if the transform needs to be applied to all the indices
+            # together. For example: one might want to vary the intensity
+            # of a transform across several crops of an image as in BYOL.
+            output = self.transform(sample["data"])
+            sample["data"] = output
+        else:
+            for idx in indices:
+                output = self.transform(sample["data"][idx])
+                if self._is_transform_with_labels():
+                    sample["data"][idx] = output[0]
+                    sample["label"].append(output[1])
+                else:
+                    sample["data"][idx] = output
+
         if self._is_transform_with_copies():
             # if the transform makes copies of the data, we just flatten the list
             # so the next set of transforms will operate on more indices

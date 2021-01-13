@@ -5,7 +5,6 @@ This script contains some helpful functions to handle tensorboard setup.
 """
 
 import logging
-import os
 
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.io import makedir
@@ -25,21 +24,22 @@ def is_tensorboard_available():
 
 def get_tensorboard_dir(cfg):
     checkpoint_folder = get_checkpoint_folder(cfg)
-    tensorboard_dir = os.path.join(checkpoint_folder, "tb_logs")
+    tensorboard_dir = f"{checkpoint_folder}/tb_logs"
     logging.info(f"Tensorboard dir: {tensorboard_dir}")
     makedir(tensorboard_dir)
     return tensorboard_dir
 
 
 def get_tensorboard_hook(cfg):
-    from vissl.ssl_hooks import SSLTensorboardHook
     from torch.utils.tensorboard import SummaryWriter
+    from vissl.hooks import SSLTensorboardHook
 
     # get the tensorboard directory and check tensorboard is installed
     tensorboard_dir = get_tensorboard_dir(cfg)
     flush_secs = cfg.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
-    log_activations = cfg.TENSORBOARD_SETUP.LOG_ACTIVATIONS
     return SSLTensorboardHook(
         tb_writer=SummaryWriter(log_dir=tensorboard_dir, flush_secs=flush_secs),
-        log_activations=log_activations,
+        log_params=cfg.TENSORBOARD_SETUP.LOG_PARAMS,
+        log_params_every_n_iterations=cfg.TENSORBOARD_SETUP.LOG_PARAMS_EVERY_N_ITERS,
+        log_params_gradients=cfg.TENSORBOARD_SETUP.LOG_PARAMS_GRADIENTS,
     )

@@ -15,7 +15,8 @@ nvcc --version
 
 # see https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#virtual-architecture-feature-list
 # maxwell, pascal, volta
-export TORCH_CUDA_ARCH_LIST="5.0;5.2;5.3;6.0;6.1;6.2;7.0;7.5"
+# example: TORCH_CUDA_ARCH_LIST="5.0;5.2;5.3;6.0;6.1;6.2;7.0;7.5"
+export TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}
 
 # install apex now (note that we recommend a specific apex version for stability)
 pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" apex@https://github.com/NVIDIA/apex/tarball/1f2aa9156547377a023932a1512752c392d9bbdf

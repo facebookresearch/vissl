@@ -13,6 +13,7 @@ import sys
 from glob import glob
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 
 
 # initiate the logger
@@ -34,8 +35,8 @@ def validate_files(input_files):
 
 
 def get_data_files(split, args):
-    data_dir = os.path.join(args.data_source_dir, "ImageSets/Main")
-    assert os.path.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
+    data_dir = f"{args.data_source_dir}/ImageSets/Main"
+    assert PathManager.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
     test_data_files = glob(os.path.join(data_dir, "*_test.txt"))
     test_data_files = validate_files(test_data_files)
     if args.separate_partitions > 0:
@@ -64,7 +65,7 @@ def get_data_files(split, args):
 
 
 def get_images_labels_info(split, args):
-    assert os.path.exists(args.data_source_dir), "Data source NOT found. Abort"
+    assert PathManager.exists(args.data_source_dir), "Data source NOT found. Abort"
 
     data_files = get_data_files(split, args)
     # we will construct a map for image name to the vector of -1, 0, 1
@@ -73,7 +74,7 @@ def get_images_labels_info(split, args):
     for cls_num, data_path in enumerate(sorted(data_files)):
         # for this class, we have images and each image will have label
         # 1, -1, 0 -> present, not present, ignore respectively as in VOC data.
-        with open(data_path, "r") as fopen:
+        with PathManager.open(data_path, "r") as fopen:
             for line in fopen:
                 try:
                     img_name, orig_label = line.strip().split()
@@ -96,9 +97,7 @@ def get_images_labels_info(split, args):
 
     img_paths, img_labels = [], []
     for item in sorted(img_labels_map.keys()):
-        img_paths.append(
-            os.path.join(args.data_source_dir, "JPEGImages", item + ".jpg")
-        )
+        img_paths.append(f"{args.data_source_dir}/JPEGImages/{item}.jpg")
         img_labels.append(img_labels_map[item])
 
     output_dict = {}
@@ -160,25 +159,19 @@ def main():
     for partition in partitions:
         logger.info("========Preparing {} data files========".format(partition))
         imgs_info, lbls_info, output_dict = get_images_labels_info(partition, args)
-        img_info_out_path = os.path.join(args.output_dir, partition + "_images.npy")
-        label_info_out_path = os.path.join(args.output_dir, partition + "_labels.npy")
+        img_info_out_path = f"{args.output_dir}/{partition}_images.npy"
+        label_info_out_path = f"{args.output_dir}/{partition}_labels.npy"
         logger.info("=================SAVING DATA files=======================")
-        logger.info(
-            "partition: {} saving img_paths to: {}".format(partition, img_info_out_path)
-        )
-        logger.info(
-            "partition: {} saving lbls_paths: {}".format(partition, label_info_out_path)
-        )
-        logger.info(
-            "partition: {} imgs: {}".format(partition, np.array(imgs_info).shape)
-        )
+        logger.info(f"partition: {partition} saving img_paths to: {img_info_out_path}")
+        logger.info(f"partition: {partition} saving lbls_paths: {label_info_out_path}")
+        logger.info(f"partition: {partition} imgs: {np.array(imgs_info).shape}")
         np.save(img_info_out_path, np.array(imgs_info))
         np.save(label_info_out_path, np.array(lbls_info))
         if args.generate_json:
-            json_out_path = os.path.join(args.output_dir, partition + "_targets.json")
+            json_out_path = f"{args.output_dir}/{partition}_targets.json"
             import json
 
-            with open(json_out_path, "w") as fp:
+            with PathManager.open(json_out_path, "w") as fp:
                 json.dump(output_dict, fp)
             logger.info("Saved Json to: {}".format(json_out_path))
     logger.info("DONE!")

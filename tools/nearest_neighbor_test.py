@@ -2,22 +2,31 @@
 
 import logging
 import sys
+from argparse import Namespace
+from typing import Any, List
 
 import torch
-from distributed_train import launch_distributed
 from hydra.experimental import compose, initialize_config_module
+from run_distributed_engines import launch_distributed
 from torch import nn
-from vissl.ssl_hooks import default_hook_generator
-from vissl.utils.checkpoint import get_absolute_path
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
-from vissl.utils.logger import setup_logging
+from vissl.hooks import default_hook_generator
+from vissl.models.model_helpers import get_trunk_output_feature_names
+from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.env import set_env_vars
+from vissl.utils.hydra_config import (
+    AttrDict,
+    convert_to_attrdict,
+    is_hydra_available,
+    print_cfg,
+)
+from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import merge_features
 
 
-def nearest_neighbor_test(cfg, layer_name="heads"):
+def nearest_neighbor_test(cfg: AttrDict, layer_name: str = "heads"):
     temperature = cfg.NEAREST_NEIGHBOR.SIGMA
     num_neighbors = cfg.NEAREST_NEIGHBOR.TOPK
-    output_dir = get_absolute_path(cfg.NEAREST_NEIGHBOR.OUTPUT_DIR)
+    output_dir = get_checkpoint_folder(cfg)
     logging.info(f"Testing with sigma: {temperature}, topk neighbors: {num_neighbors}")
 
     ############################################################################
@@ -29,7 +38,7 @@ def nearest_neighbor_test(cfg, layer_name="heads"):
     train_labels = torch.LongTensor(train_labels).cuda()
     num_classes = train_labels.max() + 1
     if cfg.NEAREST_NEIGHBOR.L2_NORM_FEATS:
-        train_features = nn.functional.normalize(train_features, dim=1, p=2)
+        train_features = nn.functional.normalize(train_features, dim=0, p=2)
 
     test_out = merge_features(output_dir, "test", layer_name, cfg)
     test_features, test_labels = test_out["features"], test_out["targets"]
@@ -84,20 +93,39 @@ def nearest_neighbor_test(cfg, layer_name="heads"):
     return top1, top5
 
 
-def main(args, config):
+def main(args: Namespace, config: AttrDict):
     # setup logging
     setup_logging(__name__)
 
     # print the coniguration used
     print_cfg(config)
 
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=config)
+
     # extract the features
-    launch_distributed(config, args, hook_generator=default_hook_generator)
-    top1, top5 = nearest_neighbor_test(config)
-    logging.info(f"Top1: {top1}, Top5: {top5}")
+    launch_distributed(
+        config,
+        args.node_id,
+        engine_name="extract_features",
+        hook_generator=default_hook_generator,
+    )
+
+    # Get the names of the features that we are extracting. If user doesn't
+    # specify the features to evaluate, we get the full model output and freeze
+    # head/trunk both as caution.
+    feat_names = get_trunk_output_feature_names(config.MODEL)
+    if len(feat_names) == 0:
+        feat_names = ["heads"]
+
+    for layer in feat_names:
+        top1, top5 = nearest_neighbor_test(config, layer_name=layer)
+        logging.info(f"layer: {layer} Top1: {top1}, Top5: {top5}")
+    # close the logging streams including the filehandlers
+    shutdown_logging()
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[Any]):
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)
     args, config = convert_to_attrdict(cfg)

@@ -93,6 +93,8 @@ class QueueDataset(Dataset):
                 continue
 
     def _enqueue_valid_image(self, img):
+        if self._get_enqueue_buffer_size() >= self.queue_size:
+            return
         try:
             self.enqueue_images_queue.put(img, block=True, timeout=0.1)
             return
@@ -100,6 +102,8 @@ class QueueDataset(Dataset):
             return
 
     def _dequeue_valid_image(self):
+        if self._get_dequeue_buffer_size() == 0:
+            return
         try:
             return self.dequeue_images_queue.get(block=True, timeout=0.1)
         except queue.Empty:
@@ -111,7 +115,17 @@ class QueueDataset(Dataset):
     def _get_dequeue_buffer_size(self):
         return self.dequeue_images_queue.qsize()
 
+    def _is_large_image(self, sample):
+        h, w = sample.size
+        if h * w > 10000000:
+            return True
+        return False
+
     def on_sucess(self, sample):
+        # if the image is very large, we don't add it to the queue
+        # as otherwise the memory will grow a lot
+        if self._is_large_image(sample):
+            return
         self._enqueue_valid_image(sample)
         if self.enqueue_images_queue.full() and not self.dequeue_images_queue.full():
             self._refill_dequeue_buffer()

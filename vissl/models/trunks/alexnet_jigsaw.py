@@ -2,10 +2,13 @@
 
 import torch.nn as nn
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
+from vissl.models.trunks import register_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
+@register_model_trunk("alexnet_jigsaw")
 class AlexNetJigsaw(nn.Module):
-    def __init__(self, model_config, model_name):
+    def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
         conv1_relu = nn.Sequential(
             nn.Conv2d(3, 96, kernel_size=11, stride=2, padding=0), nn.ReLU(inplace=True)
@@ -77,6 +80,10 @@ class AlexNetJigsaw(nn.Module):
     def forward(self, x, out_feat_keys=None):
         feat = x
         out_feats = get_trunk_forward_outputs(
-            feat, out_feat_keys, self._feature_blocks, self.all_feat_names
+            feat,
+            out_feat_keys,
+            self._feature_blocks,
+            self.all_feat_names,
+            use_checkpointing=False,
         )
         return out_feats

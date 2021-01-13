@@ -1,14 +1,15 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 import random
+import tempfile
 
 import numpy as np
 import pkg_resources
 import torch
 import torch.multiprocessing as mp
 from scipy.sparse import csr_matrix
+from vissl.utils.io import load_file
 
 
 def is_apex_available():
@@ -45,11 +46,15 @@ def get_dist_run_id(cfg, num_nodes):
             num_nodes == 1
         ), "cfg.DISTRIBUTED.RUN_ID=auto is allowed for 1 machine only."
         port = find_free_tcp_port()
-        run_id = f"127.0.0.1:{port}"
-    elif init_method == "file" and num_nodes > 1:
-        logging.warning(
-            "file is not recommended to use for distributed training on > 1 node"
-        )
+        run_id = f"localhost:{port}"
+    elif init_method == "file":
+        if num_nodes > 1:
+            logging.warning(
+                "file is not recommended to use for distributed training on > 1 node"
+            )
+        # Find a unique tempfile if needed.
+        if not run_id or run_id == "auto":
+            unused_fno, run_id = tempfile.mkstemp()
     elif init_method == "tcp" and cfg.DISTRIBUTED.NUM_NODES > 1:
         assert cfg.DISTRIBUTED.RUN_ID, "please specify RUN_ID for tcp"
     elif init_method == "env":
@@ -57,7 +62,7 @@ def get_dist_run_id(cfg, num_nodes):
     return run_id
 
 
-def setup_multiprocessing_method(method_name):
+def setup_multiprocessing_method(method_name: str):
     try:
         mp.set_start_method(method_name, force=True)
         logging.info("Set start method of multiprocessing to {}".format(method_name))
@@ -92,19 +97,13 @@ def merge_features(output_dir, split, layer, cfg):
     for local_rank in range(0, cfg.DISTRIBUTED.NUM_PROC_PER_NODE):
         for node_id in range(0, cfg.DISTRIBUTED.NUM_NODES):
             dist_rank = cfg.DISTRIBUTED.NUM_PROC_PER_NODE * node_id + local_rank
-            feat_file = os.path.join(
-                output_dir, f"rank{dist_rank}_{split}_{layer}_features.npy"
-            )
-            targets_file = os.path.join(
-                output_dir, f"rank{dist_rank}_{split}_{layer}_targets.npy"
-            )
-            inds_file = os.path.join(
-                output_dir, f"rank{dist_rank}_{split}_{layer}_inds.npy"
-            )
+            feat_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_features.npy"
+            targets_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_targets.npy"
+            inds_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_inds.npy"
             logging.info(f"Loading:\n{feat_file}\n{targets_file}\n{inds_file}")
-            feats = np.load(feat_file)
-            targets = np.load(targets_file)
-            indices = np.load(inds_file)
+            feats = load_file(feat_file)
+            targets = load_file(targets_file)
+            indices = load_file(inds_file)
             num_samples = feats.shape[0]
             for idx in range(num_samples):
                 index = indices[idx]
@@ -132,3 +131,18 @@ def get_json_data_catalog_file():
         "configs", "config/dataset_catalog.json"
     )
     return json_catalog_path
+
+
+@torch.no_grad()
+def concat_all_gather(tensor):
+    """
+    Performs all_gather operation on the provided tensors.
+    *** Warning ***: torch.distributed.all_gather has no gradient.
+    """
+    tensors_gather = [
+        torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())
+    ]
+    torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
+
+    output = torch.cat(tensors_gather, dim=0)
+    return output

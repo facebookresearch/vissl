@@ -8,6 +8,7 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: False
   DATA:
+    NUM_DATALOADER_WORKERS: 8
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
@@ -27,11 +28,12 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
   TRAINER:
-    TRAIN_STEP_NAME: standard
-  METERS: null
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -40,22 +42,22 @@ config:
           DEPTH: 50
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 128]}]]
-  CRITERION:
+  LOSS:
     name: nce_loss_with_memory
-    ignore_index: -1
-    NCE_LOSS:
-      NORM_EMBEDDING: True
-      TEMPERATURE: 0.07
-      NORM_CONSTANT: -1
-      NEGATIVE_SAMPLING_PARAMS:
-        NUM_NEGATIVES: 32000
-        TYPE: random
-      MEMORY_PARAMS:
-        MEMORY_SIZE: -1
-        EMBEDDING_DIM: 128
-        MOMENTUM: 0.5
-        NORM_INIT: True
-        UPDATE_MEM_ON_FORWARD: True
+    nce_loss_with_memory:
+      ignore_index: -1
+      norm_embedding: True
+      temperature: 0.07
+      norm_constant: -1
+      negative_sampling_params:
+        num_negatives: 32000
+        type: random
+      memory_params:
+        memory_size: -1
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: True
+        update_mem_on_forward: True
   OPTIMIZER:
       name: sgd
       weight_decay: 0.0001
@@ -81,7 +83,6 @@ config:
     INIT_METHOD: tcp
     NCCL_DEBUG: True
   MACHINE:
-    NUM_DATALOADER_WORKERS: 8
     DEVICE: gpu
   CHECKPOINT:
     DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/

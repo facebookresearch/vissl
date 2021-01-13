@@ -135,7 +135,8 @@ def collect_vissl_info(data):
 
 
 def collect_cpu_info():
-    cpu_info = os.popen("lscpu").readlines()
+    with os.popen("lscpu") as f:
+        cpu_info = f.readlines()
     out_cpu_info = []
     for item in cpu_info:
         key = item.strip("\n").split(":")[0].strip()

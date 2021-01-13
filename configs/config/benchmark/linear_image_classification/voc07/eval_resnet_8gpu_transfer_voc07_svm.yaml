@@ -1,8 +1,7 @@
 # @package _global_
-extract_features: True
-train_svm: True
 config:
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
@@ -38,36 +37,35 @@ config:
       COPY_TO_LOCAL_DISK: True
       COPY_DESTINATION_DIR: /tmp/voc2007/
   MODEL:
-    PARAMS_FILE:
-      PATH: "specify path"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify path"
       STATE_DICT_KEY_NAME: classy_state_dict
       # STATE_DICT_KEY_NAME: model_state_dict
-    FEATURE_EVAL_MODE: True
-    EXTRACT_FEATURES_ONLY: True
-    EVAL_FEATURES: ["conv1", "res2", "res3", "res4", "res5"]
-    HEAD:
-      PARAMS: [["mlp", {"dims": [2048, 4]}]]
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+        ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+        ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+        ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+        ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      ]
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-      SHOULD_FLATTEN: True
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[10, 10], 10, 4]],
-          ["AvgPool2d", [[16, 16], 8, 0]],
-          ["AvgPool2d", [[13, 13], 5, 0]],
-          ["AvgPool2d", [[8, 8], 3, 0]],
-          ["AvgPool2d", [[6, 6], 1, 0]],
-      ]
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
   SVM:
-    OUTPUT_DIR: .
     costs:
       costs_list: [0.01, 0.1, 1.0, 2, 5, 10, 15, 20, 50, 100, 1000]
     normalize: True

@@ -56,7 +56,7 @@ echo "HEADER: $HEADER"
 
 ####################### setup experiment dir ###################################
 # create the experiments folder
-RUN_SCRIPT="$EXP_ROOT_DIR/$GITHUB_REPO/tools/distributed_train.py"
+RUN_SCRIPT="$EXP_ROOT_DIR/$GITHUB_REPO/tools/run_distributed_engines.py"
 CHECKPOINT_DIR="$EXP_ROOT_DIR/checkpoints/"
 
 echo "EXP_ROOT_DIR: $EXP_ROOT_DIR"
@@ -88,9 +88,7 @@ srun --label python -u $RUN_SCRIPT \
   hydra.run.dir=$CHECKPOINT_DIR \
   ${CFG[*]} \
   config.CHECKPOINT.DIR=$CHECKPOINT_DIR \
-  config.SVM.OUTPUT_DIR=$CHECKPOINT_DIR \
-  config.NEAREST_NEIGHBOR.OUTPUT_DIR=$CHECKPOINT_DIR \
-  config.MACHINE.NUM_DATALOADER_WORKERS=$NUM_DATA_WORKERS \
+  config.DATA.NUM_DATALOADER_WORKERS=$NUM_DATA_WORKERS \
   config.MULTI_PROCESSING_METHOD=$MULTI_PROCESSING_METHOD \
   config.DISTRIBUTED.INIT_METHOD=tcp \
   config.DISTRIBUTED.RUN_ID=\$dist_run_id " >> "$SCRIPT_PATH"

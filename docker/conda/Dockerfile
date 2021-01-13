@@ -29,6 +29,7 @@ RUN conda install pytorch torchvision cudatoolkit=${CUDA_VER} -c pytorch
 
 # install apex
 ARG TORCH_CUDA_ARCH_LIST
+ARG CUDA_VER
 ADD ./common/install_apex.sh install_apex.sh
 RUN bash ./install_apex.sh && rm install_apex.sh
 
@@ -43,6 +44,6 @@ CMD ["bash"]
 # python -m unittest discover -v -s tests
 
 ######## run gpu test
-# python tools/distributed_train.py \
+# python tools/run_distributed_engines.py \
 #     config=test/circleci/quick_simclr_synthetic \
 #     hydra.verbose=true config.TENSORBOARD_SETUP.USE_TENSORBOARD=true

@@ -3,7 +3,6 @@
 import logging
 import math
 import os
-import pickle
 import subprocess
 from collections import OrderedDict
 
@@ -11,6 +10,7 @@ import numpy as np
 import scipy.io
 import torch
 import torchvision.transforms.functional as TF
+from fvcore.common.file_io import PathManager
 from PIL import Image, ImageFile
 from torch.nn import functional as F
 from torchvision import transforms
@@ -18,21 +18,22 @@ from vissl.utils.instance_retrieval_utils.evaluate import (
     compute_map,
     score_ap_from_ranks_1,
 )
+from vissl.utils.io import load_file
 
 
-def is_revisited_dataset(dataset_name):
+def is_revisited_dataset(dataset_name: str):
     if dataset_name in ["roxford5k", "rparis6k"]:
         return True
     return False
 
 
-def is_instre_dataset(dataset_name):
+def is_instre_dataset(dataset_name: str):
     if dataset_name == "instre":
         return True
     return False
 
 
-def is_whiten_dataset(dataset_name):
+def is_whiten_dataset(dataset_name: str):
     if dataset_name == "whitening":
         return True
     return False
@@ -40,7 +41,7 @@ def is_whiten_dataset(dataset_name):
 
 # pooling + whitening
 # Credits: Matthijs Douze
-def add_bias_channel(x, dim=1):
+def add_bias_channel(x, dim: int = 1):
     bias_size = list(x.size())
     bias_size[dim] = 1
     one = x.new_ones(bias_size)
@@ -48,7 +49,7 @@ def add_bias_channel(x, dim=1):
 
 
 # Credits: Matthijs Douze
-def flatten(x, keepdims=False):
+def flatten(x: torch.Tensor, keepdims: bool = False):
     """
     Flattens B C H W input to B C*H*W output, optionally retains trailing dimensions.
     """
@@ -60,7 +61,14 @@ def flatten(x, keepdims=False):
 
 
 # Credits: Matthijs Douze
-def gem(x, p=3, eps=1e-6, clamp=True, add_bias=False, keepdims=False):
+def gem(
+    x: torch.Tensor,
+    p: int = 3,
+    eps: float = 1e-6,
+    clamp: bool = True,
+    add_bias: bool = False,
+    keepdims: bool = False,
+):
     if p == math.inf or p == "inf":
         x = F.max_pool2d(x, (x.size(-2), x.size(-1)))
     elif p == 1 and not (torch.is_tensor(p) and p.requires_grad):
@@ -77,7 +85,7 @@ def gem(x, p=3, eps=1e-6, clamp=True, add_bias=False, keepdims=False):
 
 
 # Credits: Matthijs Douze
-def l2n(x, eps=1e-6, dim=1):
+def l2n(x: torch.Tensor, eps: float = 1e-6, dim: int = 1):
     x = x / (torch.norm(x, p=2, dim=dim, keepdim=True) + eps).expand_as(x)
     return x
 
@@ -89,12 +97,12 @@ class MultigrainResize(transforms.Resize):
     allowing to resize to a common largest side without cropping
     """
 
-    def __init__(self, size, largest=False, **kwargs):
+    def __init__(self, size: int, largest: bool = False, **kwargs):
         super().__init__(size, **kwargs)
         self.largest = largest
 
     @staticmethod
-    def target_size(w, h, size, largest=False):
+    def target_size(w: int, h: int, size: int, largest: bool = False):
         if (h < w) == largest:
             w, h = size, int(size * h / w)
         else:
@@ -117,9 +125,11 @@ class MultigrainResize(transforms.Resize):
 class WhiteningTrainingImageDataset:
     """ A set of training images for whitening """
 
-    def __init__(self, base_dir, image_list_file):
-        with open(image_list_file) as fopen:
+    def __init__(self, base_dir: str, image_list_file: str, num_samples: int = 0):
+        with PathManager.open(image_list_file) as fopen:
             self.image_list = fopen.readlines()
+        if num_samples > 0:
+            self.image_list = self.image_list[:num_samples]
         self.root = base_dir
         self.N_images = len(self.image_list)
         logging.info(f"Loaded whitening data: {self.N_images}...")
@@ -127,17 +137,22 @@ class WhiteningTrainingImageDataset:
     def get_num_images(self):
         return self.N_images
 
-    def get_filename(self, i):
+    def get_filename(self, i: int):
         return f"{self.root}/{self.image_list[i][:-1]}"
 
 
 class InstreDataset:
-    def __init__(self, dataset_path):
+    def __init__(self, dataset_path: str, num_samples: int = 0):
         self.base_dir = dataset_path
-        gnd_instre = scipy.io.loadmat(os.path.join(self.base_dir, "gnd_instre.mat"))
+        gnd_instre = scipy.io.loadmat(f"{self.base_dir}/gnd_instre.mat")
         self.gnd = gnd_instre["gnd"][0]
         self.qimlist = [fname[0] for fname in gnd_instre["qimlist"][0]]
         self.db_imlist = [fname[0] for fname in gnd_instre["imlist"][0]]
+
+        if num_samples > 0:
+            self.qimlist = self.qimlist[:num_samples]
+            self.db_imlist = self.db_imlist[:num_samples]
+
         self.N_images = len(self.db_imlist)
         self.N_queries = len(self.qimlist)
 
@@ -154,13 +169,13 @@ class InstreDataset:
     def get_num_query_images(self):
         return self.N_queries
 
-    def get_filename(self, i):
+    def get_filename(self, i: int):
         return f"{self.base_dir}/{self.db_imlist[i]}"
 
-    def get_query_filename(self, i):
+    def get_query_filename(self, i: int):
         return f"{self.base_dir}/{self.qimlist[i]}"
 
-    def get_query_roi(self, i):
+    def get_query_roi(self, i: int):
         # INSTRE dataset has no notion of ROI so we return None
         return None
 
@@ -189,7 +204,7 @@ class InstreDataset:
 
 
 class RevisitedInstanceRetrievalDataset:
-    def __init__(self, dataset, dir_main):
+    def __init__(self, dataset: str, dir_main: str):
         # Credits: https://github.com/filipradenovic/revisitop/blob/master/python/dataset.py#L6     # NOQA
 
         self.DATASETS = ["roxford5k", "rparis6k"]
@@ -197,15 +212,14 @@ class RevisitedInstanceRetrievalDataset:
         assert is_revisited_dataset(dataset), f"Unknown dataset: {dataset}!"
 
         # loading imlist, qimlist, and gnd, in cfg as a dict
-        gnd_fname = os.path.join(dir_main, dataset, f"gnd_{dataset}.pkl")
-        with open(gnd_fname, "rb") as f:
-            cfg = pickle.load(f)
+        gnd_fname = f"{dir_main}/{dataset}/gnd_{dataset}.pkl"
+        cfg = load_file(gnd_fname)
         cfg["gnd_fname"] = gnd_fname
         cfg["ext"] = ".jpg"
         cfg["qext"] = ".jpg"
 
-        cfg["dir_data"] = os.path.join(dir_main, dataset)
-        cfg["dir_images"] = os.path.join(cfg["dir_data"], "jpg")
+        cfg["dir_data"] = f"{dir_main}/{dataset}"
+        cfg["dir_images"] = f"{cfg['dir_data']}/jpg"
 
         cfg["n"] = len(cfg["imlist"])
         cfg["nq"] = len(cfg["qimlist"])
@@ -217,15 +231,11 @@ class RevisitedInstanceRetrievalDataset:
             f"queries: {self.get_num_query_images()}"
         )
 
-    def get_filename(self, i):
-        return os.path.join(
-            self.cfg["dir_images"], self.cfg["imlist"][i] + self.cfg["ext"]
-        )
+    def get_filename(self, i: int):
+        return f"{self.cfg['dir_images']}/{self.cfg['imlist'][i] + self.cfg['ext']}"
 
-    def get_query_filename(self, i):
-        return os.path.join(
-            self.cfg["dir_images"], self.cfg["qimlist"][i] + self.cfg["qext"]
-        )
+    def get_query_filename(self, i: int):
+        return f"{self.cfg['dir_images']}/{self.cfg['qimlist'][i] + self.cfg['qext']}"
 
     def get_num_images(self):
         return self.cfg["n"]
@@ -233,10 +243,10 @@ class RevisitedInstanceRetrievalDataset:
     def get_num_query_images(self):
         return self.cfg["nq"]
 
-    def get_query_roi(self, i):
+    def get_query_roi(self, i: int):
         return self.cfg["gnd"][i]["bbx"]
 
-    def score(self, sim, temp_dir):
+    def score(self, sim, temp_dir: str):
         sim = sim.T
         # Credits: https://github.com/filipradenovic/revisitop/blob/master/python/example_evaluate.py  # NOQA
         ranks = np.argsort(-sim, axis=0)
@@ -316,7 +326,8 @@ class InstanceRetrievalImageLoader:
         return im_resized, ratio
 
     def load_and_prepare_whitening_image(self, fname):
-        im = Image.open(fname)
+        with PathManager.open(fname, "rb") as f:
+            im = Image.open(f)
         if im.mode != "RGB":
             im = im.convert(mode="RGB")
         if self.transforms is not None:
@@ -324,14 +335,16 @@ class InstanceRetrievalImageLoader:
         return im
 
     def load_and_prepare_instre_image(self, fname):
-        im = Image.open(fname)
+        with PathManager.open(fname, "rb") as f:
+            im = Image.open(f)
         if self.transforms is not None:
             im = self.transforms(im)
         return im
 
     def load_and_prepare_image(self, fname, roi=None):
         # Read image, get aspect ratio, and resize such as the largest side equals S
-        im = Image.open(fname)
+        with PathManager.open(fname, "rb") as f:
+            im = Image.open(f).convert(mode="RGB")
         im_resized, ratio = self.apply_img_transform(im)
         # If there is a roi, adapt the roi to the new size and crop. Do not rescale
         # the image once again
@@ -346,7 +359,7 @@ class InstanceRetrievalImageLoader:
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         # open path as file to avoid ResourceWarning
         # (https://github.com/python-pillow/Pillow/issues/835)
-        with open(img_path, "rb") as f:
+        with PathManager.open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
         if roi is not None:
             im_resized = img.crop(roi)
@@ -357,7 +370,7 @@ class InstanceRetrievalImageLoader:
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
 # Adapted by: Priya Goyal (prigoyal@fb.com)
 class InstanceRetrievalDataset:
-    def __init__(self, path, eval_binary_path):
+    def __init__(self, path, eval_binary_path, num_samples=None):
         self.path = path
         self.eval_binary_path = eval_binary_path
         # Some images from the Paris dataset are corrupted. Standard practice is
@@ -391,7 +404,7 @@ class InstanceRetrievalDataset:
         self.N_images = None
         self.N_queries = None
         self.q_roi = None
-        self.load()
+        self.load(num_samples=num_samples)
 
     def get_num_images(self):
         return self.N_images
@@ -399,7 +412,7 @@ class InstanceRetrievalDataset:
     def get_num_query_images(self):
         return self.N_queries
 
-    def load(self):
+    def load(self, num_samples=None):
         # Load the dataset GT
         self.lab_root = f"{self.path}/lab/"
         self.img_root = f"{self.path}/jpg/"
@@ -428,7 +441,7 @@ class InstanceRetrievalDataset:
         for e in lab_filenames:
             if e.endswith("_query.txt"):
                 q_name = e[: -len("_query.txt")]
-                with open(f"{self.lab_root}/{e}") as fopen:
+                with PathManager.open(f"{self.lab_root}/{e}") as fopen:
                     q_data = fopen.readline().split(" ")
                 if q_data[0].startswith("oxc1_"):
                     q_filename = q_data[0][5:]
@@ -436,11 +449,11 @@ class InstanceRetrievalDataset:
                     q_filename = q_data[0]
                 self.filename_to_name[q_filename] = q_name
                 self.name_to_filename[q_name] = q_filename
-                with open(f"{self.lab_root}/{q_name}_ok.txt") as fopen:
+                with PathManager.open(f"{self.lab_root}/{q_name}_ok.txt") as fopen:
                     good = {e.strip() for e in fopen}
-                with open(f"{self.lab_root}/{q_name}_good.txt") as fopen:
+                with PathManager.open(f"{self.lab_root}/{q_name}_good.txt") as fopen:
                     good = good.union({e.strip() for e in fopen})
-                with open(f"{self.lab_root}/{q_name}_junk.txt") as fopen:
+                with PathManager.open(f"{self.lab_root}/{q_name}_junk.txt") as fopen:
                     junk = {e.strip() for e in fopen}
                 good_plus_junk = good.union(junk)
                 self.relevants[q_name] = [
@@ -466,25 +479,29 @@ class InstanceRetrievalDataset:
         self.q_index = np.array(
             [self.img_filenames.index(self.name_to_filename[qn]) for qn in self.q_names]
         )
+
         self.N_images = len(self.img_filenames)
         self.N_queries = len(self.q_index)
+
+        if num_samples is not None:
+            self.N_queries = min(self.N_queries, num_samples)
+            self.N_images = min(self.N_images, num_samples)
 
     def score(self, sim, temp_dir):
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
         idx = np.argsort(sim, axis=1)[:, ::-1]
         maps = [
-            self.score_rnk_partial(i, idx[i], temp_dir)
-            for i in range(len(self.q_names))
+            self.score_rnk_partial(i, idx[i], temp_dir) for i in range(self.N_queries)
         ]
-        for i in range(len(self.q_names)):
+        for i in range(self.N_queries):
             logging.info("{0}: {1:.2f}".format(self.q_names[i], 100 * maps[i]))
         logging.info(20 * "-")
         logging.info("Mean: {0:.2f}".format(100 * np.mean(maps)))
 
     def score_rnk_partial(self, i, idx, temp_dir):
-        rnk = np.array(self.img_filenames)[idx]
-        with open("{0}/{1}.rnk".format(temp_dir, self.q_names[i]), "w") as f:
+        rnk = np.array(self.img_filenames[: self.N_images])[idx]
+        with PathManager.open(f"{temp_dir}/{self.q_names[i]}.rnk", "w") as f:
             f.write("\n".join(rnk) + "\n")
         cmd = (
             f"{self.eval_binary_path} {self.lab_root}{self.q_names[i]} "

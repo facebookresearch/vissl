@@ -11,15 +11,16 @@ import logging
 import os
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 
 # COCO API
 from pycocotools.coco import COCO
-from vissl.utils.io import makedir
+from vissl.utils.io import makedir, save_file
 
 
 def get_output_dir():
     curr_folder = os.path.abspath(".")
-    datasets_dir = os.path.join(curr_folder, "datasets")
+    datasets_dir = f"{curr_folder}/datasets"
     logging.info(f"Datasets dir: {datasets_dir}")
     makedir(datasets_dir)
     return datasets_dir
@@ -53,9 +54,9 @@ def get_valid_objs(entry, objs):
 
 
 def get_coco_imgs_labels_info(split, data_source_dir, args):
-    json_file = os.path.join(data_source_dir, f"annotations/instances_{split}2014.json")
-    assert os.path.exists(json_file), "Annotations file does not exist. Abort"
-    json_data = json.load(open(json_file, "r"))
+    json_file = f"{data_source_dir}/annotations/instances_{split}2014.json"
+    assert PathManager.exists(json_file), "Annotations file does not exist. Abort"
+    json_data = json.load(PathManager.open(json_file, "r"))
     image_index = [x["id"] for x in json_data["images"]]
     coco = COCO(json_file)
 
@@ -97,17 +98,17 @@ def get_coco_imgs_labels_info(split, data_source_dir, args):
 
     # label = 1 (present), 0 (not present)
     img_paths, img_labels = [], []
-    train_imgs_path = os.path.join(data_source_dir, "train2014")
-    val_imgs_path = os.path.join(data_source_dir, "val2014")
+    train_imgs_path = f"{data_source_dir}/train2014"
+    val_imgs_path = f"{data_source_dir}/val2014"
     prefix = train_imgs_path if split == "train" else val_imgs_path
     for item in sorted(img_labels_map.keys()):
-        img_paths.append(os.path.join(prefix, item))
+        img_paths.append(f"{prefix}/{item}")
         img_labels.append(img_labels_map[item])
 
     # save to the datasets folder and return the path
     output_dir = get_output_dir()
-    img_info_out_path = os.path.join(output_dir, split + "_images.npy")
-    label_info_out_path = os.path.join(output_dir, split + "_labels.npy")
-    np.save(img_info_out_path, np.array(img_paths))
-    np.save(label_info_out_path, np.array(img_labels))
+    img_info_out_path = f"{output_dir}/{split}_images.npy"
+    label_info_out_path = f"{output_dir}/{split}_labels.npy"
+    save_file(np.array(img_paths), img_info_out_path)
+    save_file(np.array(img_labels), label_info_out_path)
     return [img_info_out_path, label_info_out_path]

@@ -8,6 +8,7 @@ config:
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [everstore]
       LABEL_SOURCES: [disk_filelist]
@@ -24,7 +25,7 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/places205_everstore/
     TEST:
       DATA_SOURCES: [everstore]
@@ -41,26 +42,29 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/places205_everstore/
   METERS:
-    accuracy_list:
-      num_list: 5
-      topk: [1, 5]
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 5
+      topk_values: [1, 5]
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   MODEL:
-    FEATURE_EVAL_MODE: True
-    EVAL_FEATURES: ["conv1", "conv2", "conv3", "conv4", "conv5"]
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv1", ["AvgPool2d", [[19, 19], 4, 0]]],
+          ["conv2",["AvgPool2d", [[12, 12], 3, 0]]],
+          ["conv3",["AvgPool2d", [[9, 9], 1, 0]]],
+          ["conv4",["AvgPool2d", [[9, 9], 1, 0]]],
+          ["conv5",["AvgPool2d", [[8, 8], 1, 0]]],
+      ]
     TRUNK:
       NAME: alexnet_deepcluster
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[19, 19], 4, 0]],
-          ["AvgPool2d", [[12, 12], 3, 0]],
-          ["AvgPool2d", [[9, 9], 1, 0]],
-          ["AvgPool2d", [[9, 9], 1, 0]],
-          ["AvgPool2d", [[8, 8], 1, 0]],
-      ]
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 96, "dims": [9600, 205]}],
@@ -70,11 +74,12 @@ config:
         ["eval_mlp", {"in_channels": 256, "dims": [9216, 205]}],
       ]
       BATCHNORM_MOMENTUM: 0.1
-    PARAMS_FILE:
-      PATH: "specify the weights here"
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify the weights here"
       STATE_DICT_KEY_NAME: model_state_dict
-  CRITERION:
-      name: cross_entropy_multiple_output_single_target
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
       name: sgd
@@ -101,7 +106,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

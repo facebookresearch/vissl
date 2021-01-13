@@ -1,24 +1,53 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+# VISSL uses hydra for configuration management. The usage looks like:
+#    python tools/<binary-name>.py config=<config path>
+# Example:
+#    python tools/run_distributed_engines.py config=pretrain/simclr/simclr_8node_resnet
+#
+#
+# If you create sub-folders in config folder to override parameters, you can use the
+# config files in the subfolder by adding at a "+" sign to the command line input.
+# For example:
+#    python tools/run_distributed_engines.py \
+#        config=pretrain/simclr/simclr_8node_resnet \
+#        +config/pretrain/simclr/optimization=bs32_16nodes \
+#        +config/pretrain/simclr/my_new_subfolder=my_file_in_subfolder \
+#
+#
+# If you want to override single values in the config, you can achieve that with:
+#    python tools/run_distributed_engines.py \
+#        config=pretrain/simclr/simclr_8node_resnet \
+#        +config/pretrain/simclr/my_sub_folder=my_file_name \
+#        config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<weights_path.torch>
+#
+defaults:
+  # you must specify the base config you want to run
+  - config: ???
+
+######################### versioning ###################################
+# this version is checked with the VISSL latest config version in
+# vissl/config/__init__.py
+# Users are recommended to keep a config version in their config file so vissl can
+# take care of upgrades to config files as the version evolves.
+VERSION: 1
 ################## some command line options to decide workflow ###############
 node_id: 0
-extract_features: false
-train_svm: false
-nearest_neighbor_test: false
+engine_name: train
 config:
   # ----------------------------------------------------------------------------------- #
   # GLOBAL DEFAULTS
   # ----------------------------------------------------------------------------------- #
-  VERBOSE: false
+  VERBOSE: False
   LOG_FREQUENCY: 10
-  TEST_ONLY: false
+  TEST_ONLY: False
   TEST_EVERY_NUM_EPOCH: 1
   SEED_VALUE: 0
-  TEST_MODEL: true
+  TEST_MODEL: True
   # Use the forkserver or spawn
   # https://github.com/pytorch/pytorch/blob/master/torch/nn/parallel/distributed.py#L142
   MULTI_PROCESSING_METHOD: "forkserver"
-  MONITOR_PERF_STATS: false
+  MONITOR_PERF_STATS: False
   # we print perf stats (if enabled) after every phase. If we want to print every few
   # batches, set the frequency here.
   PERF_STAT_FREQUENCY: -1
@@ -30,12 +59,18 @@ config:
   # DATA
   # ----------------------------------------------------------------------------------- #
   DATA:
+    # Common data options
+    NUM_DATALOADER_WORKERS: 4 # Set this depending on the number of CPUs you have
+    PIN_MEMORY: true # Makes CPU->GPU copy of the data faster
+    ENABLE_ASYNC_GPU_COPY: true
+    # buffer size for gradient reduction
+    DDP_BUCKET_CAP_MB: 25
     # Training Data Options
     TRAIN:
       # if we want to resume the data sampler as well from a previous iteration
-      USE_STATEFUL_DISTRIBUTED_SAMPLER: false
+      USE_STATEFUL_DISTRIBUTED_SAMPLER: False
       # whether to drop the last incomplete batch per process
-      DROP_LAST: false
+      DROP_LAST: False
       # Sources for reading data.
       # Currently supports: disk_folder and disk_filelist
       # Parallel aligned with DATA_PATHS argument.
@@ -43,14 +78,15 @@ config:
       DATA_PATHS: []
       LABEL_SOURCES: []
       LABEL_PATHS: []
-      MMAP_MODE: true
+      MMAP_MODE: True
       DEFAULT_GRAY_IMG_SIZE: 224
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
-      COLLATE_FUNCTION: "default"
+      COLLATE_FUNCTION: "default_collate"
+      COLLATE_FUNCTION_PARAMS: {}
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
-      COPY_TO_LOCAL_DISK: true
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index
       LABEL_TYPE: "standard"
@@ -64,20 +100,21 @@ config:
       ENABLE_QUEUE_DATASET: False
     TEST:
       # if we want to resume the data sampler as well from a previous iteration
-      USE_STATEFUL_DISTRIBUTED_SAMPLER: false
-      DROP_LAST: false
+      USE_STATEFUL_DISTRIBUTED_SAMPLER: False
+      DROP_LAST: False
       DATA_SOURCES: []
       DATA_PATHS: []
       LABEL_SOURCES: []
       LABEL_PATHS: []
-      MMAP_MODE: true
+      MMAP_MODE: True
       DEFAULT_GRAY_IMG_SIZE: 224
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
-      COLLATE_FUNCTION: "default"
+      COLLATE_FUNCTION: "default_collate"
+      COLLATE_FUNCTION_PARAMS: {}
       DATA_LIMIT: -1
       DATASET_NAMES: ["imagenet1k_folder"]
-      COPY_TO_LOCAL_DISK: false
+      COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""
       # either standard | sample_index
       LABEL_TYPE: "standard"
@@ -93,41 +130,102 @@ config:
   # ----------------------------------------------------------------------------------- #
   # METERS
   # ----------------------------------------------------------------------------------- #
+  # what meters to attach. All the mentioned meters will be calculated.
   METERS:
-    accuracy_list:
-      num_list: 1
-      topk: [1]
+    name: ""
+    # whether to calculate the meter during training as well. Sometimes, if the training
+    # data size is too big, it could be hard to compute the meter on training set.
+    enable_training_meter: True
+    accuracy_list_meter:
+      # number of accuracy meters. In cases like linear evaluation of feature, we perform
+      # evaluation of several layers and there's a separate meter for each layer.
+      # num_meters basically specifices number of meters.
+      num_meters: 1
+      # what topk values to calculate. Example topk_values = [1, 5] means top1 and top5
+      # both will be calculated
+      topk_values: [1]
+      # names of the meter. Useful in cases where we have several meters. For the linear
+      # feature evaluation workflows, meter name is automatically inferred.
+      meter_names: []
+    mean_ap_list_meter:
+      # number of classes
+      num_classes: 9605
+      # number of accuracy meters. In cases like linear evaluation of feature, we perform
+      # evaluation of several layers and there's a separate meter for each layer.
+      # num_meters basically specifices number of meters.
+      num_meters: 1
+      # maximum number of samples to have in the meter. This is a global variable. Ideally
+      # set it to number of examples in test set.
+      max_cpu_capacity: -1
+      # names of the meter. Useful in cases where we have several meters. For the linear
+      # feature evaluation workflows, meter name is automatically inferred.
+      meter_names: []
 
   # ----------------------------------------------------------------------------------- #
-  # MACHINE (cpu, gpu, data workers)
+  # MACHINE (cpu, gpu)
   # ----------------------------------------------------------------------------------- #
   MACHINE:
-    NUM_DATALOADER_WORKERS: 4
     DEVICE: "gpu"
-    PIN_MEMORY: true
 
   # ----------------------------------------------------------------------------------- #
   # MODEL
   # ----------------------------------------------------------------------------------- #
   MODEL:
+    # sometimes we can avoid CUDA OOM issues by clearing out the cache. Clearing out cache
+    # is slow so chose wisely.
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: False
+      CLEAR_FREQ: 100
     # the model parameter names that should not be trained
     NON_TRAINABLE_PARAMS: []
     TEMP_FROZEN_PARAMS_ITER_MAP: []
-    # Colorization models take lab input. Everything else takes rgb
+    # Colorization models take lab input. Everything else takes rgb.
     INPUT_TYPE: "rgb"
-    # if you want to evaluate several feature layers of the pre-trained model on
-    # benchmark tasks like linear classification, set this to True
-    FEATURE_EVAL_MODE: false
-    # if you want to only extract features and not train linear cls, set this to true
-    EXTRACT_FEATURES_ONLY: false
-    # model features that should be evaluated. Consult the respective model python
-    # files for names of layers.
-    EVAL_FEATURES: []
-    # Multi-input model
-    # input keys in the sample dictionary and which head uses them
-    # for example, input contains "images" and "patches" and there
+    # Multi-input model: input keys in the sample dictionary and which head
+    # uses them for example, input contains "images" and "patches" and there
     # is one separate head applied to images and another to patches
     MULTI_INPUT_HEAD_MAPPING: []
+    # In case of mult-resolution inputs, we combine the same resolution inputs and
+    # run forward pass. However, for a very large model where gpu memory is bottleneck,
+    # we can optimize memory a bit by running forward pass through each crop
+    # separately.
+    SINGLE_PASS_EVERY_CROP: False
+    # Use activation checkpointing in the training phase
+    ACTIVATION_CHECKPOINTING:
+      USE_ACTIVATION_CHECKPOINTING: false
+      NUM_ACTIVATION_CHECKPOINTING_SPLITS: 2
+    # ----------------------------------------------------------------------------------- #
+    # Feature evaluation settings
+    # ----------------------------------------------------------------------------------- #
+    FEATURE_EVAL_SETTINGS:
+      # for evaluating the features on any evaluation task/benchmark, set this to True
+      EVAL_MODE_ON: False
+      # if you want to evaluate several feature layers of the pre-trained model on
+      # benchmark tasks like linear classification, set this to True. This freezes the model
+      # trunk for feature evaluation.
+      FREEZE_TRUNK_ONLY: False
+      # if you want to evaluate the full self-supervised model including the trunk and heads,
+      # and want to freeze trunk and head both, set this to True
+      FREEZE_TRUNK_AND_HEAD: False
+      # if you want to extract features of trunk only, set this to True
+      EXTRACT_TRUNK_FEATURES_ONLY: False
+      # if we want to evaluate the full model, this requires loading the head weights as well
+      # from model weights file. In this case, set the following to True.
+      EVAL_TRUNK_AND_HEAD: False
+      # whether features should be flattened to result in N x D feature shape
+      SHOULD_FLATTEN_FEATS: True
+      # model features that should be evaluated for linear classification and what
+      # pooling to apply on features. Could be any pooling operation or Identity.
+      #
+      # Example: for evaluating 5 layers of ResNet-50,
+      #       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+      #           ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+      #           ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+      #           ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+      #           ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+      #           ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      #       ]
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
     # ----------------------------------------------------------------------------------- #
     # MODEL TRUNK
     # ----------------------------------------------------------------------------------- #
@@ -135,6 +233,9 @@ config:
       NAME: "resnet"
       # for any extra params that the model requires, pass them in the trunk_params
       TRUNK_PARAMS:
+        # ------------------------------------------------------------- #
+        # ResNe(X)t params
+        # ------------------------------------------------------------- #
         RESNETS:
           DEPTH: 50
           WIDTH_MULTIPLIER: 1
@@ -146,35 +247,72 @@ config:
           # for the pixel-wise task. Torchvision default is stride=2 and all other models
           # use this so we set the default as 2.
           LAYER4_STRIDE: 2
-        EFFICIENT_NETS: {}  # follow classy vision for these
-        REGNETS: {}
-      SHOULD_FLATTEN: false
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[10, 10], 10, 4]],
-          ["AvgPool2d", [[16, 16], 8, 0]],
-          ["AvgPool2d", [[13, 13], 5, 0]],
-          ["AvgPool2d", [[8, 8], 3, 0]],
-          ["AvgPool2d", [[6, 6], 1, 0]],
-      ]
+
+        # ------------------------------------------------------------- #
+        # EfficientNet params
+        # ------------------------------------------------------------- #
+        # follow classy vision for efficientNet settings
+        EFFICIENT_NETS: {}
+
+        # ------------------------------------------------------------- #
+        # RegNet params
+        # ------------------------------------------------------------- #
+        REGNET: {}
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
     # ----------------------------------------------------------------------------------- #
     HEAD:
-      # List of Pairs:
-      # Pair[0] = Type of Head.
-      # Pair[1] = kwargs passed to head constructor.
+      # PARAMS is a List of Pairs:
+      #   Pair[0] = Name of Head.
+      #   Pair[1] = kwargs passed to head constructor.
+      # Example of heads:
+      # Case1: Simple Head containing single module - Single Input, Single output
+      #          PARAMS: [
+      #            ["mlp", {"dims": [2048, 128]}]
+      #          ]
+      # Case2: Complex Head containing chain of head modules - Single Input, Single output
+      #          PARAMS: [
+      #              ["mlp", {"dims": [2048, 1000], "use_bn": False, "use_relu": False}],
+      #              ["siamese_concat_view", {"num_towers": 9}],
+      #              ["mlp", {"dims": [9000, 128]}]
+      #          ]
+      # Case3: Multiple Heads (example 2 heads) - Single input, multiple output
+      #        Can be used for multi-task learning
+      #          PARAMS: [
+      #            # head 0
+      #            [
+      #              ["mlp", {"dims": [2048, 128], "use_bn": False, "use_relu": False}],
+      #              ["siamese_concat_view", {"num_towers": 9}],
+      #              ["mlp", {"dims": [1152, 128]}],
+      #            ],
+      #            # head 1
+      #            [
+      #              ["mlp", {"dims": [2048, 128]}]
+      #            ],
+      #          ]
+      # Case4: Multiple Heads (example 5 simple heads) - Single input, multiple output.
+      #        PARAMS: [
+      #          ["eval_mlp", {"in_channels": 64, "dims": [9216, 1000]}],
+      #          ["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
+      #          ["eval_mlp", {"in_channels": 512, "dims": [8192, 1000]}],
+      #          ["eval_mlp", {"in_channels": 1024, "dims": [9216, 1000]}],
+      #          ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+      #        ]
       PARAMS: []
       BATCHNORM_EPS: 1e-5
       BATCHNORM_MOMENTUM: 0.1
+      # if we want to multiply the initialization of the head parameters by a factor,
+      # specify the multiplier. By default, set to 1.0
+      PARAMS_MULTIPLIER: 1.0
     # ----------------------------------------------------------------------------------- #
     # Synchronized BatchNorm Setup
     # ----------------------------------------------------------------------------------- #
     # if we want to convert all the batch norm layers in the model to use SyncBN.
     # There are two options: APEX syncBN and PyTorch SyncBN.
     SYNC_BN_CONFIG:
-      CONVERT_BN_TO_SYNC_BN: false
+      CONVERT_BN_TO_SYNC_BN: False
       SYNC_BN_TYPE: "pytorch"  # apex | pytorch
-      # if group_size=-1, will set group_size=num_gpus
+      # if group_size=-1, will set group_size=num_gpus per node
       # if group_size>0, will set group_size=value set by user
       # if group_size=0, will set process_group=None
       GROUP_SIZE: -1
@@ -182,19 +320,20 @@ config:
     # MIXED PRECISION SETUP
     # ----------------------------------------------------------------------------------- #
     AMP_PARAMS:
-      USE_AMP: false
+      USE_AMP: False
       # Use O1 as it is robust and stable than O3. If you want to use O3, we recommend
       # the following setting:
-      # {"opt_level": "O3", "keep_batchnorm_fp32": true, "master_weights": true, "loss_scale": "dynamic"}
+      # {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
       AMP_ARGS: {"opt_level": "O1"}
+      AMP_TYPE: "apex"  # apex | pytorch
     MODEL_COMPLEXITY:
       # set this to True if you want to compute flops, params, activations in your model.
-      COMPUTE_COMPLEXITY: True
+      COMPUTE_COMPLEXITY: False
       INPUT_SHAPE: [3, 224, 224]
     # parameters for initializing a model from a pre-trained model file
-    PARAMS_FILE:
+    WEIGHTS_INIT:
       # path to the .torch weights files
-      PATH: ""
+      PARAMS_FILE: ""
       # name of the state dict. checkpoint = {"classy_state_dict": {layername:value}}. Options:
       #   1. classy_state_dict - if model is trained and checkpointed with VISSL.
       #      checkpoint = {"classy_state_dict": {layername:value}}
@@ -205,127 +344,224 @@ config:
       STATE_DICT_KEY_NAME: "classy_state_dict"
       # specify what layer should not be loaded. Layer names with this key are not copied
       # By default, set to BatchNorm stats "num_batches_tracked" to be skipped.
-      SKIP_LAYERS: "num_batches_tracked"
+      SKIP_LAYERS: ["num_batches_tracked"]
       ####### If loading a non-VISSL trained model, set the following two args carefully #########
       # to make the checkpoint compatible with VISSL, if you need to remove some names
       # from the checkpoint keys, specify the name
       REMOVE_PREFIX: ""
       # In order to load the model (if not trained with VISSL) with VISSL, there are 2 scenarios:
-      #    1. using MODEL.FEATURE_EVAL_MODE=true where you are interested in evaluating the
-      #       model features and freeze the trunk. Set APPEND_PREFIX="trunk.base_model."
-      #       This assumes that your model is compatible with the VISSL trunks. The VISSL
-      #       trunks start with "_feature_blocks." prefix. If your model doesn't have these
-      #       prefix you can append them. For example:
-      #       for TorchVision ResNet trunk, set APPEND_PREFIX="trunk.base_model._feature_blocks."
+      #    1. If you are interested in evaluating the model features and freeze the trunk.
+      #       Set APPEND_PREFIX="trunk.base_model." This assumes that your model is compatible
+      #       with the VISSL trunks. The VISSL trunks start with "_feature_blocks." prefix. If
+      #       your model doesn't have these prefix you can append them. For example:
+      #       For TorchVision ResNet trunk, set APPEND_PREFIX="trunk.base_model._feature_blocks."
       #    2. where you want to load the model simply and finetune the full model.
       #       Set APPEND_PREFIX="trunk."
       #       This assumes that your model is compatible with the VISSL trunks. The VISSL
       #       trunks start with "_feature_blocks." prefix. If your model doesn't have these
       #       prefix you can append them.
+      #       For TorchVision ResNet trunk, set APPEND_PREFIX="trunk._feature_blocks."
       # NOTE: the prefix is appended to all the layers in the model
       APPEND_PREFIX: ""
 
   # ----------------------------------------------------------------------------------- #
-  # CRITERION
+  # LOSS
   # ----------------------------------------------------------------------------------- #
-  CRITERION:
+  LOSS:
     name: "CrossEntropyLoss"
-    ignore_index: -1
-    # generic flag to enable L2 normalization in a loss function. Currently supported
-    # for cross_entropy_multiple_output_single_target loss only.
-    normalize_output: false
-    # following parameters are auto-filled before the criterion is created. They are
-    # useful in cases like Memory bank which require allocating the buffer.
-    NUM_TRAIN_SAMPLES: -1    # @auto-filled
-    NUM_TEST_SAMPLES: -1     # @auto-filled
+
+    # ----------------------------------------------------------------------------------- #
+    # Standard PyTorch Cross-Entropy Loss. Use the loss name exactly as in PyTorch.
+    # pass any variables that the loss takes.
+    # ----------------------------------------------------------------------------------- #
+    CrossEntropyLoss:
+      ignore_index: -1
+
+    # ----------------------------------------------------------------------------------- #
+    # Cross-Entropy Loss for multiple input and same target
+    # ----------------------------------------------------------------------------------- #
+    cross_entropy_multiple_output_single_target:
+      weight: null
+      reduction: "mean"
+      ignore_index: -1
+      # generic flag to enable L2 normalization in a loss function. Currently supported
+      # for cross_entropy_multiple_output_single_target loss only.
+      normalize_output: False
+      # if we want to use softmax with temperature i.e. the NLL(log_softmax(input/temperature))
+      # then set the desired temperature value.
+      temperature: 1.0
+
+    # ----------------------------------------------------------------------------------- #
+    # BCELogits for multiple input and same target.
+    # Applicable for multi-label classification problems.
+    # ----------------------------------------------------------------------------------- #
+    bce_logits_multiple_output_single_target:
+      reduction: "none"
+      world_size: 1
+      normalize_output: False
 
     # ----------------------------------------------------------------------------------- #
     # NCE LOSS (Noise Contrastive Estimator)
     # ----------------------------------------------------------------------------------- #
-    NCE_LOSS:
+    nce_loss_with_memory:
       # setting below to "cross_entropy" yields the InfoNCE loss
-      LOSS_TYPE: "nce"
-      NORM_EMBEDDING: true
-      TEMPERATURE: 0.07
+      loss_type: "nce"
+      norm_embedding: True
+      temperature: 0.07
       # if the NCE loss is computed between multiple pairs, we can set a loss weight per term
       # can be used to weight different pair contributions differently.
-      LOSS_WEIGHTS: [1.0]
-      NORM_CONSTANT: -1
-      UPDATE_MEM_WITH_EMB_INDEX: -100
-      NEGATIVE_SAMPLING_PARAMS:
-        NUM_NEGATIVES: 16000
-        TYPE: "random"
-      MEMORY_PARAMS:
-        MEMORY_SIZE: -1
-        EMBEDDING_DIM: 128
-        MOMENTUM: 0.5
-        NORM_INIT: true
-        UPDATE_MEM_ON_FORWARD: true
+      loss_weights: [1.0]
+      norm_constant: -1
+      update_mem_with_emb_index: -100
+      negative_sampling_params:
+        num_negatives: 16000
+        type: "random"
+      memory_params:
+        memory_size: -1
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: True
+        update_mem_on_forward: True
+      # following parameters are auto-filled before the loss is created.
+      num_train_samples: -1    # @auto-filled
 
     # ----------------------------------------------------------------------------------- #
     # SimCLR InfoNCE LOSS (Specific to SimCLR https://arxiv.org/abs/2002.05709)
     # ----------------------------------------------------------------------------------- #
-    SIMCLR_INFO_NCE_LOSS:
-      TEMPERATURE: 0.1
-      BUFFER_PARAMS:
-        WORLD_SIZE: 64
-        EMBEDDING_DIM: 128
-        EFFECTIVE_BATCH_SIZE: 4096
-      MULTI_CROP_PARAMS: # (as proposed in SwAV https://arxiv.org/abs/2006.09882)
-        NMB_CROPS: 2
+    simclr_info_nce_loss:
+      temperature: 0.1
+      buffer_params:
+        world_size: 64
+        embedding_dim: 128
+        effective_batch_size: 4096
+
+    # ----------------------------------------------------------------------------------- #
+    # Multi-crop version of SimCLR InfoNCE LOSS (supports multicrop augmentation proposed
+    # in https://arxiv.org/abs/2006.09882)
+    # ----------------------------------------------------------------------------------- #
+    multicrop_simclr_info_nce_loss:
+      temperature: 0.1
+      num_crops: 2
+      buffer_params:
+        world_size: 64
+        embedding_dim: 128
+        effective_batch_size: 4096
 
     # ----------------------------------------------------------------------------------- #
     # SwAV LOSS (Specific to SwAV https://arxiv.org/abs/2006.09882)
     # ----------------------------------------------------------------------------------- #
-    SWAV_LOSS:
-      EMBEDDING_DIM: 128
-      TEMPERATURE: 0.1
-      USE_DOUBLE_PRECISION: false
-      NORMALIZE_LAST_LAYER: true
-      NMB_ITERS: 3
-      EPSILON: 0.05
-      NMB_CROPS: 2
-      CROPS_FOR_ASSIGN: [0, 1]
-      NMB_PROTOTYPES: [3000]
-      QUEUE:
-        QUEUE_LENGTH: 0
-        START_ITER: 0
-        LOCAL_QUEUE_LENGTH: 0
+    swav_loss:
+      embedding_dim: 128
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      num_crops: 2
+      crops_for_assign: [0, 1]
+      num_prototypes: [3000]
+      temp_hard_assignment_iters: 0
+      output_dir: ""  # for dumping the debugging info in case loss becomes NaN
+      queue:
+        queue_length: 0
+        start_iter: 0
+        local_queue_length: 0
+
+    # ----------------------------------------------------------------------------------- #
+    # SwAV MOMENTUM LOSS
+    # ----------------------------------------------------------------------------------- #
+    swav_momentum_loss:
+      momentum: 0.99
+      momentum_eval_mode_iter_start: 0
+      embedding_dim: 128
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      num_crops: 2
+      crops_for_assign: [0, 1]
+      num_prototypes: [3000]
+      queue:
+        queue_length: 0
+        start_iter: 0
+        local_queue_length: 0
 
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#
-    DEEPCLUSTERV2_LOSS:
-      DROP_LAST: true
+    deepclusterv2_loss:
+      DROP_LAST: True
       BATCHSIZE_PER_REPLICA: 256
-      NMB_CROPS: 2
-      TEMPERATURE: 0.1
-      NMB_CLUSTERS: [3000, 3000, 3000]
-      KMEANS_ITERS: 10
-      MEMORY_PARAMS:
-        CROPS_FOR_MB: [0]
-        EMBEDDING_DIM: 128
+      num_crops: 2
+      temperature: 0.1
+      num_clusters: [3000, 3000, 3000]
+      kmeans_iters: 10
+      memory_params:
+        crops_for_mb: [0]
+        embedding_dim: 128
+      # following parameters are auto-filled before the loss is created.
+      num_train_samples: -1    # @auto-filled
+
+    # ----------------------------------------------------------------------------------- #
+    #  MoCo Loss (http://arxiv.org/abs/1911.05722)
+    # ----------------------------------------------------------------------------------- #
+    moco_loss:
+      embedding_dim: 128
+      queue_size: 65536
+      momentum: 0.999
+      temperature: 0.2
 
   # ----------------------------------------------------------------------------------- #
   # OPTIMIZER
   # ----------------------------------------------------------------------------------- #
   OPTIMIZER:
     name: "sgd"
-    use_larc: false  # supported for SGD only for now
+    use_larc: False  # supported for SGD only for now
     larc_config:
-      clip: false
+      clip: False
       eps: 1e-08
       trust_coefficient: 0.001
     weight_decay: 0.0001
     momentum: 0.9
-    nesterov: false
+    nesterov: False
     num_epochs: 90
-    regularize_bn: false
-    regularize_bias: true
+    regularize_bn: False
+    regularize_bias: True
+    # we support using a different LR and weight decay for head and trunk.
+    # one needs to set the flag "use_different_values: True" in order to enable
+    # this functionality. We use the same type of param scheduler for the trunk and head
+    # but allow different LR and weight decay values.
+    head_optimizer_params:
+      use_different_lr: False
+      use_different_wd: False
+      weight_decay: 0.0001
     param_schedulers:
       lr:
         auto_lr_scaling:
-          auto_scale: false
+          auto_scale: False
+          base_value: 0.1
+          base_lr_batch_size: 256
+        name: "multistep"
+        update_interval: "epoch"
+        values: [0.1, 0.01, 0.001]
+        milestones: [30, 60]
+        # The below parameters are valid for lr.name = "composite". Various schedulers
+        # can then be composed together for the training. For example: linear warmup +
+        # multistep schedule after warmup.
+        schedulers: []
+        interval_scaling: []
+        lengths: []
+        # =====cosine learning rate specific =======
+        start_value: 0.1
+        end_value: 0.0
+        # =====constant learning rate specific =======
+        value: 0.1
+      # if we want to use a different LR scheduler for the head, then specify
+      # the lr_head similar to "lr"
+      lr_head:
+        auto_lr_scaling:
+          auto_scale: False
           base_value: 0.1
           base_lr_batch_size: 256
         name: "multistep"
@@ -347,8 +583,8 @@ config:
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #
   CLUSTERFIT:
-    OUTPUT_DIR: ""
     NUM_CLUSTERS: 16000
+    # currently we only support faiss backend for clustering.
     CLUSTER_BACKEND: "faiss"
     # how many iterations to use for faiss
     N_ITER: 50
@@ -361,7 +597,9 @@ config:
   # TRAINER (define your train step)
   # ----------------------------------------------------------------------------------- #
   TRAINER:
-    TRAIN_STEP_NAME: "standard"
+    TRAIN_STEP_NAME: "standard_train_step"
+    TASK_NAME : "self_supervision_task"
+
 
   # ----------------------------------------------------------------------------------- #
   # CHECKPOINT
@@ -369,15 +607,28 @@ config:
   CHECKPOINT:
     DIR: "."
     # for the checkpoinint, we can append the RUN_ID if we want
-    APPEND_DISTR_RUN_ID: false
+    APPEND_DISTR_RUN_ID: False
     BACKEND: "disk"
     # In case of distributed multi-node training, simply use the same RUN_ID and DIR
-    AUTO_RESUME: true
+    AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
     # if we want to checkpoint model at various iterations as well and not just phase
     CHECKPOINT_ITER_FREQUENCY: -1
     # if we want to restart a training even if it has already succeeded on this machine
-    OVERWRITE_EXISTING: false
+    OVERWRITE_EXISTING: False
+    # we can specify what "latest" checkpoint to use to resume training. This is only valid
+    # in case a training that needs to be resumed. If the training that has already finished
+    # this parameter is useless.  Sometimes the latest checkpoints could be corrupt so this
+    # option helps to resume from instead a few checkpoints before the last checkpoint.
+    # Possibilities:
+    #   1) LATEST_CHECKPOINT_RESUME_FILE_NUM = 1 -> resume from the latest checkpoint
+    #   2) LATEST_CHECKPOINT_RESUME_FILE_NUM = 2 -> resume from the second latest checkpoint
+    #   2) LATEST_CHECKPOINT_RESUME_FILE_NUM = N -> resume from the Nth latest checkpoint
+    LATEST_CHECKPOINT_RESUME_FILE_NUM: 1
+    # by default, we create a symlink to the latest checkpoint file. One can use
+    # the symlink to resume the model trainings. This helps ensure that the training
+    # always resumes from a valid checkpoint.
+    USE_SYMLINK_CHECKPOINT_FOR_RESUME: False
 
   # ----------------------------------------------------------------------------------- #
   # DISTRIBUTED TRAINING (1-gpu, multi-gpu, multi-node)
@@ -386,9 +637,10 @@ config:
     # backend for communication across gpus. Use nccl by default. For cpu training, set
     # gloo as the backend.
     BACKEND: "nccl"
-    NCCL_DEBUG: false
+    NCCL_DEBUG: False
+    NCCL_SOCKET_NTHREADS: ""
     # whether model buffers are BN buffers are broadcast in every forward pass
-    BROADCAST_BUFFERS: true
+    BROADCAST_BUFFERS: True
     # number of machines to use in training
     NUM_NODES: 1
     # set this to the number of gpus per machine. This ensrures that each gpu of the
@@ -399,28 +651,29 @@ config:
     # every training run should have a unique id. Following are the options:
     #   1. If using INIT_METHOD=env, RUN_ID="" is fine.
     #   2. If using INIT_METHOD=tcp,
-    #      - if you use > 1 machine, set port yourself. RUN_ID="127.0.0.1:{port}".
+    #      - if you use > 1 machine, set port yourself. RUN_ID="localhost:{port}".
     #      - If using 1 machine, set RUN_ID=auto and a free port will be automatically selected
     #   3. IF using INIT_METHOD=file, RUN_ID={file_path}
-    RUN_ID: ""
+    RUN_ID: "auto"
+    # if True, does the gradient reduction in DDP
+    MANUAL_GRADIENT_REDUCTION: False
 
   # ----------------------------------------------------------------------------------- #
   # SVM (benchmark)
   # ----------------------------------------------------------------------------------- #
   SVM:
-    OUTPUT_DIR: "."
-    normalize: true
+    normalize: True
     cls_list: []
     loss: "squared_hinge"
     penalty: "l2"
-    dual: true
+    dual: True
     max_iter: 2000
     cross_val_folds: 3
     costs:
       costs_list: [0.1, 0.01]
       base: -1.0
       power_range: [4, 20]
-    force_retrain: false
+    force_retrain: False
     low_shot:
       dataset_name: "voc"
       sample_inds: [1, 2, 3, 4, 5]
@@ -445,7 +698,7 @@ config:
     # Path to a temporary directory to store features and scores
     TEMP_DIR: "/tmp/instance_retrieval/"
     # Whether to apply PCA/whitening or not
-    SHOULD_TRAIN_PCA_OR_WHITENING: true
+    SHOULD_TRAIN_PCA_OR_WHITENING: True
     # gem | rmac | l2_norm
     FEATS_PROCESSING_TYPE: ""
     # valid only for GeM pooling of features
@@ -457,71 +710,25 @@ config:
   # K-NEAREST NEIGHBOR (benchmark)
   # ----------------------------------------------------------------------------------- #
   NEAREST_NEIGHBOR:
-    OUTPUT_DIR: ""
     # temperature value to use
     SIGMA: 0.1
     TOPK: 200
-    # if the features should be l2 normalized, set this to true
-    L2_NORM_FEATS: false
+    # if the features should be l2 normalized, set this to True
+    L2_NORM_FEATS: False
 
   # ----------------------------------------------------------------------------------- #
   # TENSORBOARD (visualization)
   # ----------------------------------------------------------------------------------- #
   TENSORBOARD_SETUP:
-    USE_TENSORBOARD: false
+    USE_TENSORBOARD: False
     LOG_DIR: "."
-    EXPERIMENT_LOG_DIR: ""
-    LOG_ACTIVATIONS: True
+    EXPERIMENT_LOG_DIR: "tensorboard"
     # flush logs every n minutes
     FLUSH_EVERY_N_MIN: 5
-
-
-# If you create sub-folders in configs to override, you must follow one of the
-# two options:
-#
-# 1. you can add your defaults here to the list, if you want and run like this:
-#    python tools/distributed_train.py \
-#        config=integration_test/quick_simclr \
-#        config/pretrain/simple_clr/optimization=bs32_16nodes
-#
-# 2. at runtime, add a "+" sign to the input. So run like this:
-#    python tools/distributed_train.py \
-#        config=integration_test/quick_simclr \
-#        +config/pretrain/simple_clr/models=resnext101
-#
-# If you want to override single values in the config, you can achieve that with:
-#    python tools/distributed_train.py \
-#        config=integration_test/quick_simclr \
-#        +config/pretrain/simple_clr/my_sub_folder=my_file_name \
-#        config.MODEL.PARAMS_FILE.PATH=<weights_path.torch>
-#
-# TODO: (prigoyal) figure out whether we should support these defaults or not
-defaults:
-  # you must specify the base config you want to run
-  - config: ???
-  ####### some pre=traning related paths
-  - config/pretrain/datasets: null
-  # simple_clr
-  - config/pretrain/simple_clr/models: null
-  - config/pretrain/simple_clr/transforms: null
-  - config/pretrain/simple_clr/optimization: null
-  # SwAV
-  - config/pretrain/swav/models: null
-  - config/pretrain/swav/optimization: null
-  # Jigsaw
-  - config/pretrain/jigsaw/optimization: null
-  - config/pretrain/jigsaw/permutations: null
-  # NPID
-  - config/pretrain/npid/models: null
-  - config/pretrain/npid/optimizations: null
-  # RotNet
-  - config/pretrain/rotnet/optimization: null
-  ######### some benchmark related paths
-  - config/benchmark/imagenet1k_fulltune/models: null
-  - config/benchmark/linear_image_classification/imagenet1k/models: null
-  - config/benchmark/linear_image_classification/inaturalist18/models: null
-  - config/benchmark/linear_image_classification/places205/models: null
-  - config/benchmark/linear_image_classification/voc07/models: null
-  - config/benchmark/nearest_neighbor/models: null
-  - config/benchmark/semi_supervised/dataset: null
-  - config/benchmark/semi_supervised/models: null
+    # whether the log the model parameters to tensorboard
+    LOG_PARAMS: True
+    # whether the log the model parameters gradients to tensorboard
+    LOG_PARAMS_GRADIENTS: True
+    # if we want to log the model parameters every few iterations, set the iteration
+    # frequency. -1 means the params will be logged only at the end of epochs.
+    LOG_PARAMS_EVERY_N_ITERS: 310

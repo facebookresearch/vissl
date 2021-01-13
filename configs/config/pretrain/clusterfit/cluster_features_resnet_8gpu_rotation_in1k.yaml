@@ -3,6 +3,7 @@ config:
   # must set the TEST_MODEL to false if we don't want to extract features on TEST
   TEST_MODEL: False
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
@@ -18,35 +19,34 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_TO_LOCAL_DISK: False
   MODEL:
-    FEATURE_EVAL_MODE: True
-    EXTRACT_FEATURES_ONLY: True
-    EVAL_FEATURES: ["res5"]
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res5", ["AvgPool2d", [[7, 7], 1, 0]]],
+      ]
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-      SHOULD_FLATTEN: True
-      LINEAR_FEAT_POOL_OPS: [
-          ["AvgPool2d", [[7, 7], 1, 0]],
-      ]
-    HEAD:
-      PARAMS: [["mlp", {"dims": [2048, 1000]}]]
-    PARAMS_FILE:
-      PATH: "specify weights to use for clustering."
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify weights to use for clustering."
       STATE_DICT_KEY_NAME: classy_state_dict
+      SKIP_LAYERS: ["num_batches_tracked", "heads"]
       # REMOVE_PREFIX: "trunk."
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
   CLUSTERFIT:
-    OUTPUT_DIR: .
     NUM_CLUSTERS: 16000
     CLUSTER_BACKEND: faiss
     N_ITER: 50

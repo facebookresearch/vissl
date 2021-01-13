@@ -1,42 +1,42 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 import pickle
 import threading
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 from sklearn.model_selection import cross_val_score
 from sklearn.svm import LinearSVC
+from vissl.utils.io import load_file, save_file
 from vissl.utils.svm_utils.evaluate import get_precision_recall
 
 
 # Turning it into a class to encapsulate the training and evaluation logic
 # together unlike OSS benchmark which has 3 scripts.
 class SVMTrainer(object):
-    def __init__(self, config, layer):
+    def __init__(self, config, layer, output_dir):
         self.config = config
         self.normalize = config["normalize"]
         self.layer = layer
-        self.output_dir = self._get_output_dir(self.config["OUTPUT_DIR"])
+        self.output_dir = self._get_output_dir(output_dir)
         self.costs_list = self._get_costs_list()
         self.train_ap_matrix = None
         self.cls_list = []
 
     def _get_output_dir(self, cfg_out_dir):
-        odir = os.path.join(os.path.abspath(cfg_out_dir), self.layer)
-        if not os.path.exists(odir):
-            os.makedirs(odir)
+        odir = f"{cfg_out_dir}/{self.layer}"
+        PathManager.mkdirs(odir)
         logging.info(f"Output directory for SVM results: {odir}")
         return odir
 
     def load_input_data(self, data_file, targets_file):
-        assert os.path.exists(data_file), "Data file not found. Abort!"
-        assert os.path.exists(targets_file), "Targets file not found. Abort!"
+        assert PathManager.exists(data_file), "Data file not found. Abort!"
+        assert PathManager.exists(targets_file), "Targets file not found. Abort!"
         # load the features and the targets
         logging.info("loading features and targets...")
-        targets = np.load(targets_file, encoding="latin1")
-        features = np.array(np.load(data_file, encoding="latin1")).astype(np.float64)
+        targets = load_file(targets_file)
+        features = np.array(load_file(data_file)).astype(np.float64)
         assert features.shape[0] == targets.shape[0], "Mismatched #images"
         logging.info(f"Loaded features: {features.shape} and targets: {targets.shape}")
         return features, targets
@@ -69,16 +69,18 @@ class SVMTrainer(object):
 
     def _get_svm_model_filename(self, cls_num, cost):
         cls_cost = str(cls_num) + "_cost" + str(float(cost))
-        out_file = os.path.join(self.output_dir, "cls" + cls_cost + ".pickle")
-        ap_matrix_out_file = os.path.join(self.output_dir, "AP_cls" + cls_cost + ".npy")
+        out_file = f"{self.output_dir}/cls{cls_cost}.pickle"
+        ap_matrix_out_file = f"{self.output_dir}/AP_cls{cls_cost}.npy"
         return out_file, ap_matrix_out_file
 
     def get_best_cost_value(self):
-        crossval_ap_file = os.path.join(self.output_dir, "crossval_ap.npy")
-        chosen_cost_file = os.path.join(self.output_dir, "chosen_cost.npy")
-        if os.path.exists(crossval_ap_file) and os.path.exists(chosen_cost_file):
-            self.chosen_cost = np.load(chosen_cost_file)
-            self.train_ap_matrix = np.load(crossval_ap_file)
+        crossval_ap_file = f"{self.output_dir}/crossval_ap.npy"
+        chosen_cost_file = f"{self.output_dir}/chosen_cost.npy"
+        if PathManager.exists(crossval_ap_file) and PathManager.exists(
+            chosen_cost_file
+        ):
+            self.chosen_cost = load_file(chosen_cost_file)
+            self.train_ap_matrix = load_file(crossval_ap_file)
             return self.chosen_cost
         if self.train_ap_matrix is None:
             num_classes = len(self.cls_list)
@@ -88,13 +90,13 @@ class SVMTrainer(object):
                     cost = self.costs_list[cost_idx]
                     _, ap_out_file = self._get_svm_model_filename(cls_num, cost)
                     self.train_ap_matrix[cls_num][cost_idx] = float(
-                        np.load(ap_out_file, encoding="latin1")[0]
+                        load_file(ap_out_file)[0]
                     )
         argmax_cls = np.argmax(self.train_ap_matrix, axis=1)
         chosen_cost = [self.costs_list[idx] for idx in argmax_cls]
-        logging.info("chosen_cost: {}".format(chosen_cost))
-        np.save(crossval_ap_file, np.array(self.train_ap_matrix))
-        np.save(chosen_cost_file, np.array(chosen_cost))
+        logging.info(f"chosen_cost: {chosen_cost}")
+        save_file(np.array(self.train_ap_matrix), crossval_ap_file)
+        save_file(np.array(chosen_cost), chosen_cost_file)
         logging.info(f"saved crossval_ap AP to file: {crossval_ap_file}")
         logging.info(f"saved chosen costs to file: {chosen_cost_file}")
         self.chosen_cost = chosen_cost
@@ -106,15 +108,15 @@ class SVMTrainer(object):
             cost = self.costs_list[cost_idx]
             out_file, ap_out_file = self._get_svm_model_filename(cls_num, cost)
             if (
-                os.path.exists(out_file)
-                and os.path.exists(ap_out_file)
+                PathManager.exists(out_file)
+                and PathManager.exists(ap_out_file)
                 and not self.config.force_retrain
             ):
                 logging.info(f"SVM model exists: {out_file}")
                 logging.info(f"AP file exists: {ap_out_file}")
                 continue
 
-            logging.info(f"Training model with the cost: {cost}")
+            logging.info(f"Training model with the cost: {cost} cls: {cls_num}")
             clf = LinearSVC(
                 C=cost,
                 class_weight={1: 2, -1: 1},
@@ -152,9 +154,9 @@ class SVMTrainer(object):
                 f"mean:{ap_scores.mean()}"
             )
             logging.info(f"Saving cls cost AP to: {ap_out_file}")
-            np.save(ap_out_file, np.array([ap_scores.mean()]))
+            save_file(np.array([ap_scores.mean()]), ap_out_file)
             logging.info(f"Saving SVM model to: {out_file}")
-            with open(out_file, "wb") as fwrite:
+            with PathManager.open(out_file, "wb") as fwrite:
                 pickle.dump(clf, fwrite)
 
     def train(self, features, targets):
@@ -195,8 +197,7 @@ class SVMTrainer(object):
             cost = costs_list[cls_num]
             logging.info(f"Testing model for cls: {cls_num} cost: {cost}")
             model_file, _ = self._get_svm_model_filename(cls_num, cost)
-            with open(model_file, "rb") as fopen:
-                model = pickle.load(fopen, encoding="latin1")
+            model = load_file(model_file)
             prediction = model.decision_function(features)
             cls_labels = targets[:, cls_num]
             # meaning of labels in VOC/COCO original loaded target files:
@@ -209,6 +210,6 @@ class SVMTrainer(object):
             P, R, score, ap = get_precision_recall(eval_cls_labels, eval_preds)
             ap_matrix[cls_num][0] = ap
         logging.info(f"Mean test AP: {np.mean(ap_matrix, axis=0)}")
-        test_ap_filepath = os.path.join(self.output_dir, "test_ap.npy")
-        np.save(test_ap_filepath, np.array(ap_matrix))
+        test_ap_filepath = f"{self.output_dir}/test_ap.npy"
+        save_file(np.array(ap_matrix), test_ap_filepath)
         logging.info(f"saved test AP to file: {test_ap_filepath}")

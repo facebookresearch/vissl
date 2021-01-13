@@ -10,6 +10,7 @@ import os
 from typing import List
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 from vissl.data.datasets import get_coco_imgs_labels_info, get_voc_images_labels_info
 from vissl.utils.misc import get_json_data_catalog_file
 from vissl.utils.slurm import get_slurm_dir
@@ -35,7 +36,7 @@ class VisslDatasetCatalog(object):
         Args:
             filepath: a .json filepath that contains the data to be registered
         """
-        with open(json_catalog_path) as fopen:
+        with PathManager.open(json_catalog_path) as fopen:
             data_catalog = json.load(fopen)
         for key, value in data_catalog.items():
             VisslDatasetCatalog.register_data(key, value)
@@ -69,6 +70,7 @@ class VisslDatasetCatalog(object):
     def get(name):
         """
         Get the registered dict and return it.
+
         Args:
             name (str): the name that identifies a dataset, e.g. "imagenet1k".
         Returns:
@@ -88,6 +90,7 @@ class VisslDatasetCatalog(object):
     def list() -> List[str]:
         """
         List all registered datasets.
+
         Returns:
             list[str]
         """
@@ -118,17 +121,17 @@ class VisslDatasetCatalog(object):
 
 def get_local_path(input_file, dest_dir):
     out = ""
-    if os.path.isfile(input_file):
+    if PathManager.isfile(input_file):
         out = os.path.join(dest_dir, os.path.basename(input_file))
-    elif os.path.isdir(input_file):
+    elif PathManager.isdir(input_file):
         data_name = input_file.strip("/").split("/")[-1]
         if "SLURM_JOBID" in os.environ:
             dest_dir = get_slurm_dir(dest_dir)
         dest_dir = os.path.join(dest_dir, data_name)
         complete_flag = os.path.join(dest_dir, "copy_complete")
-        if os.path.isfile(complete_flag):
+        if PathManager.isfile(complete_flag):
             out = dest_dir
-    if os.path.exists(out):
+    if PathManager.exists(out):
         return out
     else:
         return input_file
@@ -149,9 +152,9 @@ def get_local_output_filepaths(input_files, dest_dir):
 
 def check_data_exists(data_files):
     if isinstance(data_files, list):
-        return np.all([os.path.exists(item) for item in data_files])
+        return np.all([PathManager.exists(item) for item in data_files])
     else:
-        return os.path.exists(data_files)
+        return PathManager.exists(data_files)
 
 
 def register_pascal_voc():
@@ -159,7 +162,7 @@ def register_pascal_voc():
     for voc_data in voc_datasets:
         data_info = VisslDatasetCatalog.get(voc_data)
         data_folder = data_info["train"][0]
-        if os.path.exists(data_folder):
+        if PathManager.exists(data_folder):
             train_data_info = get_voc_images_labels_info("train", data_folder)
             test_data_info = get_voc_images_labels_info("val", data_folder)
             data_info["train"] = train_data_info
@@ -173,7 +176,7 @@ def register_pascal_voc():
 def register_coco():
     data_info = VisslDatasetCatalog.get("coco2014_folder")
     data_folder = data_info["train"][0]
-    if os.path.exists(data_folder):
+    if PathManager.exists(data_folder):
         train_data_info = get_coco_imgs_labels_info("train", data_folder)
         test_data_info = get_coco_imgs_labels_info("val", data_folder)
         data_info["train"] = train_data_info
@@ -185,7 +188,7 @@ def register_coco():
 
 
 def register_datasets(json_catalog_path):
-    if os.path.exists(json_catalog_path):
+    if PathManager.exists(json_catalog_path):
         logging.info(f"Registering datasets: {json_catalog_path}")
         VisslDatasetCatalog.clear()
         VisslDatasetCatalog.register_json(json_catalog_path)
@@ -206,7 +209,11 @@ def get_data_files(split, dataset_config):
     """
     assert len(dataset_config[split].DATASET_NAMES) == len(
         dataset_config[split].DATA_SOURCES
-    ), "len(data_sources) != and len(dataset_names)"
+    ), "len(data_sources) != len(dataset_names)"
+    if len(dataset_config[split].DATA_PATHS) > 0:
+        assert len(dataset_config[split].DATA_SOURCES) == len(
+            dataset_config[split].DATA_PATHS
+        ), "len(data_sources) != len(data_paths)"
     data_files, label_files = [], []
     data_names = dataset_config[split].DATASET_NAMES
     data_sources = dataset_config[split].DATA_SOURCES
@@ -216,15 +223,25 @@ def get_data_files(split, dataset_config):
         if data_sources[idx] == "synthetic":
             data_files.append("")
             continue
-        data_info = VisslDatasetCatalog.get(data_names[idx])
-        assert len(data_info[data_split]) > 0, "data paths list is empty"
-        check_data_exists(
-            data_info[data_split][0]
-        ), f"Some data files dont exist: {data_info[data_split][0]}"
-        data_files.append(data_info[data_split][0])
+        # if user has specified the data path explicitly, we use it
+        elif len(dataset_config[split].DATA_PATHS) > 0:
+            data_files.append(dataset_config[split].DATA_PATHS[idx])
+        # otherwise retrieve from the cataloag based on the dataset name
+        else:
+            data_info = VisslDatasetCatalog.get(data_names[idx])
+            assert len(data_info[data_split]) > 0, "data paths list is empty"
+            check_data_exists(
+                data_info[data_split][0]
+            ), f"Some data files dont exist: {data_info[data_split][0]}"
+            data_files.append(data_info[data_split][0])
         # labels are optional and hence we append if we find them
-        if check_data_exists(data_info[data_split][1]):
-            label_files.append(data_info[data_split][1])
+        if len(dataset_config[split].LABEL_PATHS) > 0:
+            if check_data_exists(dataset_config[split].LABEL_PATHS[idx]):
+                label_files.append(dataset_config[split].LABEL_PATHS[idx])
+        else:
+            label_data_info = VisslDatasetCatalog.get(data_names[idx])
+            if check_data_exists(label_data_info[data_split][1]):
+                label_files.append(label_data_info[data_split][1])
 
     output = [data_files, label_files]
     if dataset_config[split].COPY_TO_LOCAL_DISK:

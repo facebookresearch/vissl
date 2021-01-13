@@ -1,0 +1,102 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 2
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  PERF_STAT_FREQUENCY: 10
+  ROLLING_BTIME_FREQ: 5
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    ENABLE_ASYNC_GPU_COPY: false
+    TRAIN:
+      DATA_SOURCES: [synthetic]
+      BATCHSIZE_PER_REPLICA: 32
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: simclr_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      DATA_LIMIT: 500
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 128]}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+    AMP_PARAMS:
+      USE_AMP: False
+      AMP_ARGS: {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
+  LOSS:
+    name: simclr_info_nce_loss
+    simclr_info_nce_loss:
+      temperature: 0.1
+      buffer_params:
+        embedding_dim: 128
+  OPTIMIZER:
+      name: sgd
+      use_larc: True
+      larc_config:
+        clip: False
+        trust_coefficient: 0.001
+        eps: 0.00000001
+      weight_decay: 0.000001
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 2
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.3
+            base_lr_batch_size: 256
+          name: cosine
+          start_value: 0.15   # LR for batch size 256
+          end_value: 0.0000
+          update_interval: step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    # NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 1
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 5

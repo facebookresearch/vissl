@@ -38,8 +38,7 @@ class ImgPilRandomPhotometric(ClassyTransform):
         logging.info(f"ImgPilRandomPhotometric with prob {p} and {transforms}")
 
     def __call__(self, image):
-        transformed_image = self.transform(image)
-        return transformed_image
+        return self.transform(image)
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilRandomPhotometric":

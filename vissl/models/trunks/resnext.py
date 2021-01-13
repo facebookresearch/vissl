@@ -8,7 +8,14 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 from torchvision.models.resnet import Bottleneck
-from vissl.models.model_helpers import Flatten, _get_norm, get_trunk_forward_outputs
+from vissl.models.model_helpers import (
+    Flatten,
+    _get_norm,
+    get_trunk_forward_outputs,
+    transform_model_input_data_type,
+)
+from vissl.models.trunks import register_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
 # For more depths, add the block config here
@@ -38,6 +45,7 @@ class SUPPORTED_L4_STRIDE(int, Enum):
     two = 2
 
 
+@register_model_trunk("resnet")
 class ResNeXt(nn.Module):
     """
     Wrapper for TorchVison ResNet Model to support different depth and
@@ -45,9 +53,16 @@ class ResNeXt(nn.Module):
     ResNet block and type of norm (BatchNorm, LayerNorm)
     """
 
-    def __init__(self, model_config, model_name):
+    def __init__(self, model_config: AttrDict, model_name: str):
         super(ResNeXt, self).__init__()
         self.model_config = model_config
+        logging.info(
+            "ResNeXT trunk, supports activation checkpointing. {}".format(
+                "Activated"
+                if self.model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
+                else "Deactivated"
+            )
+        )
 
         self.trunk_config = self.model_config.TRUNK.TRUNK_PARAMS.RESNETS
         self.depth = SUPPORTED_DEPTHS(self.trunk_config.DEPTH)
@@ -56,6 +71,12 @@ class ResNeXt(nn.Module):
         self.groups = self.trunk_config.GROUPS
         self.zero_init_residual = self.trunk_config.ZERO_INIT_RESIDUAL
         self.width_per_group = self.trunk_config.WIDTH_PER_GROUP
+        self.use_checkpointing = (
+            self.model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
+        )
+        self.num_checkpointing_splits = (
+            self.model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS
+        )
 
         (n1, n2, n3, n4) = BLOCK_CONFIG[self.depth]
         logging.info(
@@ -140,16 +161,12 @@ class ResNeXt(nn.Module):
     def forward(
         self, x: torch.Tensor, out_feat_keys: List[str] = None
     ) -> List[torch.Tensor]:
-        feat = x
-
-        # In case of LAB image, we take only "L" channel as input. Split the data
-        # along the channel dimension into [L, AB] and keep only L channel.
-        if self.model_config.INPUT_TYPE == "lab":
-            feat = torch.split(x, [1, 2], dim=1)[0]
-
+        feat = transform_model_input_data_type(x, self.model_config)
         return get_trunk_forward_outputs(
             feat,
             out_feat_keys=out_feat_keys,
             feature_blocks=self._feature_blocks,
             feature_mapping=self.feat_eval_mapping,
+            use_checkpointing=self.use_checkpointing,
+            checkpointing_splits=self.num_checkpointing_splits,
         )

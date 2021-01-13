@@ -10,9 +10,10 @@ config:
   PERF_STAT_FREQUENCY: 10
   ROLLING_BTIME_FREQ: 5
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k_filelist]
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index
       TRANSFORMS:
@@ -42,8 +43,9 @@ config:
       DATA_LIMIT: 500
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
   TRAINER:
-    TRAIN_STEP_NAME: standard
-  METERS: null
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
   MODEL:
     MODEL_COMPLEXITY:
       COMPUTE_COMPLEXITY: False
@@ -65,30 +67,29 @@ config:
           ["mlp", {"dims": [2048, 128]}]
         ],
       ]
-    MULTI_INPUT_HEAD_MAPPING: ["patches", "images"]
-    EVAL_FEATURES: [
+    MULTI_INPUT_HEAD_MAPPING: [
         # "flatten" is the res5->avg->flatten feature from ResNet50
         ["patches", ["flatten"]], # feature layer to extract from second input "patches"
         ["images", ["flatten"]],  # feature layer to extract from first input "images"
     ]
-  CRITERION:
-      name: nce_loss_with_memory
+  LOSS:
+    name: nce_loss_with_memory
+    nce_loss_with_memory:
       ignore_index: -1
-      NCE_LOSS:
-        NORM_EMBEDDING: True
-        TEMPERATURE: 0.07
-        LOSS_WEIGHTS: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
-        NORM_CONSTANT: -1
-        NEGATIVE_SAMPLING_PARAMS:
-          NUM_NEGATIVES: 4096
-          TYPE: random
-        MEMORY_PARAMS:
-          MEMORY_SIZE: -1
-          EMBEDDING_DIM: 128
-          MOMENTUM: 0.5
-          NORM_INIT: True
-          UPDATE_MEM_ON_FORWARD: False
-        UPDATE_MEM_WITH_EMB_INDEX: 1
+      norm_embedding: True
+      temperature: 0.07
+      loss_weights: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
+      norm_constant: -1
+      negative_sampling_params:
+        num_negatives: 4096
+        type: random
+      memory_params:
+        memory_size: -1
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: True
+        update_mem_on_forward: False
+      update_mem_with_emb_index: 1
   OPTIMIZER:
       name: sgd
       weight_decay: 0.0001
@@ -114,7 +115,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

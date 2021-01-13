@@ -1,7 +1,7 @@
 # @package _global_
-extract_features: True
 config:
   DATA:
+    NUM_DATALOADER_WORKERS: 4
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
@@ -39,29 +39,33 @@ config:
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DATA_LIMIT: 100
   MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
     TRUNK:
       NAME: resnet
-      RESNETS:
-        DEPTH: 50
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 2048], "use_relu": True}],
         ["mlp", {"dims": [2048, 128]}],
       ]
-    PARAMS_FILE:
-      PATH: ""
+    WEIGHTS_INIT:
+      PARAMS_FILE: ""
       STATE_DICT_KEY_NAME: classy_state_dict
   DISTRIBUTED:
     NUM_NODES: 1
-    # NUM_PROC_PER_NODE: 2
     NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 4
     DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
   NEAREST_NEIGHBOR:
-    OUTPUT_DIR: .
     SIGMA: 0.1
     TOPK: 20
     L2_NORM_FEATS: False

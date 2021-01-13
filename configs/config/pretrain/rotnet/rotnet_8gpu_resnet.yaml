@@ -9,6 +9,7 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: False
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
@@ -23,11 +24,10 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_TO_LOCAL_DISK: False
     TEST:
-      DATA_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k]
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: ImgRotatePil
@@ -40,14 +40,14 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_TO_LOCAL_DISK: False
   METERS:
-    accuracy_list:
-      num_list: 1
-      topk: [1]
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1]
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   MODEL:
     TRUNK:
       NAME: resnet
@@ -56,14 +56,14 @@ config:
           DEPTH: 50
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 4]}]]
-  CRITERION:
+  LOSS:
       name: cross_entropy_multiple_output_single_target
       ignore_index: -1
   OPTIMIZER:
       name: sgd
       weight_decay: 0.0001
       momentum: 0.9
-      num_epochs: 90
+      num_epochs: 105
       nesterov: False
       regularize_bn: False
       regularize_bias: True
@@ -74,8 +74,8 @@ config:
             base_value: 0.1
             base_lr_batch_size: 256
           name: multistep
-          values: [0.1, 0.01, 0.001]
-          milestones: [30, 60]
+          values: [0.1, 0.01, 0.001, 0.0001, 0.00001]
+          milestones: [30, 60, 90, 100]
           update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
@@ -84,7 +84,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

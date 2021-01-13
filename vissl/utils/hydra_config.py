@@ -6,27 +6,84 @@ import sys
 from typing import Any, List
 
 from omegaconf import DictConfig, OmegaConf
+from vissl.config import check_cfg_version
 
 
 class AttrDict(dict):
     """
-    Dictionary class which also support attribute access.
-    Credits: https://stackoverflow.com/a/38034502
+    Dictionary subclass whose entries can be accessed like attributes (as well as normally).
+    Credits: https://aiida.readthedocs.io/projects/aiida-core/en/latest/_modules/aiida/common/extendeddicts.html#AttributeDict  # noqa
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__dict__ = self
+    def __init__(self, dictionary):
+        """
+        Recursively turn the `dict` and all its nested dictionaries into `AttrDict` instance.
+        """
+        super().__init__()
 
-    @staticmethod
-    def from_dict(data):
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                self[key] = AttrDict(value)
+            else:
+                self[key] = value
+
+    def __getattr__(self, key):
         """
-        Construct nested AttrDicts from nested dictionaries.
+        Read a key as an attribute.
+
+        :raises AttributeError: if the attribute does not correspond to an existing key.
         """
-        if not isinstance(data, dict):
-            return data
+        if key in self:
+            return self[key]
         else:
-            return AttrDict({key: AttrDict.from_dict(data[key]) for key in data})
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {key}."
+            )
+
+    def __setattr__(self, key, value):
+        """
+        Set a key as an attribute.
+        """
+        self[key] = value
+
+    def __delattr__(self, key):
+        """
+        Delete a key as an attribute.
+
+        :raises AttributeError: if the attribute does not correspond to an existing key.
+        """
+        if key in self:
+            del self[key]
+        else:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {key}."
+            )
+
+    def __getstate__(self):
+        """
+        Needed for pickling this class.
+        """
+        return self.__dict__.copy()
+
+    def __setstate__(self, dictionary):
+        """
+        Needed for pickling this class.
+        """
+        self.__dict__.update(dictionary)
+
+    def __deepcopy__(self, memo=None):
+        """
+        Deep copy.
+        """
+        from copy import deepcopy
+
+        if memo is None:
+            memo = {}
+        retval = deepcopy(dict(self))
+        return self.__class__(retval)
+
+    def __dir__(self):
+        return self.keys()
 
 
 def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
@@ -40,10 +97,13 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
 
     # convert the config to AttrDict
     cfg = OmegaConf.to_container(cfg)
-    cfg = AttrDict.from_dict(cfg)
-    config = cfg.config
+    cfg = AttrDict(cfg)
+
+    # check the cfg has valid version
+    check_cfg_version(cfg)
 
     # assert the config and infer
+    config = cfg.config
     assert_hydra_conf(config)
     return cfg, config
 
@@ -101,7 +161,7 @@ def resolve_linear_schedule(cfg, param_schedulers):
 
 
 def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
-    if param_schedulers["name"] == "cosine":
+    if "cosine" in param_schedulers["name"]:
         start_value = param_schedulers["start_value"]
         end_value = param_schedulers["end_value"]
         decay_multiplier = end_value / start_value
@@ -134,6 +194,8 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
             resolve_linear_schedule(cfg, param_schedulers)
     elif param_schedulers["name"] == "linear":
         param_schedulers["end_value"] = scaled_lr
+    elif param_schedulers["name"] == "inverse_sqrt":
+        param_schedulers["start_value"] = scaled_lr
     elif param_schedulers["name"] == "constant":
         param_schedulers["value"] = scaled_lr
     else:
@@ -143,62 +205,7 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
     return param_schedulers
 
 
-def assert_hydra_conf(cfg):
-    # some inference for the Info NCE loss.
-    if "simclr_info_nce_loss" in cfg.CRITERION.name:
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE = (
-            cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
-        )
-
-        world_size = cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE
-        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
-        num_positives = 2  # simclr uses 2 copies per image
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
-            num_positives * batch_size * world_size
-        )
-
-    # multicrop version of simclr loss
-    if "multicrop_simclr_info_nce_loss" in cfg.CRITERION.name:
-        world_size = cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.WORLD_SIZE
-        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
-        total_nmb_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_nmb_crops"]
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.EFFECTIVE_BATCH_SIZE = (
-            batch_size * world_size
-        )
-        cfg.CRITERION.SIMCLR_INFO_NCE_LOSS.MULTI_CROP_PARAMS.NMB_CROPS = total_nmb_crops
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
-
-    # some inference for the DeepCluster-v2 loss.
-    if cfg.CRITERION.name == "deepclusterv2_loss":
-        cfg.CRITERION.DEEPCLUSTERV2_LOSS.DROP_LAST = cfg.DATA.TRAIN.DROP_LAST
-        cfg.CRITERION.DEEPCLUSTERV2_LOSS.BATCHSIZE_PER_REPLICA = (
-            cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
-        )
-        cfg.CRITERION.DEEPCLUSTERV2_LOSS.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
-            "total_nmb_crops"
-        ]
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
-
-    # some inference for the SwAV loss.
-    if cfg.CRITERION.name == "swav_loss":
-        assert len(cfg.MODEL.HEAD.PARAMS) == 1
-        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
-        cfg.CRITERION.SWAV_LOSS.NMB_PROTOTYPES = cfg.MODEL.HEAD.PARAMS[0][1][
-            "nmb_clusters"
-        ]
-        cfg.CRITERION.SWAV_LOSS.EMBEDDING_DIM = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
-        cfg.CRITERION.SWAV_LOSS.NMB_CROPS = cfg.DATA.TRAIN.TRANSFORMS[0][
-            "total_nmb_crops"
-        ]
-        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
-        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
-        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
-        batch_size *= world_size
-        queue_length = cfg.CRITERION.SWAV_LOSS.QUEUE.QUEUE_LENGTH
-        queue_length -= queue_length % batch_size
-        cfg.CRITERION.SWAV_LOSS.QUEUE.QUEUE_LENGTH = queue_length
-        cfg.CRITERION.SWAV_LOSS.QUEUE.LOCAL_QUEUE_LENGTH = queue_length // world_size
-
+def assert_learning_rate(cfg):
     # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
     # to turn this automatic scaling off,
     # set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
@@ -213,3 +220,175 @@ def assert_hydra_conf(cfg):
         cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
             cfg, param_schedulers, scaled_lr
         )
+
+    if not cfg.OPTIMIZER.head_optimizer_params.use_different_lr:
+        # if not using the different value for the head, we set the weight decay and LR
+        # param scheduler same as the trunk.
+        cfg.OPTIMIZER.param_schedulers.lr_head = cfg.OPTIMIZER.param_schedulers.lr
+    elif (
+        cfg.OPTIMIZER.head_optimizer_params.use_different_lr
+        and cfg.OPTIMIZER.param_schedulers.lr_head
+        and cfg.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.auto_scale
+    ):
+        # if the user wants a different LR value for the head, then we automatically
+        # infer the LR values for the head as well (similar to trunk above)
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
+        param_schedulers = cfg.OPTIMIZER.param_schedulers.lr_head
+        base_lr = param_schedulers.auto_lr_scaling.base_value
+        base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scale_factor = float(batch_size) / base_lr_batch_size
+        scaled_lr = base_lr * scale_factor
+        cfg.OPTIMIZER.param_schedulers.lr_head = get_scaled_lr_scheduler(
+            cfg, param_schedulers, scaled_lr
+        )
+
+    # for the head, if we want to use a different weight decay value, we verify that
+    # the specified weight decay value is valid. Otherwise, we do the inference
+    # and set the weight decay value same as the trunk.
+    if not cfg.OPTIMIZER.head_optimizer_params.use_different_wd:
+        cfg.OPTIMIZER.head_optimizer_params.weight_decay = cfg.OPTIMIZER.weight_decay
+    else:
+        assert (
+            cfg.OPTIMIZER.head_optimizer_params.weight_decay >= 0.0
+        ), "weight decay for head should be >=0"
+    return cfg
+
+
+def assert_losses(cfg):
+    # some inference for the Info-NCE loss.
+    if "simclr_info_nce_loss" in cfg.LOSS.name:
+        cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"] = (
+            cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        )
+
+        world_size = cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"]
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        num_positives = 2  # simclr uses 2 copies per image
+        cfg.LOSS[cfg.LOSS.name]["buffer_params"]["effective_batch_size"] = (
+            num_positives * batch_size * world_size
+        )
+
+    # bce_logits_multiple_output_single_target
+    if cfg.LOSS.name == "bce_logits_multiple_output_single_target":
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        cfg.LOSS.bce_logits_multiple_output_single_target.world_size = world_size
+
+    # multicrop version of simclr loss
+    if cfg.LOSS.name == "multicrop_simclr_info_nce_loss":
+        world_size = cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.world_size
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        total_num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.effective_batch_size = (
+            batch_size * world_size
+        )
+        cfg.LOSS.multicrop_simclr_info_nce_loss.num_crops = total_num_crops
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
+
+    # some inference for the DeepCluster-v2 loss.
+    if cfg.LOSS.name == "deepclusterv2_loss":
+        cfg.LOSS.deepclusterv2_loss.DROP_LAST = cfg.DATA.TRAIN.DROP_LAST
+        cfg.LOSS.deepclusterv2_loss.BATCHSIZE_PER_REPLICA = (
+            cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        )
+        cfg.LOSS.deepclusterv2_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0][
+            "total_num_crops"
+        ]
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
+
+    # some inference for the SwAV loss.
+    if cfg.LOSS.name == "swav_loss":
+        assert len(cfg.MODEL.HEAD.PARAMS) == 1
+        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        assert cfg.DATA.TRAIN.COLLATE_FUNCTION in [
+            "multicrop_collator",
+            "multicrop_mixup_collator",
+        ], (
+            "for swav loss, use either a collator from "
+            "[multicrop_collator, multicrop_mixup_collator]"
+        )
+        cfg.LOSS.swav_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"]
+        cfg.LOSS.swav_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
+        cfg.LOSS.swav_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        from vissl.utils.checkpoint import get_checkpoint_folder
+
+        cfg.LOSS.swav_loss.output_dir = get_checkpoint_folder(cfg)
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        batch_size *= world_size
+        queue_length = cfg.LOSS.swav_loss.queue.queue_length
+        queue_length -= queue_length % batch_size
+        cfg.LOSS.swav_loss.queue.queue_length = queue_length
+        cfg.LOSS.swav_loss.queue.local_queue_length = queue_length // world_size
+
+    # some inference for the SwAV momentum loss.
+    if cfg.LOSS.name == "swav_momentum_loss":
+        assert len(cfg.MODEL.HEAD.PARAMS) == 1
+        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        cfg.LOSS.swav_momentum_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1][
+            "num_clusters"
+        ]
+        cfg.LOSS.swav_momentum_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][
+            -1
+        ]
+        cfg.LOSS.swav_momentum_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0][
+            "total_num_crops"
+        ]
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+        batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        batch_size *= world_size
+        queue_length = cfg.LOSS.swav_momentum_loss.queue.queue_length
+        queue_length -= queue_length % batch_size
+        cfg.LOSS.swav_momentum_loss.queue.queue_length = queue_length
+        cfg.LOSS.swav_momentum_loss.queue.local_queue_length = (
+            queue_length // world_size
+        )
+    return cfg
+
+
+def assert_hydra_conf(cfg):
+    cfg = assert_losses(cfg)
+    cfg = assert_learning_rate(cfg)
+
+    # in case of linear evaluation, we often evaluate several layers at a time. For each
+    # layer, there's a separate accuracy meter. In such case, we want to output the layer
+    # name in the meters output to make it easy to interpret the results. This is
+    # currently only supported for cases where we have linear evaluation.
+    if cfg.METERS is not None:
+        from vissl.models import is_feature_extractor_model
+
+        meter_name = cfg.METERS.get("name", "")
+        valid_meters = ["accuracy_list_meter", "mean_ap_list_meter"]
+        if meter_name:
+            if meter_name in valid_meters and is_feature_extractor_model(cfg.MODEL):
+                cfg.METERS[meter_name]["num_meters"] = len(
+                    cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+                )
+                cfg.METERS[meter_name]["meter_names"] = [
+                    item[0]
+                    for item in cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
+                ]
+
+    # in case of feature evaluation mode, we freeze the trunk. The Feature evaluation mode
+    # is used for the feature extraction of trunk as well. VISSL supports distributed feature
+    # extraction to speed up the extraction time. Since the model needs to be DDP for the
+    # distributed extraction, we need some dummy parameters in the model otherwise model
+    # can't be converted to DDP. So we attach some dummy head to the model.
+    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+    if (
+        cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+        and cfg.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
+        and cfg.MODEL.FEATURE_EVAL_SETTINGS.EXTRACT_TRUNK_FEATURES_ONLY
+        and world_size > 1
+        and len(cfg.MODEL.HEAD.PARAMS) == 0
+    ):
+        cfg.MODEL.HEAD.PARAMS = [["mlp", {"dims": [2048, 1000]}]]
+
+    # in SSL, during pre-training we don't want to use annotated labels or during feature
+    # extraction, we don't have annotated labels for some datasets. In such cases, we set
+    # the label type to be just the image index in the dataset.
+    if len(cfg.DATA.TRAIN.LABEL_SOURCES) == 0:
+        cfg.DATA.TRAIN.LABEL_TYPE = "sample_index"
+    if len(cfg.DATA.TEST.LABEL_SOURCES) == 0:
+        cfg.DATA.TEST.LABEL_TYPE = "sample_index"

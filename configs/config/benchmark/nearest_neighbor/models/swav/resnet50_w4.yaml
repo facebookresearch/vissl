@@ -9,5 +9,5 @@ config:
           WIDTH_MULTIPLIER: 4
     HEAD:
       PARAMS: [
-        ['swav_head', {'dims': [8192, 8192, 128], 'use_bn': True, 'nmb_clusters': []}]
+        ['swav_head', {'dims': [8192, 8192, 128], 'use_bn': True, 'num_clusters': []}]
       ]

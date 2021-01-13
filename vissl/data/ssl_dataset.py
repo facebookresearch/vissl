@@ -1,14 +1,28 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
-import os
 
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
+from fvcore.common.file_io import PathManager
 from torch.utils.data import Dataset
 from vissl.data import dataset_catalog
 from vissl.data.ssl_transforms import get_transform
 from vissl.utils.env import get_machine_local_and_dist_rank
+
+
+def _convert_lbl_to_long(lbl):
+    # if the labels are int32, we convert them to int64 since pytorch
+    # needs a long (int64) type for labels to index. See
+    # https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
+    out_lbl = lbl
+    if isinstance(lbl, np.ndarray) and (lbl.dtype == np.int32):
+        out_lbl = lbl.astype(np.int64)
+    elif isinstance(lbl, list):
+        out_lbl = [_convert_lbl_to_long(item) for item in lbl]
+    elif isinstance(lbl, np.int32):
+        out_lbl = out_lbl.astype(np.int64)
+    return out_lbl
 
 
 class GenericSSLDataset(Dataset):
@@ -65,36 +79,57 @@ class GenericSSLDataset(Dataset):
             split, dataset_config=self.cfg["DATA"]
         )
 
-        logging.info(f"Rank: {local_rank} Data files:\n{self.data_paths}")
-        logging.info(f"Rank: {local_rank} Label files:\n{self.label_paths}")
+        logging.info(
+            f"Rank: {local_rank} split: {split} Data files:\n{self.data_paths}"
+        )
+        logging.info(
+            f"Rank: {local_rank} split: {split} Label files:\n{self.label_paths}"
+        )
+
+    def load_single_label_file(self, path):
+        assert PathManager.isfile(path), f"Path to labels {path} is not a file"
+        assert path.endswith("npy"), "Please specify a numpy file for labels"
+        if self.cfg["DATA"][self.split].MMAP_MODE:
+            try:
+                with PathManager.open(path, "rb") as fopen:
+                    labels = np.load(fopen, allow_pickle=True, mmap_mode="r")
+            except ValueError as e:
+                logging.info(f"Could not mmap {path}: {e}. Trying without PathManager")
+                labels = np.load(path, allow_pickle=True, mmap_mode="r")
+                logging.info("Successfully loaded without PathManager")
+            except Exception:
+                logging.info("Could not mmap without PathManager. Trying without mmap")
+                with PathManager.open(path, "rb") as fopen:
+                    labels = np.load(fopen, allow_pickle=True)
+        else:
+            with PathManager.open(path, "rb") as fopen:
+                labels = np.load(fopen, allow_pickle=True)
+        return labels
 
     def _load_labels(self):
-        for idx, (label_source, path) in enumerate(
-            zip(self.label_sources, self.label_paths)
-        ):
+        local_rank, _ = get_machine_local_and_dist_rank()
+        for idx, label_source in enumerate(self.label_sources):
             if label_source == "disk_filelist":
-                # Labels are stored in a file
-                assert os.path.isfile(path), f"Path to labels {path} is not a file"
-
-                assert path.endswith("npy"), "Please specify a numpy file for labels"
-                if self.cfg["DATA"][self.split].MMAP_MODE:
-                    # Memory map the labels if the file is too large.
-                    # This is useful to save RAM.
-                    labels = np.load(path, mmap_mode="r")
+                paths = self.label_paths[idx]
+                # in case of filelist, we support multiple label files.
+                # we rely on the user to have a proper collator to handle
+                # the multiple labels
+                logging.info(f"Loading labels: {paths}")
+                if isinstance(paths, list):
+                    labels = []
+                    for path in paths:
+                        path_labels = self.load_single_label_file(path)
+                        labels.append(path_labels)
                 else:
-                    labels = np.load(path)
-                # if the labels are int32, we convert them to int64 since pytorch
-                # needs a long (int64) type for labels to index. See
-                # https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
-                if labels.dtype == np.int32:
-                    labels = labels.astype(np.int64)
+                    labels = self.load_single_label_file(paths)
             elif label_source == "disk_folder":
                 # In this case we use the labels inferred from the directory structure
                 # We enforce that the data source also be a disk folder in this case
                 assert self.data_sources[idx] == self.label_sources[idx]
-
-                logging.info(f"Using disk_folder labels from {self.data_paths[idx]}")
-
+                if local_rank == 0:
+                    logging.info(
+                        f"Using {label_source} labels from {self.data_paths[idx]}"
+                    )
                 # Use the ImageFolder object created when loading images.
                 # We do not create it again since it can be an expensive operation.
                 labels = [x[1] for x in self.data_objs[idx].image_dataset.samples]
@@ -104,9 +139,7 @@ class GenericSSLDataset(Dataset):
             self.label_objs.append(labels)
 
     def __getitem__(self, idx):
-        if not self._labels_init and (
-            len(self.label_sources) > 0 and len(self.label_paths) > 0
-        ):
+        if not self._labels_init and len(self.label_sources) > 0:
             self._load_labels()
             self._labels_init = True
 
@@ -119,16 +152,22 @@ class GenericSSLDataset(Dataset):
             item["data_idx"].append(idx)
             item["data_valid"].append(1 if valid else -1)
 
-        if self.label_objs or self.label_type == "standard":
+        if (len(self.label_objs) > 0) or self.label_type == "standard":
             item["label"] = []
             for source in self.label_objs:
-                item["label"].append(source[idx])
+                if isinstance(source, list):
+                    lbl = [entry[idx] for entry in source]
+                else:
+                    lbl = _convert_lbl_to_long(source[idx])
+                item["label"].append(lbl)
         elif self.label_type == "sample_index":
             item["label"] = []
             for _ in range(len(self.data_objs)):
                 item["label"].append(idx)
         else:
             raise ValueError(f"Unknown label type: {self.label_type}")
+
+        # apply the transforms on the image
         if self.transform:
             item = self.transform(item)
         return item

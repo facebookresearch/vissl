@@ -3,8 +3,7 @@
 import logging
 import unittest
 
-from hydra.errors import HydraException
-from omegaconf import MissingMandatoryValue
+from hydra.errors import ConfigCompositionException, HydraException
 from parameterized import parameterized
 from utils import (
     BENCHMARK_CONFIGS,
@@ -23,7 +22,7 @@ class TestConfigsFail(unittest.TestCase):
         try:
             SSLHydraConfig.from_configs()
             self.fail("We should fail if config is not specified")
-        except MissingMandatoryValue:
+        except ConfigCompositionException:
             # we must specify the base config otherwise it fails
             pass
 
@@ -43,7 +42,7 @@ class TestConfigsComposition(unittest.TestCase):
         cfg = SSLHydraConfig.from_configs(
             [
                 "config=test/integration_test/quick_simclr",
-                "config/pretrain/simple_clr/models=resnext101",
+                "+config/pretrain/simclr/models=resnext101",
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
@@ -61,12 +60,12 @@ class TestConfigsFailComposition(unittest.TestCase):
             SSLHydraConfig.from_configs(
                 [
                     "config=test/integration_test/quick_simclr",
-                    "+config/pretrain/simple_clr/models=resnext101",
+                    "config/pretrain/simclr/models=resnext101",
                 ]
             )
             self.fail(
                 "We should fail for invalid composition. "
-                "+ is not necessary as the group already exists in defaults"
+                "+ is necessary as the group does not exists in defaults"
             )
         except HydraException:
             pass
@@ -78,7 +77,7 @@ class TestConfigsCliComposition(unittest.TestCase):
         cfg = SSLHydraConfig.from_configs(
             [
                 "config=test/integration_test/quick_simclr",
-                "config/pretrain/simple_clr/models=resnext101",
+                "+config/pretrain/simclr/models=resnext101",
                 "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.GROUPS=32",
                 "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_PER_GROUP=16",
             ]
@@ -102,12 +101,12 @@ class TestConfigsKeyAddition(unittest.TestCase):
         cfg = SSLHydraConfig.from_configs(
             [
                 "config=test/integration_test/quick_simclr",
-                "+config.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS.MY_TEST_KEY=dummy",
+                "+config.LOSS.simclr_info_nce_loss.buffer_params.MY_TEST_KEY=dummy",
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertTrue(
-            "MY_TEST_KEY" in config.CRITERION.SIMCLR_INFO_NCE_LOSS.BUFFER_PARAMS,
+            "MY_TEST_KEY" in config.LOSS.simclr_info_nce_loss.buffer_params,
             "something went wrong, new key not added. Fail.",
         )
 

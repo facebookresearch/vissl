@@ -1,0 +1,39 @@
+package:
+  name: apex
+  version: "{{ environ.get('BUILD_VERSION') }}"
+
+source:
+ path: "{{ environ.get('SOURCE_ROOT_DIR') }}"
+
+requirements:
+  build:
+    - {{ compiler('c') }} # [win]
+
+  host:
+    - python
+    - setuptools
+    {{ environ.get('CONDA_PYTORCH_BUILD_CONSTRAINT') }}
+    {{ environ.get('CONDA_CUDATOOLKIT_CONSTRAINT') }}
+    {{ environ.get('CONDA_CPUONLY_FEATURE') }}
+
+  run:
+    - python
+    - numpy >=1.11
+    {{ environ.get('CONDA_PYTORCH_CONSTRAINT') }}
+    {{ environ.get('CONDA_CUDATOOLKIT_CONSTRAINT') }}
+
+build:
+  string: py{{py}}_{{ environ['CU_VERSION'] }}_pyt{{ environ['PYTORCH_VERSION_NODOT']}}
+  script: python setup.py install --single-version-externally-managed --record=record.txt --cpp_ext --cuda_ext # [not win]
+  script_env:
+    - CUDA_HOME
+  features:
+    {{ environ.get('CONDA_CPUONLY_FEATURE') }}
+
+
+
+about:
+  home: #https://github.com/facebookresearch/pytorch3d
+  license: BSD
+  license_file: LICENSE
+  summary: 'NVIDIA Apex library'

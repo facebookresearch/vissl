@@ -8,6 +8,7 @@ config:
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: False
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
@@ -29,18 +30,16 @@ config:
           patch_jitter: 21
         - name: ShuffleImgPatches
           perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/hamming_perms_2000_patches_9_max_avg.npy   # perm 2K
-          # perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/hamming_perms_10000_patches_9_max_avg.npy  # perm 10K
-          # perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/naroozi_perms_100_max.npy                  # perm 100
       COLLATE_FUNCTION: siamese_collator
       MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_TO_LOCAL_DISK: False
   METERS:
-    accuracy_list:
-      num_list: 1
-      topk: [1]
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1]
   TRAINER:
-    TRAIN_STEP_NAME: standard
+    TRAIN_STEP_NAME: standard_train_step
   MODEL:
     TRUNK:
       NAME: resnet
@@ -53,8 +52,9 @@ config:
         ["siamese_concat_view", {"num_towers": 9}],
         ["mlp", {"dims": [9000, 2000]}],    # perm 2K
       ]
-  CRITERION:
-      name: cross_entropy_multiple_output_single_target
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
       name: sgd
@@ -88,7 +88,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

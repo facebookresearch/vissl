@@ -10,6 +10,7 @@ config:
   PERF_STAT_FREQUENCY: 40
   ROLLING_BTIME_FREQ: 5
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k_filelist]
@@ -17,9 +18,9 @@ config:
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_nmb_crops: 6
+          total_num_crops: 6
           size_crops: [224, 96]
-          nmb_crops: [2, 4]
+          num_crops: [2, 4]
           crop_scales: [[0.14, 1], [0.05, 0.14]]
         - name: RandomHorizontalFlip
           p: 0.5
@@ -40,8 +41,9 @@ config:
       DATA_LIMIT: 250
       DROP_LAST: True
   TRAINER:
-    TRAIN_STEP_NAME: standard
-  METERS: null
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -49,7 +51,7 @@ config:
         DEPTH: 50
     HEAD:
       PARAMS: [
-        ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "nmb_clusters": [3000]}],
+        ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
       ]
     TEMP_FROZEN_PARAMS_ITER_MAP: [
       ['module.heads.0.prototypes0.weight', 313],
@@ -57,18 +59,18 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
-  CRITERION:
-      name: swav_loss
-      SWAV_LOSS:
-        TEMPERATURE: 0.1
-        USE_DOUBLE_PRECISION: False
-        NORMALIZE_LAST_LAYER: True
-        NMB_ITERS: 3
-        EPSILON: 0.05
-        CROPS_FOR_ASSIGN: [0, 1]
-        QUEUE:
-          QUEUE_LENGTH: 0
-          START_ITER: 0
+  LOSS:
+    name: swav_loss
+    swav_loss:
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      crops_for_assign: [0, 1]
+      queue:
+        queue_length: 0
+        start_iter: 0
   OPTIMIZER:
       name: sgd
       use_larc: True
@@ -99,7 +101,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

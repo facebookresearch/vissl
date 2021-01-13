@@ -3,10 +3,13 @@
 import torch
 import torch.nn as nn
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
+from vissl.models.trunks import register_model_trunk
+from vissl.utils.hydra_config import AttrDict
 
 
+@register_model_trunk("alexnet_colorization")
 class AlexNetColorization(nn.Module):
-    def __init__(self, model_config, model_name):
+    def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
         conv1_bn_relu = nn.Sequential(
             nn.Conv2d(1, 96, kernel_size=11, stride=4, padding=0),
@@ -81,6 +84,10 @@ class AlexNetColorization(nn.Module):
         # along the channel dimension into [L, AB] and keep only L channel.
         feat = torch.split(feat, [1, 2], dim=1)[0]
         out_feats = get_trunk_forward_outputs(
-            feat, out_feat_keys, self._feature_blocks, self.all_feat_names
+            feat,
+            out_feat_keys,
+            self._feature_blocks,
+            self.all_feat_names,
+            use_checkpointing=False,
         )
         return out_feats

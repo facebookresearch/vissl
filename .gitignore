@@ -1,3 +1,5 @@
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -66,3 +68,21 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+# Docusaurus site
+website/yarn.lock
+website/build/
+website/i18n/
+website/node_modules/*
+website/npm-debug.log
+
+## Generated for tutorials
+website/_tutorials/
+website/static/files/
+website/pages/tutorials/*
+!website/pages/tutorials/index.js
+
+*-checkpoint.ipynb
+**/.ipynb_checkpoints
+**/.ipynb_checkpoints/**

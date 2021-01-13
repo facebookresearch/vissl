@@ -10,6 +10,7 @@ config:
   PERF_STAT_FREQUENCY: 10
   ROLLING_BTIME_FREQ: 5
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k_filelist]
@@ -17,9 +18,9 @@ config:
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_nmb_crops: 2
+          total_num_crops: 2
           size_crops: [224]
-          nmb_crops: [2]
+          num_crops: [2]
           crop_scales: [[0.08, 1]]
         - name: RandomHorizontalFlip
           p: 0.5
@@ -40,8 +41,9 @@ config:
       DROP_LAST: True
       COPY_DESTINATION_DIR: "/tmp/imagenet1k"
   TRAINER:
-    TRAIN_STEP_NAME: standard
-  METERS: null
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -58,14 +60,13 @@ config:
     AMP_PARAMS:
       USE_AMP: False
       AMP_ARGS: {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
-  CRITERION:
-      name: multicrop_simclr_info_nce_loss
-      SIMCLR_INFO_NCE_LOSS:
-        TEMPERATURE: 0.1
-        BUFFER_PARAMS:
-          EMBEDDING_DIM: 128
-        MULTI_CROP_PARAMS:
-          NMB_CROPS: 2
+  LOSS:
+    name: multicrop_simclr_info_nce_loss
+    multicrop_simclr_info_nce_loss:
+      temperature: 0.1
+      buffer_params:
+        embedding_dim: 128
+      num_crops: 2
   OPTIMIZER:
       name: sgd
       use_larc: True
@@ -97,7 +98,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

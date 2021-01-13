@@ -2,12 +2,14 @@
 
 import logging
 import sys
+from typing import List
 
+import torch
 import tqdm
 from fvcore.common.timer import Timer
 from hydra.experimental import compose, initialize_config_module
 from vissl.data import build_dataset, get_loader
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.logger import setup_logging
 
 
@@ -16,18 +18,29 @@ MAX_ITERS = 500
 BENCHMARK_ROUNDS = 2
 
 
-def benchmark_data(cfg, split="train"):
+def benchmark_data(cfg: AttrDict, split: str = "train"):
     split = split.upper()
     total_images = MAX_ITERS * cfg["DATA"][split]["BATCHSIZE_PER_REPLICA"]
     timer = Timer()
     dataset = build_dataset(cfg, split)
+
+    try:
+        device = torch.device("cuda" if cfg.MACHINE.DEVICE == "gpu" else "cpu")
+    except AttributeError:
+        device = torch.device("cuda")
+
     dataloader = get_loader(
         dataset=dataset,
         dataset_config=cfg["DATA"][split],
-        num_dataloader_workers=cfg.MACHINE.NUM_DATALOADER_WORKERS,
+        num_dataloader_workers=cfg.DATA.NUM_DATALOADER_WORKERS,
         pin_memory=False,
         multi_processing_method=cfg.MULTI_PROCESSING_METHOD,
+        device=device,
     )
+
+    # Fairstore data sampler would require setting the start iter before it can start.
+    if hasattr(dataloader.sampler, "set_start_iter"):
+        dataloader.sampler.set_start_iter(0)
 
     # initial warmup measured as warmup time
     timer.reset()
@@ -66,7 +79,7 @@ def benchmark_data(cfg, split="train"):
     del dataloader
 
 
-def hydra_main(overrides):
+def hydra_main(overrides: List[str]):
     print(f"####### overrides: {overrides}")
     with initialize_config_module(config_module="vissl.config"):
         cfg = compose("defaults", overrides=overrides)

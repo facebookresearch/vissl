@@ -10,6 +10,7 @@ config:
   PERF_STAT_FREQUENCY: 10
   ROLLING_BTIME_FREQ: 5
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k_filelist]
@@ -39,8 +40,9 @@ config:
       DROP_LAST: True
       COPY_DESTINATION_DIR: "/tmp/imagenet1k"
   TRAINER:
-    TRAIN_STEP_NAME: standard
-  METERS: null
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -57,12 +59,12 @@ config:
     AMP_PARAMS:
       USE_AMP: False
       AMP_ARGS: {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}
-  CRITERION:
-      name: simclr_info_nce_loss
-      SIMCLR_INFO_NCE_LOSS:
-        TEMPERATURE: 0.1
-        BUFFER_PARAMS:
-          EMBEDDING_DIM: 128
+  LOSS:
+    name: simclr_info_nce_loss
+    simclr_info_nce_loss:
+      temperature: 0.1
+      buffer_params:
+        embedding_dim: 128
   OPTIMIZER:
       name: sgd
       use_larc: True
@@ -95,7 +97,6 @@ config:
     NUM_PROC_PER_NODE: 8
     INIT_METHOD: tcp
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

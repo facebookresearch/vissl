@@ -1,0 +1,91 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 0
+    TRAIN:
+      DATA_SOURCES: [synthetic]
+      BATCHSIZE_PER_REPLICA: 4
+      LABEL_TYPE: sample_index
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: moco_collator
+      MMAP_MODE: True
+      DATA_LIMIT: 4
+      DROP_LAST: True
+      COPY_TO_LOCAL_DISK: False
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: False
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_400mf
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [440, 128]}]
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: False
+  LOSS:
+    name: moco_loss
+  OPTIMIZER:
+      name: sgd
+      use_larc: False
+      weight_decay: 0.0001
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 3
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.03
+            base_lr_batch_size: 256
+          name: cosine
+          start_value: 0.03
+          end_value: 0.0000
+          update_interval: step
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.1, 0.9]             # 100ep
+  DISTRIBUTED:
+    BACKEND: gloo
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: cpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: false
+    CHECKPOINT_FREQUENCY: 5
+    OVERWRITE_EXISTING: true

@@ -3,8 +3,10 @@
 import logging
 import os
 
+from vissl.utils.hydra_config import AttrDict
 
-def set_env_vars(local_rank, node_id, cfg):
+
+def set_env_vars(local_rank: int, node_id: int, cfg: AttrDict):
     os.environ["WORLD_SIZE"] = str(
         cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
     )
@@ -13,6 +15,12 @@ def set_env_vars(local_rank, node_id, cfg):
     os.environ["LOCAL_RANK"] = str(local_rank)
     if cfg.DISTRIBUTED.NCCL_DEBUG:
         os.environ["NCCL_DEBUG"] = "INFO"
+    if cfg.DISTRIBUTED.NCCL_SOCKET_NTHREADS:
+        logging.info(
+            f"local_rank: {local_rank}, "
+            f"using NCCL_SOCKET_NTHREADS: {cfg.DISTRIBUTED.NCCL_SOCKET_NTHREADS}"
+        )
+        os.environ["NCCL_SOCKET_NTHREADS"] = str(cfg.DISTRIBUTED.NCCL_SOCKET_NTHREADS)
 
 
 def print_system_env_info(current_env):

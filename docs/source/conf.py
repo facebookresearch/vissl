@@ -49,12 +49,8 @@ except ImportError:
     ]:
         sys.modules[m] = mock.Mock(name=m)
 
-for m in ["cv2", "scipy", "numpy", "vissl", "np.eye", "np.zeros"]:
-    sys.modules[m] = mock.Mock(name=m)
-
 
 # -- Project information -----------------------------------------------------
-
 
 project = "VISSL"
 copyright = "2020, VISSL contributors"

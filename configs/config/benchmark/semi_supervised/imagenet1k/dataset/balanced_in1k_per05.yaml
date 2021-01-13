@@ -1,0 +1,5 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATASET_NAMES: ["balanced-imagenet1k-per05"]

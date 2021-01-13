@@ -21,7 +21,9 @@ class TestBenchmarkModel(unittest.TestCase):
     @parameterized.expand(BENCHMARK_CONFIGS)
     def test_benchmark_model(self, filepath):
         logger.info(f"Loading {filepath}")
-        cfg = SSLHydraConfig.from_configs([filepath])
+        cfg = SSLHydraConfig.from_configs(
+            [filepath, "config.DISTRIBUTED.NUM_PROC_PER_NODE=1"]
+        )
         _, config = convert_to_attrdict(cfg.default_cfg)
         build_model(config.MODEL, config.OPTIMIZER)
 

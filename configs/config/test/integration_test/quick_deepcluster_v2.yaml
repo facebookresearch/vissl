@@ -10,6 +10,7 @@ config:
   PERF_STAT_FREQUENCY: 40
   ROLLING_BTIME_FREQ: 5
   DATA:
+    NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k_filelist]
@@ -17,9 +18,9 @@ config:
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_nmb_crops: 2
+          total_num_crops: 2
           size_crops: [224]
-          nmb_crops: [2]
+          num_crops: [2]
           crop_scales: [[0.14, 1]]
         - name: RandomHorizontalFlip
           p: 0.5
@@ -40,8 +41,9 @@ config:
       DATA_LIMIT: 250
       DROP_LAST: True
   TRAINER:
-    TRAIN_STEP_NAME: standard
-  METERS: null
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
   MODEL:
     TRUNK:
       NAME: resnet
@@ -56,18 +58,18 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
-  CRITERION:
+  LOSS:
     name: deepclusterv2_loss
-    NUM_TRAIN_SAMPLES: 500
-    DEEPCLUSTERV2_LOSS:
+    deepclusterv2_loss:
+      num_train_samples: 500
       BATCHSIZE_PER_REPLICA: 64
-      NMB_CROPS: 2
-      TEMPERATURE: 0.1
-      NMB_CLUSTERS: [10, 10, 10]
-      KMEANS_ITERS: 10
-      MEMORY_PARAMS:
-        CROPS_FOR_MB: [0, 1]
-        EMBEDDING_DIM: 128
+      num_crops: 2
+      temperature: 0.1
+      num_clusters: [10, 10, 10]
+      kmeans_iters: 10
+      memory_params:
+        crops_for_mb: [0, 1]
+        embedding_dim: 128
   OPTIMIZER:
       name: sgd
       use_larc: True
@@ -99,7 +101,6 @@ config:
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
-    NUM_DATALOADER_WORKERS: 5
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."

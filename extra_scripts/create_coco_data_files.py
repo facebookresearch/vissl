@@ -9,10 +9,10 @@ prepared for various data splits.
 import argparse
 import json
 import logging
-import os
 import sys
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 from pycocotools.coco import COCO
 
 
@@ -50,8 +50,8 @@ def get_valid_objs(entry, objs):
 
 
 def get_imgs_labels_info(split, json_file, args):
-    assert os.path.exists(json_file), "Data source does not exist. Abort"
-    json_data = json.load(open(json_file, "r"))
+    assert PathManager.exists(json_file), "Data source does not exist. Abort"
+    json_data = json.load(PathManager.open(json_file, "r"))
     image_index = [x["id"] for x in json_data["images"]]
     coco = COCO(json_file)
 
@@ -95,7 +95,7 @@ def get_imgs_labels_info(split, json_file, args):
     img_paths, img_labels = [], []
     prefix = args.train_imgs_path if split == "train" else args.val_imgs_path
     for item in sorted(img_labels_map.keys()):
-        img_paths.append(os.path.join(prefix, item))
+        img_paths.append(f"{prefix}/{item}")
         img_labels.append(img_labels_map[item])
     return img_paths, img_labels
 
@@ -132,23 +132,15 @@ def main():
     # valminusminival, we will write numpy files for each partition.
     partitions = ["val", "train", "minival", "valminusminival"]
     for partition in partitions:
-        annotation_file = os.path.join(
-            args.json_annotations_dir, "instances_{}2014.json".format(partition)
-        )
+        annotation_file = f"{args.json_annotations_dir}/instances_{partition}2014.json"
         logger.info("========Preparing {} data files========".format(partition))
         imgs_info, lbls_info = get_imgs_labels_info(partition, annotation_file, args)
-        img_info_out_path = os.path.join(args.output_dir, partition + "_images.npy")
-        label_info_out_path = os.path.join(args.output_dir, partition + "_labels.npy")
+        img_info_out_path = f"{args.output_dir}/{partition}_images.npy"
+        label_info_out_path = f"{args.output_dir}/{partition}_labels.npy"
         logger.info("=================SAVING DATA files=======================")
-        logger.info(
-            "partition: {} saving img_paths to: {}".format(partition, img_info_out_path)
-        )
-        logger.info(
-            "partition: {} saving lbls_paths: {}".format(partition, label_info_out_path)
-        )
-        logger.info(
-            "partition: {} imgs: {}".format(partition, np.array(imgs_info).shape)
-        )
+        logger.info(f"partition: {partition} saving img_paths to: {img_info_out_path}")
+        logger.info(f"partition: {partition} saving lbls_paths: {label_info_out_path}")
+        logger.info(f"partition: {partition} imgs: {np.array(imgs_info).shape}")
         np.save(img_info_out_path, np.array(imgs_info))
         np.save(label_info_out_path, np.array(lbls_info))
     logger.info("DONE!")

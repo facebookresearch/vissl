@@ -1,0 +1,48 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        # ["res4", ["AdaptiveAvgPool2d", [[2, 3]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[3, 2]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[1, 6]]]],
+        # ["res4", ["AdaptiveAvgPool2d", [[6, 1]]]],
+
+        # ["res4", ["AdaptiveAvgPool2d", [[1, 7]]]],
+        ["res4", ["AdaptiveAvgPool2d", [[7, 1]]]],
+
+        ["res5", ["AdaptiveAvgPool2d", [[3, 1]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 3]]]],
+
+        # ["res5", ["AdaptiveAvgPool2d", [[1, 4]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[4, 1]]]],
+        # ["res5", ["AdaptiveAvgPool2d", [[2, 2]]]],
+
+        ["avgpool", ["Identity", []]],
+        # ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_32gf
+    HEAD:
+      PARAMS: [
+        # ["eval_mlp", {"in_channels": 1392, "dims": [8352, 205]}],
+        # ["eval_mlp", {"in_channels": 1392, "dims": [8352, 205]}],
+        # ["eval_mlp", {"in_channels": 1392, "dims": [8352, 205]}],
+        # ["eval_mlp", {"in_channels": 1392, "dims": [8352, 205]}],
+
+        # ["eval_mlp", {"in_channels": 1392, "dims": [9744, 205]}],
+        ["eval_mlp", {"in_channels": 1392, "dims": [9744, 205]}],
+
+        ["eval_mlp", {"in_channels": 3712, "dims": [11136, 205]}],
+        # ["eval_mlp", {"in_channels": 3712, "dims": [11136, 205]}],
+
+        # ["eval_mlp", {"in_channels": 3712, "dims": [14848, 205]}],
+        # ["eval_mlp", {"in_channels": 3712, "dims": [14848, 205]}],
+        # ["eval_mlp", {"in_channels": 3712, "dims": [14848, 205]}],
+
+        ["eval_mlp", {"in_channels": 3712, "dims": [3712, 205]}],
+        # ["mlp", {"dims": [3712, 205]}],
+      ]

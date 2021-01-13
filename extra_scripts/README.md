@@ -179,6 +179,18 @@ python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
     --output_model <pth_model>.torch
 ```
 
+## Converting Models ClassyVision -> VISSL
+We provide scripts to convert [ClassyVision](https://github.com/facebookresearch/ClassyVision) models to [VISSL](https://github.com/facebookresearch/vissl) compatible models.
+
+
+```bash
+python extra_scripts/convert_classy_vision_to_vissl_resnet.py \
+    --input_model_file <input_model>.pth  \
+    --output_model <d2_model>.torch \
+    --depth 50
+```
+
+
 ## Converting Official RotNet and DeepCluster models -> VISSL
 
 AlexNet RotNet model:

@@ -1,0 +1,27 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+          WIDTH_MULTIPLIER: 2
+    HEAD:
+      PARAMS: [
+        # head 0 that operates on patches
+        [
+            ["mlp", {"dims": [4096, 128], "use_bn": False, "use_relu": False}],
+            ["siamese_concat_view", {"num_towers": 9}],
+            ["mlp", {"dims": [1152, 128]}],
+        ],
+        # head 1 that operates on images. Linear projection.
+          [
+              ["mlp", {"dims": [4096, 128]}]
+          ],
+        ]
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
+  OPTIMIZER:
+      num_epochs: 400

@@ -1,0 +1,30 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 6
+          size_crops: [160, 96]
+          num_crops: [2, 4]
+          crop_scales: [[0.08, 1], [0.05, 0.14]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
+  LOSS:
+      name: multicrop_simclr_info_nce_loss
+      multicrop_simclr_info_nce_loss:
+        temperature: 0.1
+        buffer_params:
+          embedding_dim: 128
+        num_crops: 2

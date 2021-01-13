@@ -1,0 +1,98 @@
+# _BASE_: "../Base-RCNN-FPN.yaml"
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  ANCHOR_GENERATOR:
+    SIZES: [[32], [64], [128], [256], [512]]  # One size for each in feature map
+    ASPECT_RATIOS: [[0.5, 1.0, 2.0]]  # Three aspect ratios (same for all in feature maps)
+  RPN:
+    IN_FEATURES: ["p2", "p3", "p4", "p5", "p6"]
+    PRE_NMS_TOPK_TRAIN: 2000  # Per FPN level
+    PRE_NMS_TOPK_TEST: 1000  # Per FPN level
+    # Detectron1 uses 2000 proposals per-batch,
+    # (See "modeling/rpn/rpn_outputs.py" for details of this legacy issue)
+    # which is approximately 1000 proposals per-image since the default batch size for FPN is 2.
+    POST_NMS_TOPK_TRAIN: 1000
+    POST_NMS_TOPK_TEST: 1000
+  ROI_HEADS:
+    NAME: "StandardROIHeads"
+    IN_FEATURES: ["p2", "p3", "p4", "p5"]
+  ROI_BOX_HEAD:
+    NAME: "FastRCNNConvFCHead"
+    NUM_FC: 2
+    POOLER_RESOLUTION: 7
+  ROI_MASK_HEAD:
+    NAME: "MaskRCNNConvUpsampleHead"
+    NUM_CONV: 4
+    POOLER_RESOLUTION: 14
+  MASK_ON: True
+
+  PIXEL_MEAN: [123.675, 116.280, 103.530]
+  PIXEL_STD: [58.395, 57.120, 57.375]
+  BACKBONE:
+    NAME: "build_regnet_fpn_backbone"
+    FREEZE_AT: 0
+  REGNET:
+    OUT_FEATURES: ["s1", "s2", "s3", "s4"]
+    DEPTH: 20
+    W0: 352
+    WA: 147.48
+    WM: 2.4
+    GROUP_W: 328
+    SE_R: 0.25  # RegNetY
+    NORM: "SyncBN"
+  FPN:
+    IN_FEATURES: ["s1", "s2", "s3", "s4"]
+    NORM: "SyncBN"
+TEST:
+  EVAL_PERIOD: 5000
+DATASETS:
+  TRAIN: ("coco_2017_train",)
+  TEST: ("coco_2017_val",)
+SOLVER:
+  IMS_PER_BATCH: 16
+  BASE_LR: 0.02
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
+  # WEIGHT_DECAY: 0.00005 # gives better results
+  WEIGHT_DECAY: 0.0001  # default
+  WARMUP_ITERS: 100
+  #################### RGY64-FPN_sBN_FPNnorm_pBNfz0_lrpt02_warm100_2x ###################
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.02
+  # STEPS: (120000, 160000)
+  # MAX_ITER: 180000
+  # # WEIGHT_DECAY: 0.00005 # gives better results
+  # WEIGHT_DECAY: 0.0001  # default
+  # WARMUP_ITERS: 100
+  # #################### RGY64-FPN_sBN_FPNnorm_pBNfz0_lrpt02_wd5e-5_warm100_1x ###################
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.02
+  # STEPS: (60000, 80000)
+  # MAX_ITER: 90000
+  # WEIGHT_DECAY: 0.00005 # gives better results
+  # WARMUP_ITERS: 100
+  # #################### RGY64-FPN_sBN_FPNnorm_pBNfz0_lrpt02_wd5e-5_warm100_2x ###################
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.02
+  # STEPS: (120000, 160000)
+  # MAX_ITER: 180000
+  # WEIGHT_DECAY: 0.00005 # gives better results
+  # WARMUP_ITERS: 100
+  # ################### RGY64-FPN_sBN_FPNnorm_pBNfz0_lrpt1_wd5e-5_warm100_1x ###################
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # STEPS: (60000, 80000)
+  # MAX_ITER: 90000
+  # WEIGHT_DECAY: 0.00005 # gives better results
+  # WARMUP_ITERS: 100
+  # #################### RGY64-FPN_sBN_FPNnorm_pBNfz0_lrpt1_wd5e-5_warm100_2x ###################
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # STEPS: (120000, 160000)
+  # MAX_ITER: 180000
+  # WEIGHT_DECAY: 0.00005 # gives better results
+  # WARMUP_ITERS: 100
+INPUT:
+  MIN_SIZE_TRAIN: (640, 672, 704, 736, 768, 800)
+  FORMAT: "RGB" # torchvision models take RGB input
+VERSION: 2

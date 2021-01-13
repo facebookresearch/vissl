@@ -7,7 +7,6 @@ selected based on hamming distance.
 import argparse
 import itertools
 import logging
-import os
 import sys
 
 import numpy as np
@@ -91,8 +90,8 @@ def main():
     min_dist = non_diag_elements.min() * selected_perms.shape[1]
     logger.info(f"Permutation stats: avg dist {mean_dist}; min dist {min_dist}")
 
-    perm_file = os.path.join(
-        args.output_dir, f"hamming_perms_{args.N}_patches_{args.M}_{ args.method}.npy"
+    perm_file = (
+        f"{args.output_dir}/hamming_perms_{args.N}_patches_{args.M}_{ args.method}.npy"
     )
     logger.info(f"Writing permutations to: {perm_file}")
     logger.info(f"permutations shape: {selected_perms.shape}")
