@@ -4,12 +4,8 @@ We provide a brief tutorial for running various evaluations using various tasks 
 
 - For installation, please refer to [`INSTALL.md`](INSTALL.md).
 
-## Preparing Data input files
 
-Below are the example commands to prepare input data files for various datasets.
-
-
-### Preparing ImageNet-1K data files
+## ImageNet-1K dataset
 We assume the downloaded data to look like:
 
 ```
@@ -40,22 +36,19 @@ imagenet_full_size
 |  |  |_...
 ```
 
-Run the following commands to create the data input files:
-```bash
-mkdir -p $HOME/ssl_scaling/datasets/imagenet1k/
-
-cd $HOME/ssl_scaling
-python extra_scripts/create_imagenet_data_files.py \
-    --data_source_dir /datasets01_101/imagenet_full_size/061417/ \
-    --output_dir $HOME/ssl_scaling/datasets/imagenet1k/
-```
-
-## Running Pre-training
+## Running SimCLR Pre-training on 1-gpu
 
 We provide a config to train model using the pretext SimCLR task on the ResNet50 model.
-Change the `TRAIN.DATA_PATHS` path in the config to where the imagenet handles are saved from the above script.
+Change the `DATA.TRAIN.DATA_PATHS` path to the ImageNet train dataset folder path.
 
 ```bash
-python tools/run_distributed_engines.py --node_id 0 \
-    --config_file configs/simple_clr/pretext_rn50_2gpu_simpleCLR_imagenet.yaml
+python3 run_distributed_engines.py \
+    hydra.verbose=true \
+    config.DATA.TRAIN.DATASET_NAMES=[imagenet1k_folder] \
+    config.DATA.TRAIN.DATA_SOURCES=[disk_folder] \
+    config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
+    config=test/integration_test/quick_simclr \
+    config.DATA.TRAIN.DATA_SOURCES=[synthetic] \
+    config.CHECKPOINT.DIR="./checkpoints" \
+    config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
 ```
