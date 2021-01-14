@@ -49,7 +49,6 @@ python3 run_distributed_engines.py \
     config.DATA.TRAIN.DATA_SOURCES=[disk_folder] \
     config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
     config=test/integration_test/quick_simclr \
-    config.DATA.TRAIN.DATA_SOURCES=[synthetic] \
     config.CHECKPOINT.DIR="./checkpoints" \
     config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
 ```
