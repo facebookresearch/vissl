@@ -1,8 +1,9 @@
-# Using SSL framework
+# Quick Start with VISSL
 
-We provide a brief tutorial for running various evaluations using various tasks (benchmark/legacy) on various datasets.
+We provide a quick overview for training SimCLR self-supervised model on 1-gpu with VISSL.
 
-- For installation, please refer to [`INSTALL.md`](INSTALL.md).
+## Install VISSL
+For installation, please refer to [`INSTALL.md`](INSTALL.md).
 
 
 ## ImageNet-1K dataset
