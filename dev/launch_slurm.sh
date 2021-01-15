@@ -2,21 +2,37 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 ######################### INPUT PARAMS ##################################
-NODES=${NODES-1}    # number of machines to distribute training on
+# number of machines to distribute training on
+NODES=${NODES-1}
+# number of gpus per machine to use for training
 NUM_GPU=${NUM_GPU-8}
+# gpus type: P100 | V100 | V100_32G etc. User should set this based on their machine
 GPU_TYPE=${GPU_TYPE-V100}
+# name of the training. for example: simclr_2node_resnet50_in1k. This is helpful to clearly recognize the training
 EXPT_NAME=${EXPT_NAME}
+# how much CPU memory to use
 MEM=${MEM-250g}
+# number of CPUs used for each trainer (i.e. each gpu)
 CPU=${CPU-8}
+# directory where all the training artifacts like checkpoints etc will be written
 OUTPUT_DIR=${OUTPUT_DIR}
+# partition of the cluster on which training should run. User should determine this parameter for their cluster
 PARTITION=${PARTITION-learnfair}
-COMMENT=${COMMENT-ggl4i_gcd}
-GITHUB_REPO=${GITHUB_REPO-ssl_scaling}
+# any helpful comment that slurm dashboard can display
+COMMENT=${COMMENT-vissl_training}
+GITHUB_REPO=${GITHUB_REPO-vissl}
+# what branch of VISSL should be used. specify your custom branch
 BRANCH=${BRANCH-master}
+# automatically determined and used for distributed training.
+# each training run must have a unique id and vissl defaults to date
 RUN_ID=$(date +'%Y%m%d')
+# number of dataloader workers to use per gpu
 NUM_DATA_WORKERS=${NUM_DATA_WORKERS-8}
+# multi-processing method to use in PyTorch. Options: forkserver | fork | spawn
 MULTI_PROCESSING_METHOD=${MULTI_PROCESSING_METHOD-forkserver}
 
+# specify the training configuration to run. For example: to train swav for 100epochs
+# config=pretrain/swav/swav_8node_resnet config.OPTIMIZER.num_epochs=1-00
 CFG=( "$@" )
 
 
