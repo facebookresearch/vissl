@@ -12,9 +12,11 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 
 
 def _convert_lbl_to_long(lbl):
-    # if the labels are int32, we convert them to int64 since pytorch
-    # needs a long (int64) type for labels to index. See
-    # https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
+    """
+    if the labels are int32, we convert them to int64 since pytorch
+    needs a long (int64) type for labels to index. See
+    https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-long-but-got-scalar-type-float-when-using-crossentropyloss/30542/5  # NOQA
+    """
     out_lbl = lbl
     if isinstance(lbl, np.ndarray) and (lbl.dtype == np.int32):
         out_lbl = lbl.astype(np.int64)
@@ -28,7 +30,34 @@ def _convert_lbl_to_long(lbl):
 class GenericSSLDataset(Dataset):
     """
     Base Self Supervised Learning Dataset Class.
-    TODO:: Documentation
+
+    The GenericSSLDataset class is defined to support reading data
+    from multiple data sources. For example: data = [dataset1, dataset2]
+    and the minibatches generated will have the corresponding data
+    from each dataset.
+
+    For this reason, we also support labels from multiple sources. For example
+    targets = [dataset1 targets, dataset2 targets].
+
+    In order to support multiple data sources, the dataset configuration
+    always has list inputs.
+        - DATA_SOURCES, LABEL_SOURCES, DATASET_NAMES, DATA_PATHS, LABEL_PATHS
+
+    For several data sources, we also support specifying on what dataset the
+    transforms should be applied. By default, apply the transforms
+    on data from all datasets.
+
+    Args:
+        cfg (AttrDict): configuration defined by user
+        split (str): the dataset split for which we are constructing the Dataset object
+        dataset_source_map (Dict[str, Callable]): The dictionary that maps
+                    what data sources are supported and what object to use to read
+                    data from those sources. For example:
+                    DATASET_SOURCE_MAP = {
+                        "disk_filelist": DiskImageDataset,
+                        "disk_folder": DiskImageDataset,
+                        "synthetic": SyntheticImageDataset,
+                    }
     """
 
     def __init__(self, cfg, split, dataset_source_map):
@@ -67,6 +96,11 @@ class GenericSSLDataset(Dataset):
             )
 
     def _verify_data_sources(self, split, dataset_source_map):
+        """
+        For each data source, verify that the specified data source
+        is supported in VISSL. See DATASET_SOURCE_MAP for what sources
+        are supported.
+        """
         for idx in range(len(self.data_sources)):
             assert self.data_sources[idx] in dataset_source_map, (
                 f"Unknown data source: {self.data_sources[idx]}, supported: "
@@ -74,6 +108,19 @@ class GenericSSLDataset(Dataset):
             )
 
     def _get_data_files(self, split):
+        """
+        Get the given dataset split (train or test), get the path to the dataset
+        (images and labels).
+        1. If the user has explicitly specified the data_sources, we simply
+           use those and don't do lookup in the datasets registered with VISSL
+           from the dataset catalog.
+        2. If the user hasn't specified the path, look for the dataset in
+           the datasets catalog registered with VISSL. For a given list of datasets
+           and a given partition (train/test), we first verify that we have the
+           dataset and the correct source as specified by the user.
+           Then for each dataset in the list, we get the data path (make sure it
+           exists, sources match). For the label file, the file is optional.
+        """
         local_rank, _ = get_machine_local_and_dist_rank()
         self.data_paths, self.label_paths = dataset_catalog.get_data_files(
             split, dataset_config=self.cfg["DATA"]
@@ -87,6 +134,13 @@ class GenericSSLDataset(Dataset):
         )
 
     def load_single_label_file(self, path):
+        """
+        Load the single data file. We only support user specifying the numpy label
+        files if user is specifying a data_filelist source of labels.
+
+        To save memory, if the mmap_mode is set to True for loading, we try to load
+        the images in mmap_mode. If it fails, we simply load the labels without mmap
+        """
         assert PathManager.isfile(path), f"Path to labels {path} is not a file"
         assert path.endswith("npy"), "Please specify a numpy file for labels"
         if self.cfg["DATA"][self.split].MMAP_MODE:
@@ -107,6 +161,18 @@ class GenericSSLDataset(Dataset):
         return labels
 
     def _load_labels(self):
+        """
+        Load the labels if the dataset has labels. In self-supervised
+        pre-training task, we don't use labels. However, we use labels for the
+        evaluations of the self-supervised models on the downstream tasks.
+
+        For labels, two label sources are supported: disk_filelist and disk_folder
+
+        In case of disk_filelist, we iteratively read labels for each specified file.
+        See load_single_label_file().
+        In case of disk_folder, we use the ImageFolder object created during the
+        data loading itself.
+        """
         local_rank, _ = get_machine_local_and_dist_rank()
         for idx, label_source in enumerate(self.label_sources):
             if label_source == "disk_filelist":
@@ -139,6 +205,21 @@ class GenericSSLDataset(Dataset):
             self.label_objs.append(labels)
 
     def __getitem__(self, idx):
+        """
+        Get the input sample for the minibatch for a specified data index.
+        For each data object (if we are loading several datasets in a minibatch),
+        we get the sample: consisting of {
+            - image data,
+            - label (if applicable) otherwise idx
+            - data_valid: 0 or 1 indicating if the data is valid image
+            - data_idx : index of the data in the dataset for book-keeping and debugging
+        }
+
+        Once the sample data is available, we apply the data transform on the sample.
+
+        The final transformed sample is returned to be added into the minibatch.
+        """
+
         if not self._labels_init and len(self.label_sources) > 0:
             self._load_labels()
             self._labels_init = True
@@ -173,23 +254,50 @@ class GenericSSLDataset(Dataset):
         return item
 
     def __len__(self):
+        """
+        Size of the dataset. Assumption made there is only one
+        data source
+        """
         return len(self.data_objs[0])
 
     def get_image_paths(self):
+        """
+        Get the image paths for all the data sources.
+
+        Return:
+            image_paths (List[List[str]]): list containing image paths list for each
+                                            data source.
+        """
         image_paths = []
         for source in self.data_objs:
             image_paths.append(source.get_image_paths())
         return image_paths
 
     def get_available_splits(self, dataset_config):
+        """
+        Get the available splits in the dataset confir. Not specific to this split
+        for which the SSLDataset is being constructed.
+
+        NOTE: this is deprecated method.
+        """
         return [key for key in dataset_config if key.lower() in ["train", "test"]]
 
     def num_samples(self, source_idx=0):
+        """
+        Size of the dataset. Assumption made there is only one
+        data source
+        """
         return len(self.data_objs[source_idx])
 
     def get_batchsize_per_replica(self):
+        """
+        Get the batch size per trainer
+        """
         # this searches for batchsize_per_replica in self and then in self.dataset
         return getattr(self, "batchsize_per_replica", 1)
 
     def get_global_batchsize(self):
+        """
+        The global batch size across all the trainers
+        """
         return self.get_batchsize_per_replica() * get_world_size()

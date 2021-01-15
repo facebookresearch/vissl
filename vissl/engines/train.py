@@ -28,6 +28,34 @@ def train_main(
     node_id: int = 0,
     hook_generator: Callable[[Any], List[ClassyHook]] = default_hook_generator,
 ):
+    """
+    Sets up and executes training workflow per machine.
+
+    Args:
+        cfg (AttrDict): user specified input config that has optimizer, loss, meters etc
+                        settings relevant to the training
+        dist_run_id (str): For multi-gpu training with PyTorch, we have to specify
+                           how the gpus are going to rendezvous. This requires specifying
+                           the communication method: file, tcp and the unique rendezvous
+                           run_id that is specific to 1 run.
+                           We recommend:
+                                1) for 1node: use init_method=tcp and run_id=auto
+                                2) for multi-node, use init_method=tcp and specify
+                                run_id={master_node}:{port}
+        checkpoint_path (str): if the training is being resumed from a checkpoint, path to
+                          the checkpoint. The tools/run_distributed_engines.py automatically
+                          looks for the checkpoint in the checkpoint directory.
+        checkpoint_folder (str): what directory to use for checkpointing. The
+                          tools/run_distributed_engines.py creates the directory based on user
+                          input in the yaml config file.
+        local_rank (int): id of the current device on the machine. If using gpus,
+                        local_rank = gpu number on the current machine
+        node_id (int): id of the current machine. starts from 0. valid for multi-gpu
+        hook_generator (Callable): The utility function that prepares all the hoooks that will
+                         be used in training based on user selection. Some basic hooks are used
+                         by default.
+    """
+
     # setup the environment variables
     set_env_vars(local_rank, node_id, cfg)
     dist_rank = int(os.environ["RANK"])

@@ -13,7 +13,9 @@ from classy_vision.generic.util import recursive_copy_to_gpu
 
 class DataloaderSyncGPUWrapper(DataloaderWrapper):
     """
-    Dataloader which wraps another dataloader, and moves the data to GPU.
+    Dataloader which wraps another dataloader, and moves the data to GPU
+    in async manner so as to overlap the cost of copying data from
+    cpu to gpu with the previous model iteration.
     """
 
     def __init__(self, dataloader: Iterable) -> None:

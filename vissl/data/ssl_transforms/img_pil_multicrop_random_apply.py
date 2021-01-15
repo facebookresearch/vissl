@@ -11,18 +11,19 @@ from PIL import Image
 
 @register_transform("ImgPilMultiCropRandomApply")
 class ImgPilMultiCropRandomApply(ClassyTransform):
+    """
+    Apply a list of transforms on multi-crop input. The transforms
+    are Randomly applied to each crop using the specified probability.
+    This is used in BYOL https://arxiv.org/pdf/2006.07733.pdf
+
+    Multi-crops are several crops of a given image. This is most commonly
+    used in contrastive learning. For example SimCLR, SwAV approaches use
+    multi-crop input.
+    """
+
     def __init__(self, transforms: List[Dict[str, Any]], prob: float):
-
         """
-        Apply a list of transforms on multi-crop input. The transforms
-        are Randomly applied to each crop using the specified probability.
-        This is used in BYOL https://arxiv.org/pdf/2006.07733.pdf
-
-        Multi-crops are several crops of a given image. This is most commonly
-        used in contrastive learning. For example SimCLR, SwAV approaches use
-        multi-crop input.
-
-        Inputs:
+        Args:
             transforms ( List(tranforms) ): List of transforms that should be applied
                                            to each crop.
             prob (List(float)): Probability of RandomApply for the transforms
@@ -59,6 +60,15 @@ class ImgPilMultiCropRandomApply(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilMultiCropRandomApply":
+        """
+        Instantiates ImgPilMultiCropRandomApply from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilMultiCropRandomApply instance.
+        """
         transforms = config.get("transforms", [])
         prob = config.get("prob", [])
         logging.info(f"ImgPilMultiCropRandomApply | Using prob: {prob}")

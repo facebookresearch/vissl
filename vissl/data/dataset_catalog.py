@@ -120,6 +120,17 @@ class VisslDatasetCatalog(object):
 
 
 def get_local_path(input_file, dest_dir):
+    """
+    If user specified copying data to a local directory,
+    get the local path where the data files were copied.
+
+    - If input_file is just a file, we return the dest_dir/filename
+    - If the intput_file is a directory, then we check if the
+      environemt is SLURM and use slurm_dir or otherwise dest_dir
+      to look up copy_complete file is available.
+      If available, we return the directory.
+    - If both above fail, we return the input_file as is.
+    """
     out = ""
     if PathManager.isfile(input_file):
         out = os.path.join(dest_dir, os.path.basename(input_file))
@@ -138,8 +149,10 @@ def get_local_path(input_file, dest_dir):
 
 
 def get_local_output_filepaths(input_files, dest_dir):
-    # if we have copied the files to local disk as specified in the config, we
-    # return those local paths. Otherwise return the original paths.
+    """
+    If we have copied the files to local disk as specified in the config, we
+    return those local paths. Otherwise return the original paths.
+    """
     output_files = []
     for item in input_files:
         if isinstance(item, list):
@@ -151,6 +164,10 @@ def get_local_output_filepaths(input_files, dest_dir):
 
 
 def check_data_exists(data_files):
+    """
+    Check that the input data files exist. If the data_files is a list,
+    we iteratively check for each file in the list.
+    """
     if isinstance(data_files, list):
         return np.all([PathManager.exists(item) for item in data_files])
     else:
@@ -158,6 +175,12 @@ def check_data_exists(data_files):
 
 
 def register_pascal_voc():
+    """
+    Register PASCAL VOC 2007 and 2012 datasets to the data catalog.
+    We first look up for these datasets paths in the dataset catalog,
+    if the paths exist, we register, otherwise we remove the voc_data
+    from the catalog registry.
+    """
     voc_datasets = ["voc2007_folder", "voc2012_folder"]
     for voc_data in voc_datasets:
         data_info = VisslDatasetCatalog.get(voc_data)
@@ -174,6 +197,12 @@ def register_pascal_voc():
 
 
 def register_coco():
+    """
+    Register COCO 2004 datasets to the data catalog.
+    We first look up for these datasets paths in the dataset catalog,
+    if the paths exist, we register, otherwise we remove the
+    coco2014_folder from the catalog registry.
+    """
     data_info = VisslDatasetCatalog.get("coco2014_folder")
     data_folder = data_info["train"][0]
     if PathManager.exists(data_folder):
@@ -188,6 +217,14 @@ def register_coco():
 
 
 def register_datasets(json_catalog_path):
+    """
+    If the json dataset_catalog file is found, we register
+    the datasets specified in the catalog with VISSL.
+    If the catalog also specified VOC or coco datasets, we resister them
+
+    Args:
+        json_catalog_path (str): the path to the json dataset catalog
+    """
     if PathManager.exists(json_catalog_path):
         logging.info(f"Registering datasets: {json_catalog_path}")
         VisslDatasetCatalog.clear()
@@ -202,10 +239,19 @@ def register_datasets(json_catalog_path):
 
 def get_data_files(split, dataset_config):
     """
-    For a given list of datasets and a given partition (train/test), we first
-    verify that we have the dataset and the correct source as specified by the user.
-    Then for each dataset in the list, we get the data path (make sure it exists,
-    sources match). For the label file, the file is optional.
+    Get the path to the dataset (images and labels).
+        1. If the user has explicitly specified the data_sources, we simply
+           use those and don't do lookup in the datasets registered with VISSL
+           from the dataset catalog.
+        2. If the user hasn't specified the path, look for the dataset in
+           the datasets catalog registered with VISSL. For a given list of datasets
+           and a given partition (train/test), we first verify that we have the
+           dataset and the correct source as specified by the user.
+           Then for each dataset in the list, we get the data path (make sure it
+           exists, sources match). For the label file, the file is optional.
+
+    Once we have the dataset original paths, we replace the path with the local paths
+    if the data was copied to local disk.
     """
     assert len(dataset_config[split].DATASET_NAMES) == len(
         dataset_config[split].DATA_SOURCES
@@ -252,5 +298,7 @@ def get_data_files(split, dataset_config):
     return output
 
 
+# get the path to dataset_catalog.json file
 json_catalog_file = get_json_data_catalog_file()
+# register the datasets specified in the catalog with VISSL
 register_datasets(json_catalog_file)

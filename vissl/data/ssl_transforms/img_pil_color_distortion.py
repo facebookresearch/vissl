@@ -20,8 +20,9 @@ class ImgPilColorDistortion(ClassyTransform):
 
     def __init__(self, strength):
         """
-        Inputs
-        - strength (float): A number used to quantify the strength of the color distortion.
+        Args:
+            strength (float): A number used to quantify the strength of the
+                              color distortion.
         """
         self.strength = strength
         self.color_jitter = pth_transforms.ColorJitter(
@@ -39,6 +40,15 @@ class ImgPilColorDistortion(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilColorDistortion":
+        """
+        Instantiates ImgPilColorDistortion from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilColorDistortion instance.
+        """
         strength = config.get("strength", 1.0)
         logging.info(f"ImgPilColorDistortion | Using strength: {strength}")
         return cls(strength=strength)
