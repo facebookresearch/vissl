@@ -116,13 +116,15 @@ from designing a new self-supervised task to evaluating the learned representati
 
 .. toctree::
    :maxdepth: 1
-   :caption: Large Scale Self-Supervised learning
+   :caption: Large Scale Training
 
+   large_scale/activation_checkpointing
    large_scale/larc
    large_scale/queue_dataset
    large_scale/stateful_sampler
    large_scale/mixed_precision
    large_scale/distributed_training
+   large_scale/zero
 
 .. toctree::
    :maxdepth: 1
