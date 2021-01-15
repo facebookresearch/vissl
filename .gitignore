@@ -69,6 +69,8 @@ docs/_build/
 # PyBuilder
 target/
 
+# Pycharm folders
+.idea/
 
 # Docusaurus site
 website/yarn.lock
