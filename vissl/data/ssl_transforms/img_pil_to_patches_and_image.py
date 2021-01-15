@@ -13,15 +13,15 @@ from vissl.data.ssl_transforms.img_patches_tensor import ImgPatchesFromTensor
 @register_transform("ImgPilToPatchesAndImage")
 class ImgPilToPatchesAndImage(ClassyTransform):
     """
-    Convert a PIL image to Patches and Image
-    Input
-    - PIL Image
-    Returns
-    - list containing N+1 elements
-      + zeroth element: a RandomResizedCrop of the image
-      + remainder: N patches extracted uniformly from a RandomResizedCrop
+    Convert an input PIL image to Patches and Image
+    This transform was proposed in PIRL - https://arxiv.org/abs/1912.01991.
 
-    This transform was proposed in PIRL - https://arxiv.org/abs/1912.01991
+    Input:
+        PIL Image
+    Returns:
+        list containing N+1 elements
+            + zeroth element: a RandomResizedCrop of the image
+            + remainder: N patches extracted uniformly from a RandomResizedCrop
     """
 
     def __init__(
@@ -34,13 +34,13 @@ class ImgPilToPatchesAndImage(ClassyTransform):
         num_patches=9,
     ):
         """
-        Input
-        - crop_scale_image (tuple of floats): scale for RandomResizedCrop of image
-        - crop_size_image (int): size for RandomResizedCrop of image
-        - crop_scale_patches (tuple of floats): scale for RandomResizedCrop of patches
-        - crop_size_patches (int): size for RandomResizedCrop of patches
-        - permute_patches (bool): permute the patches in any order
-        - num_patches (int): number of patches to create. should be a square integer.
+        Args:
+            crop_scale_image (tuple of floats): scale for RandomResizedCrop of image
+            crop_size_image (int): size for RandomResizedCrop of image
+            crop_scale_patches (tuple of floats): scale for RandomResizedCrop of patches
+            crop_size_patches (int): size for RandomResizedCrop of patches
+            permute_patches (bool): permute the patches in any order
+            num_patches (int): number of patches to create. should be a square integer.
         """
         assert isinstance(num_patches, int)
         splits_per_side = np.sqrt(num_patches)
@@ -61,7 +61,6 @@ class ImgPilToPatchesAndImage(ClassyTransform):
         self.image_to_patch_tx = ImgPatchesFromTensor(num_patches=num_patches)
 
     def __call__(self, image):
-
         cropped_image = self.crop_image_tx(image)
         cropped_patch_image = self.crop_patches_tx(image)
 
@@ -80,4 +79,13 @@ class ImgPilToPatchesAndImage(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilToPatchesAndImage":
+        """
+        Instantiates ImgPilToPatchesAndImage from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilToPatchesAndImage instance.
+        """
         return cls(**config)

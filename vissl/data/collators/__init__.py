@@ -15,7 +15,8 @@ COLLATOR_NAMES = set()
 
 
 def register_collator(name):
-    """Registers Self-Supervision data collators.
+    """
+    Registers Self-Supervision data collators.
 
     This decorator allows VISSL to add custom data collators, even if the
     collator itself is not part of VISSL. To use it, apply this decorator
@@ -27,7 +28,8 @@ def register_collator(name):
         def my_collator_name():
             ...
 
-    To get a collator from a configuration file, see :func:`get_collator`."""
+    To get a collator from a configuration file, see :func:`get_collator`.
+    """
 
     def register_collator_fn(func):
         if name in COLLATOR_REGISTRY:
@@ -47,6 +49,10 @@ def register_collator(name):
 
 
 def get_collator(collator_name, collate_params):
+    """
+    Given the collator name and the collator params, return the collator
+    if registered with VISSL. Also supports pytorch default collators.
+    """
     if collator_name == "default_collate":
         return default_collate
     else:

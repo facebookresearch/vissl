@@ -6,7 +6,26 @@ from vissl.data.collators import register_collator
 
 @register_collator("multicrop_collator")
 def multicrop_collator(batch):
-    """"""
+    """
+    This collator is used in SwAV approach.
+
+    The collators collates the batch for the following input (assuming k-copies of image):
+
+    Input:
+        batch: Example
+                batch = [
+                    {"data" : [img1_0, ..., img1_k], ..},
+                    {"data" : [img2_0, ..., img2_k], ...},
+                    ...
+                ]
+
+    Returns: Example output:
+                output = [
+                    {
+                        "data": torch.tensor([img1_0, ..., imgN_0], [img1_k, ..., imgN_k]) ..
+                    },
+                ]
+    """
     assert "data" in batch[0], "data not found in sample"
     assert "label" in batch[0], "label not found in sample"
 

@@ -14,6 +14,18 @@ from vissl.utils.hydra_config import AttrDict
 
 @register_loss("simclr_info_nce_loss")
 class SimclrInfoNCELoss(ClassyLoss):
+    """
+    This is the loss which was proposed in SimCLR https://arxiv.org/abs/2002.05709 paper.
+    See the paper for the details on the loss.
+
+    Config params:
+        temperature (float): the temperature to be applied on the logits
+        buffer_params:
+            world_size (int): total number of trainers in training
+            embedding_dim (int): output dimensions of the features projects
+            effective_batch_size (int): total batch size used (includes positives)
+    """
+
     def __init__(self, loss_config: AttrDict, device: str = "gpu"):
         super(SimclrInfoNCELoss, self).__init__()
 
@@ -27,6 +39,15 @@ class SimclrInfoNCELoss(ClassyLoss):
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates SimclrInfoNCELoss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            SimclrInfoNCELoss instance.
+        """
         return cls(loss_config)
 
     def forward(self, output, target):
@@ -40,6 +61,18 @@ class SimclrInfoNCELoss(ClassyLoss):
 
 
 class SimclrInfoNCECriterion(nn.Module):
+    """
+    The criterion corresponding to the SimCLR loss as defined in the paper
+    https://arxiv.org/abs/2002.05709.
+
+    Args:
+        temperature (float): the temperature to be applied on the logits
+        buffer_params:
+            world_size (int): total number of trainers in training
+            embedding_dim (int): output dimensions of the features projects
+            effective_batch_size (int): total batch size used (includes positives)
+    """
+
     def __init__(self, buffer_params, temperature: float):
         super(SimclrInfoNCECriterion, self).__init__()
 
@@ -55,7 +88,10 @@ class SimclrInfoNCECriterion(nn.Module):
         logging.info(f"Creating Info-NCE loss on Rank: {self.dist_rank}")
 
     def precompute_pos_neg_mask(self):
-        # computed once at the beginning of training
+        """
+        We precompute the positive and negative masks to speed up the loss calculation
+        """
+        # computed once at the begining of training
         total_images = self.buffer_params.effective_batch_size
         world_size = self.buffer_params.world_size
         batch_size = total_images // world_size
@@ -85,6 +121,9 @@ class SimclrInfoNCECriterion(nn.Module):
         self.neg_mask = neg_mask.cuda(non_blocking=True) if self.use_gpu else neg_mask
 
     def forward(self, embedding: torch.Tensor):
+        """
+        Calculate the loss. Operates on embeddings tensor.
+        """
         assert embedding.ndim == 2
         assert embedding.shape[1] == int(self.buffer_params.embedding_dim)
 

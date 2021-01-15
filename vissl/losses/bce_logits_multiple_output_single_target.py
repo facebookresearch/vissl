@@ -19,8 +19,9 @@ class BCELogitsMultipleOutputSingleTargetLoss(ClassyLoss):
         losses for each tensor in the list against the target.
 
         Config params:
-            "reduction": specifies reduction to apply to the output, optional
-            "normalize_output": Whether to L2 normalize the outputs
+            reduction: specifies reduction to apply to the output, optional
+            normalize_output: Whether to L2 normalize the outputs
+            world_size: total number of gpus in training. automatically inferred by vissl
         """
         super(BCELogitsMultipleOutputSingleTargetLoss, self).__init__()
         self.loss_config = loss_config
@@ -31,6 +32,15 @@ class BCELogitsMultipleOutputSingleTargetLoss(ClassyLoss):
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates BCELogitsMultipleOutputSingleTargetLoss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            BCELogitsMultipleOutputSingleTargetLoss instance.
+        """
         return cls(loss_config)
 
     def _create_loss_function(self):
@@ -43,6 +53,10 @@ class BCELogitsMultipleOutputSingleTargetLoss(ClassyLoss):
     def forward(
         self, output: Union[torch.Tensor, List[torch.Tensor]], target: torch.Tensor
     ):
+        """
+        For each output and single target, loss is calculated.
+        The returned loss value is the sum loss across all outputs.
+        """
         if isinstance(output, torch.Tensor):
             output = [output]
         assert isinstance(

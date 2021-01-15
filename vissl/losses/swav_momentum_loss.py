@@ -19,6 +19,31 @@ from vissl.utils.hydra_config import AttrDict
 
 @register_loss("swav_momentum_loss")
 class SwAVMomentumLoss(ClassyLoss):
+    """
+    This loss extends the SwAV loss proposed in paper https://arxiv.org/abs/2006.09882
+    by Caron et al. The loss combines the benefits of using the SwAV approach
+    with the momentum encoder as used in MoCo.
+
+    Config params:
+        momentum (float):               for the momentum encoder
+        momentum_eval_mode_iter_start (int): from what iteration should the momentum encoder
+                                        network be in eval mode
+        embedding_dim (int):            the projection head output dimension
+        temperature (float):            temperature to be applied to the logits
+        use_double_precision (bool):    whether to use double precision for the loss.
+                                        This could be a good idea to avoid NaNs.
+        normalize_last_layer (bool):    whether to normalize the last layer
+        num_iters (int):                number of sinkhorn algorithm iterations to make
+        epsilon (float):                see the paper for details
+        num_crops (int):                number of crops used
+        crops_for_assign (List[int]):   what crops to use for assignment
+        num_prototypes (List[int]):     number of prototypes
+        queue:
+            queue_length (int):         number of features to store and used in the scores
+            start_iter (int):           when to start using the queue for the scores
+            local_queue_length (int):   length of queue per gpu
+    """
+
     def __init__(self, loss_config: AttrDict):
         super().__init__()
         self.loss_config = loss_config
@@ -41,6 +66,15 @@ class SwAVMomentumLoss(ClassyLoss):
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates SwAVMomentumLoss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            SwAVMomentumLoss instance.
+        """
         return cls(loss_config)
 
     def initialize_queue(self):
@@ -68,7 +102,8 @@ class SwAVMomentumLoss(ClassyLoss):
         self.register_buffer("local_emb_queue", init_queue)
 
     def load_state_dict(self, state_dict, *args, **kwargs):
-        """Restore the loss state given a checkpoint
+        """
+        Restore the loss state given a checkpoint
 
         Args:
             state_dict (serialized via torch.save)
@@ -142,6 +177,10 @@ class SwAVMomentumLoss(ClassyLoss):
         return pprint.pformat(repr_dict, indent=2)
 
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
+        """
+        Apply the distributed sinknorn optimization on the scores matrix to
+        find the assignments
+        """
         with torch.no_grad():
             sum_Q = torch.sum(Q, dtype=Q.dtype)
             all_reduce_sum(sum_Q)
