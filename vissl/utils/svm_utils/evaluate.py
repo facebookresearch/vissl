@@ -23,14 +23,16 @@ def calculate_ap(rec, prec):
 def get_precision_recall(targets, scores, weights=None):
     """
     [P, R, score, ap] = get_precision_recall(targets, scores, weights)
-    Input    :
-        targets  : number of occurrences of this class in the ith image
-        scores   : score for this image
-        weights  : 0 or 1 whether where 0 means we should ignore the sample
-    Output   :
-        P, R   : precision and recall
-        score  : score which corresponds to the particular precision and recall
-        ap     : average precision
+
+    Args:
+        targets: number of occurrences of this class in the ith image
+        scores: score for this image
+        weights: 0 or 1 whether where 0 means we should ignore the sample
+
+    Returns:
+        P, R: precision and recall
+        score: score which corresponds to the particular precision and recall
+        ap: average precision
     """
     if weights is not None:
         sortweights = weights
