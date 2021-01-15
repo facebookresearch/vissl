@@ -17,28 +17,19 @@ from designing a new self-supervised task to evaluating the learned representati
    :maxdepth: 1
    :caption: Index
 
+   what_is_vissl
+   installation
    getting_started
 
-
 .. toctree::
    :maxdepth: 1
-   :caption: Installation
-
-   installation
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: VISSL Configuration files
+   :caption: Notes
 
    hydra_config
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Visualization
-
    visualization
+   compatibility_libraries
+   contributing
+   contacts
 
 
 .. toctree::
@@ -125,25 +116,6 @@ from designing a new self-supervised task to evaluating the learned representati
    large_scale/mixed_precision
    large_scale/distributed_training
    large_scale/zero
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Compatibility with other Libraries
-
-   compatibility_libraries
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contributing
-
-   contributing
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contact
-
-   contacts
 
 
 .. toctree::
