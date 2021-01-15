@@ -3,7 +3,7 @@ Train PIRL model
 
 Author: imisra@fb.com
 
-VISSL reproduces the self-supervised approach "Self-Supervised Learning of Pretext-Invariant Representations" proposed by **Ishan Misra and Laurens van der Maaten** in `this paper <https://arxiv.org/abs/1912.01991>`_.
+VISSL reproduces the self-supervised approach **Self-Supervised Learning of Pretext-Invariant Representations** proposed by **Ishan Misra and Laurens van der Maaten** in `this paper <https://arxiv.org/abs/1912.01991>`_.
 
 How to train PIRL model
 ---------------------------
