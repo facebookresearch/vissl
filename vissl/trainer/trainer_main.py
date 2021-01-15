@@ -38,6 +38,34 @@ def build_task(config):
 
 
 class SelfSupervisionTrainer(object):
+    """
+    The main entry point for any training or feature extraction workflows in VISSL.
+
+    The trainer constructs a train_task which prepares all the components of the
+    training (optimizer, loss, meters, model etc) using the settings specified by user
+    in the yaml config file. See the vissl/trainer/train_task.py for more details.
+
+    Args:
+        cfg (AttrDict): user specified input config that has optimizer, loss, meters etc
+                        settings relevant to the training
+        dist_run_id (str): For multi-gpu training with PyTorch, we have to specify
+                           how the gpus are going to rendezvous. This requires specifying
+                           the communication method: file, tcp and the unique rendezvous
+                           run_id that is specific to 1 run.
+                           We recommend:
+                                1) for 1node: use init_method=tcp and run_id=auto
+                                2) for multi-node, use init_method=tcp and specify
+                                run_id={master_node}:{port}
+        checkpoint_path (str): if the training is being resumed from a checkpoint, path to
+                          the checkpoint. The tools/run_distributed_engines.py automatically
+                          looks for the checkpoint in the checkpoint directory.
+        checkpoint_folder (str): what directory to use for checkpointing. The
+                          tools/run_distributed_engines.py creates the directory based on user
+                          input in the yaml config file.
+        hooks (List[ClassyHooks]): the list of hooks to use during the training. The hooks
+                          vissl/engines/{train, extract_features}.py determine the hooks.
+    """
+
     def __init__(
         self,
         cfg: AttrDict,
@@ -63,7 +91,16 @@ class SelfSupervisionTrainer(object):
         self.setup_distributed(self.task.device.type == "cuda")
 
     def setup_distributed(self, use_gpu: bool):
+        """
+        Setup the distributed training. VISSL support both GPU and CPU only training.
 
+        (1) Initialize the torch.distributed.init_process_group if the distributed is
+            not already initialized. The init_method, backend are specified by user in the
+            yaml config file. See vissl/defaults.yaml file for description on how to set
+            init_method, backend.
+        (2) We also set the global cuda device index using torch.cuda.set_device or
+            cpu device
+        """
         # we overwrite the distributed trainer setup here with our config options
         distributed_world_size = int(os.environ["WORLD_SIZE"])
         assert distributed_world_size % self.cfg.DISTRIBUTED.NUM_NODES == 0
@@ -99,6 +136,21 @@ class SelfSupervisionTrainer(object):
             set_cpu_device()
 
     def train(self):
+        """
+        The train workflow. We get the training loop to use (vissl default is
+        standard_train_step) but the user can create their own training loop
+        and specify the name TRAINER.TRAIN_STEP_NAME
+
+        The training happens:
+        1. Execute any hooks at the start of training (mostly resets the variable like
+           iteration num phase_num etc)
+        2. For each epoch (train or test), run the hooks at the start of an epoch. Mostly
+           involves setting things like timer, setting dataloader epoch etc
+        3. Execute the training loop (1 training iteration) involving forward, loss, backward,
+           optimizer update, metrics collection etc.
+        4. At the end of epoch, sync meters and execute hooks at the end of phase. Involves
+           things like checkpointing model, logging timers, logging to tensorboard etc
+        """
         train_step_fn = get_train_step(self.cfg["TRAINER"]["TRAIN_STEP_NAME"])
         self.task.prepare(pin_memory=self.cfg.DATA.PIN_MEMORY)
         self.task.init_distributed_data_parallel_model()
@@ -153,16 +205,18 @@ class SelfSupervisionTrainer(object):
 
     @staticmethod
     def _init_training_state(cfg, task: ClassyTask) -> Tuple[ClassyTask, int, int]:
-        """If a checkpoint is present, recover the current training status.
+        """
+        If a checkpoint is present, recover the current training status.
         If not initialize everything properly
 
-        Arguments:
-            task {ClassyTask} -- [description]
+        Args:
+            task {ClassyTask}: object consisting of all components a training requires
+                               (meters, optimizers, model, loss etc.)
 
         Returns:
-            task {ClassyTask} -- updated task
-            phase_idx {int} -- phase index
-            iteration_num {int} -- iteration number
+            task {ClassyTask}: updated task
+            phase_idx {int}: phase index
+            iteration_num: iteration number
         """
 
         phase_idx, iteration_num = -1, -1
@@ -191,6 +245,16 @@ class SelfSupervisionTrainer(object):
         return task, phase_idx, task.local_iteration_num
 
     def _advance_phase(self, task: ClassyTask):
+        """
+        Advance the training phase to the next phase.
+        - Updates the phase number,
+        - resets the meters,
+        - reset losses,
+        - recreates the data iterator and destroys previous iterator
+        - set the model to be in train or eval phase depending on what phase we are in
+        - execute any optimizer update (normally learning rate updates etc at the end of
+          an epoch)
+        """
         # reset the meters at the beginning of the epoch
         for meter in task.meters:
             meter.reset()
@@ -232,6 +296,14 @@ class SelfSupervisionTrainer(object):
         logging.info(f"Phase advanced. Rank: {local_rank}")
 
     def extract(self):
+        """
+        Extract workflow supports multi-gpu feature extraction. Since we are only extracting
+        features, only the model is built (and initialized from some model weights file
+        if specified by user). The model is set to the eval mode fully.
+
+        The features are extracted for whatever data splits (train, val, test) etc that user
+        wants.
+        """
         # support feature extraction on gpu only.
         assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)

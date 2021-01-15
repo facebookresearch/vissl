@@ -23,6 +23,12 @@ from vissl.utils.perf_stats import PerfStats
 
 
 class LogGpuStatsHook(ClassyHook):
+    """
+    Hook executed at the start of training and after every training iteration is done.
+    Logs Gpu nvidia-smi stats to logger streams: at the start of training and
+    after 50 training iterations.
+    """
+
     on_forward = ClassyHook._noop
     on_backward = ClassyHook._noop
     on_phase_start = ClassyHook._noop
@@ -32,13 +38,18 @@ class LogGpuStatsHook(ClassyHook):
     on_update = ClassyHook._noop
 
     def on_start(self, task: "tasks.ClassyTask") -> None:
+        """
+        Logs Gpu nvidia-smi stats to logger streams.
+        """
         if is_primary() and (task.device.type == "cuda"):
             # print the nvidia-smi stats
             log_gpu_stats()
 
     def on_step(self, task: "tasks.ClassyTask") -> None:
-        # print the nvidia-smi stats again to get more accurate nvidia-smi
-        # useful for monitoring memory usage.
+        """
+        Print the nvidia-smi stats again to get more accurate nvidia-smi
+        useful for monitoring memory usage.
+        """
         if (
             is_primary()
             and (task.device.type == "cuda")
@@ -48,6 +59,11 @@ class LogGpuStatsHook(ClassyHook):
 
 
 class LogLossLrEtaHook(ClassyHook):
+    """
+    Hook executed after every parameters update step. Logs training
+    stats like: LR, iteration, ETA, batch time etc to logger streams.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop
@@ -67,6 +83,18 @@ class LogLossLrEtaHook(ClassyHook):
         self.btime_freq: Optional[int] = btime_freq
 
     def on_update(self, task: "tasks.ClassyTask") -> None:
+        """
+        Executed after after parameter update. If the current phase is training,
+        and it's a logging iteration, we compute and log several helpul training
+        stats to keep track of ongoing training.
+
+        For monitoring the batch size (average training iteration time), we allow
+        monitoring the stats (optionally) for every N iterations to get better
+        idea about the batch time and training eta.
+
+        Set the btime_freq input using cfg.PERF_STAT_FREQUENCY=N ensuring that
+        cfg.MONITOR_PERF_STATS = True.
+        """
         phase_type = "train" if task.train else "test"
         if is_primary() and phase_type == "train":
             train_phase_idx = task.train_phase_idx
@@ -128,6 +156,12 @@ class LogLossLrEtaHook(ClassyHook):
 
 
 class LogLossMetricsCheckpointHook(ClassyHook):
+    """
+    Hook called after every forward pass (to check training doesn't give NaN),
+    after every step and at the end of epoch (to check if the model should be checkpointed)
+    and print the meters values at the end of every phase.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop
@@ -141,7 +175,9 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     def on_forward(self, task: "tasks.ClassyTask") -> None:
         """
         Called each time a model forward is done and make sure that
-        the model forward output is not NaN
+        the model forward output is not NaN. If we encounter NaN as the model
+        output, we checkpoint the model to enable debugging and also checkpoint
+        the model input sample, model output.
         """
         # check the model output is not NaN.
         has_nan = False
@@ -177,8 +213,11 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             logging.info(f"Saved model input: {input_sample_file}")
 
     def on_step(self, task: "tasks.ClassyTask") -> None:
-        # in some cases, we might want to checkpoint after certain number of
-        # iterations.
+        """
+        In some cases, we might want to checkpoint after certain number of iterations.
+        If we want to checkpoint after every N iterations, check the checkpoint
+        frequency matches and checkpoint if it does.
+        """
         checkpoint_frequency = task.config["CHECKPOINT"]["CHECKPOINT_ITER_FREQUENCY"]
         if checkpoint_frequency > 0:
             self._checkpoint_model(
@@ -208,6 +247,22 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     def _checkpoint_model(
         self, task, train_phase_idx, mode_frequency, mode_num, mode="phase"
     ):
+        """
+        Checkpoint model. Can be called in 3 possible scenarios:
+        1. If training becomes NaN, then we checkpoint the model to facilitate debugging
+        2. After every N epochs (CHECKPOINT_FREQ), model state is checkpointed.
+        3. If user wants to checkpoint during the epoch (ie. after every few training
+           iterations, the model state is checkpointed.)
+
+        Args:
+            task: Self-supervision task that hold information about training iteration,
+                  epoch number etc.
+            train_phase_idx (int): current training phase number. Starts from 0
+            mode_frequency (int): mode can be "phase" or "iteration". Frequency
+                                  of checkpointing for the given mode
+            mode_num (int): for the checkpointing mode (phase or iteration), the number
+                            of phase or iteration at which checkpointing is being done
+        """
         phase_idx = task.phase_idx
         num_epochs = task.num_epochs
         # check if we need to checkpoint this phase
@@ -265,6 +320,11 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             logging.info(f"Created symlink: {symlink_dest_file}")
 
     def _print_and_save_meters(self, task, train_phase_idx):
+        """
+        Executed only on master gpu at the end of each epoch. Computes the
+        meters and logs the metrics to the json file and to logger streams
+        (stdout, file).
+        """
         phase_type = "train" if task.train else "test"
         rank, _ = get_machine_local_and_dist_rank()
         checkpoint_folder = task.checkpoint_folder

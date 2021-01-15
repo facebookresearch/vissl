@@ -25,6 +25,10 @@ if is_apex_available():
 def _get_bn_optimizer_params(
     module, regularized_params, unregularized_params, optimizer_config
 ):
+    """
+    Given the (Sync)BatchNorm module in the model, we separate the module params
+    into regularized or non-regularized (weight_decay=0).
+    """
     # this is called by get_optimizer_params for BN specific layer only
     if module.weight is not None:
         if optimizer_config["regularize_bn"]:
@@ -40,6 +44,10 @@ def _get_bn_optimizer_params(
 
 
 def _filter_trainable(param_list: List[Any]) -> List[Any]:
+    """
+    Keep on the trainable parameters of the model and return the list of
+    trainable params.
+    """
     # Keep only the trainable params
     return list(filter(lambda x: x.requires_grad, param_list))
 
@@ -49,13 +57,27 @@ def get_optimizer_param_groups(
 ):
     """
     Go through all the layers, sort out which parameters should be regularized,
-    unregularized and optimization settings for the head/trunk.
+    unregularized and optimization settings for the head/trunk. We filter
+    the trainable params only and add them to the param_groups.
 
-    Returns: tuple
-        - param_groups (list): [
-            {"params": head_params, "lr": lr_value, "weight_decay": wd_value},
-            {"params": regularized_params},
-            {"params": unregularized_params, "weight_decay": 0.0}
+    Returns:
+        param_groups (List[Dict]): [
+            {
+                "params": trunk_regularized_params, "lr": lr_value, "weight_decay": wd_value,
+            },
+            {
+                "params": trunk_unregularized_params, "lr": lr_value, "weight_decay": 0.0,
+            },
+            {
+                "params": head_regularized_params, "lr": head_lr_value,
+                "weight_decay": head_weight_decay,
+            },
+            {
+                "params": head_unregularized_params, "lr": head_lr_value, "weight_decay": 0.0,
+            },
+            {
+                "params": remaining_regularized_params, "lr": lr_value
+            }
         ]
     """
     # if the different LR, weight decay value for head is not specified, we use the

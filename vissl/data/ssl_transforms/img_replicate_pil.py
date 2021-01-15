@@ -19,8 +19,8 @@ class ImgReplicatePil(ClassyTransform):
 
     def __init__(self, num_times: int = 2):
         """
-        Inputs
-        -
+        Args:
+            num_times (int): how many times should the image be replicated.
         """
         assert isinstance(
             num_times, int
@@ -36,6 +36,15 @@ class ImgReplicatePil(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgReplicatePil":
+        """
+        Instantiates ImgReplicatePil from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgReplicatePil instance.
+        """
         num_times = config.get("num_times", 2)
         logging.info(f"ImgReplicatePil | Using num_times: {num_times}")
         return cls(num_times=num_times)

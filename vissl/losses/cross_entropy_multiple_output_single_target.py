@@ -11,19 +11,20 @@ from vissl.utils.hydra_config import AttrDict
 
 @register_loss("cross_entropy_multiple_output_single_target")
 class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
-    def __init__(self, loss_config: AttrDict):
-        """
-        Intializer for the sum cross-entropy loss. For a single
-        tensor, this is equivalent to the cross-entropy loss. For a
-        list of tensors, this computes the sum of the cross-entropy
-        losses for each tensor in the list against the target.
+    """
+    Intializer for the sum cross-entropy loss. For a single
+    tensor, this is equivalent to the cross-entropy loss. For a
+    list of tensors, this computes the sum of the cross-entropy
+    losses for each tensor in the list against the target.
 
-        Config params:
-            "weight": weight of sample, optional
-            "ignore_index": sample should be ignored for loss, optional
-            "reduction": specifies reduction to apply to the output, optional
-            "temperature": specify temperature for softmax. Default 1.0
-        """
+    Config params:
+        weight: weight of sample, optional
+        ignore_index: sample should be ignored for loss, optional
+        reduction: specifies reduction to apply to the output, optional
+        temperature: specify temperature for softmax. Default 1.0
+    """
+
+    def __init__(self, loss_config: AttrDict):
         super(CrossEntropyMultipleOutputSingleTargetLoss, self).__init__()
         self._weight = None
         self._ignore_index = -1
@@ -39,6 +40,15 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates CrossEntropyMultipleOutputSingleTargetLoss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            CrossEntropyMultipleOutputSingleTargetLoss instance.
+        """
         return cls(loss_config)
 
     def _create_loss_function(self):
@@ -55,6 +65,10 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
     def forward(
         self, output: Union[torch.Tensor, List[torch.Tensor]], target: torch.Tensor
     ):
+        """
+        For each output and single target, loss is calculated.
+        The returned loss value is the sum loss across all outputs.
+        """
         if isinstance(output, torch.Tensor):
             output = [output]
         assert isinstance(

@@ -46,6 +46,10 @@ def register_model_trunk(name: str):
 
 
 def get_model_trunk(name: str):
+    """
+    Given the model trunk name, construct the trunk if it's registered
+    with VISSL.
+    """
     assert name in MODEL_TRUNKS_REGISTRY, "Unknown model trunk"
     return MODEL_TRUNKS_REGISTRY[name]
 
