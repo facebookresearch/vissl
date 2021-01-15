@@ -15,6 +15,65 @@ vissl.data.collators module
     :undoc-members:
     :show-inheritance:
 
+
+vissl.data.collators.mixup_collator module
+-----------------------------------------------
+
+.. automodule:: vissl.data.collators.mixup_collator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+vissl.data.collators.moco_collator module
+-----------------------------------------------
+
+.. automodule:: vissl.data.collators.moco_collator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.data.collators.multicrop_collator module
+-------------------------------------------------
+
+.. automodule:: vissl.data.collators.multicrop_collator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+vissl.data.collators.patch_and_image_collator module
+-------------------------------------------------------
+
+.. automodule:: vissl.data.collators.patch_and_image_collator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.data.collators.siamese_collator module
+-------------------------------------------------------
+
+.. automodule:: vissl.data.collators.siamese_collator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+vissl.data.collators.simclr_collator module
+-------------------------------------------------------
+
+.. automodule:: vissl.data.collators.simclr_collator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+vissl.data.collators.targets_one_hot_default_collator module
+---------------------------------------------------------------
+
+.. automodule:: vissl.data.collators.targets_one_hot_default_collator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 vissl.data.datasets module
 ---------------------------------------
 
@@ -67,6 +126,11 @@ vissl.data.ssl_transforms module
     :show-inheritance:
 
 .. automodule:: vissl.data.ssl_transforms.img_pil_to_raw_tensor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vissl.data.ssl_transforms.img_pil_to_tensor
     :members:
     :undoc-members:
     :show-inheritance:
@@ -131,6 +195,15 @@ vissl.data.dataset\_catalog module
 ---------------------------------------
 
 .. automodule:: vissl.data.dataset_catalog
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.data.dataloader\_sync\_gpu\_wrapper module
+------------------------------------------------
+
+.. automodule:: vissl.data.dataloader_sync_gpu_wrapper
     :members:
     :undoc-members:
     :show-inheritance:
