@@ -98,6 +98,10 @@ config:
       USE_STATEFUL_DISTRIBUTED_SAMPLER: False
       # whether to drop the last incomplete batch per process
       DROP_LAST: False
+      # name of the dataset. Meaningful and used to do lookup in the dataset_catalog.json
+      # it has the advantage that user needs to full the dataset_catalog.json once
+      # and then simply use the dataset name without having to specify data paths every time.
+      DATASET_NAMES: ["imagenet1k_folder"]
       # Sources for reading data.
       # Currently supports: disk_folder and disk_filelist
       # Parallel aligned with DATA_PATHS argument.
@@ -106,6 +110,11 @@ config:
       DATA_PATHS: []
       LABEL_SOURCES: []
       LABEL_PATHS: []
+      # either standard | sample_index
+      # sample_index is a common practice in self-supervised learning and sample_index = id of the
+      # sample in the data.
+      # standard label type is used for supervised learning and user specifis the labels to use.
+      LABEL_TYPE: "standard"
       # whether to memory map the input data.
       MMAP_MODE: True
       # if the images are invalid for whatever reason, we return the gray image of specified size.
@@ -122,21 +131,12 @@ config:
       COLLATE_FUNCTION_PARAMS: {}
       # limit the amount of data used in training. If set to -1, full dataset is used.
       DATA_LIMIT: -1
-      # name of the dataset. Meaningful and used to do lookup in the dataset_catalog.json
-      # it has the advantage that user needs to full the dataset_catalog.json once
-      # and then simply use the dataset name without having to specify data paths every time.
-      DATASET_NAMES: ["imagenet1k_folder"]
       # whether the data specified (whether file list or directory) should be copied locally
       # on the machine where training is happening.
       COPY_TO_LOCAL_DISK: False
       # if copying the data to a local directory, the destination to use. Otherwise,
       # temporary destination directory will be created and set.
       COPY_DESTINATION_DIR: ""
-      # either standard | sample_index
-      # sample_index is a common practice in self-supervised learning and sample_index = id of the
-      # sample in the data.
-      # standard label type is used for supervised learning and user specifis the labels to use.
-      LABEL_TYPE: "standard"
       # keys that specify what `keys' in a sample dictionary
       # correspond to input and target
       INPUT_KEY_NAMES: ["data"]
