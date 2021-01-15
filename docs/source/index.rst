@@ -69,6 +69,7 @@ from designing a new self-supervised task to evaluating the learned representati
    ssl_approaches/pirl
    ssl_approaches/simclr
    ssl_approaches/moco
+   ssl_approaches/deepclusterv2
    ssl_approaches/swav
 
 
