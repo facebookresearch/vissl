@@ -42,7 +42,6 @@ class SelfSupervisionTask(ClassificationTask):
     1) converts the model BatchNorm layers to the synchronized batchnorm
     2) sets mixed precision (apex and pytorch both supported)
 
-    T
     """
 
     def __init__(self, config: AttrDict):
