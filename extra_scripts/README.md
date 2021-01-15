@@ -124,7 +124,7 @@ All the models have been added to `ICCV19_MODEL_ZOO_FB.md`.
 Jigsaw model:
 
 ```bash
-python extra_scripts/convert_caffe2_to_torchvision_resnet.par \
+python extra_scripts/convert_caffe2_to_torchvision_resnet.py \
     --c2_model <model>.pkl \
     --output_model <pth_model>.torch \
     --jigsaw True --bgr2rgb True
@@ -133,7 +133,7 @@ python extra_scripts/convert_caffe2_to_torchvision_resnet.par \
 Colorization model:
 
 ```
-python extra_scripts/convert_caffe2_to_torchvision_resnet.par \
+python extra_scripts/convert_caffe2_to_torchvision_resnet.py \
     --c2_model <model>.pkl \
     --output_model <pth_model>.torch \
     --bgr2rgb False
@@ -142,7 +142,7 @@ python extra_scripts/convert_caffe2_to_torchvision_resnet.par \
 Supervised model:
 
 ```
-python extra_scripts/convert_caffe2_to_pytorch_rn50.par \
+python extra_scripts/convert_caffe2_to_pytorch_rn50.py \
     --c2_model <model>.pkl \
     --output_model <pth_model>.torch \
     --bgr2rgb True
@@ -152,7 +152,7 @@ python extra_scripts/convert_caffe2_to_pytorch_rn50.par \
 
 AlexNet Jigsaw models:
 ```
-python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
+python extra_scripts/convert_caffe2_to_vissl_alexnet.py \
     --weights_type caffe2 \
     --model_name jigsaw \
     --bgr2rgb True \
@@ -162,7 +162,7 @@ python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
 
 AlexNet Colorization models:
 ```
-python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
+python extra_scripts/convert_caffe2_to_vissl_alexnet.py \
     --weights_type caffe2 \
     --model_name colorization \
     --input_model_weights <model.pkl> \
@@ -171,7 +171,7 @@ python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
 
 AlexNet Supervised models:
 ```
-python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
+python extra_scripts/convert_caffe2_to_vissl_alexnet.py \
     --weights_type caffe2 \
     --model_name supervised \
     --bgr2rgb True \
@@ -195,7 +195,7 @@ python extra_scripts/convert_classy_vision_to_vissl_resnet.py \
 
 AlexNet RotNet model:
 ```
-python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
+python extra_scripts/convert_caffe2_to_vissl_alexnet.py \
     --weights_type torch \
     --model_name rotnet \
     --input_model_weights <model> \
@@ -204,7 +204,7 @@ python extra_scripts/convert_caffe2_to_vissl_alexnet.par \
 
 AlexNet DeepCluster model:
 ```
-python extra_scripts/convert_alexnet_models.par \
+python extra_scripts/convert_alexnet_models.py \
     --weights_type torch \
     --model_name deepcluster \
     --input_model_weights <model> \
