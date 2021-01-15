@@ -21,10 +21,10 @@ config:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
-      #      DATA_PATHS: ["<path to train folder>"]
       LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 4096
+#      DATASET_NAMES: [imagenet1k_folder]
+#      DATASET_NAMES: [imagenet1k_folder] google-imagenet1k-per01 or
+#      google-imagenet1k-per10
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -33,71 +33,51 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
       DATA_SOURCES: [disk_folder]
-#      DATA_PATHS: ["<path to test folder>"]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 4096
       TRANSFORMS:
         - name: Resize
-          size: 256
+          size: 224
         - name: CenterCrop
           size: 224
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-  MODEL:
-    FEATURE_EVAL_SETTINGS:
-      EVAL_MODE_ON: True
-      FREEZE_TRUNK_ONLY: True
-    TRUNK:
-      NAME: vision_transformer
-      TRUNK_PARAMS:
-        VISION_TRANSFORMERS:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 32
-          NUM_LAYERS: 12
-          NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
-          DROPOUT_RATE: 0.1
-          ATTENTION_DROPOUT_RATE: 0
-          CLASSIFIER: token
-    HEAD:
-      PARAMS: [
-      ["mlp", {"dims": [768, 1000]}],
-      ]
-    WEIGHTS_INIT:
-      PARAMS_FILE: "specify the model weights"
-      STATE_DICT_KEY_NAME: classy_state_dict
-    SYNC_BN_CONFIG:
-      CONVERT_BN_TO_SYNC_BN: False
-      SYNC_BN_TYPE: apex
-      GROUP_SIZE: 8
-    AMP_PARAMS:
-      USE_AMP: True
-      # USE_AMP: True
-      AMP_ARGS: {"opt_level": "O1"}
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1, 5]
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
   LOSS:
     name: cross_entropy_multiple_output_single_target
     cross_entropy_multiple_output_single_target:
       ignore_index: -1
+  GRAD_CLIP:
+    USE_GRAD_CLIP: True
   OPTIMIZER:
     name: sgd
-    # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
-    weight_decay: 0
+    weight_decay: 0.000
     momentum: 0.9
     num_epochs: 100
-    nesterov: False
-#    regularize_bn: True
+    nesterov: True
+    regularize_bn: False
     regularize_bias: True
     param_schedulers:
       lr:
         auto_lr_scaling:
           auto_scale: true
-          base_value: 0.1
+          base_value: 0.01
           base_lr_batch_size: 256
         name: composite
         schedulers:
@@ -110,20 +90,11 @@ config:
         interval_scaling: [rescaled, rescaled]
         update_interval: step
         lengths: [0.1, 0.9]
-  GRAD_CLIP:
-    USE_GRAD_CLIP: False
-  METERS:
-    name: accuracy_list_meter
-    accuracy_list_meter:
-      num_meters: 1
-      topk_values: [1, 5]
-  TRAINER:
-    TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 8 # 1 GPU
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
     RUN_ID: auto
-    SLURM_ENV: True
   MACHINE:
     DEVICE: gpu

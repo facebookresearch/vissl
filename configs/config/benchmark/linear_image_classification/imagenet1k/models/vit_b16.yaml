@@ -22,7 +22,7 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_folder]
       #      DATA_PATHS: ["<path to train folder>"]
-      LABEL_SOURCES: [disk_folder]
+#      LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 2048
       TRANSFORMS:
@@ -36,7 +36,7 @@ config:
     TEST:
       DATA_SOURCES: [disk_folder]
       DATA_PATHS: ["<path to test folder>"]
-      LABEL_SOURCES: [disk_folder]
+#      LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 2048
       TRANSFORMS:
@@ -56,7 +56,12 @@ config:
       NAME: vision_transformer
       TRUNK_PARAMS:
         VISION_TRANSFORMERS:
-          name: vit_b_16
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 12
+          HIDDEN_DIM: 768
+          MLP_DIM: 3072
           DROPOUT_RATE: 0.1
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token

@@ -44,11 +44,11 @@
         "val": ["<img_path>", "<lbl_path>"]
     },
     "google-imagenet1k-per01": {
-        "train": ["<img_path>", "<lbl_path>"],
-        "val": ["<img_path>", "<lbl_path>"]
+        "train": ["/private/home/ito/datasets/imagenet_1percent/train", "<lbl_path>"],
+        "val": ["/datasets01/imagenet_full_size/061417/val/", "<lbl_path>"]
     },
     "google-imagenet1k-per10": {
-        "train": ["<img_path>", "<lbl_path>"],
-        "val": ["<img_path>", "<lbl_path>"]
+        "train": ["/private/home/ito/datasets/imagenet_10percent/train", "<lbl_path>"],
+        "val": ["/datasets01/imagenet_full_size/061417/val/", "<lbl_path>"]
     }
 }
