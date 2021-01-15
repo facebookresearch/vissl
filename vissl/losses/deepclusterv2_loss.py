@@ -20,7 +20,22 @@ from vissl.utils.misc import get_indices_sparse
 
 @register_loss("deepclusterv2_loss")
 class DeepClusterV2Loss(ClassyLoss):
-    """"""
+    """
+    Loss used for DeepClusterV2 approach as provided in SwAV paper
+    https://arxiv.org/abs/2006.09882
+
+    Config params:
+        DROP_LAST (bool): automatically inferred from DATA.TRAIN.DROP_LAST
+        BATCHSIZE_PER_REPLICA (int): 256  # automatically inferred from
+                                            DATA.TRAIN.BATCHSIZE_PER_REPLICA
+        num_crops (int): 2                # automatically inferred from DATA.TRAIN.TRANSFORMS
+        temperature (float): 0.1
+        num_clusters (List[int]): [3000, 3000, 3000]
+        kmeans_iters (int): 10
+        crops_for_mb: [0]
+        embedding_dim: 128
+        num_train_samples (int): -1       # @auto-filled
+    """
 
     def __init__(self, loss_config: AttrDict):
         super().__init__()
@@ -64,6 +79,15 @@ class DeepClusterV2Loss(ClassyLoss):
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates DeepClusterV2Loss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            DeepClusterV2Loss instance.
+        """
         return cls(loss_config)
 
     def forward(self, output: torch.Tensor, idx: int):

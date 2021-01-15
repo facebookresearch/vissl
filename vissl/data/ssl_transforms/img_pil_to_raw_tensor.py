@@ -28,4 +28,13 @@ class ImgPilToRawTensor(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilToRawTensor":
+        """
+        Instantiates ImgPilToRawTensor from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilToRawTensor instance.
+        """
         return cls()

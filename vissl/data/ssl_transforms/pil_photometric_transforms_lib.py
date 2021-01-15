@@ -12,6 +12,11 @@ and do not alter the geometric properties of the image.
 
 
 class TransformObject(object):
+    """
+    Helper object to that prints information about the transformation and
+    other transforms can inherit from this.
+    """
+
     def _get_name(self):
         return self.__class__.__name__
 
@@ -26,14 +31,15 @@ class RandomValueApplier(TransformObject):
     ):
         """
         Applies a transform by sampling a random value between [min_v, max_v]
-        Inputs
-        - min_v (float or int): minimum value
-        - max_v (float or int): maximum value
-        - root_transform (transform object): transform that will be applied.
-            must accept a value as input.
-        - vtype (string): value type - either "float" or "int"
-        - closed_interval (bool): sample from [min_v, max_v] (when True)
-            or [min_v, max_v) when False
+
+        Args:
+            min_v (float or int): minimum value
+            max_v (float or int): maximum value
+            root_transform (transform object): transform that will be applied.
+                                               must accept a value as input.
+            vtype (string): value type - either "float" or "int"
+            closed_interval (bool): sample from [min_v, max_v] (when True)
+                                    or [min_v, max_v) when False
         """
         self.min_v = min_v
         self.max_v = max_v
@@ -44,6 +50,11 @@ class RandomValueApplier(TransformObject):
             assert self.vtype == "int"
 
     def sample_value(self):
+        """
+        Randomly sample the value from min_v and max_v depending on
+        float or int type and also whether to use open or closed
+        interval for sampleing
+        """
         if self.vtype == "float":
             v = np.random.uniform(low=self.min_v, high=self.max_v)
         elif self.vtype == "int":
@@ -58,32 +69,61 @@ class RandomValueApplier(TransformObject):
         return self.root_transform(img, v)
 
     def __repr__(self):
-        str = f"{self._get_name()}(min_v={self.min_v}, max_v={self.max_v}, root_transform={self.root_transform}, vtype={self.vtype}, closed_interval={self.closed_interval})"  # NOQA
+        str = (
+            f"{self._get_name()}(min_v={self.min_v}, max_v={self.max_v}, "
+            f"root_transform={self.root_transform}, vtype={self.vtype}, "
+            f"closed_interval={self.closed_interval})"
+        )
         return str
 
 
 def Sharpness(img, v):
+    """
+    Applies PIL.ImageEnhance.Sharpness to the image
+    """
     assert 0.1 <= v <= 1.9, f"{v} out of range [0.1, 1.9]"
     return PIL.ImageEnhance.Sharpness(img).enhance(v)
 
 
 def Solarize(img, v):
+    """
+    Applies PIL.ImageOps.solarize to the image
+    """
     assert 0 <= v <= 256, f"{v} out of range [0, 256]"
     return PIL.ImageOps.solarize(img, v)
 
 
 def Posterize(img, v):
+    """
+    Applies PIL.ImageOps.posterize to the image
+    """
     assert 4 <= v <= 8, f"{v} out of range [4, 8]"
     v = int(v)
     return PIL.ImageOps.posterize(img, v)
 
 
 def AutoContrast(img, _):
+    """
+    Applies PIL.ImageOps.autocontrast to the image
+    """
     return PIL.ImageOps.autocontrast(img)
 
 
 class RandomSharpnessTransform(RandomValueApplier):
+    """
+    Randomly apply the Sharpness transformation
+    with the random value selected from an interval.
+    """
+
     def __init__(self, min_v=0.1, max_v=1.9, root_transform=Sharpness, vtype="float"):
+        """
+        Args:
+            min_v (float): minimum value
+            max_v (float): maximum value
+            root_transform (transform object): transform that will be applied.
+                                               must accept a value as input.
+            vtype (string): value type - "float"
+        """
         super(RandomSharpnessTransform, self).__init__(
             min_v, max_v, root_transform, vtype
         )
@@ -91,6 +131,14 @@ class RandomSharpnessTransform(RandomValueApplier):
 
 class RandomPosterizeTransform(RandomValueApplier):
     def __init__(self, min_v=4, max_v=8, root_transform=Posterize, vtype="int"):
+        """
+        Args:
+            min_v (int): minimum value
+            max_v (int): maximum value
+            root_transform (transform object): transform that will be applied.
+                                               must accept a value as input.
+            vtype (string): value type - "int"
+        """
         super(RandomPosterizeTransform, self).__init__(
             min_v, max_v, root_transform, vtype, True
         )
@@ -98,12 +146,24 @@ class RandomPosterizeTransform(RandomValueApplier):
 
 class RandomSolarizeTransform(RandomValueApplier):
     def __init__(self, min_v=0, max_v=256, root_transform=Solarize, vtype="int"):
+        """
+        Args:
+            min_v (int): minimum value
+            max_v (int): maximum value
+            root_transform (transform object): transform that will be applied.
+                                               must accept a value as input.
+            vtype (string): value type - "int"
+        """
         super(RandomSolarizeTransform, self).__init__(
             min_v, max_v, root_transform, vtype, True
         )
 
 
 class AutoContrastTransform(TransformObject):
+    """
+    Wraps the AutoContrast method
+    """
+
     def __init__(self):
         self.root_transform = AutoContrast
 

@@ -50,6 +50,20 @@ class SSLClassyHookFunctions(Enum):
 
 
 def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
+    """
+    The utility function that prepares all the hoooks that will be used in training
+    based on user selection. Some basic hooks are used by default.
+
+    Optional hooks:
+        - Tensorboard hook,
+        - loss specific hooks (swav loss, deepcluster loss, moco loss) used only when the
+          loss is being used
+        - model complexity hook (if user wants to compute model flops, activations, params)
+          enable the hook via MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY = True
+
+    Returns:
+        hooks (List(functions)): list containing the hook functions that will be used
+    """
     hooks = []
 
     # conditionally add hooks based on use-case

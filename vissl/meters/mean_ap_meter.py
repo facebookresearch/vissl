@@ -13,15 +13,15 @@ from vissl.utils.svm_utils.evaluate import get_precision_recall
 @register_meter("mean_ap_meter")
 class MeanAPMeter(ClassyMeter):
     """
-    Meter to calculate mean AP metric for multi-label image classification task
-    on multiple output single target
+    Meter to calculate mean AP metric for multi-label image classification task.
+
+    Args:
+        meters_config (AttrDict): config containing the meter settings
+
+    meters_config should specify the num_classes
     """
 
     def __init__(self, meters_config: AttrDict):
-        """
-        args:
-            num_meters: number of meters and hence we have same number of outputs
-        """
         self.num_classes = meters_config.get("num_classes")
         self._total_sample_count = None
         self._curr_sample_count = None
@@ -29,14 +29,23 @@ class MeanAPMeter(ClassyMeter):
 
     @classmethod
     def from_config(cls, meters_config: AttrDict):
+        """
+        Get the AccuracyListMeter instance from the user defined config
+        """
         return cls(meters_config)
 
     @property
     def name(self):
+        """
+        Name of the meter
+        """
         return "mean_ap_manual_meter"
 
     @property
     def value(self):
+        """
+        Value of the meter globally synced. mean AP and AP for each class is returned
+        """
         _, distributed_rank = get_machine_local_and_dist_rank()
         logging.info(
             f"Rank: {distributed_rank} Mean AP meter: "
@@ -91,6 +100,10 @@ class MeanAPMeter(ClassyMeter):
         return targets_gathered
 
     def sync_state(self):
+        """
+        Globally syncing the state of each meter across all the trainers.
+        We gather scores, targets, total sampled
+        """
         # Communications
         self._curr_sample_count = all_reduce_sum(self._curr_sample_count)
         self._scores = self.gather_scores(self._scores)
@@ -103,6 +116,9 @@ class MeanAPMeter(ClassyMeter):
         self._curr_sample_count.zero_()
 
     def reset(self):
+        """
+        Reset the meter
+        """
         self._scores = torch.zeros(0, self.num_classes, dtype=torch.float32)
         self._targets = torch.zeros(0, self.num_classes, dtype=torch.int8)
         self._total_sample_count = torch.zeros(1)
@@ -112,6 +128,9 @@ class MeanAPMeter(ClassyMeter):
         return repr({"name": self.name, "value": self.value})
 
     def set_classy_state(self, state):
+        """
+        Set the state of meter
+        """
         assert (
             self.name == state["name"]
         ), f"State name {state['name']} does not match meter name {self.name}"
@@ -129,7 +148,7 @@ class MeanAPMeter(ClassyMeter):
 
     def get_classy_state(self):
         """
-        Contains the states of the meter.
+        Returns the states of meter
         """
         return {
             "name": self.name,
@@ -141,11 +160,17 @@ class MeanAPMeter(ClassyMeter):
         }
 
     def verify_target(self, target):
+        """
+        Verify that the target contains {-1, 0, 1} values only
+        """
         assert torch.all(
             torch.eq(target, 0) + torch.eq(target, 1) + torch.eq(target, -1)
         ), "Target values should be either 0 OR 1 OR -1"
 
     def update(self, model_output, target):
+        """
+        Update the scores and targets
+        """
         self.validate(model_output, target)
         self.verify_target(target)
 
@@ -168,6 +193,9 @@ class MeanAPMeter(ClassyMeter):
         del curr_scores, curr_targets
 
     def validate(self, model_output, target):
+        """
+        Validate that the input to meter is valid
+        """
         assert len(model_output.shape) == 2, "model_output should be a 2D tensor"
         assert len(target.shape) == 2, "target should be a 2D tensor"
         assert (

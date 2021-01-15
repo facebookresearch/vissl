@@ -30,6 +30,14 @@ LastBatchInfo = SimpleNamespace
 
 
 def construct_sample_for_model(batch_data, task):
+    """
+    Given the input batch from the dataloader, verify the input is
+    as expected: the input data and target data is present in the
+    batch.
+    In case of multi-input trainings like PIRL, make sure the data
+    is in right format i.e. the multiple input should be nested
+    under a common key "input".
+    """
     sample_key_names = task.data_and_label_keys
     inp_key, target_key = sample_key_names["input"], sample_key_names["target"]
     all_keys = inp_key + target_key
@@ -78,6 +86,19 @@ def construct_sample_for_model(batch_data, task):
 
 @register_train_step("standard_train_step")
 def standard_train_step(task):
+    """
+    Single training iteration loop of the model.
+
+    Performs: data read, forward, loss computation, backward, optimizer step, parameter updates.
+
+    Various intermediate steps are also performed:
+    - logging the training loss, training eta, LR, etc to loggers
+    - logging to tensorboard,
+    - performing any self-supervised method specific operations (like in MoCo approach, the
+    momentum encoder is updated), computing the scores in swav
+    - checkpointing model if user wants to checkpoint in the middle
+    of an epoch
+    """
     assert isinstance(task, ClassyTask), "task is not instance of ClassyTask"
 
     # reset the last batch info at every step

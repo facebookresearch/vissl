@@ -9,8 +9,10 @@ from vissl.data.collators import register_collator
 def convert_to_one_hot(pos_lbl, neg_lbl, num_classes: int) -> torch.Tensor:
     """
     This function converts target class indices to one-hot vectors,
-    given the number of classes. 1 for positive labels, 0 for negative and -1 for
-    ignore labels.
+    given the number of classes.
+        -> 1 for positive labels,
+        -> 0 for negative and
+        -> -1 for ignore labels.
     """
     one_hot_targets = torch.LongTensor(num_classes).zero_() - 1
     if isinstance(pos_lbl, list) and (len(pos_lbl) > 0):
@@ -30,6 +32,7 @@ def convert_to_one_hot(pos_lbl, neg_lbl, num_classes: int) -> torch.Tensor:
 def targets_one_hot_default_collator(batch, num_classes: int):
     """
     The collators collates the batch for the following input:
+
     Input:
         input : [[img0, ..., imgk]]
         label:  [
