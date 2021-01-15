@@ -134,9 +134,14 @@ class SSLTensorboardHook(ClassyHook):
             logging.info(f"Logging Parameter gradients. Iteration {iteration}")
             for name, parameter in task.base_model.named_parameters():
                 if parameter.grad is not None:
-                    self.tb_writer.add_histogram(
-                        f"Gradients/{name}", parameter.grad, global_step=task.iteration
-                    )
+                    try:
+                        self.tb_writer.add_histogram(
+                            f"Gradients/{name}", parameter.grad, global_step=task.iteration
+                        )
+                    except ValueError:
+                        logging.info(f"Gradient histogram empty for {name}, "
+                                     f"iteration {task.iteration}. Unable to "
+                                     f"log gradient.")
 
         if iteration % task.config["LOG_FREQUENCY"] == 0 or (
             iteration <= 100 and iteration % 5 == 0
