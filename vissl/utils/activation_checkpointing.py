@@ -25,7 +25,9 @@ def manual_gradient_reduction(model: Module, config_flag: bool) -> bool:
 
 
 def manual_sync_params(model: DistributedDataParallel) -> None:
-    """Manually sync params and buffers for DDP."""
+    """
+    Manually sync params and buffers for DDP.
+    """
     _orig = model.require_forward_param_sync
     model.require_forward_param_sync = True
     model._sync_params()
@@ -33,7 +35,9 @@ def manual_sync_params(model: DistributedDataParallel) -> None:
 
 
 def manual_gradient_all_reduce(model: DistributedDataParallel) -> None:
-    """Gradient reduction function used after backward is done."""
+    """
+    Gradient reduction function used after backward is done.
+    """
     w = []
     for p in model.parameters():
         if p.grad is not None:
@@ -49,7 +53,10 @@ def manual_gradient_all_reduce(model: DistributedDataParallel) -> None:
 
 
 def layer_splittable_before(m: Module) -> bool:
-    """Return if this module can be split in front of it for checkpointing."""
+    """
+    Return if this module can be split in front of it for checkpointing.
+    We don't split the relu module.
+    """
     return str(m) != "ReLU(inplace=True)"
 
 
@@ -58,7 +65,9 @@ def checkpoint_trunk(
     unique_out_feat_keys: List[str],
     checkpointing_splits: int,
 ) -> Dict[str, Module]:
-    """Checkpoint a list of blocks and return back the split version."""
+    """
+    Checkpoint a list of blocks and return back the split version.
+    """
     # If checkpointing, split the model appropriately. The number of features requested
     # can be a limiting factor and override the number of activation chunks requested
     feature_blocks_bucketed = []
