@@ -12,6 +12,14 @@ from vissl.utils.svm_utils.svm_trainer import SVMTrainer
 
 
 class SVMLowShotTrainer(SVMTrainer):
+    """
+    Train the SVM for the low-shot image classification tasks. Currently,
+    datasets like VOC07 and Places205 are supported.
+
+    The trained inherits from the SVMTrainer class and takes care of
+    training SVM, evaluating, and aggregate the metrics.
+    """
+
     def __init__(self, config, layer, output_dir):
         super().__init__(config, layer, output_dir)
         self._dataset_name = config["low_shot"]["dataset_name"]
@@ -75,6 +83,13 @@ class SVMLowShotTrainer(SVMTrainer):
         return out_file
 
     def train(self, features, targets, sample_num, low_shot_kvalue):
+        """
+        Train SVM on the input features and targets for a given low-shot
+        k-value and the independent low-shot sample number.
+
+        We save the trained SVM model for each combination:
+            cost value, class number, sample number, k-value
+        """
         logging.info("Training Low-shot SVM")
         if self.normalize:
             # normalize the features: N x 9216 (example shape)
@@ -121,6 +136,15 @@ class SVMLowShotTrainer(SVMTrainer):
         logging.info(f"Done training: sample: {sample_num} k-value: {low_shot_kvalue}")
 
     def test(self, features, targets, sample_num, low_shot_kvalue):
+        """
+        Test the SVM for the input test features and targets for the given:
+            low-shot k-value, sample number
+
+        We compute the meanAP across all classes for a given cost value.
+        We get the output matrix of shape (1, #costs) for the given sample_num and
+        k-value and save the matrix. We use this information to aggregate
+        later.
+        """
         logging.info("Testing SVM")
         # normalize the features: N x 9216 (example shape)
         if self.normalize:
@@ -164,6 +188,16 @@ class SVMLowShotTrainer(SVMTrainer):
         save_file(output, out_file)
 
     def aggregate_stats(self, k_values, sample_inds):
+        """
+        Aggregate the test AP across all k-values and independent samples.
+
+        For each low-shot k-value, we obtain the mean, max, min, std AP value.
+        Steps:
+            1. For each k-value, get the min/max/mean/std value across all the
+               independent samples. This results in matrices [#k-values x #classes]
+            2. Then we aggregate stats across the classes. For the mean stats in
+               step 1, for each k-value, we get the class which has maximum mean.
+        """
         logging.info(
             f"Aggregating stats for k-values: {k_values} and sample_inds: {sample_inds}"
         )

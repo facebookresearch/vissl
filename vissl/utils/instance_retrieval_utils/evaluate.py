@@ -3,13 +3,18 @@
 import numpy as np
 
 
-# AP routine of the Holdiays and INSTRE package
+# AP routine of the Holidays and INSTRE package
 # Credits: Matthijs Douze
 def score_ap_from_ranks_1(ranks, nres):
     """
     Compute the average precision of one search.
-    ranks = ordered list of ranks of true positives
-    nres  = total number of positives in dataset
+
+    Args:
+        ranks: ordered list of ranks of true positives
+        nres: total number of positives in dataset
+
+    Returns:
+        ap (float): the average precision following the Holidays and the INSTRE package
     """
     # accumulate trapezoids in PR-plot
     ap = 0.0
@@ -33,14 +38,12 @@ def compute_ap(ranks, nres):
     """
     Computes average precision for given ranked indexes.
 
-    Arguments
-    ---------
-    ranks : zerro-based ranks of positive images
-    nres  : number of positive images
+    Args:
+        ranks: zero-based ranks of positive images
+        nres: number of positive images
 
-    Returns
-    -------
-    ap    : average precision
+    Returns:
+        ap (float): average precision
     """
 
     # number of images ranked by the system
@@ -70,6 +73,10 @@ def compute_ap(ranks, nres):
 def compute_map(ranks, gnd, kappas):
     """
     Computes the mAP for a given set of returned results.
+
+    Credits:
+        https://github.com/filipradenovic/revisitop/blob/master/python/evaluate.py
+
     Usage:
       map = compute_map (ranks, gnd)
             computes mean average precsion (map) only
