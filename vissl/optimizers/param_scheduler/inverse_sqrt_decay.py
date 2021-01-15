@@ -43,6 +43,16 @@ class InverseSqrtScheduler(ClassyParamScheduler):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "InverseSqrtScheduler":
+        """
+        Instantiates a InverseSqrtScheduler from a configuration.
+
+        Args:
+            config: A configuration for a InverseSqrtScheduler.
+                See :func:`__init__` for parameters expected in the config.
+
+        Returns:
+            A InverseSqrtScheduler instance.
+        """
         assert "start_value" in config, "InverseSqrtScheduler requires a start_value"
         assert (
             "warmup_interval_length" in config

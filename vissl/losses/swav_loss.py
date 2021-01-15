@@ -23,6 +23,31 @@ from vissl.utils.hydra_config import AttrDict
 
 @register_loss("swav_loss")
 class SwAVLoss(ClassyLoss):
+    """
+    This loss is proposed by the SwAV paper https://arxiv.org/abs/2006.09882
+    by Caron et al. See the paper for more details about the loss.
+
+    Config params:
+        embedding_dim (int):            the projection head output dimension
+        temperature (float):            temperature to be applied to the logits
+        use_double_precision (bool):    whether to use double precision for the loss.
+                                        This could be a good idea to avoid NaNs.
+        normalize_last_layer (bool):    whether to normalize the last layer
+        num_iters (int):                number of sinkhorn algorithm iterations to make
+        epsilon (float):                see the paper for details
+        num_crops (int):                number of crops used
+        crops_for_assign (List[int]):   what crops to use for assignment
+        num_prototypes (List[int]):     number of prototypes
+        temp_hard_assignment_iters (int): whether to do hard assignment for the initial
+                                        few iterations
+        output_dir (str):               for dumping the debugging info in case loss
+                                        becomes NaN
+        queue:
+            queue_length (int):         number of features to store and used in the scores
+            start_iter (int):           when to start using the queue for the scores
+            local_queue_length (int):   length of queue per gpu
+    """
+
     def __init__(self, loss_config: AttrDict):
         super().__init__()
 
@@ -44,6 +69,15 @@ class SwAVLoss(ClassyLoss):
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates SwAVLoss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            SwAVLoss instance.
+        """
         return cls(loss_config)
 
     def forward(self, output: torch.Tensor, target: torch.Tensor):
@@ -77,6 +111,26 @@ class SwAVLoss(ClassyLoss):
 
 
 class SwAVCriterion(nn.Module):
+    """
+    This criterion is used by the SwAV paper https://arxiv.org/abs/2006.09882
+    by Caron et al. See the paper for more details about the loss.
+
+    Config params:
+        embedding_dim (int):            the projection head output dimension
+        temperature (float):            temperature to be applied to the logits
+
+        num_iters (int):                number of sinkhorn algorithm iterations to make
+        epsilon (float):                see the paper for details
+        num_crops (int):                number of crops used
+        crops_for_assign (List[int]):   what crops to use for assignment
+        num_prototypes (List[int]):     number of prototypes
+        temp_hard_assignment_iters (int): whether to do hard assignment for the initial
+                                        few iterations
+        output_dir (str):               for dumping the debugging info in case loss
+                                        becomes NaN
+        local_queue_length (int):   length of queue per gpu
+    """
+
     def __init__(
         self,
         temperature: float,
@@ -117,6 +171,10 @@ class SwAVCriterion(nn.Module):
         self.output_dir = output_dir
 
     def distributed_sinkhornknopp(self, Q: torch.Tensor):
+        """
+        Apply the distributed sinknorn optimization on the scores matrix to
+        find the assignments
+        """
         eps_num_stab = 1e-12
         with torch.no_grad():
             # remove potential infs in Q
