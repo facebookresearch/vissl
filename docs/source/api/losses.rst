@@ -34,6 +34,33 @@ vissl.losses.swav_loss
     :show-inheritance:
 
 
+vissl.losses.bce_logits_multiple_output_single_target
+------------------------------------------------------------
+
+.. automodule:: vissl.losses.bce_logits_multiple_output_single_target
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.losses.swav_momentum_loss
+-----------------------------------------------------
+
+.. automodule:: vissl.losses.swav_momentum_loss
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.losses.moco_loss
+-----------------------------------------------------
+
+.. automodule:: vissl.losses.moco_loss
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 vissl.losses.nce_loss
 -----------------------------------------------------
 

@@ -21,3 +21,12 @@ vissl.trainer.train_steps module
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+vissl.trainer.train_steps.standard_train_step module
+-------------------------------------------------------
+
+.. automodule:: vissl.trainer.train_steps.standard_train_step
+    :members:
+    :undoc-members:
+    :show-inheritance:

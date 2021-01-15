@@ -15,6 +15,11 @@ from vissl.utils.svm_utils.evaluate import get_precision_recall
 # Turning it into a class to encapsulate the training and evaluation logic
 # together unlike OSS benchmark which has 3 scripts.
 class SVMTrainer(object):
+    """
+    SVM trainer that takes care of training (using k-fold cross validation),
+    and evaluating the SVMs
+    """
+
     def __init__(self, config, layer, output_dir):
         self.config = config
         self.normalize = config["normalize"]
@@ -31,6 +36,10 @@ class SVMTrainer(object):
         return odir
 
     def load_input_data(self, data_file, targets_file):
+        """
+        Given the input data (features) and targets (labels) files, load the
+        features of shape N x D and labels of shape (N,)
+        """
         assert PathManager.exists(data_file), "Data file not found. Abort!"
         assert PathManager.exists(targets_file), "Targets file not found. Abort!"
         # load the features and the targets
@@ -42,11 +51,20 @@ class SVMTrainer(object):
         return features, targets
 
     def _normalize_features(self, features):
+        """
+        Normalize the features.
+        """
         feats_norm = np.linalg.norm(features, axis=1)
         features = features / (feats_norm + 1e-5)[:, np.newaxis]
         return features
 
     def _get_costs_list(self):
+        """
+        Costs values for which SVM training is done. We take costs values
+        specified in the costs_list input in the config file. Additionally,
+        costs specified to be the powers of a base value are also added
+        (assuming the base value is > 0).
+        """
         costs_list = self.config["costs"]["costs_list"]
         # we append more costs to the output based on power function
         if self.config["costs"]["base"] > 0.0:
@@ -74,6 +92,14 @@ class SVMTrainer(object):
         return out_file, ap_matrix_out_file
 
     def get_best_cost_value(self):
+        """
+        During the SVM training, we write the cross vaildation
+        AP value for training at each class and cost value
+        combination. We load the AP values and for each
+        class, determine the cost value that gives the maximum
+        AP. We return the chosen cost values for each class as a
+        numpy matrix.
+        """
         crossval_ap_file = f"{self.output_dir}/crossval_ap.npy"
         chosen_cost_file = f"{self.output_dir}/chosen_cost.npy"
         if PathManager.exists(crossval_ap_file) and PathManager.exists(
@@ -103,6 +129,12 @@ class SVMTrainer(object):
         return np.array(chosen_cost)
 
     def train_cls(self, features, targets, cls_num):
+        """
+        Train SVM on the input features and targets for a given class.
+        The SVMs are trained for all costs values for the given class. We
+        also save the cross-validation AP at each cost value for the given
+        class.
+        """
         logging.info(f"Training cls: {cls_num}")
         for cost_idx in range(len(self.costs_list)):
             cost = self.costs_list[cost_idx]
@@ -160,6 +192,10 @@ class SVMTrainer(object):
                 pickle.dump(clf, fwrite)
 
     def train(self, features, targets):
+        """
+        Train SVMs on the given features and targets for all classes and all the
+        costs values.
+        """
         logging.info("Training SVM")
         if self.normalize:
             # normalize the features: N x 9216 (example shape)
@@ -182,6 +218,14 @@ class SVMTrainer(object):
             t.join()
 
     def test(self, features, targets):
+        """
+        Test the trained SVM models on the test features and targets values.
+        We use the cost per class that gives the maximum cross validation AP on
+        the training and load the correspond trained SVM model for the cost value
+        and the class.
+
+        Log the test ap to stdout and also save the AP in a file.
+        """
         logging.info("Testing SVM")
         # normalize the features: N x 9216 (example shape)
         if self.normalize:
