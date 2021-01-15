@@ -7,6 +7,15 @@ vissl.models package
     :show-inheritance:
 
 
+vissl.models.model_helpers module
+---------------------------------------
+
+.. automodule:: vissl.models.model_helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 vissl.models.heads module
 ---------------------------------------
 
