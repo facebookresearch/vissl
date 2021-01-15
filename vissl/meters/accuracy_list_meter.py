@@ -12,14 +12,18 @@ from vissl.utils.hydra_config import AttrDict
 class AccuracyListMeter(ClassyMeter):
     """
     Meter to calculate top-k accuracy for single label image classification task.
+
+    Supports Single target and multiple output. A list of accuracy meters is
+    constructed and each output has a meter associated.
+
+    Args:
+        num_meters: number of meters and hence we have same number of outputs
+        topk_values: list of int `k` values. Example: [1, 5]
+        meter_names: list of str indicating the name of meter. Usually corresponds
+                     to the output layer name.
     """
 
     def __init__(self, num_meters: int, topk_values: List[int], meter_names: List[str]):
-        """
-        args:
-            num_meters: number of meters and hence we have same number of outputs
-            topk_values: list of int `k` values.
-        """
         super().__init__()
 
         assert is_pos_int(num_meters), "num_meters must be positive"
@@ -38,6 +42,9 @@ class AccuracyListMeter(ClassyMeter):
 
     @classmethod
     def from_config(cls, meters_config: AttrDict):
+        """
+        Get the AccuracyListMeter instance from the user defined config
+        """
         return cls(
             num_meters=meters_config["num_meters"],
             topk_values=meters_config["topk_values"],
@@ -46,10 +53,18 @@ class AccuracyListMeter(ClassyMeter):
 
     @property
     def name(self):
+        """
+        Name of the meter
+        """
         return "accuracy_list_meter"
 
     @property
     def value(self):
+        """
+        Value of the meter globally synced. For each output, all the top-k values are
+        returned. If there are several meters attached to the same layer
+        name, a list of top-k values will be returned for that layer name meter.
+        """
         val_dict = {}
         for ind, meter in enumerate(self._meters):
             meter_val = meter.value
@@ -80,12 +95,15 @@ class AccuracyListMeter(ClassyMeter):
         return output_dict
 
     def sync_state(self):
+        """
+        Globally syncing the state of each meter across all the trainers.
+        """
         for _, meter in enumerate(self._meters):
             meter.sync_state()
 
     def get_classy_state(self):
         """
-        Contains the states of the meter
+        Returns the states of each meter
         """
         meter_states = {}
         for ind, meter in enumerate(self._meters):
@@ -95,6 +113,9 @@ class AccuracyListMeter(ClassyMeter):
         return meter_states
 
     def set_classy_state(self, state):
+        """
+        Set the state of each meter
+        """
         assert len(state) == len(self._meters), "Incorrect state dict for meters"
         for ind, meter in enumerate(self._meters):
             meter.set_classy_state(state[ind]["state"])
@@ -116,11 +137,14 @@ class AccuracyListMeter(ClassyMeter):
         target: torch.Tensor,
     ):
         """
-        args:
+        Updates the value of the meter for the given model output list and targets.
+
+        Args:
             model_output: list of tensors of shape (B, C) where each value is
                           either logit or class probability.
             target:       tensor of shape (B).
-            Note: For binary classification, C=2.
+
+        NOTE: For binary classification, C=2.
         """
         if isinstance(model_output, torch.Tensor):
             model_output = [model_output]
@@ -130,7 +154,13 @@ class AccuracyListMeter(ClassyMeter):
             meter.update(output, target)
 
     def reset(self):
+        """
+        Reset all the meters
+        """
         [x.reset() for x in self._meters]
 
     def validate(self, model_output_shape, target_shape):
+        """
+        Not implemented
+        """
         pass

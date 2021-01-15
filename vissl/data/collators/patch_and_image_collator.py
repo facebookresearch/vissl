@@ -7,14 +7,17 @@ from vissl.data.collators import register_collator
 @register_collator("patch_and_image_collator")
 def patch_and_image_collator(batch):
     """
-    batch contains two keys "data" and "label"
-    - data is a list of N+1 elements.
-       1st element is the "image" and remainder N
-       are patches.
-    - label is an integer
+    This collator is used in PIRL approach.
+
+    batch contains two keys "data" and "label".
+        - data is a list of N+1 elements.
+          1st element is the "image" and remainder N
+          are patches.
+        - label is an integer (image index in the dataset)
+
     We collate this to
-    - image: batch_size tensor containing images
-    - patches: N * batch_size tensor containing patches
+        image: batch_size tensor containing images
+        patches: N * batch_size tensor containing patches
     """
     assert "data" in batch[0], "data not found in sample"
     assert "label" in batch[0], "label not found in sample"

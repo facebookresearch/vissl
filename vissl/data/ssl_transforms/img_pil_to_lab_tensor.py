@@ -14,6 +14,14 @@ class ImgPil2LabTensor(ClassyTransform):
     """
     Convert a PIL image to LAB tensor of shape C x H x W
     This transform was proposed in Colorization - https://arxiv.org/abs/1603.08511
+
+    The input image is PIL Image. We first convert it to tensor
+    HWC which has channel order RGB. We then convert the RGB to BGR
+    and use OpenCV to convert the image to LAB. The LAB image is
+    8-bit image in range > L [0, 255], A [0, 255], B [0, 255]. We
+    rescale it to: L [0, 100], A [-128, 127], B [-128, 127]
+
+    The output is image torch tensor.
     """
 
     def __init__(self, indices):
@@ -58,5 +66,14 @@ class ImgPil2LabTensor(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPil2LabTensor":
+        """
+        Instantiates ImgPil2LabTensor from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPil2LabTensor instance.
+        """
         indices = config.get("indices", [])
         return cls(indices=indices)

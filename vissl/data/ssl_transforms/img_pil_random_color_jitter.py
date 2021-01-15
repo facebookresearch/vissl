@@ -17,7 +17,7 @@ class ImgPilRandomColorJitter(ClassyTransform):
 
     def __init__(self, strength, prob):
         """
-        Inputs:
+        Args:
             strength (float): A number used to quantify the strength of the color distortion.
             p (float): probability of random application
         """
@@ -38,6 +38,15 @@ class ImgPilRandomColorJitter(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilRandomColorJitter":
+        """
+        Instantiates ImgPilRandomColorJitter from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilRandomColorJitter instance.
+        """
         strength = config.get("strength", 1.0)
         prob = config.get("p", 0.8)
         logging.info(f"ImgPilRandomColorJitter | Using strength: {strength}")
