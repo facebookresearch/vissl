@@ -39,4 +39,3 @@ config:
         update_mem_on_forward: False
       update_mem_with_emb_index: 1
       num_train_samples: 1281167
-
