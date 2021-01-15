@@ -7,9 +7,33 @@ from vissl.data.collators import register_collator
 @register_collator("simclr_collator")
 def simclr_collator(batch):
     """
-    The collators collates the batch for the following input:
-    input: [[img1_0, ..., img1_k], [img2_0, ..., img2_k], ..., [imgN_0, ..., imgN_k]]
-    output: [img1_0, img2_0, ....., img1_1, img2_1,...]
+    This collator is used in SimCLR approach.
+
+    The collators collates the batch for the following input (each image has k-copies):
+        input: [[img1_0, ..., img1_k], [img2_0, ..., img2_k], ..., [imgN_0, ..., imgN_k]]
+        output: [img1_0, img2_0, ....., img1_1, img2_1,...]
+
+
+    Input:
+        batch: Example
+                batch = [
+                    {"data": [img1_0, ..., img1_k], "label": [lbl1, ]},        #img1
+                    {"data": [img2_0, ..., img2_k], "label": [lbl2, ]},        #img2
+                    .
+                    .
+                    {"data": [imgN_0, ..., imgN_k], "label": [lblN, ]},        #imgN
+                ]
+
+                where:
+                    img{x} is a tensor of size: C x H x W
+                    lbl{x} is an integer
+
+    Returns: Example output:
+                output = [
+                    {
+                        "data": torch.tensor([img1_0, img2_0, ....., img1_1, img2_1,...]) ..
+                    },
+                ]
     """
     assert "data" in batch[0], "data not found in sample"
     assert "label" in batch[0], "label not found in sample"

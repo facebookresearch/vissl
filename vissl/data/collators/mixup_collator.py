@@ -16,6 +16,31 @@ def _blend_images(images, mixing_factor):
 
 @register_collator("multicrop_mixup_collator")
 def multicrop_mixup_collator(batch):
+    """
+    This collator is used to mix-up 2 images at a time. 2*N input images becomes N images
+    This collator can handle multi-crop input. For each crop, it mixes-up the corresponding
+    crop of the next image.
+
+    Input:
+        batch: Example
+                batch = [
+                    {"data" : [img1_0, ..., img1_k], ..},
+                    {"data" : [img2_0, ..., img2_k], ...},
+                    ...
+                    {"data" : [img2N_0, ..., img2N_k], ...},
+                ]
+
+    Returns: Example output:
+                output = [
+                    {
+                        "data": [
+                            torch.tensor([img1_2_0, ..., img1_2_k]),
+                            torch.tensor([img3_4_0, ..., img3_4_k])
+                            ...
+                        ]
+                    },
+                ]
+    """
     assert "data" in batch[0], "data not found in sample"
     assert "label" in batch[0], "label not found in sample"
 

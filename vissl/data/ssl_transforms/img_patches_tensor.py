@@ -14,6 +14,10 @@ class ImgPatchesFromTensor(ClassyTransform):
     """
     Create image patches from a torch Tensor or numpy array.
     This transform was proposed in Jigsaw - https://arxiv.org/abs/1603.09246
+
+    Args:
+        num_patches (int): how many image patches to create
+        patch_jitter (int): space to leave between patches
     """
 
     def __init__(self, num_patches=9, patch_jitter=21):
@@ -27,6 +31,9 @@ class ImgPatchesFromTensor(ClassyTransform):
         )
 
     def __call__(self, image):
+        """
+        Input image which is a torch.Tensor object of shape 3 x H x W
+        """
         data = []
         grid_size = int(image.shape[1] / self.grid_side_len)
         patch_size = grid_size - self.patch_jitter
@@ -55,6 +62,15 @@ class ImgPatchesFromTensor(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPatchesFromTensor":
+        """
+        Instantiates ImgPatchesFromTensor from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPatchesFromTensor instance.
+        """
         num_patches = config.get("num_patches", 9)
         patch_jitter = config.get("patch_jitter", 21)
         logging.info(f"ImgPatchesFromTensor | Using num_patches: {num_patches}")

@@ -12,6 +12,21 @@ from vissl.utils.hydra_config import AttrDict
 
 @register_loss("multicrop_simclr_info_nce_loss")
 class MultiCropSimclrInfoNCELoss(SimclrInfoNCELoss):
+    """
+    Expanded version of the SimCLR loss. The SimCLR loss works only on 2 positives.
+    We expand the loss to work for more positives following the multi-crop
+    augmentation proposed in SwAV paper. See SwAV paper https://arxiv.org/abs/2006.09882
+    for the multi-crop augmentation details.
+
+    Config params:
+        temperature (float): the temperature to be applied on the logits
+        num_crops (int): number of positives used
+        buffer_params:
+            world_size (int): total number of trainers in training
+            embedding_dim (int): output dimensions of the features projects
+            effective_batch_size (int): total batch size used (includes positives)
+    """
+
     def __init__(self, loss_config: AttrDict, device: str = "gpu"):
         super(SimclrInfoNCELoss, self).__init__()
 
@@ -34,6 +49,21 @@ class MultiCropSimclrInfoNCELoss(SimclrInfoNCELoss):
 
 
 class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
+    """
+    The criterion corresponding to the expandion SimCLR loss (as defined in the paper
+    https://arxiv.org/abs/2002.05709) using the multi-crop augmentaion proposed
+    in SwAV paper. The multi-crop augmentation allows using more positives
+    per image.
+
+    Args:
+        temperature (float): the temperature to be applied on the logits
+        num_crops (int): number of positives
+        buffer_params:
+            world_size (int): total number of trainers in training
+            embedding_dim (int): output dimensions of the features projects
+            effective_batch_size (int): total batch size used (includes positives)
+    """
+
     def __init__(self, buffer_params, temperature: float, num_crops: int):
 
         self.num_crops = num_crops
@@ -43,6 +73,9 @@ class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
         logging.info(f"Setting multicrop num_crops: {num_crops}")
 
     def precompute_pos_neg_mask(self):
+        """
+        We precompute the positive and negative masks to speed up the loss calculation
+        """
         # computed once at the beginning of training
         total_images = self.buffer_params.effective_batch_size
         world_size = self.buffer_params.world_size
@@ -80,6 +113,9 @@ class MultiCropSimclrInfoNCECriterion(SimclrInfoNCECriterion):
         self.pos_mask, self.neg_mask = pos_mask, neg_mask
 
     def forward(self, embedding: torch.Tensor):
+        """
+        Calculate the loss. Operates on embeddings tensor.
+        """
         assert embedding.ndim == 2
         assert embedding.shape[1] == int(self.buffer_params.embedding_dim)
 

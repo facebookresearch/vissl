@@ -18,7 +18,6 @@ from torch import nn
 from vissl.utils.hydra_config import AttrDict
 
 
-# Written by: Ishan Misra (imisra@fb.com)
 @register_loss("nce_loss_with_memory")
 class NCELossWithMemory(ClassyLoss):
     """
@@ -29,6 +28,32 @@ class NCELossWithMemory(ClassyLoss):
 
     This loss is used by NPID (https://arxiv.org/pdf/1805.01978.pdf), NPID++ and
     PIRL (https://arxiv.org/abs/1912.01991) approaches.
+
+    Written by: Ishan Misra (imisra@fb.com)
+
+    Config params:
+        norm_embedding (bool):           whether to normalize embeddings
+        temperature (float):             the temperature to apply to logits
+        norm_constant (int):             Z parameter in the NCEAverage
+        update_mem_with_emb_index (int): In case we have multiple embeddings used
+                                         in the nce loss, specify which embedding
+                                         to use to update the memory.
+        loss_type (str):                 options are "nce" | "cross_entropy". Using the
+                                         cross_entropy turns the loss into InfoNCE loss.
+        loss_weights (List[float]):      if the NCE loss is computed between multiple pairs,
+                                         we can set a loss weight per term can be used to weight
+                                         different pair contributions differently
+        negative_sampling_params:
+            num_negatives (int):         how many negatives to contrast with
+            type (str):                  how to select the negatives. options "random"
+        memory_params:
+            memory_size (int):           number of training samples as all the samples are
+                                         stored in memory
+            embedding_dim (int):         the projection head output dimension
+            momentum (int):              momentum to use to update the memory
+            norm_init (bool):            whether to L2 normalize the initialized memory bank
+            update_mem_on_forward (bool): whether to update memory on the forward pass
+        num_train_samples (int):         number of unique samples in the training dataset
     """
 
     def __init__(self, loss_config: AttrDict):
@@ -80,11 +105,23 @@ class NCELossWithMemory(ClassyLoss):
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates NCELossWithMemory from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            NCELossWithMemory instance.
+        """
         return cls(loss_config)
 
     def forward(
         self, output: Union[torch.Tensor, List[torch.Tensor]], target: torch.Tensor
     ):
+        """
+        For each output and single target, loss is calculated.
+        """
         if isinstance(output, torch.Tensor):
             output = [output]
         assert isinstance(

@@ -19,12 +19,15 @@ class ImgPilRandomPhotometric(ClassyTransform):
     """
     Randomly apply some photometric transforms to an image.
     This was used in PIRL - https://arxiv.org/abs/1912.01991
+
+    The photometric transforms applied includes:
+        AutoContrast, RandomPosterize, RandomSharpness, RandomSolarize
     """
 
     def __init__(self, p):
         """
-        Inputs
-        - p (float): Probability of applying the transforms
+        Args:
+            p (float): Probability of applying the transforms
         """
         assert isinstance(p, float), f"p must be a float value. Found {type(p)}"
         assert p >= 0 and p <= 1
@@ -42,5 +45,14 @@ class ImgPilRandomPhotometric(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilRandomPhotometric":
+        """
+        Instantiates ImgPilRandomPhotometric from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilRandomPhotometric instance.
+        """
         p = config.get("p", 0.66)
         return cls(p=p)

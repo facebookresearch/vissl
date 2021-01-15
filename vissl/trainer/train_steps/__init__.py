@@ -17,7 +17,8 @@ TRAIN_STEP_NAMES = set()
 
 
 def register_train_step(name):
-    """Registers Self-Supervision Train step.
+    """
+    Registers Self-Supervision Train step.
 
     This decorator allows VISSL to add custom train steps, even if the
     train step itself is not part of VISSL. To use it, apply this decorator
@@ -29,7 +30,8 @@ def register_train_step(name):
         def my_step_name():
             ...
 
-    To get a train step from a configuration file, see :func:`get_train_step`."""
+    To get a train step from a configuration file, see :func:`get_train_step`.
+    """
 
     def register_train_step_fn(func):
         if name in TRAIN_STEP_REGISTRY:
@@ -48,7 +50,11 @@ def register_train_step(name):
     return register_train_step_fn
 
 
-def get_train_step(train_step_name):
+def get_train_step(train_step_name: str):
+    """
+    Lookup the train_step_name in the train step registry and return.
+    If the train step is not implemented, asserts will be thrown and workflow will exit.
+    """
     assert train_step_name in TRAIN_STEP_REGISTRY, "Unknown train step"
     return TRAIN_STEP_REGISTRY[train_step_name]
 

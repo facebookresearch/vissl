@@ -374,9 +374,12 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: False
       SYNC_BN_TYPE: "pytorch"  # apex | pytorch
-      # if group_size=-1, will set group_size=num_gpus per node
-      # if group_size>0, will set group_size=value set by user
-      # if group_size=0, will set process_group=None
+      # 1) if group_size=-1 -> use the VISSL default setting. We synchronize within a
+      #     machine and hence will set group_size=num_gpus per node. This gives the best
+      #     speedup.
+      # 2) if group_size>0 -> will set group_size=value set by user.
+      # 3) if group_size=0 -> no groups are created and process_group=None. This means
+      #     global sync is done.
       GROUP_SIZE: -1
     # ----------------------------------------------------------------------------------- #
     # MIXED PRECISION SETUP
