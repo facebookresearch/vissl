@@ -11,7 +11,18 @@ from vissl.utils.io import makedir
 
 
 def is_training_finished(cfg: AttrDict, checkpoint_folder: str):
-    # given the checkpoint folder, we check that there's not already a final checkpoint
+    """
+    Given the checkpoint folder, we check that there's not already a final checkpoint
+    If the final checkpoint exists but the user wants to override the final checkpoint
+    then we mark training as not finished.
+
+    Args:
+        cfg (AttrDict): input config file specified by user and parsed by vissl
+        checkpoint_folder (str): the directory where the checkpoints exist
+
+    Returns:
+        boolean whether training is finished or not.
+    """
     if not cfg["CHECKPOINT"]["OVERWRITE_EXISTING"] and has_final_checkpoint(
         checkpoint_folder
     ):
@@ -19,6 +30,14 @@ def is_training_finished(cfg: AttrDict, checkpoint_folder: str):
 
 
 def get_checkpoint_folder(config: AttrDict):
+    """
+    Check, create and return the checkpoint folder. User can specify their own
+    checkpoint directory otherwise the default "." is used.
+
+    Optionally, for training that involves more than 1 machine, we allow to append
+    the distributed run id which helps to uniquely identify the training. This is
+    completely optional and user can se APPEND_DISTR_RUN_ID=true for this.
+    """
     odir = config.CHECKPOINT.DIR
     if config.DISTRIBUTED.NUM_NODES > 1 and config.CHECKPOINT.APPEND_DISTR_RUN_ID:
         odir = f"{odir}/{config.DISTRIBUTED.RUN_ID}"
@@ -154,6 +173,14 @@ def get_checkpoint_resume_files(
 
 
 def get_resume_checkpoint(cfg: AttrDict, checkpoint_folder: str):
+    """
+    Return the checkpoint from which to resume traning. If no checkpoint found,
+    return None. Resuming training is optional and user can set AUTO_RESUME=false
+    to not resume the training.
+
+    If we want to overwrite the existing final checkpoint, we ignore the final
+    checkpoint and return the previous checkpoints if exist.
+    """
     # we check whether there's a checkpoint that already exists
     checkpoint_path = None
     # if we are overwriting the existing checkpoint, then skip_final=true in
@@ -177,6 +204,13 @@ def get_resume_checkpoint(cfg: AttrDict, checkpoint_folder: str):
 
 
 def print_state_dict_shapes(state_dict: Dict[str, Any]):
+    """
+    For the given model state dictionary, print the name and shape
+    of each parameter tensor in the model state. Helps debugging.
+
+    Args:
+        state_dict (Dict[str, Any]): model state dictionary
+    """
     logging.info("Model state_dict:")
     for param_tensor in state_dict.keys():
         logging.info(f"{param_tensor}:\t{state_dict[param_tensor].size()}")
@@ -232,8 +266,10 @@ def replace_module_prefix(
     state_dict: Dict[str, Any], prefix: str, replace_with: str = ""
 ):
     """
-    Replace prefixes in a state_dict
-    Needed when loading DDP or classy vision models
+    Remove prefixes in a state_dict needed when loading models that are not VISSL
+    trained models.
+
+    Specify the prefix in the keys that should be removed.
     """
     state_dict = {
         (key.replace(prefix, replace_with, 1) if key.startswith(prefix) else key): val
@@ -244,8 +280,22 @@ def replace_module_prefix(
 
 def append_module_prefix(state_dict: Dict[str, Any], prefix: str):
     """
-    Append prefixes in a state_dict
-    Needed when loading DDP or classy vision models
+    Append prefixes in a state_dict needed when loading models that are not VISSL
+    trained models.
+
+    In order to load the model (if not trained with VISSL) with VISSL, there are 2 scenarios:
+        1. If you are interested in evaluating the model features and freeze the trunk.
+           Set APPEND_PREFIX="trunk.base_model." This assumes that your model is compatible
+           with the VISSL trunks. The VISSL trunks start with "_feature_blocks." prefix. If
+           your model doesn't have these prefix you can append them. For example:
+           For TorchVision ResNet trunk, set APPEND_PREFIX="trunk.base_model._feature_blocks."
+        2. where you want to load the model simply and finetune the full model.
+           Set APPEND_PREFIX="trunk."
+           This assumes that your model is compatible with the VISSL trunks. The VISSL
+           trunks start with "_feature_blocks." prefix. If your model doesn't have these
+           prefix you can append them.
+           For TorchVision ResNet trunk, set APPEND_PREFIX="trunk._feature_blocks."
+     NOTE: the prefix is appended to all the layers in the model
     """
     state_dict = {f"{prefix}{key}": val for (key, val) in state_dict.items()}
     return state_dict

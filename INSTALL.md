@@ -137,7 +137,7 @@ conda install -c vissl apex vissl
 ```
 
 #### Step 4: Install VISSL
-Follow [step4 instructions from the PIP installation](#step-4-install-vissl-from-source)
+Follow [step4 instructions from the PIP installation](#step-4-install-vissl)
 
 That's it! You are now ready to use this code.
 

@@ -11,6 +11,13 @@ from vissl.utils.io import makedir
 
 
 def is_tensorboard_available():
+    """
+    Check whether tensorboard is available or not.
+
+    Returns:
+        tb_available (bool): based on tensorboard imports, returns whether tensboarboard
+                             is available or not.
+    """
     try:
         import tensorboard  # noqa F401
         from torch.utils.tensorboard import SummaryWriter  # noqa F401
@@ -23,6 +30,17 @@ def is_tensorboard_available():
 
 
 def get_tensorboard_dir(cfg):
+    """
+    Get the output directory where the tensorboard events will be written.
+
+    Args:
+        cfg (AttrDict): User specified config file containing the settings for the
+                        tensorboard as well like log directory, logging frequency etc
+
+    Returns:
+        tensorboard_dir (str): output directory path
+
+    """
     checkpoint_folder = get_checkpoint_folder(cfg)
     tensorboard_dir = f"{checkpoint_folder}/tb_logs"
     logging.info(f"Tensorboard dir: {tensorboard_dir}")
@@ -31,6 +49,16 @@ def get_tensorboard_dir(cfg):
 
 
 def get_tensorboard_hook(cfg):
+    """
+    Construct the Tensorboard hook for visualization from the specified config
+
+    Args:
+        cfg (AttrDict): User specified config file containing the settings for the
+                        tensorboard as well like log directory, logging frequency etc
+
+    Returns:
+        SSLTensorboardHook (function): the tensorboard hook constructed
+    """
     from torch.utils.tensorboard import SummaryWriter
     from vissl.hooks import SSLTensorboardHook
 
