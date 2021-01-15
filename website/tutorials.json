@@ -1,29 +1,40 @@
 {
+  "Getting Started": [
+     {
+      "id": "Installation",
+      "title": "Installation"
+     },
+     {
+      "id": "Understanding_VISSL_Training_and_YAML_Config",
+      "title": "Understanding VISSL Training and YAML Config"
+     }
+  ],
   "Training": [
      {
-      "id": "train_simclr_imagenet",
-      "title": "Training SimCLR ImageNet"
-     },{
-      "id": "Supervised-ImageNet",
-      "title": "Training Supervised Imagenet"
+      "id": "Train_SimCLR_on_1_gpu",
+      "title": "Train SimCLR on 1-gpu"
      }
   ],
   "Feature Extraction": [
      {
-      "id": "extract_features_simclr_imagenet",
-      "title": "Extract Features SimCLR"
+      "id": "Feature_Extraction",
+      "title": "Feature Extraction"
      }
   ],
   "Benchmark": [
      {
-      "id": "eval_simclr_linear_imagenet",
-      "title": "Linear Image Classficiation on ImageNet"         
-     },{
-      "id": "eval_simclr_fulltune_imagenet",
-      "title": "Full finetuning on ImageNet"
-     },{
-      "id": "eval_simclr_object_detection",
-      "title": "Evaluation on Object Detection VOC07"
+      "id": "Benchmark_Linear_Image_Classification_on_ImageNet_1K",
+      "title": "Benchmark Linear Image Classification on ImageNet-1K"
+     },
+     {
+      "id": "Benchmark_Full_Finetuning_on_ImageNet_1K",
+      "title": "Benchmark Full-Finetuning on ImageNet-1K"
      }
-  ]
+  ],
+  "Large Scale Training": [
+   {
+    "id": "Large_Scale_Training",
+    "title": "Large Scale Training with VISSL Training (mixed precision, LARC, ZeRO etc.)"
+   }
+]
 }
