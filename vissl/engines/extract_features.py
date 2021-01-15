@@ -15,6 +15,25 @@ from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 def extract_main(
     cfg: AttrDict, dist_run_id: str, local_rank: int = 0, node_id: int = 0
 ):
+    """
+    Sets up and executes feature extraction workflow per machine.
+
+    Args:
+        cfg (AttrDict): user specified input config that has optimizer, loss, meters etc
+                        settings relevant to the training
+        dist_run_id (str): For multi-gpu training with PyTorch, we have to specify
+                           how the gpus are going to rendezvous. This requires specifying
+                           the communication method: file, tcp and the unique rendezvous
+                           run_id that is specific to 1 run.
+                           We recommend:
+                                1) for 1node: use init_method=tcp and run_id=auto
+                                2) for multi-node, use init_method=tcp and specify
+                                run_id={master_node}:{port}
+        local_rank (int): id of the current device on the machine. If using gpus,
+                        local_rank = gpu number on the current machine
+        node_id (int): id of the current machine. starts from 0. valid for multi-gpu
+    """
+
     # setup logging
     setup_logging(__name__)
     # setup the environment variables

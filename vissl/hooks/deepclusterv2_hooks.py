@@ -5,7 +5,7 @@ from classy_vision.hooks.classy_hook import ClassyHook
 
 class InitMemoryHook(ClassyHook):
     """
-    Initialize the memory banks
+    Initialize the memory banks. Valid only for DeepClusterV2 training
     """
 
     on_phase_start = ClassyHook._noop
@@ -18,6 +18,9 @@ class InitMemoryHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_start(self, task) -> None:
+        """
+        At the begining of the training, initialize the memory banks
+        """
         if not task.config["LOSS"]["name"] == "deepclusterv2_loss":
             return
         if task.train_phase_idx >= 0:
@@ -27,7 +30,8 @@ class InitMemoryHook(ClassyHook):
 
 class ClusterMemoryHook(ClassyHook):
     """
-    Cluster the memory banks with distributed k-means
+    Cluster the memory banks with distributed k-means. Valid only for
+    DeepClusterV2 trainings.
     """
 
     on_start = ClassyHook._noop
@@ -40,6 +44,10 @@ class ClusterMemoryHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_phase_start(self, task) -> None:
+        """
+        At the beginning of each epochs, cluster the memory banks with
+        distributed k-means
+        """
         if not task.config["LOSS"]["name"] == "deepclusterv2_loss":
             return
         task.loss.cluster_memory()

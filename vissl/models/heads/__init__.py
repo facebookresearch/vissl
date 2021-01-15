@@ -46,6 +46,10 @@ def register_model_head(name: str):
 
 
 def get_model_head(name: str):
+    """
+    Given the model head name, construct the head if it's registered
+    with VISSL.
+    """
     assert name in MODEL_HEADS_REGISTRY, "Unknown model head"
     return MODEL_HEADS_REGISTRY[name]
 

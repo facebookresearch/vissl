@@ -30,11 +30,31 @@ DATASET_SOURCE_MAP = {
 
 
 def build_dataset(cfg, split):
+    """
+    Given the user defined config and the dataset split (train/val), build
+    the dataset.
+
+    Args:
+        cfg (AttrDict): user defined configuration file
+        split (str): dataset split (from train or test)
+
+    Returns:
+        Instance of GenericSSLDataset
+    """
     dataset = GenericSSLDataset(cfg, split, DATASET_SOURCE_MAP)
     return dataset
 
 
 def print_sampler_config(data_sampler):
+    """
+    Print the data sampler config to facilitate debugging. Printed params include:
+        num_replicas,
+        rank
+        epoch
+        num_samples
+        total_size
+        shuffle
+    """
     sampler_cfg = {
         "num_replicas": data_sampler.num_replicas,
         "rank": data_sampler.rank,
@@ -53,6 +73,13 @@ def print_sampler_config(data_sampler):
 
 
 def get_sampler(dataset, dataset_config):
+    """
+    Given the dataset object and the dataset config, get the data sampler to use
+    Supports 2 types of samplers:
+        - Pytorch default torch.utils.data.distributed.DistributedSampler
+        - VISSL sampler StatefulDistributedSampler that is written specifically for
+          large scale dataset trainings
+    """
     data_sampler = None
     if torch.distributed.is_available() and torch.distributed.is_initialized():
         if dataset_config["USE_STATEFUL_DISTRIBUTED_SAMPLER"]:
@@ -80,6 +107,26 @@ def get_loader(
     get_sampler=get_sampler,
     worker_init_fn=None,
 ):
+    """
+    Get the dataloader for the given satasets and data split
+
+    Args:
+        dataset (GenericSSLDataset):    the dataset object for which dataloader is constructed
+        dataset_config (dict):          configuration of the dataset.
+                                        should be DATA.TRAIN or DATA.TEST settings
+        num_dataloader_workers (int):   number of workers per gpu (or cpu) training
+        pin_memory (bool):              whether to pin memory or not
+        multi_processing_method (str):  method to use. options: forkserver | fork | spawn
+        device (torch.device):          training on cuda or cpu
+        get_sampler (get_sampler):      function that is used to get the sampler
+        worker_init_fn (None):          any function that should be executed during
+                                        initialization of dataloader workers
+
+    Returns:
+        Instance of Pytorch DataLoader. The dataloader is wrapped with
+        DataloaderAsyncGPUWrapper or DataloaderSyncGPUWrapper depending
+        on whether user wants to copy data to gpu async or not.
+    """
     # pytorch dataloader requires setting the multiprocessing type.
     setup_multiprocessing_method(multi_processing_method)
     # we don't need to set the rank, replicas as the Sampler already does so in

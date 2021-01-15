@@ -20,8 +20,8 @@ class ImgPilRandomSolarize(ClassyTransform):
 
     def __init__(self, prob: float):
         """
-        Inputs:
-            - p (float): Probability of applying the transform
+        Args:
+            p (float): Probability of applying the transform
         """
         self.p = prob
         transforms = [RandomSolarizeTransform()]
@@ -33,6 +33,15 @@ class ImgPilRandomSolarize(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilRandomSolarize":
+        """
+        Instantiates ImgPilRandomSolarize from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilRandomSolarize instance.
+        """
         prob = config.get("p", 0.66)
         assert isinstance(prob, float), f"p must be a float value. Found {type(prob)}"
         assert prob >= 0 and prob <= 1

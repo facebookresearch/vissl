@@ -14,17 +14,19 @@ class ImgRotatePil(ClassyTransform):
     """
     Apply rotation to a PIL Image. Samples rotation angle from a set of
     predefined rotation angles.
+
+    Predefined rotation angles are sampled at
+    equal intervals in the [0, 360) angle space where the number of angles
+    is specified by `num_angles`.
+
     This transform was used in RotNet - https://arxiv.org/abs/1803.07728
     """
 
     def __init__(self, num_angles=4, num_rotations_per_img=1):
         """
-        Predefined rotation angles are sampled at
-        equal intervals in the [0, 360) angle space where the number of angles
-        is specified by `num_angles`.
-        Inputs
-        - num_angles (int): Number of angles in the [0, 360) space
-        - num_rotations_per_img (int): Number of rotations to apply to each image.
+        Args:
+            num_angles (int): Number of angles in the [0, 360) space
+            num_rotations_per_img (int): Number of rotations to apply to each image.
         """
         self.num_angles = num_angles
         self.num_rotations_per_img = num_rotations_per_img
@@ -39,6 +41,15 @@ class ImgRotatePil(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgRotatePil":
+        """
+        Instantiates ImgRotatePil from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgRotatePil instance.
+        """
         num_angles = config.get("num_angles", 4)
         num_rotations_per_img = config.get("num_rotations_per_img", 1)
         assert num_rotations_per_img == 1, "Only num_rotations_per_img=1 allowed"

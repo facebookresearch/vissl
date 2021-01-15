@@ -15,23 +15,27 @@ class DiskImageDataset(QueueDataset):
     Can load a predefined list of images or all images inside
     a folder.
 
-    Args
-    - data_source (string): data source either of "disk_filelist" or "disk_folder"
-    - path (string): can be either of the following
-        1. A .npy file containing a list of filepaths.
-           In this case `data_source = "disk_filelist"`
-        2. A folder such that folder/split contains images.
-           In this case `data_source = "disk_folder"`
-    - split (string): specify split for the dataset.
-        Usually train/val/test.
-        Used to read images if
-        reading from a folder `path` and retrieve settings for that split
-        from the config path.
-    - dataset_name (string): name of dataset. For information only.
+    Inherits from QueueDataset class in VISSL to provide better
+    handling of the invalid images by replacing them with the
+    valid and seen images.
 
-    *Note*: This dataset class only returns images (not labels or other metdata).
+    Args:
+        cfg (AttrDict): configuration defined by user
+        data_source (string): data source either of "disk_filelist" or "disk_folder"
+        path (string): can be either of the following
+            1. A .npy file containing a list of filepaths.
+               In this case `data_source = "disk_filelist"`
+            2. A folder such that folder/split contains images.
+               In this case `data_source = "disk_folder"`
+        split (string): specify split for the dataset.
+                        Usually train/val/test.
+                        Used to read images if reading from a folder `path` and retrieve
+                        settings for that split from the config path.
+        dataset_name (string): name of dataset. For information only.
+
+    NOTE: This dataset class only returns images (not labels or other metdata).
     To load labels you must specify them in `LABEL_SOURCES` (See `ssl_dataset.py`).
-    LABEL_SOURCES follow a similar convention as the dataset and can either be a filelist
+    LABEL_SOURCES follows a similar convention as the dataset and can either be a filelist
     or a torchvision ImageFolder compatible folder -
     1. Store labels in a numpy file
     2. Store images in a nested directory structure so that torchvision ImageFolder
@@ -89,16 +93,35 @@ class DiskImageDataset(QueueDataset):
                 self.image_dataset.samples = self.image_dataset.samples[:limit]
 
     def num_samples(self):
+        """
+        Size of the dataset
+        """
         return self._num_samples
 
     def get_image_paths(self):
+        """
+        Get paths of all images in the datasets. See load_data()
+        """
         self._load_data(self._path)
         return self.image_dataset
 
     def __len__(self):
+        """
+        Size of the dataset
+        """
         return self.num_samples()
 
     def __getitem__(self, idx):
+        """
+        - We do delayed loading of data to reduce the memory size due to pickling of
+          dataset across dataloader workers.
+        - Loads the data if not already loaded.
+        - Sets and initializes the queue if not already initialized
+        - Depending on the data source (folder or filelist), get the image.
+          If using the QueueDataset and image is valid, save the image in queue if
+          not full. Otherwise return a valid seen image from the queue if queue is
+          not empty.
+        """
         if not self.is_initialized:
             self._load_data(self._path)
             self.is_initialized = True

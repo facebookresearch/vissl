@@ -13,14 +13,18 @@ from vissl.utils.hydra_config import AttrDict
 class MeanAPListMeter(ClassyMeter):
     """
     Meter to calculate mean AP metric for multi-label image classification task
-    on multiple output single target
+    on multiple output single target.
+
+    Supports Single target and multiple output. A list of mean AP meters is
+    constructed and each output has a meter associated.
+
+    Args:
+        meters_config (AttrDict): config containing the meter settings
+
+    meters_config should specify the num_meters and meter_names
     """
 
     def __init__(self, meters_config: AttrDict):
-        """
-        args:
-            num_meters: number of meters and hence we have same number of outputs
-        """
         self.meters_config = meters_config
         num_meters = self.meters_config["num_meters"]
         meter_names = self.meters_config["meter_names"]
@@ -34,14 +38,24 @@ class MeanAPListMeter(ClassyMeter):
 
     @classmethod
     def from_config(cls, meters_config: AttrDict):
+        """
+        Get the AccuracyListMeter instance from the user defined config
+        """
         return cls(meters_config)
 
     @property
     def name(self):
+        """
+        Name of the meter
+        """
         return "mean_ap_list_meter"
 
     @property
     def value(self):
+        """
+        Value of the meter globally synced. For each output, mean AP and AP for each class is
+        returned.
+        """
         val_dict = {}
         for ind, meter in enumerate(self._meters):
             meter_val = meter.value
@@ -71,12 +85,15 @@ class MeanAPListMeter(ClassyMeter):
         return output_dict
 
     def sync_state(self):
+        """
+        Globally syncing the state of each meter across all the trainers.
+        """
         for _, meter in enumerate(self._meters):
             meter.sync_state()
 
     def get_classy_state(self):
         """
-        Contains the states of the meter
+        Returns the states of each meter
         """
         meter_states = {}
         for ind, meter in enumerate(self._meters):
@@ -87,6 +104,9 @@ class MeanAPListMeter(ClassyMeter):
         return meter_states
 
     def set_classy_state(self, state):
+        """
+        Set the state of each meter
+        """
         assert len(state) == len(self._meters), "Incorrect state dict for meters"
         for ind, meter in enumerate(self._meters):
             meter.set_classy_state(state[ind]["state"])
@@ -105,11 +125,14 @@ class MeanAPListMeter(ClassyMeter):
         target: torch.Tensor,
     ):
         """
-        args:
+        Updates the value of the meter for the given model output list and targets.
+
+        Args:
             model_output: list of tensors of shape (B, C) where each value is
                           either logit or class probability.
             target:       tensor of shape (B).
-            Note: For binary classification, C=2.
+
+        NOTE: For binary classification, C=2.
         """
         if isinstance(model_output, torch.Tensor):
             model_output = [model_output]
@@ -120,7 +143,13 @@ class MeanAPListMeter(ClassyMeter):
             meter.update(probs, target)
 
     def reset(self):
+        """
+        Reset all the meters
+        """
         [x.reset() for x in self._meters]
 
     def validate(self, model_output_shape, target_shape):
+        """
+        Not implemented
+        """
         pass

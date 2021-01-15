@@ -11,15 +11,18 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.misc import concat_all_gather
 
 
-"""
-This is the loss which was proposed in the "Momentum Contrast
-for Unsupervised Visual Representation Learning" paper, from Kaiming He et al.
-See http://arxiv.org/abs/1911.05722 for details
-and https://github.com/facebookresearch/moco for a reference implementation, reused here.
-"""
-
-
 class MoCoHook(ClassyHook):
+    """
+    This hook corresponds to the loss proposed in the "Momentum Contrast
+    for Unsupervised Visual Representation Learning" paper, from Kaiming He et al.
+    See http://arxiv.org/abs/1911.05722 for details
+    and https://github.com/facebookresearch/moco for a reference implementation,
+    reused here.
+
+    Called after every forward pass to update the momentum encoder. At the beginning
+    of training i.e. after 1st forward call, the encoder is contructed and updated.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
@@ -39,6 +42,10 @@ class MoCoHook(ClassyHook):
         logging.warning("Batch shuffling: %s", self.shuffle_batch)
 
     def _build_moco_encoder(self, task: tasks.ClassyTask) -> None:
+        """
+        Create the model replica called the encoder. This will slowly track
+        the main model.
+        """
         # Create the encoder, which will slowly track the model
         logging.info(
             "Building MoCo encoder - rank %s %s", *get_machine_local_and_dist_rank()
@@ -130,7 +137,12 @@ class MoCoHook(ClassyHook):
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
         """
-        Compute the key, reusing the moco-encoder
+        - Update the momentum encoder.
+        - Compute the key reusing the updated moco-encoder. If we use the
+          batch shuffling, the perform global shuffling of the batch
+          and then run the moco encoder to compute the features.
+          We unshuffle the computer features and use the features
+          as "key" in computing the moco loss.
         """
 
         # Update the momentum encoder

@@ -7,16 +7,29 @@ from vissl.data.collators import register_collator
 @register_collator("siamese_collator")
 def siamese_collator(batch):
     """
-    batch: [
-        {"data": [img1,], "label": [lbl1, ]},        #img1
-        {"data": [img2,], "label": [lbl2, ]},        #img2
-        .
-        .
-        {"data": [imgN,], "label": [lblN, ]},        #imgN
-    ]
+    This collator is used in Jigsaw approach.
 
-    img{x} is a tensor of size: num_towers x C x H x W
-    lbl{x} is an integer
+    Input:
+        batch: Example
+                batch = [
+                    {"data": [img1,], "label": [lbl1, ]},        #img1
+                    {"data": [img2,], "label": [lbl2, ]},        #img2
+                    .
+                    .
+                    {"data": [imgN,], "label": [lblN, ]},        #imgN
+                ]
+
+                where:
+                    img{x} is a tensor of size: num_towers x C x H x W
+                    lbl{x} is an integer
+
+    Returns: Example output:
+                output = [
+                    {
+                        "data": torch.tensor([img1_0, ..., imgN_0]) ..
+                    },
+                ]
+                where the output is of dimension: (N * num_towers) x C x H x W
     """
     assert "data" in batch[0], "data not found in sample"
     assert "label" in batch[0], "label not found in sample"

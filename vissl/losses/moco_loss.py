@@ -11,13 +11,6 @@ from torch import nn
 from vissl.utils.misc import concat_all_gather
 
 
-"""
-This is the loss which was proposed in the "Momentum Contrast
-for Unsupervised Visual Representation Learning" paper, from Kaiming He et al.
-See http://arxiv.org/abs/1911.05722 for details
-and https://github.com/facebookresearch/moco for a reference implementation, reused here
-"""
-
 _MoCoLossConfig = namedtuple(
     "_MoCoLossConfig", ["embedding_dim", "queue_size", "momentum", "temperature"]
 )
@@ -35,6 +28,19 @@ class MoCoLossConfig(_MoCoLossConfig):
 
 @register_loss("moco_loss")
 class MoCoLoss(ClassyLoss):
+    """
+    This is the loss which was proposed in the "Momentum Contrast
+    for Unsupervised Visual Representation Learning" paper, from Kaiming He et al.
+    See http://arxiv.org/abs/1911.05722 for details
+    and https://github.com/facebookresearch/moco for a reference implementation, reused here
+
+    Config params:
+        embedding_dim (int): head output output dimension
+        queue_size (int): number of elements in queue
+        momentum (float): encoder momentum value for the update
+        temperature (float): temperature to use on the logits
+    """
+
     def __init__(self, config: MoCoLossConfig):
         super().__init__()
         self.loss_config = config
@@ -58,11 +64,21 @@ class MoCoLoss(ClassyLoss):
 
     @classmethod
     def from_config(cls, config: MoCoLossConfig):
+        """
+        Instantiates MoCoLoss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            MoCoLoss instance.
+        """
         return cls(config)
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self, key: torch.Tensor):
-        """Discard the oldest key from the MoCo queue, save the newest one,
+        """
+        Discard the oldest key from the MoCo queue, save the newest one,
         through a round-robin mechanism
         """
 
@@ -86,7 +102,8 @@ class MoCoLoss(ClassyLoss):
         self.queue_ptr[0] = ptr
 
     def forward(self, query: torch.Tensor, *args, **kwargs) -> torch.Tensor:
-        """Given the encoder queries, the key and the queue of the previous queries,
+        """
+        Given the encoder queries, the key and the queue of the previous queries,
         compute the cross entropy loss for this batch
 
         Args:
@@ -138,7 +155,8 @@ class MoCoLoss(ClassyLoss):
         return pprint.pformat(repr_dict, indent=2)
 
     def load_state_dict(self, state_dict, *args, **kwargs):
-        """Restore the loss state given a checkpoint
+        """
+        Restore the loss state given a checkpoint
 
         Args:
             state_dict (serialized via torch.save)

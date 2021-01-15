@@ -19,6 +19,12 @@ class ImgPilGaussianBlur(ClassyTransform):
     """
 
     def __init__(self, p, radius_min, radius_max):
+        """
+        Args:
+            p (float): probability of applying gaussian blur to the image
+            radius_min (float): blur kernel minimum radius used by ImageFilter.GaussianBlur
+            radius_max (float): blur kernel maximum radius used by ImageFilter.GaussianBlur
+        """
         self.prob = p
         self.radius_min = radius_min
         self.radius_max = radius_max
@@ -36,6 +42,15 @@ class ImgPilGaussianBlur(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilGaussianBlur":
+        """
+        Instantiates ImgPilGaussianBlur from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilGaussianBlur instance.
+        """
         prob = config.get("p", 0.5)
         radius_min = config.get("radius_min", 0.1)
         radius_max = config.get("radius_max", 2.0)

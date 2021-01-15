@@ -30,12 +30,22 @@ class SyntheticImageDataset(Dataset):
             self._num_samples = cfg.DATA[split].DATA_LIMIT
 
     def num_samples(self):
+        """
+        Size of the dataset
+        """
         return self._num_samples
 
     def __len__(self):
+        """
+        Size of the dataset
+        """
         return self.num_samples()
 
     def __getitem__(self, idx):
+        """
+        Simply return the mean dummy image of the specified size and mark
+        it as a success.
+        """
         img = get_mean_image(self.cfg["DATA"][self.split].DEFAULT_GRAY_IMG_SIZE)
         is_success = True
         return img, is_success
