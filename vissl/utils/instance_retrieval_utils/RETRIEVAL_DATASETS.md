@@ -75,24 +75,4 @@ rm -rf tmp
 wget http://cmp.felk.cvut.cz/revisitop/data/datasets/rparis6k/gnd_rparis6k.pkl
 cd ..
 cd ..
-
-### Local run on devgpu:
-Follow the steps below to train Alexnet on imagenet1k for Rotation Pretext Task:
-
-0. Run `buck clean`
-
-0. Build with `buck build @mode/dev-nosan deeplearning/projects/ssl_framework/tools/instance_retrieval/...`
-
-0. Evaluating AlexNet Deepcluster model on devgpu (1-gpu is required):
-`buck-out/gen/deeplearning/projects/ssl_framework/tools/instance_retrieval/instance_retrieval_test.par --config_file deeplearning/projects/ssl_framework/fb/configs/deepcluster/eval_deepcluster_alexnet_8gpu_transfer_paris_oxford_retrieval.yaml`
-
-For evaluating other models (Jigsaw, RotNet, NPID), choose the proper config file.
-
-
-### Running on GPU cluster (1-node and multi-node)
-Follow the steps below:
-
-0. `cd deeplearning/projects/ssl_framework/`
-
-0. You can use a yaml file to start cluster training. An example:
-`GPU_TYPE=V100 CFG=fb/configs/deepcluster/eval_deepcluster_alexnet_8gpu_transfer_paris_oxford_retrieval.yaml NAME=alexnet_deepcluster REBUILD=true ./fb/scripts/train_instance_retrieval_cluster.sh`
+```

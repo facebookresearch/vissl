@@ -16,6 +16,9 @@ __all__ = ["collect_env_info"]
 
 
 def collect_torch_env():
+    """
+    If torch is available, print the torch config.
+    """
     try:
         import torch.__config__
 
@@ -28,6 +31,10 @@ def collect_torch_env():
 
 
 def collect_python_info(data):
+    """
+    Collect python version, numpy and pillow version and the system platform
+    information
+    """
     data.append(("sys.platform", sys.platform))
     data.append(("Python", sys.version.replace("\n", "")))
     data.append(("numpy", np.__version__))
@@ -36,6 +43,10 @@ def collect_python_info(data):
 
 
 def collect_gpus_info(data):
+    """
+    If the cuda is available on the system, collect information about
+    CUDA_HOME, TORCH_CUDA_ARCH_LIST, GPU names, count
+    """
     has_gpu = torch.cuda.is_available()  # true for both CUDA & ROCM
     data.append(("GPU available", has_gpu))
     from torch.utils.cpp_extension import CUDA_HOME
@@ -55,6 +66,10 @@ def collect_gpus_info(data):
 
 
 def collect_dep_env(data):
+    """
+    Collection information about VISSL dependendices and their version
+    torchvision, hydra, classy vision, tensorboard, apex
+    """
     # torchvision
     try:
         data.append(
@@ -123,6 +138,9 @@ def collect_dep_env(data):
 
 
 def collect_vissl_info(data):
+    """
+    Collect information about vissl version being used
+    """
     try:
         import vissl  # noqa
 
@@ -135,6 +153,9 @@ def collect_vissl_info(data):
 
 
 def collect_cpu_info():
+    """
+    collect information about system cpus.
+    """
     with os.popen("lscpu") as f:
         cpu_info = f.readlines()
     out_cpu_info = []
@@ -148,6 +169,11 @@ def collect_cpu_info():
 
 
 def collect_env_info():
+    """
+    Collect information about user system including cuda, torch, gpus, vissl and its
+    dependencies. Users are strongly recommended to run this script to collect
+    information about information if they needed debugging help.
+    """
     # common python info
     data = []
     data = collect_python_info(data)
