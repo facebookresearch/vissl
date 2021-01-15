@@ -6,14 +6,26 @@ import torch
 
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
 def normalize_L2(a, dim):
+    """
+    L2 normalize the input tensor along the specified dimension
+
+    Args:
+        a(torch.Tensor): the tensor to normalize
+        dim (int): along which dimension to L2 normalize
+
+    Returns:
+        a (torch.Tensor): L2 normalized tensor
+    """
     norms = torch.sqrt(torch.sum(a ** 2, dim=dim, keepdim=True))
     return a / norms
 
 
 def get_rmac_region_coordinates(H, W, L):
-    # Almost verbatim from Tolias et al Matlab implementation.
-    # Could be heavily pythonized, but really not worth it...
-    # Desired overlap of neighboring regions
+    """
+    Almost verbatim from Tolias et al Matlab implementation.
+    Could be heavily pythonized, but really not worth it...
+    Desired overlap of neighboring regions
+    """
     ovr = 0.4
     # Possible regions for the long dimension
     steps = np.array((2, 3, 4, 5, 6, 7), dtype=np.float32)
@@ -67,6 +79,12 @@ def get_rmac_region_coordinates(H, W, L):
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
 # Adapted by: Priya Goyal (prigoyal@fb.com)
 def get_rmac_descriptors(features, rmac_levels, pca=None):
+    """
+    RMAC descriptors. Coordinates are retrieved following Tolias et al.
+    L2 normalize the descriptors and optionally apply PCA on the descriptors
+    if specified by the user. After PCA, aggregate the descriptors (sum) and
+    normalize the aggregated descriptor and return.
+    """
     nim, nc, xd, yd = features.size()
 
     rmac_regions = get_rmac_region_coordinates(xd, yd, rmac_levels)

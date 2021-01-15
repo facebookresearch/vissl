@@ -10,6 +10,11 @@ import os
 
 
 def get_node_id(node_id: int):
+    """
+    If using SLURM, we get environment variables like SLURMD_NODENAME,
+    SLURM_NODEID to get information about the current node.
+    Useful to set the node_id automatically.
+    """
     node_list = os.environ.get("SLURM_STEP_NODELIST")
     if node_list is not None:
         node_name = str(os.environ["SLURMD_NODENAME"])
@@ -19,6 +24,12 @@ def get_node_id(node_id: int):
 
 
 def get_slurm_dir(input_dir: str):
+    """
+    If using SLURM, we use the environment variable "SLURM_JOBID" to
+    uniquely identify the current training and append the id to the
+    input directory. This could be used to store any training artifacts
+    specific to this training run.
+    """
     output_dir = input_dir
     if "SLURM_JOBID" in os.environ:
         output_dir = f"{input_dir}/{os.environ['SLURM_JOBID']}"
