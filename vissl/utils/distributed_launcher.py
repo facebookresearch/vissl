@@ -162,7 +162,7 @@ def distributed_worker(
     process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
 
 
-class ResumableTrainer:
+class ResumableSlurmTraining:
     """
     Distributed training that can be resumed from a checkpoint
     """
@@ -189,8 +189,8 @@ class ResumableTrainer:
         shutdown_logging()
 
     def checkpoint(self):
-        trainer = ResumableTrainer(engine_name=self.engine_name, config=self.config)
-        return submitit.helpers.DelayedSubmission(trainer,)
+        trainer = ResumableSlurmTraining(engine_name=self.engine_name, config=self.config)
+        return submitit.helpers.DelayedSubmission(trainer)
 
 
 def schedule_on_slurm(
@@ -229,6 +229,6 @@ def schedule_on_slurm(
         gpus_per_node=nb_gpus,
         mem_gb=60 * nb_gpus,
     )
-    trainer = ResumableTrainer(engine_name=engine_name, config=config)
-    job = executor.submit(trainer,)
+    trainer = ResumableSlurmTraining(engine_name=engine_name, config=config)
+    job = executor.submit(trainer)
     print(f"Submitted {job.job_id}")
