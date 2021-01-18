@@ -3,10 +3,11 @@ config:
   DATA:
     TRAIN:
       TRANSFORMS:
-        - name: ImgReplicatePil
-          num_times: 2
-        - name: RandomResizedCrop
-          size: 224
+        - name: ImgPilToMultiCrop
+          total_num_crops: 2
+          size_crops: [224]
+          num_crops: [2]
+          crop_scales: [[0.14, 1]]
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
@@ -17,5 +18,9 @@ config:
           radius_max: 2.0
         - name: RandAugment
           n: 5
-          m: 15
+          m: 10
           probabilistic: True
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]

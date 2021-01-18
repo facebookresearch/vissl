@@ -109,7 +109,7 @@ config:
       lr:
         auto_lr_scaling:
           auto_scale: True
-          base_value: 0.0015
+          base_value: 0.0005
           base_lr_batch_size: 4096
         #        auto_lr_scaling: # learning rate is automatically scaled based on batch size
         #          auto_scale: true
