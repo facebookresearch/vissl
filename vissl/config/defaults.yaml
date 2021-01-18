@@ -276,6 +276,8 @@ config:
           DROPOUT_RATE: 0.1
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token
+          # Parameter for hybrid model. E.g. resnet18, resnet34, resnet50, etc.
+          # HYBRID:
           # Parameters for attention modules. Default is vanilla
           # self-attention for every layer. To be implemented.
 #          ATTENTION_MODULES:
