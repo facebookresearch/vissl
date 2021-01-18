@@ -4,9 +4,11 @@
 ######################### INPUT PARAMS ##################################
 
 EXPT_NAME=${EXPT_NAME-'unnamed'}
-PARTITION=${PARTITION-'learnfair'}
-GPU_TYPE=${GPU_TYPE-'V100'}
 COMMENT=${COMMENT-''}
+PARTITION=${PARTITION-'learnfair'}
+GPU_TYPE=${GPU_TYPE-''}
+TIME_HOURS=${TIME_HOURS-72}
+MEM=${MEM-250}
 RUN_ID=$(date +'%Y-%m-%d-%H:%M:%S')
 CFG=( "$@" )
 
@@ -38,5 +40,7 @@ python -u "$RUN_SCRIPT" "${CFG[*]}" \
   +comment="$COMMENT" \
   +partition="$PARTITION" \
   +log_folder="$EXP_ROOT_DIR" \
+  +time_hours="$TIME_HOURS" \
   +constraint="$GPU_TYPE" \
+  +mem_gb="$MEM" \
   config.CHECKPOINT.DIR="$CHECKPOINT_DIR"

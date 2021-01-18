@@ -200,7 +200,9 @@ def schedule_on_slurm(
     job_comment: str,
     log_folder: str,
     partition: str,
+    time_hours: int = 72,
     constraint: str = "",
+    mem_gb: int = 0,
 ):
     """
     Run a distributed training on SLURM, allocating the nodes and gpus as described in the configuration
@@ -210,7 +212,9 @@ def schedule_on_slurm(
     :param job_comment: comment of the job on SLURM
     :param log_folder: where the logs (stdout and stderr) will be written
     :param partition: on which partition to run the SLURM job
+    :param time_hours: maximum number of hours taken by the job
     :param constraint: constraints on the kind of GPU to use
+    :param mem_gb: memory in GB to reserve on each node
     """
 
     # DO NOT REMOVE: submitit processes will not be initialized correctly if numpy is not imported first
@@ -219,18 +223,20 @@ def schedule_on_slurm(
 
     nb_nodes = config.DISTRIBUTED.NUM_NODES
     nb_gpus = config.DISTRIBUTED.NUM_PROC_PER_NODE
+    mem_gb = mem_gb or 60 * nb_gpus
+
     executor = submitit.AutoExecutor(folder=log_folder)
     executor.update_parameters(
         name=job_name,
         slurm_comment=job_comment,
         slurm_partition=partition,
         slurm_constraint=constraint,
-        timeout_min=72 * 60,
+        timeout_min=time_hours * 60,
         nodes=nb_nodes,
         cpus_per_task=8 * nb_gpus,
         tasks_per_node=1,
         gpus_per_node=nb_gpus,
-        mem_gb=60 * nb_gpus,
+        mem_gb=mem_gb,
     )
     trainer = ResumableSlurmTraining(engine_name=engine_name, config=config)
     job = executor.submit(trainer)
