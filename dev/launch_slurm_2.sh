@@ -5,6 +5,7 @@
 
 EXPT_NAME=${EXPT_NAME-'unnamed'}
 PARTITION=${PARTITION-'learnfair'}
+GPU_TYPE=${GPU_TYPE-'V100'}
 COMMENT=${COMMENT-''}
 RUN_ID=$(date +'%Y-%m-%d-%H:%M:%S')
 CFG=( "$@" )
@@ -37,4 +38,5 @@ python -u "$RUN_SCRIPT" "${CFG[*]}" \
   +comment="$COMMENT" \
   +partition="$PARTITION" \
   +log_folder="$EXP_ROOT_DIR" \
+  +constraint="$GPU_TYPE" \
   config.CHECKPOINT.DIR="$CHECKPOINT_DIR"

@@ -200,6 +200,7 @@ def schedule_on_slurm(
     job_comment: str,
     log_folder: str,
     partition: str,
+    constraint: str = "",
 ):
     """
     Run a distributed training on SLURM, allocating the nodes and gpus as described in the configuration
@@ -209,6 +210,7 @@ def schedule_on_slurm(
     :param job_comment: comment of the job on SLURM
     :param log_folder: where the logs (stdout and stderr) will be written
     :param partition: on which partition to run the SLURM job
+    :param constraint: constraints on the kind of GPU to use
     """
 
     # DO NOT REMOVE: submitit processes will not be initialized correctly if numpy is not imported first
@@ -222,6 +224,7 @@ def schedule_on_slurm(
         name=job_name,
         slurm_comment=job_comment,
         slurm_partition=partition,
+        slurm_constraint=constraint,
         timeout_min=72 * 60,
         nodes=nb_nodes,
         cpus_per_task=8 * nb_gpus,

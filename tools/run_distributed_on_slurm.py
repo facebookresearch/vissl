@@ -20,6 +20,7 @@ def hydra_main(overrides: List[Any]):
         job_name=args.name,
         job_comment=args.comment,
         partition=args.partition,
+        constraint=args.constraint,
         log_folder=args.log_folder)
 
 
