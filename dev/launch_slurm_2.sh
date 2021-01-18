@@ -34,7 +34,7 @@ cp -r . $EXP_ROOT_DIR
 
 ####################### launch script #########################################
 
-python -u "$RUN_SCRIPT" "${CFG[*]}" \
+python -u "$RUN_SCRIPT" "${CFG[@]}" \
   hydra.run.dir="$EXP_ROOT_DIR" \
   +name="$EXPT_NAME" \
   +comment="$COMMENT" \
