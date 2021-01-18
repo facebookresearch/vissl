@@ -231,4 +231,4 @@ def schedule_on_slurm(
     )
     trainer = ResumableSlurmTraining(engine_name=engine_name, config=config)
     job = executor.submit(trainer)
-    print(f"Submitted {job.job_id}")
+    print(f"SUBMITTED: {job.job_id}")
