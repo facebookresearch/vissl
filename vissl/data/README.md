@@ -68,7 +68,7 @@ e.g. "imagenet1k_folder") to a `dict` which contains:
 The purpose of having this catalog is to make it easy to choose different datasets,
 by just using the strings in the config.
 
-### Creating a custon Dataset catalog `dataset_catalog.json`
+### Creating a custom Dataset catalog `dataset_catalog.json`
 
 Users can edit the template `vissl/configs/config/dataset_catalog.json` file to specify their datasets. The json file can be fully decided by user and can have any number of supported datasets (one or more). User can give the string names to dataset as per their choice.
 
