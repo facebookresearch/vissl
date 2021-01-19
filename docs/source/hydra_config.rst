@@ -17,6 +17,21 @@ The usage looks like
     python <binary-name>.py config=<yaml_config path>/<yaml_config_file_name>
 
 
+Detecting new configuration directories in Hydra
+------------------------------------------------------
+
+VISSL provides configuration files `here <https://github.com/facebookresearch/vissl/tree/master/configs>`_ and uses the Hydra Plugin `VisslPlugin <https://github.com/facebookresearch/vissl/blob/master/hydra_plugins/vissl_plugin/vissl_plugin.py>`_
+to automatically search for the :code:`configs` folder in VISSL.
+
+If users want to create their own configuration directories and not use the :code:`configs` directory provided by VISSL, then users must
+add their own Plugin following the :code:`VisslPlugin`.
+
+.. note::
+
+    For any new folder containing configuration files, Hydra requires creating a :code:`__init__.py` empty file. Hence, if users
+    create a new configuration directory, they must create empty :code:`__init__.py` file.
+
+
 How to use VISSL provided config files
 ----------------------------------------
 
