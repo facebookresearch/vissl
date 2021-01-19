@@ -58,7 +58,7 @@ config:
           DROPOUT_RATE: 0.1
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token
-          HYBRID: resnet50
+          HYBRID: resnet18
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,

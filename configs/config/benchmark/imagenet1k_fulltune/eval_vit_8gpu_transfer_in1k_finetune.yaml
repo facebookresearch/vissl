@@ -27,7 +27,7 @@ config:
 #      google-imagenet1k-per10
       TRANSFORMS:
         - name: RandomResizedCrop
-          size: 224
+          size: 384
         - name: RandomHorizontalFlip
         - name: ToTensor
         - name: Normalize
@@ -42,9 +42,9 @@ config:
       DATASET_NAMES: [imagenet1k_folder]
       TRANSFORMS:
         - name: Resize
-          size: 224
+          size: 384
         - name: CenterCrop
-          size: 224
+          size: 384
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]

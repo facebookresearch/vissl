@@ -71,15 +71,16 @@ config:
           IMAGE_SIZE: 224
           PATCH_SIZE: 16
           NUM_LAYERS: 12
-          NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
+          NUM_HEADS: 6
+          HIDDEN_DIM: 384
+          MLP_DIM: 1536
           DROPOUT_RATE: 0
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token
+          HYBRID: resnet50
     HEAD:
       PARAMS: [
-      ["mlp", {"dims": [768, 2048], "use_relu": True}],
+      ["mlp", {"dims": [384, 2048], "use_relu": True}],
       ["mlp", {"dims": [2048, 128]}],
       ]
     SYNC_BN_CONFIG:

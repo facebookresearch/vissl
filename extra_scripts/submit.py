@@ -51,7 +51,7 @@ if __name__ == '__main__':
                                                                  'of GPU ram per node')
     parser.add_argument('--partition', type=str, default='learnfair', \
                                                   help='learnfair, dev, or priority')
-    parser.add_argument('--max_num_timeout', type=int, default=12,
+    parser.add_argument('--max_num_timeout', type=int, default=20,
                         help='Maximum number of resubmissions on '
                              'timeout/preemption')
     parser.add_argument('--comment', type=str, default=None, help='Needed for priority')

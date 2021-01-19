@@ -7,6 +7,7 @@ and https://www.internalfb.com/D24577730, as per https://arxiv.org/abs/2010.1192
 
 import logging
 from typing import Type, Any, Callable, Union, List, Optional
+import math
 
 import torch
 import torch.nn as nn
@@ -52,6 +53,8 @@ class VisionTransformer(nn.Module):
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
         trunk_config = model_config.TRUNK.TRUNK_PARAMS.VISION_TRANSFORMERS
 
+        # self.call_on_parameter_load =
+
         hybrid_backbone_string = None
         if "name" in trunk_config and trunk_config["name"]:
             name = trunk_config["name"]
@@ -68,11 +71,13 @@ class VisionTransformer(nn.Module):
         # TODO: This is where we hackily add the resnet backbone for hybrid
         #  models
         if hybrid_backbone_string:
-            hybrid_backbone = globals()[hybrid_backbone_string]()
             hidden_dim = model.classy_model.hidden_dim
+            hybrid_backbone = globals()[hybrid_backbone_string](
+                out_dim=hidden_dim)
             # We know that the output dimensionality of the model will be
             # 1024 because we're using the output of the penultimate stage.
-            hybrid_backbone.output_proj = nn.Linear(1024, hidden_dim)
+            # hybrid_backbone(torch.zeros(1, 3, 224, 224))
+            # hybrid_backbone.output_proj = nn.Linear(1024, hidden_dim)
             model.classy_model.conv_proj = hybrid_backbone
 
         # TODO: This is where we would collect the model's modules into a
@@ -94,6 +99,73 @@ class VisionTransformer(nn.Module):
         #  the unsqueezing of dimension 0 should be handled?
         x = x.unsqueeze(0)
         return x
+
+    def interpolate_position_embedding(self, pos_embedding, strict=True):
+        # shape of pos_embedding is (seq_length, 1, hidden_dim)
+        seq_length, n, hidden_dim = pos_embedding.shape
+        if n != 1:
+            raise ValueError(
+                f"Unexpected position embedding shape: {pos_embedding.shape}"
+            )
+        if hidden_dim != self.model.hidden_dim:
+            raise ValueError(
+                f"Position embedding hidden_dim incorrect: {hidden_dim}"
+                f", expected: {self.hidden_dim}"
+            )
+        new_seq_length = self.model.seq_length
+
+        if new_seq_length != seq_length:
+            # need to interpolate the weights for the position embedding
+            # we do this by reshaping the positions embeddings to a 2d grid, performing
+            # an interpolation in the (h, w) space and then reshaping back to a 1d grid
+            if self.model.classifier == "token":
+                # the class token embedding shouldn't be interpolated so we split it up
+                seq_length -= 1
+                new_seq_length -= 1
+                pos_embedding_token = pos_embedding[:1, :, :]
+                pos_embedding_img = pos_embedding[1:, :, :]
+            else:
+                pos_embedding_token = pos_embedding[:0, :, :]  # empty data
+                pos_embedding_img = pos_embedding
+            # (seq_length, 1, hidden_dim) -> (1, hidden_dim, seq_length)
+            pos_embedding_img = pos_embedding_img.permute(1, 2, 0)
+            seq_length_1d = int(math.sqrt(seq_length))
+            assert (
+                    seq_length_1d * seq_length_1d == seq_length
+            ), "seq_length is not a perfect square"
+
+            logging.info(
+                "Interpolating the position embeddings from image "
+                f"{seq_length_1d * self.model.patch_size} to size"
+                f" {self.model.image_size}"
+            )
+
+            # (1, hidden_dim, seq_length) -> (1, hidden_dim, seq_l_1d, seq_l_1d)
+            pos_embedding_img = pos_embedding_img.reshape(
+                1, hidden_dim, seq_length_1d, seq_length_1d
+            )
+            new_seq_length_1d = self.model.image_size // self.model.patch_size
+
+            # use bicubic interpolation - it gives significantly better results in
+            # the test `test_resolution_change`
+            new_pos_embedding_img = torch.nn.functional.interpolate(
+                pos_embedding_img,
+                size=new_seq_length_1d,
+                mode="bicubic",
+                align_corners=True,
+            )
+
+            # (1, hidden_dim, new_seq_l_1d, new_seq_l_1d) -> (1, hidden_dim, new_seq_l)
+            new_pos_embedding_img = new_pos_embedding_img.reshape(
+                1, hidden_dim, new_seq_length
+            )
+            # (1, hidden_dim, new_seq_length) -> (new_seq_length, 1, hidden_dim)
+            new_pos_embedding_img = new_pos_embedding_img.permute(2, 0, 1)
+            new_pos_embedding = torch.cat(
+                [pos_embedding_token, new_pos_embedding_img], dim=0
+            )
+            return new_pos_embedding
+        # super().set_classy_state(state, strict=strict)
 
 
 ## Resnet hybrid backbone. Didn't use ClassyVision resnets cuz no ResNets <
@@ -302,7 +374,7 @@ class ResNet(nn.Module):
         #                                dilate=replace_stride_with_dilation[2])
         # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         # self.fc = nn.Linear(512 * block.expansion, out_dim)
-        self.output_proj = None
+        self.output_proj = nn.Linear(256 * block.expansion, out_dim)
 
         for m in self.modules():
             if isinstance(m, Conv2d):

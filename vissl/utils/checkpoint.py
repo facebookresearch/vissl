@@ -395,6 +395,18 @@ def init_model_from_weights(
                     and config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
                 )
             ):
+                # Hack to accomodate changing position embeddings
+                if 'pos_embedding' in layername:
+                    if hasattr(model.trunk, 'interpolate_position_embedding')\
+                            and all_layers[layername].shape != param.shape:
+                        interp = model.trunk.interpolate_position_embedding
+                        if callable(interp):
+                            try:
+                                param = interp(param)
+                            except:
+                                logging.info("Unable to interpolate position "
+                                             "embeddings")
+                                exit(1)
                 assert all_layers[layername].shape == param.shape, (
                     f"{layername} have different shapes: "
                     f"checkpoint: {param.shape}, model: {all_layers[layername].shape}"

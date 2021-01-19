@@ -2,15 +2,15 @@
 config:
   DATA:
     TRAIN:
-      BATCHSIZE_PER_REPLICA: 512
+      BATCHSIZE_PER_REPLICA: 32
     TEST:
-      BATCHSIZE_PER_REPLICA: 512
+      BATCHSIZE_PER_REPLICA: 32
   MODEL:
     TRUNK:
       NAME: vision_transformer
       TRUNK_PARAMS:
         VISION_TRANSFORMERS:
-          IMAGE_SIZE: 224
+          IMAGE_SIZE: 384
           PATCH_SIZE: 16
           NUM_LAYERS: 12
           NUM_HEADS: 12
