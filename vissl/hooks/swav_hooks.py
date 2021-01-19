@@ -8,7 +8,8 @@ from classy_vision.hooks.classy_hook import ClassyHook
 
 class SwAVUpdateQueueScoresHook(ClassyHook):
     """
-    Update queue scores, useful with small batches
+    Update queue scores, useful with small batches and helps getting
+    meaningful gradients.
     """
 
     on_start = ClassyHook._noop
@@ -21,6 +22,10 @@ class SwAVUpdateQueueScoresHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_forward(self, task) -> None:
+        """
+        If we want to use queue in SwAV training,
+        update the queue scores after every forward.
+        """
         if not task.config["LOSS"]["name"] == "swav_loss":
             return
         if not task.loss.swav_criterion.use_queue:
@@ -32,6 +37,10 @@ class SwAVUpdateQueueScoresHook(ClassyHook):
 
 
 class NormalizePrototypesHook(ClassyHook):
+    """
+    L2 Normalize the prototypes in swav training. Optional.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop

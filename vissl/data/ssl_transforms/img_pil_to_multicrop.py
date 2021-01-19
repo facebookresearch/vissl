@@ -11,11 +11,9 @@ from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 @register_transform("ImgPilToMultiCrop")
 class ImgPilToMultiCrop(ClassyTransform):
     """
-    Convert a PIL image to Multi-resolution Crops
-    Input:
-        - PIL Image
-    Returns:
-        - list containing crops
+    Convert a PIL image to Multi-resolution Crops.
+    The input is a PIL image and output is the list of image crops.
+
     This transform was proposed in SwAV - https://arxiv.org/abs/2006.09882
     """
 
@@ -26,12 +24,12 @@ class ImgPilToMultiCrop(ClassyTransform):
         For ease of use, one can specify `num_crops` which removes the need to repeat
         parameters.
 
-        Inputs:
-        - total_num_crops (int): Total number of crops to extract
-        - num_crops (List or Tuple of ints): Specifies the number of `type' of crops.
-        - size_crops (List or Tuple of ints): Specifies the height (height = width)
-                                              of each patch
-        - crop_scales (List or Tuple containing [float, float]): Scale of the crop
+        Args:
+            total_num_crops (int): Total number of crops to extract
+            num_crops (List or Tuple of ints): Specifies the number of `type' of crops.
+            size_crops (List or Tuple of ints): Specifies the height (height = width)
+                                                of each patch
+            crop_scales (List or Tuple containing [float, float]): Scale of the crop
 
         Example usage:
         - (total_num_crops=2, num_crops=[1, 1],
@@ -64,4 +62,13 @@ class ImgPilToMultiCrop(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilToMultiCrop":
+        """
+        Instantiates ImgPilToMultiCrop from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ImgPilToMultiCrop instance.
+        """
         return cls(**config)

@@ -27,7 +27,13 @@ def _is_pil_image(img):
 
 @register_transform("ImgToTensor")
 class ImgToTensor(ClassyTransform):
-    # credits: @mannatsingh
+    """
+    The Transform that overrides the PyTorch transform to provide
+    better transformation speed.
+
+    # credits: mannatsingh@fb.com
+    """
+
     def __call__(self, img: Image):
         assert _is_numpy(img) or _is_pil_image(img)
 

@@ -11,12 +11,39 @@ from torch.utils.data.distributed import DistributedSampler
 
 
 def get_mean_image(crop_size):
+    """
+    Helper function that returns a gray PIL image of the size specified by user.
+
+    Args:
+        crop_size (int): used to generate (crop_size x crop_size x 3) image.
+
+    Returns:
+        img: PIL Image
+    """
     img = Image.fromarray(128 * np.ones((crop_size, crop_size, 3), dtype=np.uint8))
     return img
 
 
 class StatefulDistributedSampler(DistributedSampler):
+    """
+    More fine-grained state DataSampler that uses training iteration and epoch
+    both for shuffling data. PyTorch DistributedSampler only uses epoch
+    for the shuffling and starts sampling data from the start. In case of training
+    on very large data, we train for one epoch only and when we resume training,
+    we want to resume the data sampler from the training iteration.
+    """
+
     def __init__(self, dataset, batch_size=None):
+        """
+        Initializes the instance of StatefulDistributedSampler. Random seed is set
+        for the epoch set and data is shuffled. For starting the sampling, use
+        the start_iter (set to 0 or set by checkpointing resuming) to
+        sample data from the remaining images.
+
+        Args:
+            dataset (Dataset): Pytorch dataset that sampler will shuffle
+            batch_size (int): batch size we want the sampler to sample
+        """
         super().__init__(dataset, shuffle=False)
 
         self.start_iter = 0
@@ -47,6 +74,11 @@ class StatefulDistributedSampler(DistributedSampler):
         return iter(indices)
 
     def set_start_iter(self, start_iter):
+        """
+        Set the iteration number from which the sampling should start. This is
+        used to find the marker in the data permutation order from where the
+        sampler should start sampling.
+        """
         self.start_iter = start_iter
 
 
@@ -122,8 +154,12 @@ class QueueDataset(Dataset):
         return False
 
     def on_sucess(self, sample):
-        # if the image is very large, we don't add it to the queue
-        # as otherwise the memory will grow a lot
+        """
+        If we encounter a successful image and the queue is not full, we store it
+        in the queue. One consideration we make further is: if the image is very
+        large, we don't add it to the queue as otherwise the CPU memory will grow
+        a lot.
+        """
         if self._is_large_image(sample):
             return
         self._enqueue_valid_image(sample)
@@ -131,6 +167,11 @@ class QueueDataset(Dataset):
             self._refill_dequeue_buffer()
 
     def on_failure(self):
+        """
+        If there was a failure in getting the origin image, we look into the queue
+        if there is any valid seen image available. If yes, we dequeue and use this
+        image in place of the failed image.
+        """
         sample, is_success = None, False
         if self._get_dequeue_buffer_size() > 0:
             sample = self._dequeue_valid_image()

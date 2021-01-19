@@ -18,28 +18,30 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 
 @register_model("multi_input_output_model")
 class BaseSSLMultiInputOutputModel(ClassyModel):
-    def __init__(self, model_config, optimizer_config):
-        """
-        Class to implement a self-supervised model.
-        The model is split into `trunk' that computes features and
-        `head' that computes outputs.
+    """
+    Class to implement a Self-Supervised model.
+    The model is split into `trunk' that computes features and `head' that
+    computes outputs (projections, classifications etc)
 
-        This class supports many use cases:
-        1. Model producing single output as in standard supervised ImageNet training
-        2. Model producing multiple outputs (Multi-task)
-        3. Model producing multiple outputs from different features (layers)
-           from the trunk (useful in linear evaluatin of features from several model layers)
-        4. Model that accepts multiple inputs (e.g. image and patches as in PIRL appraoch).
-        5. Model where the trunk is frozen.
+    This class supports many use cases:
+    1. Model producing single output as in standard supervised ImageNet training
+    2. Model producing multiple outputs (Multi-task)
+    3. Model producing multiple outputs from different features (layers)
+       from the trunk (useful in linear evaluation of features from several model layers)
+    4. Model that accepts multiple inputs (e.g. image and patches as in PIRL appraoch).
+    5. Model where the trunk is frozen.
+    6. Model that supports multiple resolutions inputs as in SwAV
 
-        * How to specify heads?
+    * How to specify heads?
         For information on heads see the `_get_heads()` function
 
-        * What inputs do `heads' operate on?
-            One can specify the `input' to heads mapping in the list
-            MULTI_INPUT_HEAD_MAPPING. See the _setup_multi_input_head_mapping()
-            function for details.
-        """
+    * What inputs do `heads' operate on?
+        One can specify the `input' to heads mapping in the list
+        MULTI_INPUT_HEAD_MAPPING. See the _setup_multi_input_head_mapping()
+        function for details.
+    """
+
+    def __init__(self, model_config, optimizer_config):
         self.model_config = model_config
         self.optimizer_config = optimizer_config
         super().__init__()
@@ -72,9 +74,12 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
     def multi_res_input_forward(self, batch, feature_names):
         """
-        Perform forward pass separately on each resolution input and concatenate
-        all the output features. Then run the head forward on the concatenated
-        features.
+        Perform forward pass separately on each resolution input.
+        The inputs corresponding to a single resolution are clubbed and single
+        forward is run on the same resolution inputs. Hence we do several
+        forward passes = number of different resolutions used. We then
+        concatenate all the output features. Then run the head forward on the
+        concatenated features.
         """
         assert isinstance(batch, list)
         idx_crops = torch.cumsum(
@@ -100,7 +105,10 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
     def single_input_forward(self, batch, feature_names, heads):
         """
-        Simply run the trunk and heads forward on the input tensor.
+        Simply run the trunk and heads forward on the input tensor. We run the trunk
+        first and then the heads on the trunk output.
+        If the model is trunk feature extraction only, then we simply return the output
+        of the trunk.
         """
         assert isinstance(batch, torch.Tensor)
         feats = self.trunk(batch, feature_names)
@@ -116,6 +124,14 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         return self.heads_forward(feats, heads)
 
     def heads_forward(self, feats, heads):
+        """
+        Run the forward of the head on the trunk output features.
+        We have 2 cases:
+            1. #heads = #feats -> example training linear classifiers on various layers.
+               We run one head on the corresponding feature.
+            2. #feats = 1 and #heads > 1 -> head consists of many layers to be run sequentially.
+               #outputs = 1
+        """
         # Example case: training linear classifiers on various layers
         if len(feats) == len(heads):
             output = []
@@ -135,6 +151,10 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             )
 
     def forward(self, batch):
+        """
+        Main forward of the model. Depending on the model type the calls are patched
+        to the suitable function.
+        """
         if len(self.model_config.MULTI_INPUT_HEAD_MAPPING) > 0:
             # this model accepts multiple types of inputs and a separate
             # head is applied to each model output of a given input.
@@ -146,27 +166,39 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         return self.single_input_forward(batch, self._output_feature_names, self.heads)
 
     def freeze_head(self):
+        """
+        Freeze the model head by setting requires_grad=False for all the parameters
+        """
         logging.info("Freezing model heads...")
         for head in self.heads:
             for param in head.parameters():
                 param.requires_grad = False
 
     def freeze_trunk(self):
+        """
+        Freeze the model trunk by setting requires_grad=False for all the parameters
+        """
         logging.info("Freezing model trunk...")
         for param in self.trunk.parameters():
             param.requires_grad = False
 
     def freeze_head_and_trunk(self):
-        # Freeze the full model including the heads and the trunk. In 99% cases,
-        # we do not use the pretext head as it is specific to the self-supervised
-        # pretext task. But in case of some models like NPID, SimCLR, SwAV, the
-        # head is essentially a low dimensional feature projection which we want
-        # to use. Hence, we provide utility to freeze the full model.
+        """
+        Freeze the full model including the heads and the trunk. In 99% cases,
+        we do not use the pretext head as it is specific to the self-supervised
+        pretext task. But in case of some models like NPID, SimCLR, SwAV, the
+        head is essentially a low dimensional feature projection which we want
+        to use. Hence, we provide utility to freeze the full model.
+        """
         logging.info("Freezing model...")
         self.freeze_trunk()
         self.freeze_head()
 
     def is_fully_frozen_model(self):
+        """
+        Look at all the parameters of the model (trunk + heads) and check if there
+        is any trainable parameter. if not, the model is completely frozen.
+        """
         trunk_params_list = self.trunk.parameters()
         heads_params_list = self.heads.parameters()
         trunk_trainable_params = list(
@@ -180,12 +212,23 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         return False
 
     def get_features(self, batch):
-        # we don't run the heads and only the trunk. The trunk will already
-        # have the feature extractor AvgPool layers and flattened features
+        """
+        Run the trunk forward on the input batch. This give us the features
+        from the trunk at several layers of the model.
+
+        In case of feature extraction, we don't run the heads and only the trunk.
+        The trunk will already have the feature extractor Pooling layers and flattened
+        features attached. feature extractor heads are part of the trunk already.
+        """
         feats = self.trunk(batch)
         return feats
 
     def _get_trunk(self):
+        """
+        Construct the model trunk given the architecture specified
+
+        The trunks could be convnet (AlexNet, ResNe(X)t, RegNet,...etc), transformers etc.
+        """
         # if we are going to evaluate trunk only we shift to feature extractor backbone
         if is_feature_extractor_model(self.model_config):
             self.eval_mode = True
@@ -196,6 +239,24 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             return get_model_trunk(trunk_name)(self.model_config, trunk_name)
 
     def _build_head_module(self, head_param):
+        """
+        Given the head, contruct the head.
+
+        Args:
+            head_param: The head param is a list containing:
+                        head_param = [
+                            head_name : str,
+                            head_settings: dict containing head settings
+                        ]
+
+                        Example:
+                            head_param = [
+                                "mlp",
+                                {"dims": [2048, 128]}
+                            ]
+        Returns:
+            pytorch module for the head
+        """
         head_name, head_kwargs = head_param[0], head_param[1]
         head_module = get_model_head(head_name)(self.model_config, **head_kwargs)
         return head_module
@@ -265,6 +326,9 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
     def _setup_multi_input_head_mapping(self):
         """
+        Used for PIRL style training where the model operates
+        on image and the patches.
+
         Assumptions:
         - This assumes that the same trunk is used to extract features
           for the different types of inputs.
@@ -276,14 +340,14 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
            from different layers. In this case, we specify MODEL.MULTI_INPUT_HEAD_MAPPING
            to be a list like:
            [
-               ["input_key", [ list of features heads is applied on]]
+               ["input_key", [list of features heads is applied on]]
            ]
            For example: for a model that applies two heads on images
-           and one head on patches
-           [
-               ["images", ["res5", "res4"]],
-               ["patches", ["res3"]],
-           ]
+                        and one head on patches
+                        [
+                            ["images", ["res5", "res4"]],
+                            ["patches", ["res3"]],
+                        ]
         """
         if len(self.model_config.MULTI_INPUT_HEAD_MAPPING) == 0:
             return
@@ -312,9 +376,13 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                 )
             self._input_to_eval_features_map[key] = eval_layer_names
 
-    # we call this on the state.base_model which is not wrapped with DDP.
-    # get the model state_dict to checkpoint
     def get_classy_state(self, deep_copy=False):
+        """
+        Return the model state (trunk + heads) to checkpoint.
+
+        We call this on the state.base_model which is not wrapped with DDP.
+        get the model state_dict to checkpoint
+        """
         trunk_state_dict = self.trunk.state_dict()
         heads_state_dict = self.heads.state_dict()
         model_state_dict = {
@@ -329,9 +397,13 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         # print_state_dict_shapes_shapes(heads_state_dict)
         return model_state_dict
 
-    # we call this on the state.base_model which is not wrapped with DDP.
-    # load the model from checkpoint
     def set_classy_state(self, state):
+        """
+        Initialize the model trunk and head from the state dictionary.
+
+        We call this on the state.base_model which is not wrapped with DDP.
+        load the model from checkpoint.
+        """
         from vissl.utils.checkpoint import print_loaded_dict_info
 
         logging.info("Loading Trunk state dict....")
@@ -368,19 +440,34 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
     @property
     def num_classes(self):
+        """
+        Not implemented and not required
+        """
         raise NotImplementedError
 
     @property
     def input_shape(self):
+        """
+        Not implemented and not required
+        """
         raise NotImplementedError
 
     @property
     def output_shape(self):
+        """
+        Not implemented and not required
+        """
         raise NotImplementedError
 
     @property
     def model_depth(self):
+        """
+        Not implemented and not required
+        """
         raise NotImplementedError
 
     def validate(self, dataset_output_shape):
+        """
+        Not implemented and not required
+        """
         raise NotImplementedError

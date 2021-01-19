@@ -1,7 +1,7 @@
 vissl.trainer package
 ==========================================
 
-.. automodule:: vissl.trainer_main
+.. automodule:: vissl.trainer.trainer_main
     :members:
     :undoc-members:
     :show-inheritance:
