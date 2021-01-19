@@ -129,7 +129,7 @@ class CosineWarmRestartScheduler(ClassyParamScheduler):
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "CosineWarmRestartScheduler":
         """
-        Instantiates a CosineParamScheduler from a configuration.
+        Instantiates a CosineWarmRestartScheduler from a configuration.
 
         Args:
             config: A configuration for a CosineWarmRestartScheduler.
