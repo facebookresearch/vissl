@@ -93,7 +93,6 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5
     CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations

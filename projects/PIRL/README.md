@@ -1,4 +1,4 @@
-# PIRL 
+# PIRL
 **Self-Supervised Learning of Pretext-Invariant Representations**
 
 Ishan Misra, Laurens van der Maaten
@@ -44,12 +44,12 @@ We provide the following pretrained models and report their single crop top-1 ac
 
 ## <a name="Citation"></a>Citing PIRL
 
-If you find PIRL useful, please consider citing the following paper 
+If you find PIRL useful, please consider citing the following paper
 ```
 @inproceedings{misra2020pirl,
   title={Self-Supervised Learning of Pretext-Invariant Representations},
-    author={Misra, Ishan and van der Maaten, Laurens},
-      booktitle={CVPR},
-        year={2020}
+  author={Misra, Ishan and van der Maaten, Laurens},
+  booktitle={CVPR},
+  year={2020}
 }
 ```
