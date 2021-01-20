@@ -23,7 +23,7 @@ CFG=( "$@" )
 ####################### setup experiment dir ###################################
 
 # create a temporary experiment folder to run the SLURM job in isolation
-RUN_ID=$(date +'%Y-%m-%d-%H:%M:%S')
+RUN_ID=$(date +'%Y-%m-%d-%H-%M-%S')
 EXP_ROOT_DIR="/checkpoint/$USER/vissl/$RUN_ID"
 CHECKPOINT_DIR="$EXP_ROOT_DIR/checkpoints/"
 
@@ -37,6 +37,7 @@ cp -r . $EXP_ROOT_DIR
 
 ####################### launch script #########################################
 
+export PYTHONPATH="$EXP_ROOT_DIR/:$PYTHONPATH"
 python -u "$EXP_ROOT_DIR/tools/run_distributed_on_slurm.py" \
   "${CFG[@]}" \
   hydra.run.dir="$EXP_ROOT_DIR" \
