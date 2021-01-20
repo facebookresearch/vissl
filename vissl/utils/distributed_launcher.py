@@ -175,7 +175,7 @@ class ResumableSlurmTraining:
         environment = submitit.JobEnvironment()
         node_id = environment.global_rank
         master_ip = environment.hostnames[0]
-        master_port = 40050
+        master_port = self.config.SLURM.PORT_ID
         self.config.DISTRIBUTED.INIT_METHOD = "tcp"
         self.config.DISTRIBUTED.RUN_ID = f"{master_ip}:{master_port}"
 
@@ -193,10 +193,7 @@ class ResumableSlurmTraining:
         return submitit.helpers.DelayedSubmission(trainer)
 
 
-def schedule_on_slurm(
-    engine_name: str,
-    config: AttrDict,
-):
+def schedule_on_slurm(engine_name: str, config: AttrDict):
     """
     Run a distributed training on SLURM, allocating the nodes and gpus as described in the configuration
     :param engine_name: the name of the engine to run (train or extract_features)

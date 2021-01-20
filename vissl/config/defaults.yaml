@@ -677,6 +677,8 @@ config:
     CONSTRAINT: ""
     # GB of RAM memory to allocate for each node
     MEM_GB: 250
+    # TCP port on which the workers will synchronize themselves with torch distributed
+    PORT_ID: 40050
 
   # ----------------------------------------------------------------------------------- #
   # SVM (benchmark)
