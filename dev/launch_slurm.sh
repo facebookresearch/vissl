@@ -1,32 +1,35 @@
 #!/bin/bash
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+######################### EXAMPLE USAGE #################################
+#
+# ./dev/launch_slurm.sh
+#    config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear
+#    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/checkpoint/user/checkpoint.torch
+#
+# Configuration for SLURM can be provided as additional hydra overrides:
+#
+# ./dev/launch_slurm.sh
+#    config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear
+#    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/checkpoint/user/checkpoint.torch
+#    config.SLURM.NAME=linear_evaluation
+#    config.SLURM.COMMENT=linear_evaluation_on_simclr
+#    config.SLURM.PARTITION=learnfair
+
 ######################### INPUT PARAMS ##################################
 
-EXPT_NAME=${EXPT_NAME-'unnamed'}
-COMMENT=${COMMENT-''}
-PARTITION=${PARTITION-'learnfair'}
-GPU_TYPE=${GPU_TYPE-''}
-TIME_HOURS=${TIME_HOURS-72}
-MEM=${MEM-250}
-RUN_ID=$(date +'%Y-%m-%d-%H:%M:%S')
 CFG=( "$@" )
-
-echo "EXPT_NAME: $EXPT_NAME"
-echo "COMMENT: $COMMENT"
-echo "PARTITION: $PARTITION"
 
 ####################### setup experiment dir ###################################
 
-# create the experiments folder
-EXP_ROOT_DIR="/checkpoint/$USER/vissl/$RUN_ID/$EXPT_NAME"
-RUN_SCRIPT="$EXP_ROOT_DIR/tools/run_distributed_on_slurm.py"
+# create a temporary experiment folder to run the SLURM job in isolation
+RUN_ID=$(date +'%Y-%m-%d-%H:%M:%S')
+EXP_ROOT_DIR="/checkpoint/$USER/vissl/$RUN_ID"
 CHECKPOINT_DIR="$EXP_ROOT_DIR/checkpoints/"
 
 echo "EXP_ROOT_DIR: $EXP_ROOT_DIR"
 echo "CHECKPOINT_DIR: $CHECKPOINT_DIR"
 
-# make the exp_dir and clone the current code inside it
 rm -rf $EXP_ROOT_DIR
 mkdir -p "$EXP_ROOT_DIR"
 mkdir -p "$CHECKPOINT_DIR"
@@ -34,13 +37,8 @@ cp -r . $EXP_ROOT_DIR
 
 ####################### launch script #########################################
 
-python -u "$RUN_SCRIPT" "${CFG[@]}" \
+python -u "$EXP_ROOT_DIR/tools/run_distributed_on_slurm.py" \
+  "${CFG[@]}" \
   hydra.run.dir="$EXP_ROOT_DIR" \
-  config.SLURM.NAME="$EXPT_NAME" \
-  config.SLURM.COMMENT="$COMMENT" \
-  config.SLURM.PARTITION="$PARTITION" \
   config.SLURM.LOG_FOLDER="$EXP_ROOT_DIR" \
-  config.SLURM.TIME_HOURS="$TIME_HOURS" \
-  config.SLURM.CONSTRAINT="$GPU_TYPE" \
-  config.SLURM.MEM_GB="$MEM" \
   config.CHECKPOINT.DIR="$CHECKPOINT_DIR"
