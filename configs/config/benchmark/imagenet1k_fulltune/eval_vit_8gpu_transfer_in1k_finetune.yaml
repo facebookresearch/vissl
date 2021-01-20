@@ -69,7 +69,7 @@ config:
     name: sgd
     weight_decay: 0.000
     momentum: 0.9
-    num_epochs: 100
+    num_epochs: 30
     nesterov: True
     regularize_bn: False
     regularize_bias: True
