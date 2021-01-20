@@ -38,8 +38,9 @@ cp -r . $EXP_ROOT_DIR
 ####################### launch script #########################################
 
 export PYTHONPATH="$EXP_ROOT_DIR/:$PYTHONPATH"
-python -u "$EXP_ROOT_DIR/tools/run_distributed_on_slurm.py" \
+python -u "$EXP_ROOT_DIR/tools/run_distributed_engines.py" \
   "${CFG[@]}" \
   hydra.run.dir="$EXP_ROOT_DIR" \
+  config.SLURM.ENABLED=true \
   config.SLURM.LOG_FOLDER="$EXP_ROOT_DIR" \
   config.CHECKPOINT.DIR="$CHECKPOINT_DIR"

@@ -663,6 +663,8 @@ config:
   # (options like number of nodes and number of GPUs by node are taken from DISTRIBUTED)
   # ----------------------------------------------------------------------------------- #
   SLURM:
+    # Whether or not to run the job on SLURM
+    ENABLED: false
     # Name of the job on SLURM
     NAME: "vissl"
     # Comment of the job on SLURM
