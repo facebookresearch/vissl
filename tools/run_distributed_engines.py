@@ -10,6 +10,7 @@ import sys
 import tempfile
 from typing import Any, Callable, List
 
+import submitit
 import torch
 from fvcore.common.file_io import PathManager
 from hydra.experimental import compose, initialize_config_module
@@ -166,12 +167,8 @@ def _distributed_worker(
     process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
 
 
-def hydra_main(overrides: List[Any]):
-    print(f"####### overrides: {overrides}")
-    with initialize_config_module(config_module="vissl.config"):
-        cfg = compose("defaults", overrides=overrides)
+def schedule_distributed_job(args, config):
     setup_logging(__name__)
-    args, config = convert_to_attrdict(cfg)
     launch_distributed(
         config,
         node_id=args.node_id,
@@ -180,6 +177,79 @@ def hydra_main(overrides: List[Any]):
     )
     # close the logging streams including the filehandlers
     shutdown_logging()
+
+
+class ResumableSlurmTraining:
+    """
+    Distributed training that can be resumed from a checkpoint
+    """
+
+    def __init__(self, engine_name: str, config: AttrDict):
+        self.engine_name = engine_name
+        self.config = config
+
+    def __call__(self):
+        environment = submitit.JobEnvironment()
+        node_id = environment.global_rank
+        master_ip = environment.hostnames[0]
+        master_port = self.config.SLURM.PORT_ID
+        self.config.DISTRIBUTED.INIT_METHOD = "tcp"
+        self.config.DISTRIBUTED.RUN_ID = f"{master_ip}:{master_port}"
+
+        setup_logging(__name__)
+        launch_distributed(
+            self.config,
+            node_id=node_id,
+            engine_name=self.engine_name,
+            hook_generator=default_hook_generator,
+        )
+        shutdown_logging()
+
+    def checkpoint(self):
+        trainer = ResumableSlurmTraining(engine_name=self.engine_name, config=self.config)
+        return submitit.helpers.DelayedSubmission(trainer)
+
+
+def schedule_on_slurm(engine_name: str, config: AttrDict):
+    """
+    Run a distributed training on SLURM, allocating the nodes and gpus as described in the configuration
+    :param engine_name: the name of the engine to run (train or extract_features)
+    :param config: the configuration of the experiment
+    """
+
+    # DO NOT REMOVE: submitit processes will not be initialized correctly if numpy is not imported first
+    import numpy
+    print(numpy.__version__)
+
+    log_folder = config.SLURM.LOG_FOLDER
+    executor = submitit.AutoExecutor(folder=log_folder)
+    executor.update_parameters(
+        name=config.SLURM.NAME,
+        slurm_comment=config.SLURM.COMMENT,
+        slurm_partition=config.SLURM.PARTITION,
+        slurm_constraint=config.SLURM.CONSTRAINT,
+        timeout_min=config.SLURM.TIME_HOURS * 60,
+        nodes=config.DISTRIBUTED.NUM_NODES,
+        cpus_per_task=8 * config.DISTRIBUTED.NUM_PROC_PER_NODE,
+        tasks_per_node=1,
+        gpus_per_node=config.DISTRIBUTED.NUM_PROC_PER_NODE,
+        mem_gb=config.SLURM.MEM_GB,
+    )
+    trainer = ResumableSlurmTraining(engine_name=engine_name, config=config)
+    job = executor.submit(trainer)
+    print(f"SUBMITTED: {job.job_id}")
+
+
+def hydra_main(overrides: List[Any]):
+    print(f"####### overrides: {overrides}")
+    with initialize_config_module(config_module="vissl.config"):
+        cfg = compose("defaults", overrides=overrides)
+    args, config = convert_to_attrdict(cfg)
+    if config.SLURM.ENABLED:
+        config.DATA.NUM_DATALOADER_WORKERS = 8
+        schedule_on_slurm(engine_name=args.engine_name, config=config)
+    else:
+        schedule_distributed_job(args, config)
 
 
 if __name__ == "__main__":
