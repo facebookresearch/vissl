@@ -34,12 +34,12 @@ We provide the following pretrained models and report their single crop top-1 ac
 
 | Model | Epochs | Head | Top-1 |  Checkpoint |
 | ----- | ------ | -----| ----- | ----------- |
-| R50 |  200 | Linear | 62.9 |  [model](pirl/r50_200ep/model_final_checkpoint_phase199.torch) |
-| R50 | 200 | MLP | 65.8 | [model](pirl/r50_200ep_mlp_gblur/model_final_checkpoint_phase199.torch) |
-| R50 | 800 | Linear | 63.8 | [model](pirl/pretext_rn50_4nodes_pirl_imagenet_ep800/model_final_checkpoint_phase799.torch) |
-| R50 | 800 | MLP | 69.9 | [model](pirl/r50_800ep_mlphead_gblur/model_final_checkpoint_phase799.torch) |
-| R50w2 | 400 | Linear | 69.3 | [model](pirl/w2_400ep/model_final_checkpoint_phase399.torch) |
-| R50w2 | 400 | MLP | 70.9 | [model](pirl/r50w2_400ep_mlphead_gblur/model_final_checkpoint_phase399.torch) |
+| R50 |  200 | Linear | 62.9 |  [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/pirl/r50_200ep/model_final_checkpoint_phase199.torch) |
+| R50 | 200 | MLP | 65.8 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/pirl/r50_200ep_mlp_gblur/model_final_checkpoint_phase199.torch) |
+| R50 | 800 | Linear | 64.29 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/pirl_jigsaw_4node_pirl_jigsaw_4node_resnet_22_07_20.34377f59/model_final_checkpoint_phase799.torch) |
+| R50 | 800 | MLP | 69.9 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/pirl/r50_800ep_mlphead_gblur/model_final_checkpoint_phase799.torch) |
+| R50w2 | 400 | Linear | 69.3 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/pirl/w2_400ep/model_final_checkpoint_phase399.torch) |
+| R50w2 | 400 | MLP | 70.9 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/pirl/r50w2_400ep_mlphead_gblur/model_final_checkpoint_phase399.torch) |
 
 
 ## <a name="Citation"></a>Citing PIRL

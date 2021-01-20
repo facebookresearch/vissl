@@ -2,7 +2,7 @@ vissl.utils package
 ===========================
 
 vissl.utils.instance_retrieval_utils.data_util module
-----------------------------------------------------
+-----------------------------------------------------------
 
 .. automodule:: vissl.utils.instance_retrieval_utils.data_util
     :members:
@@ -11,7 +11,7 @@ vissl.utils.instance_retrieval_utils.data_util module
 
 
 vissl.utils.instance_retrieval_utils.evaluate module
-----------------------------------------------------
+----------------------------------------------------------
 
 .. automodule:: vissl.utils.instance_retrieval_utils.evaluate
     :members:

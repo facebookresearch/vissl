@@ -1,7 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import torch.nn as nn
-from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
+from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs_module_list
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict
 
@@ -76,7 +76,7 @@ class AlexNetBvlc(nn.Module):
 
     def forward(self, x, out_feat_keys=None):
         feat = x
-        out_feats = get_trunk_forward_outputs(
+        out_feats = get_trunk_forward_outputs_module_list(
             feat,
             out_feat_keys,
             self._feature_blocks,

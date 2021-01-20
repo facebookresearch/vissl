@@ -485,3 +485,17 @@ def assert_hydra_conf(cfg):
         cfg.DATA.TRAIN.LABEL_TYPE = "sample_index"
     if len(cfg.DATA.TEST.LABEL_SOURCES) == 0:
         cfg.DATA.TEST.LABEL_TYPE = "sample_index"
+
+    # if the user has specified the model initialization from a params_file, we check if
+    # the params_file is a url. If it is, we download the file to a local cache directory
+    # and use that instead
+    from vissl.utils.checkpoint import get_checkpoint_folder
+    from vissl.utils.io import cache_url, is_url
+
+    if is_url(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
+        checkpoint_dir = get_checkpoint_folder(cfg)
+        cache_dir = f"{checkpoint_dir}/params_file_cache/"
+        cached_url_path = cache_url(
+            url=cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE, cache_dir=cache_dir
+        )
+        cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE = cached_url_path

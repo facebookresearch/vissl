@@ -1,0 +1,94 @@
+{
+    "params": {
+      "benchmarks": [
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/rotnet_rn50_in1k_ep105_rotnet_8gpu_resnet_17_07_20.46bada9f/model_final_checkpoint_phase125.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in1k_rotnet",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_rotnet_in22k_ep105.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in22k_rotnet",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_alexnet_8gpu_transfer_in1k_linear",
+            "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_rotnet",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/rotnet_alexnet_model_net_epoch50.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "alexnet_in1k_oss_rotnet",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_alexnet_8gpu_transfer_in1k_linear",
+            "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_deepcluster",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/deepcluster_alexnet_checkpoint.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "alexnet_in1k_oss_deepcluster",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_rotnet_16kclusters_in1k_ep105.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in1k_clusterfit",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        }
+      ]
+    }
+  }
