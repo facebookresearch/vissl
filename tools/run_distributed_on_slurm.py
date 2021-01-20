@@ -14,16 +14,7 @@ def hydra_main(overrides: List[Any]):
 
     args, config = convert_to_attrdict(cfg)
     config.DATA.NUM_DATALOADER_WORKERS = 8
-    schedule_on_slurm(
-        engine_name=args.engine_name,
-        config=config,
-        job_name=args.name,
-        job_comment=args.comment,
-        partition=args.partition,
-        time_hours=args.time_hours,
-        constraint=args.constraint,
-        mem_gb=args.mem_gb,
-        log_folder=args.log_folder)
+    schedule_on_slurm(engine_name=args.engine_name, config=config)
 
 
 if __name__ == "__main__":

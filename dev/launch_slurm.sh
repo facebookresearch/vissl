@@ -36,11 +36,11 @@ cp -r . $EXP_ROOT_DIR
 
 python -u "$RUN_SCRIPT" "${CFG[@]}" \
   hydra.run.dir="$EXP_ROOT_DIR" \
-  +name="$EXPT_NAME" \
-  +comment="$COMMENT" \
-  +partition="$PARTITION" \
-  +log_folder="$EXP_ROOT_DIR" \
-  +time_hours="$TIME_HOURS" \
-  +constraint="$GPU_TYPE" \
-  +mem_gb="$MEM" \
+  config.SLURM.NAME="$EXPT_NAME" \
+  config.SLURM.COMMENT="$COMMENT" \
+  config.SLURM.PARTITION="$PARTITION" \
+  config.SLURM.LOG_FOLDER="$EXP_ROOT_DIR" \
+  config.SLURM.TIME_HOURS="$TIME_HOURS" \
+  config.SLURM.CONSTRAINT="$GPU_TYPE" \
+  config.SLURM.MEM_GB="$MEM" \
   config.CHECKPOINT.DIR="$CHECKPOINT_DIR"

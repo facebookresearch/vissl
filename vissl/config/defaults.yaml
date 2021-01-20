@@ -606,7 +606,7 @@ config:
   # ----------------------------------------------------------------------------------- #
   CHECKPOINT:
     DIR: "."
-    # for the checkpoinint, we can append the RUN_ID if we want
+    # for the checkpoint, we can append the RUN_ID if we want
     APPEND_DISTR_RUN_ID: False
     BACKEND: "disk"
     # In case of distributed multi-node training, simply use the same RUN_ID and DIR
@@ -657,6 +657,26 @@ config:
     RUN_ID: "auto"
     # if True, does the gradient reduction in DDP
     MANUAL_GRADIENT_REDUCTION: False
+
+  # ----------------------------------------------------------------------------------- #
+  # DISTRIBUTED TRAINING ON SLURM: Additional options for SLURM node allocation
+  # (options like number of nodes and number of GPUs by node are taken from DISTRIBUTED)
+  # ----------------------------------------------------------------------------------- #
+  SLURM:
+    # Name of the job on SLURM
+    NAME: "vissl"
+    # Comment of the job on SLURM
+    COMMENT: "vissl job"
+    # Partition of SLURM on which to run the job
+    PARTITION: "learnfair"
+    # Where the logs produced by the SLURM jobs will be output
+    LOG_FOLDER: "."
+    # Maximum number of hours needed by the job to complete. Above this limit, the job might be pre-empted.
+    TIME_HOURS: 72
+    # Additional constraints on the hardware of the nodes to allocate (example 'volta' to select a volta GPU)
+    CONSTRAINT: ""
+    # GB of RAM memory to allocate for each node
+    MEM_GB: 250
 
   # ----------------------------------------------------------------------------------- #
   # SVM (benchmark)
