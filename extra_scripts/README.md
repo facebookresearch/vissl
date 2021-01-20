@@ -90,7 +90,7 @@ python extra_scripts/generate_jigsaw_permutations.py \
     -- N 2000
 ```
 
-## Converting Models VISSL -> {Detectron2, ClassyVision}
+## Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
 We provide scripts to convert VISSL models to [Detectron2](https://github.com/facebookresearch/detectron2) and [ClassyVision](https://github.com/facebookresearch/ClassyVision) compatible models.
 
 ### Converting to Detectron2
@@ -112,6 +112,16 @@ python extra_scripts/convert_vissl_to_classy_vision.py \
     --input_model_file <input_model>.pth  \
     --output_model <d2_model>.torch \
     --state_dict_key_name classy_state_dict
+```
+
+### Converting to TorchVision
+All the ResNe(X)t models in VISSL can be converted to Torchvision weights using following command:
+
+```bash
+python extra_scripts/convert_vissl_to_torchvision.py \
+    --model_url_or_file <input_model>.pth  \
+    --output_dir /path/to/output/dir/ \
+    --output_name <my_converted_model>.torch
 ```
 
 ## Converting Caffe2 models -> VISSL

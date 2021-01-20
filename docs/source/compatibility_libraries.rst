@@ -5,7 +5,7 @@ Compatibility with Other Libraries
 - VISSL also provides scripts to convert models from other sources like `Caffe2 models <https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md>`_ in the `paper <https://arxiv.org/abs/1905.01235>`_ to VISSL compatible models.
 - `TorchVision <https://github.com/pytorch/vision/tree/master/torchvision/models>`_ models are directly compatible with VISSL and don't require any conversion.
 
-Converting Models VISSL -> {Detectron2, ClassyVision}
+Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
 ---------------------------------------------------------------
 We provide scripts to convert VISSL models to `Detectron2 <https://github.com/facebookresearch/detectron2>`_ and `ClassyVision <https://github.com/facebookresearch/ClassyVision>`_ compatible models.
 
@@ -32,6 +32,18 @@ All the ResNe(X)t models in VISSL can be converted to Detectron2 weights using f
         --input_model_file <input_model>.pth  \
         --output_model <d2_model>.torch \
         --state_dict_key_name classy_state_dict
+
+
+Converting to TorchVision
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+All the ResNe(X)t models in VISSL can be converted to Torchvision weights using following command:
+
+.. code-block:: bash
+
+    python extra_scripts/convert_vissl_to_torchvision.py \
+        --model_url_or_file <input_model>.pth  \
+        --output_dir /path/to/output/dir/ \
+        --output_name <my_converted_model>.torch
 
 
 Converting Caffe2 models -> VISSL

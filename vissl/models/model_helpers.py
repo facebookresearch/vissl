@@ -285,6 +285,35 @@ def parse_out_keys_arg(
     return out_feat_keys, max_out_feat
 
 
+def get_trunk_forward_outputs_module_list(
+    feat: torch.Tensor,
+    out_feat_keys: List[str],
+    feature_blocks: nn.ModuleList,
+    all_feat_names: List[str] = None,
+) -> List[torch.Tensor]:
+    """
+    Args:
+        feat: model input.
+        out_feat_keys: a list/tuple with the feature names of the features that
+            the function should return. By default the last feature of the network
+            is returned.
+        feature_blocks: list of feature blocks in the model
+        feature_mapping: name of the layers in the model
+
+    Returns:
+        out_feats: a list with the asked output features placed in the same order as in
+        `out_feat_keys`.
+    """
+    out_feat_keys, max_out_feat = parse_out_keys_arg(out_feat_keys, all_feat_names)
+    out_feats = [None] * len(out_feat_keys)
+    for f in range(max_out_feat + 1):
+        feat = feature_blocks[f](feat)
+        key = all_feat_names[f]
+        if key in out_feat_keys:
+            out_feats[out_feat_keys.index(key)] = feat
+    return out_feats
+
+
 def get_trunk_forward_outputs(
     feat: torch.Tensor,
     out_feat_keys: List[str],
@@ -299,7 +328,7 @@ def get_trunk_forward_outputs(
         out_feat_keys: a list/tuple with the feature names of the features that
             the function should return. By default the last feature of the network
             is returned.
-        feature_blocks: list of feature blocks in the model
+        feature_blocks: ModuleDict containing feature blocks in the model
         feature_mapping: an optional correspondence table in between the requested
             feature names and the model's.
 
