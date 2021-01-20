@@ -1,0 +1,236 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>source/evaluations/feature_eval_settings · VISSL</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="# Summary: Feature Eval Config Settings"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="source/evaluations/feature_eval_settings · VISSL"/><meta property="og:type" content="website"/><meta property="og:url" content="https://vissl.ai/"/><meta property="og:description" content="# Summary: Feature Eval Config Settings"/><meta property="og:image" content="https://vissl.ai/img/vissllogo.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://vissl.ai/img/vissllogo.svg"/><link rel="shortcut icon" href="/img/visslfavicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-172675973-1', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/visslfavicon.png" alt="VISSL"/><h2 class="headerTitleWithLogo">VISSL</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/tutorials" target="_self">Tutorials</a></li><li class=""><a href="https://vissl.readthedocs.io/" target="_self">Docs</a></li><li class=""><a href="https://github.com/facebookresearch/vissl" target="_self">GitHub</a></li><li class=""><a target="_self"></a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">source/evaluations/feature_eval_settings</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="summary-feature-eval-config-settings"></a><a href="#summary-feature-eval-config-settings" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Summary: Feature Eval Config Settings</h1>
+<p>This doc describes summary of how to set :code:<code>MODEL.FEATURE_EVAL_SETTINGS</code> parameter for different evaluations.</p>
+<p>In order to evaluate the model, you need to set :code:<code>MODEL.FEATURE_EVAL_SETTINGS</code> in yaml config file. Various options determine how the model is evaluated and also what part of the model is initialized from weights or what part of the model is frozen.</p>
+<p>Below we provide instructions for setting the :code:<code>MODEL.FEATURE_EVAL_SETTINGS</code> for evaluating a pre-trained model on several benchmark tasks. Below are only some example scenarios but hopefully provide an idea for any different use case one might have in mind.</p>
+<h2><a class="anchor" aria-hidden="true" id="linear-image-classification-with-mlp-heads"></a><a href="#linear-image-classification-with-mlp-heads" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Linear Image Classification with MLP heads</h2>
+<h3><a class="anchor" aria-hidden="true" id="attach-mlp-heads-to-several-layers-of-the-trunk"></a><a href="#attach-mlp-heads-to-several-layers-of-the-trunk" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Attach MLP heads to several layers of the trunk</h3>
+<ul>
+<li>If you want Zhang et. al style which has <code>BN -&gt; FC</code> as the head, use <code>eval_mlp</code> head. Example:</li>
+</ul>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">SHOULD_FLATTEN_FEATS:</span> <span class="hljs-literal">False</span>
+    <span class="hljs-attr">LINEAR_EVAL_FEAT_POOL_OPS_MAP:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["conv1",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[10,</span> <span class="hljs-number">10</span><span class="hljs-string">],</span> <span class="hljs-number">10</span><span class="hljs-string">,</span> <span class="hljs-number">4</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res2",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[16,</span> <span class="hljs-number">16</span><span class="hljs-string">],</span> <span class="hljs-number">8</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res3",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[13,</span> <span class="hljs-number">13</span><span class="hljs-string">],</span> <span class="hljs-number">5</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res4",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[8,</span> <span class="hljs-number">8</span><span class="hljs-string">],</span> <span class="hljs-number">3</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res5",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[6,</span> <span class="hljs-number">6</span><span class="hljs-string">],</span> <span class="hljs-number">1</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res5avg",</span> <span class="hljs-string">["Identity",</span> <span class="hljs-string">[]]],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+  <span class="hljs-attr">HEAD:</span>
+    <span class="hljs-attr">PARAMS:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["eval_mlp",</span> <span class="hljs-string">{"in_channels":</span> <span class="hljs-number">64</span><span class="hljs-string">,</span> <span class="hljs-attr">"dims":</span> <span class="hljs-string">[9216,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+      <span class="hljs-string">["eval_mlp",</span> <span class="hljs-string">{"in_channels":</span> <span class="hljs-number">256</span><span class="hljs-string">,</span> <span class="hljs-attr">"dims":</span> <span class="hljs-string">[9216,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+      <span class="hljs-string">["eval_mlp",</span> <span class="hljs-string">{"in_channels":</span> <span class="hljs-number">512</span><span class="hljs-string">,</span> <span class="hljs-attr">"dims":</span> <span class="hljs-string">[8192,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+      <span class="hljs-string">["eval_mlp",</span> <span class="hljs-string">{"in_channels":</span> <span class="hljs-number">1024</span><span class="hljs-string">,</span> <span class="hljs-attr">"dims":</span> <span class="hljs-string">[9216,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+      <span class="hljs-string">["eval_mlp",</span> <span class="hljs-string">{"in_channels":</span> <span class="hljs-number">2048</span><span class="hljs-string">,</span> <span class="hljs-attr">"dims":</span> <span class="hljs-string">[8192,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+      <span class="hljs-string">["eval_mlp",</span> <span class="hljs-string">{"in_channels":</span> <span class="hljs-number">2048</span><span class="hljs-string">,</span> <span class="hljs-attr">"dims":</span> <span class="hljs-string">[2048,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">WEIGHTS_INIT:</span>
+    <span class="hljs-attr">PARAMS_FILE:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">STATE_DICT_KEY_NAME:</span> <span class="hljs-string">classy_state_dict</span>
+</code></pre>
+<ul>
+<li>If you want <code>FC</code> layer only in the head, use <code>mlp</code> head. Example:</li>
+</ul>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">SHOULD_FLATTEN_FEATS:</span> <span class="hljs-literal">False</span>
+    <span class="hljs-attr">LINEAR_EVAL_FEAT_POOL_OPS_MAP:</span> <span class="hljs-string">[</span>
+        <span class="hljs-string">["res5avg",</span> <span class="hljs-string">["Identity",</span> <span class="hljs-string">[]]],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+  <span class="hljs-attr">HEAD:</span>
+    <span class="hljs-attr">PARAMS:</span> <span class="hljs-string">[</span>
+        <span class="hljs-string">["mlp",</span> <span class="hljs-string">{"dims":</span> <span class="hljs-string">[2048,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">WEIGHTS_INIT:</span>
+    <span class="hljs-attr">PARAMS_FILE:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">STATE_DICT_KEY_NAME:</span> <span class="hljs-string">classy_state_dict</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="attach-mlp-head-to-the-trunk-output"></a><a href="#attach-mlp-head-to-the-trunk-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Attach MLP head to the trunk output</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">SHOULD_FLATTEN_FEATS:</span> <span class="hljs-literal">False</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+  <span class="hljs-attr">HEAD:</span>
+    <span class="hljs-attr">PARAMS:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["eval_mlp",</span> <span class="hljs-string">{"in_channels":</span> <span class="hljs-number">2048</span><span class="hljs-string">,</span> <span class="hljs-attr">"dims":</span> <span class="hljs-string">[2048,</span> <span class="hljs-number">1000</span><span class="hljs-string">]}],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">WEIGHTS_INIT:</span>
+    <span class="hljs-attr">PARAMS_FILE:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">STATE_DICT_KEY_NAME:</span> <span class="hljs-string">classy_state_dict</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="linear-image-classification-with-svm-trainings"></a><a href="#linear-image-classification-with-svm-trainings" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Linear Image Classification with SVM trainings</h2>
+<h3><a class="anchor" aria-hidden="true" id="train-svm-on-several-layers-of-the-trunk"></a><a href="#train-svm-on-several-layers-of-the-trunk" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Train SVM on several layers of the trunk</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">EXTRACT_TRUNK_FEATURES_ONLY:</span> <span class="hljs-literal">True</span>   <span class="hljs-comment"># only extract the features and we will train SVM on these</span>
+    <span class="hljs-attr">LINEAR_EVAL_FEAT_POOL_OPS_MAP:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["res4",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[8,</span> <span class="hljs-number">8</span><span class="hljs-string">],</span> <span class="hljs-number">3</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res5",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[6,</span> <span class="hljs-number">6</span><span class="hljs-string">],</span> <span class="hljs-number">1</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res5avg",</span> <span class="hljs-string">["Identity",</span> <span class="hljs-string">[]]],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="train-svm-on-the-trunk-output"></a><a href="#train-svm-on-the-trunk-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Train SVM on the trunk output</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">EXTRACT_TRUNK_FEATURES_ONLY:</span> <span class="hljs-literal">True</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="nearest-neighbor"></a><a href="#nearest-neighbor" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Nearest Neighbor</h2>
+<h3><a class="anchor" aria-hidden="true" id="knn-test-on-trunk-output"></a><a href="#knn-test-on-trunk-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>knn test on trunk output</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>  <span class="hljs-comment"># only freeze the trunk</span>
+    <span class="hljs-attr">EXTRACT_TRUNK_FEATURES_ONLY:</span> <span class="hljs-literal">True</span>   <span class="hljs-comment"># we extract features from the trunk only</span>
+    <span class="hljs-attr">SHOULD_FLATTEN_FEATS:</span> <span class="hljs-literal">False</span>   <span class="hljs-comment"># don't flatten the features and return as is</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+  <span class="hljs-attr">WEIGHTS_INIT:</span>
+    <span class="hljs-attr">PARAMS_FILE:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">STATE_DICT_KEY_NAME:</span> <span class="hljs-string">classy_state_dict</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="knn-test-on-model-head-output-self-supervised-head"></a><a href="#knn-test-on-model-head-output-self-supervised-head" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>knn test on model head output (self-supervised head)</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_AND_HEAD:</span> <span class="hljs-literal">True</span>   <span class="hljs-comment"># both head and trunk will be frozen (including BN in eval mode)</span>
+    <span class="hljs-attr">EVAL_TRUNK_AND_HEAD:</span> <span class="hljs-literal">True</span>  <span class="hljs-comment"># initialized the model head as well from weights</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+  <span class="hljs-attr">HEAD:</span>
+    <span class="hljs-comment"># SimCLR model head structure</span>
+    <span class="hljs-attr">PARAMS:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["mlp",</span> <span class="hljs-string">{"dims":</span> <span class="hljs-string">[2048,</span> <span class="hljs-number">2048</span><span class="hljs-string">],</span> <span class="hljs-attr">"use_relu":</span> <span class="hljs-literal">True</span><span class="hljs-string">}],</span>
+      <span class="hljs-string">["mlp",</span> <span class="hljs-string">{"dims":</span> <span class="hljs-string">[2048,</span> <span class="hljs-number">128</span><span class="hljs-string">]}],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">WEIGHTS_INIT:</span>
+    <span class="hljs-attr">PARAMS_FILE:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">STATE_DICT_KEY_NAME:</span> <span class="hljs-string">classy_state_dict</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="knn-test-on-several-layers-of-the-trunk"></a><a href="#knn-test-on-several-layers-of-the-trunk" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>knn test on several layers of the trunk</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>  <span class="hljs-comment"># only freeze the trunk</span>
+    <span class="hljs-attr">EXTRACT_TRUNK_FEATURES_ONLY:</span> <span class="hljs-literal">True</span>   <span class="hljs-comment"># we extract features from the trunk only</span>
+    <span class="hljs-attr">SHOULD_FLATTEN_FEATS:</span> <span class="hljs-literal">False</span>   <span class="hljs-comment"># don't flatten the features and return as is</span>
+    <span class="hljs-attr">LINEAR_EVAL_FEAT_POOL_OPS_MAP:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["res4",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[8,</span> <span class="hljs-number">8</span><span class="hljs-string">],</span> <span class="hljs-number">3</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res5",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[6,</span> <span class="hljs-number">6</span><span class="hljs-string">],</span> <span class="hljs-number">1</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+  <span class="hljs-attr">WEIGHTS_INIT:</span>
+    <span class="hljs-attr">PARAMS_FILE:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">STATE_DICT_KEY_NAME:</span> <span class="hljs-string">classy_state_dict</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="feature-extraction"></a><a href="#feature-extraction" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Feature Extraction</h2>
+<p>You need to set <code>engine_name: extract_features</code> in the config file or pass the <code>engine_name=extract_features</code> as an additional input from the command line.</p>
+<h3><a class="anchor" aria-hidden="true" id="extract-features-from-several-layers-of-the-trunk"></a><a href="#extract-features-from-several-layers-of-the-trunk" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Extract features from several layers of the trunk</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">EXTRACT_TRUNK_FEATURES_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">SHOULD_FLATTEN_FEATS:</span> <span class="hljs-literal">False</span>
+    <span class="hljs-attr">LINEAR_EVAL_FEAT_POOL_OPS_MAP:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["conv1",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[10,</span> <span class="hljs-number">10</span><span class="hljs-string">],</span> <span class="hljs-number">10</span><span class="hljs-string">,</span> <span class="hljs-number">4</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res2",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[16,</span> <span class="hljs-number">16</span><span class="hljs-string">],</span> <span class="hljs-number">8</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res3",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[13,</span> <span class="hljs-number">13</span><span class="hljs-string">],</span> <span class="hljs-number">5</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res4",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[8,</span> <span class="hljs-number">8</span><span class="hljs-string">],</span> <span class="hljs-number">3</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res5",</span> <span class="hljs-string">["AvgPool2d",</span> <span class="hljs-string">[[6,</span> <span class="hljs-number">6</span><span class="hljs-string">],</span> <span class="hljs-number">1</span><span class="hljs-string">,</span> <span class="hljs-number">0</span><span class="hljs-string">]]],</span>
+      <span class="hljs-string">["res5avg",</span> <span class="hljs-string">["Identity",</span> <span class="hljs-string">[]]],</span>
+    <span class="hljs-string">]</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="extract-features-of-the-trunk-output"></a><a href="#extract-features-of-the-trunk-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Extract features of the trunk output</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">EXTRACT_TRUNK_FEATURES_ONLY:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">SHOULD_FLATTEN_FEATS:</span> <span class="hljs-literal">False</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="extract-features-of-the-model-head-output-self-supervised-head"></a><a href="#extract-features-of-the-model-head-output-self-supervised-head" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Extract features of the model head output (self-supervised head)</h3>
+<pre><code class="hljs css language-yaml"><span class="hljs-attr">MODEL:</span>
+  <span class="hljs-attr">FEATURE_EVAL_SETTINGS:</span>
+    <span class="hljs-attr">EVAL_MODE_ON:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">FREEZE_TRUNK_AND_HEAD:</span> <span class="hljs-literal">True</span>
+    <span class="hljs-attr">EVAL_TRUNK_AND_HEAD:</span> <span class="hljs-literal">True</span>
+  <span class="hljs-attr">TRUNK:</span>
+    <span class="hljs-attr">NAME:</span> <span class="hljs-string">resnet</span>
+    <span class="hljs-attr">TRUNK_PARAMS:</span>
+      <span class="hljs-attr">RESNETS:</span>
+        <span class="hljs-attr">DEPTH:</span> <span class="hljs-number">50</span>
+  <span class="hljs-attr">HEAD:</span>
+    <span class="hljs-attr">PARAMS:</span> <span class="hljs-string">[</span>
+      <span class="hljs-string">["mlp",</span> <span class="hljs-string">{"dims":</span> <span class="hljs-string">[2048,</span> <span class="hljs-number">2048</span><span class="hljs-string">],</span> <span class="hljs-attr">"use_relu":</span> <span class="hljs-literal">True</span><span class="hljs-string">}],</span>
+      <span class="hljs-string">["mlp",</span> <span class="hljs-string">{"dims":</span> <span class="hljs-string">[2048,</span> <span class="hljs-number">128</span><span class="hljs-string">]}],</span>
+    <span class="hljs-string">]</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="full-finetuning"></a><a href="#full-finetuning" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Full finetuning</h2>
+<p>Since this only requires to initialize the model from the pre-trained model weights, there's
+no need for the <code>FEATURE_EVAL_SETTINGS</code> params. Simply set <code>MODEL.WEIGHTS_INIT</code> params.</p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#linear-image-classification-with-mlp-heads">Linear Image Classification with MLP heads</a><ul class="toc-headings"><li><a href="#attach-mlp-heads-to-several-layers-of-the-trunk">Attach MLP heads to several layers of the trunk</a></li><li><a href="#attach-mlp-head-to-the-trunk-output">Attach MLP head to the trunk output</a></li></ul></li><li><a href="#linear-image-classification-with-svm-trainings">Linear Image Classification with SVM trainings</a><ul class="toc-headings"><li><a href="#train-svm-on-several-layers-of-the-trunk">Train SVM on several layers of the trunk</a></li><li><a href="#train-svm-on-the-trunk-output">Train SVM on the trunk output</a></li></ul></li><li><a href="#nearest-neighbor">Nearest Neighbor</a><ul class="toc-headings"><li><a href="#knn-test-on-trunk-output">knn test on trunk output</a></li><li><a href="#knn-test-on-model-head-output-self-supervised-head">knn test on model head output (self-supervised head)</a></li><li><a href="#knn-test-on-several-layers-of-the-trunk">knn test on several layers of the trunk</a></li></ul></li><li><a href="#feature-extraction">Feature Extraction</a><ul class="toc-headings"><li><a href="#extract-features-from-several-layers-of-the-trunk">Extract features from several layers of the trunk</a></li><li><a href="#extract-features-of-the-trunk-output">Extract features of the trunk output</a></li><li><a href="#extract-features-of-the-model-head-output-self-supervised-head">Extract features of the model head output (self-supervised head)</a></li></ul></li><li><a href="#full-finetuning">Full finetuning</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><div class="social"><a class="github-button" href="https://github.com/facebookresearch/vissl" data-count-href="https://github.com/facebookresearch/vissl/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star VISSL on GitHub">vissl</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2021 Your Name or Your Company Name<br/>Legal:<a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></section></footer></div></body></html>
