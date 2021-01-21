@@ -132,7 +132,7 @@ class SSLTensorboardHook(ClassyHook):
                             self.tb_writer.add_histogram(
                                 f"Gradients/{name}",
                                 parameter.grad,
-                                global_step=task.train_phase_idx
+                                global_step=task.train_phase_idx,
                             )
                         except ValueError:
                             logging.info(
@@ -173,7 +173,7 @@ class SSLTensorboardHook(ClassyHook):
                         self.tb_writer.add_histogram(
                             f"Gradients/{name}",
                             parameter.grad,
-                            global_step=task.iteration
+                            global_step=task.iteration,
                         )
                     except ValueError:
                         logging.info(
