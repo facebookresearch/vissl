@@ -1,7 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-# from typing import List
-
 import torch
 from vissl.data.collators import register_collator
 
