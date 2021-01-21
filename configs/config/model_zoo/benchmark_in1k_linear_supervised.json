@@ -79,7 +79,7 @@
             "+config/benchmark/linear_image_classification/models=alexnet_bvlc_supervised",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
             "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
-            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/iccv19_models/sslime/converted_caffenet_bvlc_in1k_supervised.torch"
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_caffenet_bvlc_in1k_supervised.torch"
           ],
           "workflow_type": "engine",
           "expt_name": "alexnet_bvlc_in1k",
@@ -95,7 +95,7 @@
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
             "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
-            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/sup_rn50_in1k_ep105_supervised_8gpu_resnet_17_07_20.733dbdee/model_final_checkpoint_phase208.torch"
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/sup_rn50_in1k_ep105_supervised_8gpu_resnet_17_07_20.733dbdee/model_final_checkpoint_phase208.torch"
           ],
           "workflow_type": "engine",
           "expt_name": "rn50_in1k_vissl",

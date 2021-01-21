@@ -48,8 +48,6 @@ config:
     TRUNK:
       NAME: regnet
       TRUNK_PARAMS:
-        # These params are for RegNetY 200Mflops from here:
-        #   /mnt/vol/gfsai-bistro2-east/ai-group/bistro/gpu/mannatsingh/regnety_configs/regnety_200m.json
         REGNET:
           # The w_0, w_a and w_m params will compute the following config, e.g. same as the json above.
           #   depth: sum([1, 1, 4, 7]) = 13
