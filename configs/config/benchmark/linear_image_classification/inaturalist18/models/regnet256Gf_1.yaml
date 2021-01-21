@@ -1,22 +1,11 @@
 # @package _global_
 config:
-  METERS:
-    name: accuracy_list_meter
-    accuracy_list_meter:
-      num_meters: 5
-      topk_values: [1, 5]
   MODEL:
     FEATURE_EVAL_SETTINGS:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
         ["res4", ["AdaptiveAvgPool2d", [[2, 1]]]],
-        # ["res4", ["AdaptiveAvgPool2d", [[1, 2]]]],
-        # ["res4", ["AdaptiveAvgPool2d", [[3, 1]]]],
-
-        # ["res5", ["AdaptiveAvgPool2d", [[2, 1]]]],
         ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
-
         ["avgpool", ["Identity", []]],
-        # ["avgpool", ["Identity", []]],
       ]
     TRUNK:
       NAME: regnet
@@ -30,12 +19,14 @@ config:
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 4103, "dims": [8206, 1000]}],
-        # ["eval_mlp", {"in_channels": 4103, "dims": [8206, 1000]}],
-        # ["eval_mlp", {"in_channels": 4103, "dims": [12309, 1000]}],
-
-        # ["eval_mlp", {"in_channels": 10444, "dims": [20888, 1000]}],
         ["eval_mlp", {"in_channels": 10444, "dims": [20888, 1000]}],
-
         ["eval_mlp", {"in_channels": 10444, "dims": [10444, 1000]}],
-        # ["mlp", {"dims": [10444, 1000]}],
       ]
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 16
+    TEST:
+      BATCHSIZE_PER_REPLICA: 16
+  DISTRIBUTED:
+    NUM_NODES: 2  # we can't fit the model on 16GB machine so instead use 2 nodes
+    INIT_METHOD: tcp
