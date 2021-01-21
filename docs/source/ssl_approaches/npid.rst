@@ -3,7 +3,7 @@ Train NPID (and NPID++) model
 
 VISSL reproduces the self-supervised approach **Unsupervised Feature Learning via Non-Parametric Instance Discrimination**
 proposed by **Zhirong Wu, Yuanjun Xiong, Stella Yu, Dahua Lin** in `this paper <https://arxiv.org/abs/1805.01978>`_. The NPID baselines were improved
-further by **Misra et. al** in "Self-Supervised Learning of Pretext-Invariant Representations" proposed in `this paper <https://arxiv.org/abs/1912.01991>`_.
+further by **Misra et. al** in **Self-Supervised Learning of Pretext-Invariant Representations** proposed in `this paper <https://arxiv.org/abs/1912.01991>`_.
 
 How to train NPID model
 ---------------------------

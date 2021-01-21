@@ -1,7 +1,7 @@
 Train SimCLR model
 ===============================
 
-VISSL reproduces the self-supervised approach "A Simple Framework for Contrastive Learning of Visual Representations" proposed by **Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton** in `this paper <https://arxiv.org/abs/2002.05709>`_.
+VISSL reproduces the self-supervised approach **A Simple Framework for Contrastive Learning of Visual Representations** proposed by **Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton** in `this paper <https://arxiv.org/abs/2002.05709>`_.
 
 How to train SimCLR model
 ---------------------------

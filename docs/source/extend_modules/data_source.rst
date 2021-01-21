@@ -3,7 +3,7 @@ Add new Data Source
 
 VISSL supports data loading from :code:`disk` as the default data source. If users dataset lives in their custom data storage solution :code:`my_data_source` instead of :code:`disk`, then users can extend VISSL to work with their data storage. Follow the steps below:
 
-**Step1**: Implement your custom data source under :code:`vissl/data/my_data_source.py` following the template:
+- **Step1**: Implement your custom data source under :code:`vissl/data/my_data_source.py` following the template:
 
 .. code-block:: bash
 

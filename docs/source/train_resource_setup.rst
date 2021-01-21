@@ -1,9 +1,7 @@
 Train models on CPU
 ===========================
 
-VISSL supports training any model on CPUs. Typically, this involves correctly setting the :code:`MACHINE.DEVICE=cpu` and adjusting the distributed settings accordingly.
-
-For example, the config settings will look like:
+VISSL supports training any model on CPUs. Typically, this involves correctly setting the :code:`MACHINE.DEVICE=cpu` and adjusting the distributed settings accordingly. For example, the config settings will look like:
 
 .. code-block:: yaml
 

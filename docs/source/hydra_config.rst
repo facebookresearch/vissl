@@ -5,12 +5,11 @@ YAML Configuration system
 VISSL uses `Hydra <https://github.com/facebookresearch/hydra>`_ for configuration management. The configuration files are simple YAML files.
 Hydra provides flexible yet powerful configuration system.
 
-- Users can create configs for only a specific component of their training (for example: using different datasets) and overwrite a master
-configuration setting for that specific component. This way, Hydra allows reusability of configs.
+- Users can create configs for only a specific component of their training (for example: using different datasets) and overwrite a master configuration setting for that specific component. This way, Hydra allows reusability of configs.
 - Hydra also allows to modify the configuration values from command line and
 - Hydra also offers an intuitive solution to adding new keys to a configuration.
 
-The usage looks like
+The usage looks like:
 
 .. code-block:: bash
 
