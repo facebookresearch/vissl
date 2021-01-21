@@ -114,6 +114,13 @@ class Index extends React.Component {
 python tools/run_distributed_engines.py config=test/integration_test/quick_simclr
     `;
 
+    const installBlock = `${pre}bash
+conda create -n vissl python=3.8
+conda activate vissl
+conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
+conda install -c vissl apex vissl
+    `;
+
     const QuickStart = () => (
       <div
         className="productShowcaseSection"
@@ -125,7 +132,8 @@ python tools/run_distributed_engines.py config=test/integration_test/quick_simcl
             <li>
               <h4>Install VISSL:</h4>
               <a>via conda:</a>
-              <MarkdownBlock>{bash`conda install vissl -c vissl`}</MarkdownBlock>
+              {/* <MarkdownBlock>{bash`conda install vissl -c vissl`}</MarkdownBlock> */}
+              <MarkdownBlock>{installBlock}</MarkdownBlock>
             </li>
             <li>
               <h4>Try training SimCLR model  </h4>

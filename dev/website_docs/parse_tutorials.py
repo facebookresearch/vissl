@@ -10,10 +10,8 @@ from nbconvert import HTMLExporter, ScriptExporter
 
 
 TEMPLATE = """const CWD = process.cwd();
-
 const React = require('react');
 const Tutorial = require(`${{CWD}}/core/Tutorial.js`);
-
 class TutorialPage extends React.Component {{
   render() {{
       const {{config: siteConfig}} = this.props;
@@ -21,9 +19,7 @@ class TutorialPage extends React.Component {{
       return <Tutorial baseUrl={{baseUrl}} tutorialID="{}"/>;
   }}
 }}
-
 module.exports = TutorialPage;
-
 """
 
 JS_SCRIPTS = """

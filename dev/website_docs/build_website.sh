@@ -43,7 +43,8 @@ echo "-----------------------------------"
 cwd=$(pwd)
 mkdir -p "website/_tutorials"
 mkdir -p "website/static/files"
-python scripts/parse_tutorials.py --repo_dir "${cwd}"
+echo ${cwd}
+python dev/website_docs/parse_tutorials.py --repo_dir "${cwd}"
 
 cd website || exit
 
