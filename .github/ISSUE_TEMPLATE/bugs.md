@@ -30,3 +30,7 @@ Provide your environment information using the following command:
 ```
 wget -nc -q https://github.com/facebookresearch/vissl/raw/master/vissl/utils/collect_env.py && python collect_env.py
 ```
+
+## When to expect Triage
+
+VISSL devs and contributors aim to triage issues asap however, as a general guideline, we ask users to expect triaging in 1-2 weeks.
