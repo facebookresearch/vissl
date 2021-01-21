@@ -459,13 +459,6 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         """
         raise NotImplementedError
 
-    @property
-    def model_depth(self):
-        """
-        Not implemented and not required
-        """
-        raise NotImplementedError
-
     def validate(self, dataset_output_shape):
         """
         Not implemented and not required
