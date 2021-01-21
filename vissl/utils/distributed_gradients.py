@@ -1,3 +1,5 @@
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+
 import torch
 import torch.distributed as dist
 from classy_vision.generic.distributed_util import (
