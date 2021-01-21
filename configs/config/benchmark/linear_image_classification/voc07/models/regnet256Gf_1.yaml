@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          depth: 27
+          w_0: 640
+          w_a: 230.83
+          w_m: 2.53
+          group_width: 373
+    HEAD:
+      PARAMS: [["mlp", {"dims": [2048, 20]}]]
