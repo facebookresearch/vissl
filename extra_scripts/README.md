@@ -20,11 +20,11 @@ python extra_scripts/create_coco_data_files.py \
 
 0. for VOC2007
 data_source_dir='/mnt/fair/VOC2007/'
-output_dir='/mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/voc2007/'
+output_dir='/path/to/my/output/dir/voc2007/'
 
 1. for VOC2012
 data_source_dir='/mnt/fair/VOC2012/'
-output_dir='/mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/voc2012'
+output_dir='/path/to/my/output/dir/voc2012'
 
 - For VOC2007 dataset:
 ```bash

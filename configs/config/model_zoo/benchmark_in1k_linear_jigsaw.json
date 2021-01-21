@@ -129,7 +129,7 @@
             "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_jigsaw",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
             "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
-            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/iccv19_models/sslime/converted_alexnet_jigsaw_in1k_pretext.torch"
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_alexnet_jigsaw_in1k_pretext.torch"
           ],
           "workflow_type": "engine",
           "expt_name": "alexnet_in1k_jigsaw_goyal",
@@ -147,7 +147,7 @@
             "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_jigsaw",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
             "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
-            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/iccv19_models/sslime/converted_alexnet_jigsaw_in22k_pretext.torch"
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_alexnet_jigsaw_in22k_pretext.torch"
           ],
           "workflow_type": "engine",
           "expt_name": "alexnet_in22k_jigsaw_goyal",
@@ -165,7 +165,7 @@
             "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_jigsaw",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
             "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
-            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/iccv19_models/sslime/converted_alexnet_jigsaw_yfcc100m_pretext.torch"
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_alexnet_jigsaw_yfcc100m_pretext.torch"
           ],
           "workflow_type": "engine",
           "expt_name": "alexnet_yfcc100m_jigsaw_goyal",

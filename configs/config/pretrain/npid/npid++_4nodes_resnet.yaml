@@ -85,6 +85,5 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: /mnt/vol/gfsai-bistro2-east/ai-group/users/prigoyal/distributed/
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 10
