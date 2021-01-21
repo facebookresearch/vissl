@@ -130,12 +130,16 @@ class SSLTensorboardHook(ClassyHook):
                     if parameter.grad is not None:
                         try:
                             self.tb_writer.add_histogram(
-                                f"Gradients/{name}", parameter.grad, global_step=task.train_phase_idx
+                                f"Gradients/{name}",
+                                parameter.grad,
+                                global_step=task.train_phase_idx
                             )
                         except ValueError:
-                            logging.info(f"Gradient histogram empty for {name}, "
-                                         f"iteration {task.iteration}. Unable to "
-                                         f"log gradient.")
+                            logging.info(
+                                f"Gradient histogram empty for {name}, "
+                                f"iteration {task.iteration}. Unable to "
+                                f"log gradient."
+                            )
 
             # Reset the GPU Memory counter
             if torch.cuda.is_available():
@@ -167,12 +171,16 @@ class SSLTensorboardHook(ClassyHook):
                 if parameter.grad is not None:
                     try:
                         self.tb_writer.add_histogram(
-                            f"Gradients/{name}", parameter.grad, global_step=task.iteration
+                            f"Gradients/{name}",
+                            parameter.grad,
+                            global_step=task.iteration
                         )
                     except ValueError:
-                        logging.info(f"Gradient histogram empty for {name}, "
-                                     f"iteration {task.iteration}. Unable to "
-                                     f"log gradient.")
+                        logging.info(
+                            f"Gradient histogram empty for {name}, "
+                            f"iteration {task.iteration}. Unable to "
+                            f"log gradient."
+                        )
 
         if iteration % task.config["LOG_FREQUENCY"] == 0 or (
             iteration <= 100 and iteration % 5 == 0
