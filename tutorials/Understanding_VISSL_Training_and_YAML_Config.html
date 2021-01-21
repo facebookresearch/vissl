@@ -1,0 +1,1397 @@
+<!DOCTYPE html><html lang=""><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>VISSL · A library for state-of-the-art self-supervised learning</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:title" content="VISSL · A library for state-of-the-art self-supervised learning"/><meta property="og:type" content="website"/><meta property="og:url" content="https://vissl.ai/"/><meta property="og:description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:image" content="https://vissl.ai/img/vissllogo.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://vissl.ai/img/vissllogo.svg"/><link rel="shortcut icon" href="/img/visslfavicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-172675973-1', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/visslfavicon.png" alt="VISSL"/><h2 class="headerTitleWithLogo">VISSL</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/tutorials" target="_self">Tutorials</a></li><li class=""><a href="https://vissl.readthedocs.io/" target="_self">Docs</a></li><li class=""><a href="https://github.com/facebookresearch/vissl" target="_self">GitHub</a></li><li class=""><a target="_self"></a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span></span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Tutorials</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Installation">Installation</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/tutorials/Understanding_VISSL_Training_and_YAML_Config">Understanding VISSL Training and YAML Config</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Train_SimCLR_on_1_gpu">Train SimCLR on 1-gpu</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Feature Extraction</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Feature_Extraction">Feature Extraction</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Benchmark</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K">Benchmark Linear Image Classification on ImageNet-1K</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Full_Finetuning_on_ImageNet_1K">Benchmark Full-Finetuning on ImageNet-1K</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Large Scale Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Large_Scale_Training">Large Scale Training with VISSL (fp16, LARC, ZeRO, etc)</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="tutorialButtonsWrapper"><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Understanding_VISSL_Training_and_YAML_Config.ipynb" target="_blank"><img class="colabButton" align="left" src="/img/colab_icon.png"/>Run in Google Colab</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Understanding_VISSL_Training_and_YAML_Config.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Understanding_VISSL_Training_and_YAML_Config.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div><div class="tutorialBody">
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js">
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
+</script>
+<div class="notebook">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Understanding-VISSL-Training-and-YAML-Config">Understanding VISSL Training and YAML Config<a class="anchor-link" href="#Understanding-VISSL-Training-and-YAML-Config">¶</a></h1><p>In this tutorial, we look at a simple example of Training Supervised ResNet-50 model and use it to understand various parts of the model training configuration.</p>
+<p>You can make a copy of this tutorial by <code>File -&gt; Open in playground mode</code> and make changes there. DO NOT request access to this tutorial.</p>
+<p><strong>NOTE:</strong> Please ensure your Collab Notebook has GPU available. To ensure/select this, simple follow: <code>Edit -&gt; Notebook Settings -&gt; select GPU</code>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Install-VISSL">Install VISSL<a class="anchor-link" href="#Install-VISSL">¶</a></h1><p>Installing VISSL is pretty straightfoward. We will use pip binaries of VISSL and follow instructions from <a href="https://github.com/facebookresearch/vissl/blob/master/INSTALL.md#install-vissl-pip-package">here</a>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Install: PyTorch (we assume 1.5.1 but VISSL works with all PyTorch versions &gt;=1.4)</span>
+<span class="o">!</span>pip install <span class="nv">torch</span><span class="o">==</span><span class="m">1</span>.5.1+cu101 <span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+
+<span class="c1"># install opencv</span>
+<span class="o">!</span>pip install opencv-python
+
+<span class="c1"># install apex by checking system settings: cuda version, pytorch version, python version</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="n">version_str</span><span class="o">=</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+    <span class="sa">f</span><span class="s2">"py3</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">_cu"</span><span class="p">,</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span><span class="s2">""</span><span class="p">),</span>
+    <span class="sa">f</span><span class="s2">"_pyt</span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+<span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">version_str</span><span class="p">)</span>
+
+<span class="c1"># install apex (pre-compiled with optimizer C++ extensions and CUDA kernels)</span>
+<span class="o">!</span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/<span class="o">{</span>version_str<span class="o">}</span>/download.html
+
+<span class="c1"># install VISSL</span>
+<span class="o">!</span>pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>VISSL should be successfuly installed by now and all the dependencies should be available.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [2]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">vissl</span>
+<span class="kn">import</span> <span class="nn">tensorboard</span>
+<span class="kn">import</span> <span class="nn">apex</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="YAML-config-file-for-Supervised-Training">YAML config file for Supervised Training<a class="anchor-link" href="#YAML-config-file-for-Supervised-Training">¶</a></h1><p>VISSL provides yaml configuration files that reproduce training of all self-supervised approaches <a href="https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/supervised">here</a>.</p>
+<p>For the purpose of this tutorial, we will use the config file for training ResNet-50 supervised model on 1-gpu. Let's go ahead and download the <a href="https://github.com/facebookresearch/vissl/blob/master/configs/config/pretrain/supervised/supervised_1gpu_resnet_example.yaml">example config file</a>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>mkdir -p configs/config/
+<span class="o">!</span>wget -O configs/__init__.py https://dl.fbaipublicfiles.com/vissl/tutorials/configs/__init__.py 
+<span class="o">!</span>wget -O configs/config/supervised_1gpu_resnet_example.yaml https://dl.fbaipublicfiles.com/vissl/tutorials/configs/supervised_1gpu_resnet_example.yaml
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Training-Supervised-ResNet50-model">Training Supervised ResNet50 model<a class="anchor-link" href="#Training-Supervised-ResNet50-model">¶</a></h1><p>As our first step, let's train a supervised ResNet-50 model.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Builtin-training-tool-in-VISSL">Builtin training tool in VISSL<a class="anchor-link" href="#Builtin-training-tool-in-VISSL">¶</a></h2><p>VISSL also provides a <a href="https://github.com/facebookresearch/vissl/blob/master/tools/run_distributed_engines.py">helper python tool</a> that allows to use VISSL for training purposes. This tool offers:</p>
+<ul>
+<li>allows training and feature extraction both using VISSL. </li>
+<li>also allows training on 1-gpu or multi-gpu. </li>
+<li>can be used to launch multi-machine distributed training.</li>
+</ul>
+<p>Let's go ahead and download this tool directly.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>wget https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Creating-a-custom-data">Creating a custom data<a class="anchor-link" href="#Creating-a-custom-data">¶</a></h2><p>For the purpose of this tutorial, since we don't have ImageNet on the disk, we will create a dummy dataset by copying an image from COCO dataset in ImageNet dataset folder style as below:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [60]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>mkdir -p dummy_data/train/class1
+<span class="o">!</span>mkdir -p dummy_data/train/class2
+<span class="o">!</span>mkdir -p dummy_data/val/class1
+<span class="o">!</span>mkdir -p dummy_data/val/class2
+
+<span class="c1"># create 2 classes in train and add 2 images per class</span>
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img5.jpg
+
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img5.jpg
+
+<span class="c1"># create 2 classes in val and add 2 images per class</span>
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img5.jpg
+
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img5.jpg
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Using-the-custom-data-in-VISSL">Using the custom data in VISSL<a class="anchor-link" href="#Using-the-custom-data-in-VISSL">¶</a></h2><p>Next step for us is to register the dummy data we created above with VISSL. Registering the dataset involves telling VISSL about the dataset name and the paths for the dataset. For this, we create a simple json file with the metadata and save it to <code>configs/config/dataset_catalog.py</code> file.</p>
+<p><strong>NOTE</strong>: VISSL uses the specific <code>dataset_catalog.json</code> under the path <code>configs/config/dataset_catalog.json</code>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [45]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">json_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"dummy_data_folder"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"train"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"/content/dummy_data/train"</span><span class="p">,</span> <span class="s2">"/content/dummy_data/train"</span>
+      <span class="p">],</span>
+      <span class="s2">"val"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"/content/dummy_data/val"</span><span class="p">,</span> <span class="s2">"/content/dummy_data/val"</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># use VISSL's api to save or you can use your custom code.</span>
+<span class="kn">from</span> <span class="nn">vissl.utils.io</span> <span class="kn">import</span> <span class="n">save_file</span>
+<span class="n">save_file</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s2">"/content/configs/config/dataset_catalog.json"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Next, we verify that the dataset is registered with VISSL. For that we query VISSL's dataset catalog as below:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [46]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">vissl.data.dataset_catalog</span> <span class="kn">import</span> <span class="n">VisslDatasetCatalog</span>
+
+<span class="c1"># list all the datasets that exist in catalog</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">VisslDatasetCatalog</span><span class="o">.</span><span class="n">list</span><span class="p">())</span>
+
+<span class="c1"># get the metadata of dummy_data_folder dataset</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">VisslDatasetCatalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dummy_data_folder"</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>['dummy_data_folder']
+{'train': ['/content/dummy_data/train', '/content/dummy_data/train'], 'val': ['/content/dummy_data/val', '/content/dummy_data/val']}
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Train-the-model">Train the model<a class="anchor-link" href="#Train-the-model">¶</a></h2><p>We are ready to train now. For the purpose of training, we will use synthetic dataset and train on dummy images. VISSL supports training on wide range of datasets and allows adding custom datasets. Please see VISSL documentation on how to use the datasets. To train on ImageNet instead: assuming your ImageNet dataset folder path is <code>/path/to/my/imagenet/folder/</code>, you can add the following command line 
+input to your training command:</p>
+<pre><code>config.DATA.TRAIN.DATASET_NAMES=[imagenet1k_folder] \
+config.DATA.TRAIN.DATA_SOURCES=[disk_folder] \
+config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
+config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]</code></pre>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The training command looks like:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [62]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>python3 run_distributed_engines.py <span class="err">\</span>
+    <span class="n">hydra</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="n">true</span> \
+    <span class="n">config</span><span class="o">=</span><span class="n">supervised_1gpu_resnet_example</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATA_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">LABEL_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATASET_NAMES</span><span class="o">=</span><span class="p">[</span><span class="n">dummy_data_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">BATCHSIZE_PER_REPLICA</span><span class="o">=</span><span class="mi">2</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">DATA_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">LABEL_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">DATASET_NAMES</span><span class="o">=</span><span class="p">[</span><span class="n">dummy_data_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">BATCHSIZE_PER_REPLICA</span><span class="o">=</span><span class="mi">2</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="o">.</span><span class="n">NUM_NODES</span><span class="o">=</span><span class="mi">1</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="o">.</span><span class="n">NUM_PROC_PER_NODE</span><span class="o">=</span><span class="mi">1</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">OPTIMIZER</span><span class="o">.</span><span class="n">num_epochs</span><span class="o">=</span><span class="mi">2</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">OPTIMIZER</span><span class="o">.</span><span class="n">param_schedulers</span><span class="o">.</span><span class="n">lr</span><span class="o">.</span><span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.001</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">OPTIMIZER</span><span class="o">.</span><span class="n">param_schedulers</span><span class="o">.</span><span class="n">lr</span><span class="o">.</span><span class="n">milestones</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">TENSORBOARD_SETUP</span><span class="o">.</span><span class="n">USE_TENSORBOARD</span><span class="o">=</span><span class="n">true</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">CHECKPOINT</span><span class="o">.</span><span class="n">DIR</span><span class="o">=</span><span class="s2">"./checkpoints"</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+####### overrides: ['hydra.verbose=true', 'config=supervised_1gpu_resnet_example', 'config.DATA.TRAIN.DATA_SOURCES=[disk_folder]', 'config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]', 'config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TEST.DATA_SOURCES=[disk_folder]', 'config.DATA.TEST.LABEL_SOURCES=[disk_folder]', 'config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]', 'config.DISTRIBUTED.NUM_NODES=1', 'config.DISTRIBUTED.NUM_PROC_PER_NODE=1', 'config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2', 'config.DATA.TEST.BATCHSIZE_PER_REPLICA=2', 'config.OPTIMIZER.num_epochs=2', 'config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001]', 'config.OPTIMIZER.param_schedulers.lr.milestones=[1]', 'config.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'config.CHECKPOINT.DIR=./checkpoints', 'hydra.verbose=true']
+INFO 2021-01-13 20:39:08,772 __init__.py:  32: Provided Config has latest version: 1
+INFO 2021-01-13 20:39:08,772 run_distributed_engines.py: 121: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:59709
+INFO 2021-01-13 20:39:08,773 train.py:  42: Env set for rank: 0, dist_rank: 0
+INFO 2021-01-13 20:39:08,773 env.py:  24: CLICOLOR:	1
+INFO 2021-01-13 20:39:08,773 env.py:  24: CLOUDSDK_CONFIG:	/content/.config
+INFO 2021-01-13 20:39:08,773 env.py:  24: CLOUDSDK_PYTHON:	python3
+INFO 2021-01-13 20:39:08,773 env.py:  24: COLAB_GPU:	1
+INFO 2021-01-13 20:39:08,773 env.py:  24: CUDA_PKG_VERSION:	10-1=10.1.243-1
+INFO 2021-01-13 20:39:08,773 env.py:  24: CUDA_VERSION:	10.1.243
+INFO 2021-01-13 20:39:08,773 env.py:  24: CUDNN_VERSION:	7.6.5.32
+INFO 2021-01-13 20:39:08,773 env.py:  24: DATALAB_SETTINGS_OVERRIDES:	{"kernelManagerProxyPort":6000,"kernelManagerProxyHost":"172.28.0.3","jupyterArgs":["--ip=\"172.28.0.2\""],"debugAdapterMultiplexerPath":"/usr/local/bin/dap_multiplexer"}
+INFO 2021-01-13 20:39:08,773 env.py:  24: DEBIAN_FRONTEND:	noninteractive
+INFO 2021-01-13 20:39:08,774 env.py:  24: ENV:	/root/.bashrc
+INFO 2021-01-13 20:39:08,774 env.py:  24: GCE_METADATA_TIMEOUT:	0
+INFO 2021-01-13 20:39:08,774 env.py:  24: GCS_READ_CACHE_BLOCK_SIZE_MB:	16
+INFO 2021-01-13 20:39:08,774 env.py:  24: GIT_PAGER:	cat
+INFO 2021-01-13 20:39:08,774 env.py:  24: GLIBCPP_FORCE_NEW:	1
+INFO 2021-01-13 20:39:08,774 env.py:  24: GLIBCXX_FORCE_NEW:	1
+INFO 2021-01-13 20:39:08,774 env.py:  24: HOME:	/root
+INFO 2021-01-13 20:39:08,774 env.py:  24: HOSTNAME:	010ea261cff2
+INFO 2021-01-13 20:39:08,774 env.py:  24: JPY_PARENT_PID:	53
+INFO 2021-01-13 20:39:08,774 env.py:  24: LANG:	en_US.UTF-8
+INFO 2021-01-13 20:39:08,774 env.py:  24: LAST_FORCED_REBUILD:	20210105
+INFO 2021-01-13 20:39:08,774 env.py:  24: LD_LIBRARY_PATH:	/usr/lib64-nvidia
+INFO 2021-01-13 20:39:08,774 env.py:  24: LD_PRELOAD:	/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+INFO 2021-01-13 20:39:08,774 env.py:  24: LIBRARY_PATH:	/usr/local/cuda/lib64/stubs
+INFO 2021-01-13 20:39:08,774 env.py:  24: LOCAL_RANK:	0
+INFO 2021-01-13 20:39:08,774 env.py:  24: MPLBACKEND:	module://ipykernel.pylab.backend_inline
+INFO 2021-01-13 20:39:08,774 env.py:  24: NCCL_VERSION:	2.7.8
+INFO 2021-01-13 20:39:08,774 env.py:  24: NO_GCE_CHECK:	True
+INFO 2021-01-13 20:39:08,774 env.py:  24: NVIDIA_DRIVER_CAPABILITIES:	compute,utility
+INFO 2021-01-13 20:39:08,775 env.py:  24: NVIDIA_REQUIRE_CUDA:	cuda&gt;=10.1 brand=tesla,driver&gt;=396,driver&lt;397 brand=tesla,driver&gt;=410,driver&lt;411 brand=tesla,driver&gt;=418,driver&lt;419
+INFO 2021-01-13 20:39:08,775 env.py:  24: NVIDIA_VISIBLE_DEVICES:	all
+INFO 2021-01-13 20:39:08,775 env.py:  24: OLDPWD:	/
+INFO 2021-01-13 20:39:08,775 env.py:  24: PAGER:	cat
+INFO 2021-01-13 20:39:08,775 env.py:  24: PATH:	/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/node/bin:/tools/google-cloud-sdk/bin:/opt/bin
+INFO 2021-01-13 20:39:08,775 env.py:  24: PWD:	/content
+INFO 2021-01-13 20:39:08,775 env.py:  24: PYTHONPATH:	/env/python
+INFO 2021-01-13 20:39:08,775 env.py:  24: PYTHONWARNINGS:	ignore:::pip._internal.cli.base_command
+INFO 2021-01-13 20:39:08,775 env.py:  24: RANK:	0
+INFO 2021-01-13 20:39:08,775 env.py:  24: SHELL:	/bin/bash
+INFO 2021-01-13 20:39:08,775 env.py:  24: SHLVL:	1
+INFO 2021-01-13 20:39:08,775 env.py:  24: TBE_CREDS_ADDR:	172.28.0.1:8008
+INFO 2021-01-13 20:39:08,775 env.py:  24: TERM:	xterm-color
+INFO 2021-01-13 20:39:08,775 env.py:  24: TF_FORCE_GPU_ALLOW_GROWTH:	true
+INFO 2021-01-13 20:39:08,775 env.py:  24: WORLD_SIZE:	1
+INFO 2021-01-13 20:39:08,775 env.py:  24: _:	/usr/bin/python3
+INFO 2021-01-13 20:39:08,775 env.py:  24: __EGL_VENDOR_LIBRARY_DIRS:	/usr/lib64-nvidia:/usr/share/glvnd/egl_vendor.d/
+INFO 2021-01-13 20:39:08,775 misc.py:  68: Set start method of multiprocessing to fork
+INFO 2021-01-13 20:39:08,776 train.py:  53: Setting seed....
+INFO 2021-01-13 20:39:08,776 misc.py:  77: MACHINE SEED: 0
+INFO 2021-01-13 20:39:08,817 hydra_config.py: 122: Training with config:
+INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR_RUN_ID': False,
+                'AUTO_RESUME': True,
+                'BACKEND': 'disk',
+                'CHECKPOINT_FREQUENCY': 1,
+                'CHECKPOINT_ITER_FREQUENCY': -1,
+                'DIR': './checkpoints',
+                'LATEST_CHECKPOINT_RESUME_FILE_NUM': 1,
+                'OVERWRITE_EXISTING': False},
+ 'CLUSTERFIT': {'CLUSTER_BACKEND': 'faiss',
+                'FEATURES': {'DATASET_NAME': '',
+                             'DATA_PARTITION': 'TRAIN',
+                             'LAYER_NAME': ''},
+                'NUM_CLUSTERS': 16000,
+                'N_ITER': 50},
+ 'DATA': {'ENABLE_ASYNC_GPU_COPY': True,
+          'NUM_DATALOADER_WORKERS': 5,
+          'PIN_MEMORY': True,
+          'TEST': {'BATCHSIZE_PER_REPLICA': 2,
+                   'COLLATE_FUNCTION': 'default_collate',
+                   'COPY_DESTINATION_DIR': '',
+                   'COPY_TO_LOCAL_DISK': False,
+                   'DATASET_NAMES': ['dummy_data_folder'],
+                   'DATA_LIMIT': -1,
+                   'DATA_PATHS': ['&lt;path to test folder&gt;'],
+                   'DATA_SOURCES': ['disk_folder'],
+                   'DEFAULT_GRAY_IMG_SIZE': 224,
+                   'DROP_LAST': False,
+                   'ENABLE_QUEUE_DATASET': False,
+                   'INPUT_KEY_NAMES': ['data'],
+                   'LABEL_PATHS': [],
+                   'LABEL_SOURCES': ['disk_folder'],
+                   'LABEL_TYPE': 'standard',
+                   'MMAP_MODE': True,
+                   'TARGET_KEY_NAMES': ['label'],
+                   'TRANSFORMS': [{'name': 'Resize', 'size': 256},
+                                  {'name': 'CenterCrop', 'size': 224},
+                                  {'name': 'ToTensor'},
+                                  {'mean': [0.485, 0.456, 0.406],
+                                   'name': 'Normalize',
+                                   'std': [0.229, 0.224, 0.225]}],
+                   'USE_STATEFUL_DISTRIBUTED_SAMPLER': False},
+          'TRAIN': {'BATCHSIZE_PER_REPLICA': 2,
+                    'COLLATE_FUNCTION': 'default_collate',
+                    'COPY_DESTINATION_DIR': '',
+                    'COPY_TO_LOCAL_DISK': False,
+                    'DATASET_NAMES': ['dummy_data_folder'],
+                    'DATA_LIMIT': -1,
+                    'DATA_PATHS': ['&lt;path to train folder&gt;'],
+                    'DATA_SOURCES': ['disk_folder'],
+                    'DEFAULT_GRAY_IMG_SIZE': 224,
+                    'DROP_LAST': False,
+                    'ENABLE_QUEUE_DATASET': False,
+                    'INPUT_KEY_NAMES': ['data'],
+                    'LABEL_PATHS': [],
+                    'LABEL_SOURCES': ['disk_folder'],
+                    'LABEL_TYPE': 'standard',
+                    'MMAP_MODE': True,
+                    'TARGET_KEY_NAMES': ['label'],
+                    'TRANSFORMS': [{'name': 'RandomResizedCrop', 'size': 224},
+                                   {'name': 'RandomHorizontalFlip'},
+                                   {'brightness': 0.4,
+                                    'contrast': 0.4,
+                                    'hue': 0.4,
+                                    'name': 'ColorJitter',
+                                    'saturation': 0.4},
+                                   {'name': 'ToTensor'},
+                                   {'mean': [0.485, 0.456, 0.406],
+                                    'name': 'Normalize',
+                                    'std': [0.229, 0.224, 0.225]}],
+                    'USE_STATEFUL_DISTRIBUTED_SAMPLER': False}},
+ 'DISTRIBUTED': {'BACKEND': 'nccl',
+                 'BROADCAST_BUFFERS': True,
+                 'INIT_METHOD': 'tcp',
+                 'MANUAL_GRADIENT_REDUCTION': False,
+                 'NCCL_DEBUG': False,
+                 'NUM_NODES': 1,
+                 'NUM_PROC_PER_NODE': 1,
+                 'RUN_ID': 'auto'},
+ 'IMG_RETRIEVAL': {'DATASET_PATH': '',
+                   'EVAL_BINARY_PATH': '',
+                   'EVAL_DATASET_NAME': 'Paris',
+                   'FEATS_PROCESSING_TYPE': '',
+                   'GEM_POOL_POWER': 4.0,
+                   'N_PCA': 512,
+                   'RESIZE_IMG': 1024,
+                   'SHOULD_TRAIN_PCA_OR_WHITENING': True,
+                   'SPATIAL_LEVELS': 3,
+                   'TEMP_DIR': '/tmp/instance_retrieval/',
+                   'TRAIN_DATASET_NAME': 'Oxford',
+                   'WHITEN_IMG_LIST': ''},
+ 'LOG_FREQUENCY': 100,
+ 'LOSS': {'CrossEntropyLoss': {'ignore_index': -1},
+          'cross_entropy_multiple_output_single_target': {'ignore_index': -1,
+                                                          'normalize_output': False,
+                                                          'reduction': 'mean',
+                                                          'weight': None},
+          'deepclusterv2_loss': {'BATCHSIZE_PER_REPLICA': 256,
+                                 'DROP_LAST': True,
+                                 'kmeans_iters': 10,
+                                 'memory_params': {'crops_for_mb': [0],
+                                                   'embedding_dim': 128},
+                                 'num_clusters': [3000, 3000, 3000],
+                                 'num_crops': 2,
+                                 'num_train_samples': -1,
+                                 'temperature': 0.1},
+          'moco_loss': {'embedding_dim': 128,
+                        'momentum': 0.999,
+                        'queue_size': 65536,
+                        'temperature': 0.2},
+          'multicrop_simclr_info_nce_loss': {'buffer_params': {'effective_batch_size': 4096,
+                                                               'embedding_dim': 128,
+                                                               'world_size': 64},
+                                             'num_crops': 2,
+                                             'temperature': 0.1},
+          'name': 'cross_entropy_multiple_output_single_target',
+          'nce_loss_with_memory': {'loss_type': 'nce',
+                                   'loss_weights': [1.0],
+                                   'memory_params': {'embedding_dim': 128,
+                                                     'memory_size': -1,
+                                                     'momentum': 0.5,
+                                                     'norm_init': True,
+                                                     'update_mem_on_forward': True},
+                                   'negative_sampling_params': {'num_negatives': 16000,
+                                                                'type': 'random'},
+                                   'norm_constant': -1,
+                                   'norm_embedding': True,
+                                   'num_train_samples': -1,
+                                   'temperature': 0.07,
+                                   'update_mem_with_emb_index': -100},
+          'simclr_info_nce_loss': {'buffer_params': {'effective_batch_size': 4096,
+                                                     'embedding_dim': 128,
+                                                     'world_size': 64},
+                                   'temperature': 0.1},
+          'swav_loss': {'crops_for_assign': [0, 1],
+                        'embedding_dim': 128,
+                        'epsilon': 0.05,
+                        'normalize_last_layer': True,
+                        'num_crops': 2,
+                        'num_iters': 3,
+                        'num_prototypes': [3000],
+                        'queue': {'local_queue_length': 0,
+                                  'queue_length': 0,
+                                  'start_iter': 0},
+                        'temperature': 0.1,
+                        'use_double_precision': False}},
+ 'MACHINE': {'DEVICE': 'gpu'},
+ 'METERS': {'accuracy_list_meter': {'meter_names': [],
+                                    'num_meters': 1,
+                                    'topk_values': [1, 5]}},
+ 'MODEL': {'ACTIVATION_CHECKPOINTING': {'NUM_ACTIVATION_CHECKPOINTING_SPLITS': 2,
+                                        'USE_ACTIVATION_CHECKPOINTING': False},
+           'AMP_PARAMS': {'AMP_ARGS': {'opt_level': 'O1'}, 'USE_AMP': False},
+           'FEATURE_EVAL_SETTINGS': {'EVAL_MODE_ON': False,
+                                     'EVAL_TRUNK_AND_HEAD': False,
+                                     'EXTRACT_TRUNK_FEATURES_ONLY': False,
+                                     'FREEZE_TRUNK_AND_HEAD': False,
+                                     'FREEZE_TRUNK_ONLY': False,
+                                     'LINEAR_EVAL_FEAT_POOL_OPS_MAP': [],
+                                     'SHOULD_FLATTEN_FEATS': True},
+           'HEAD': {'BATCHNORM_EPS': 1e-05,
+                    'BATCHNORM_MOMENTUM': 0.1,
+                    'PARAMS': [['mlp', {'dims': [2048, 1000]}]]},
+           'INPUT_TYPE': 'rgb',
+           'MODEL_COMPLEXITY': {'COMPUTE_COMPLEXITY': False,
+                                'INPUT_SHAPE': [3, 224, 224]},
+           'MULTI_INPUT_HEAD_MAPPING': [],
+           'NON_TRAINABLE_PARAMS': [],
+           'SYNC_BN_CONFIG': {'CONVERT_BN_TO_SYNC_BN': False,
+                              'GROUP_SIZE': -1,
+                              'SYNC_BN_TYPE': 'pytorch'},
+           'TEMP_FROZEN_PARAMS_ITER_MAP': [],
+           'TRUNK': {'NAME': 'resnet',
+                     'TRUNK_PARAMS': {'EFFICIENT_NETS': {},
+                                      'REGNETS': {},
+                                      'RESNETS': {'DEPTH': 50,
+                                                  'GROUPS': 1,
+                                                  'LAYER4_STRIDE': 2,
+                                                  'NORM': 'BatchNorm',
+                                                  'WIDTH_MULTIPLIER': 1,
+                                                  'WIDTH_PER_GROUP': 64,
+                                                  'ZERO_INIT_RESIDUAL': False}}},
+           'WEIGHTS_INIT': {'APPEND_PREFIX': '',
+                            'PARAMS_FILE': '',
+                            'REMOVE_PREFIX': '',
+                            'SKIP_LAYERS': ['num_batches_tracked'],
+                            'STATE_DICT_KEY_NAME': 'classy_state_dict'}},
+ 'MONITOR_PERF_STATS': False,
+ 'MULTI_PROCESSING_METHOD': 'fork',
+ 'NEAREST_NEIGHBOR': {'L2_NORM_FEATS': False, 'SIGMA': 0.1, 'TOPK': 200},
+ 'OPTIMIZER': {'larc_config': {'clip': False,
+                               'eps': 1e-08,
+                               'trust_coefficient': 0.001},
+               'momentum': 0.9,
+               'name': 'sgd',
+               'nesterov': True,
+               'num_epochs': 2,
+               'param_schedulers': {'lr': {'auto_lr_scaling': {'auto_scale': True,
+                                                               'base_lr_batch_size': 256,
+                                                               'base_value': 0.1},
+                                           'end_value': 0.0,
+                                           'interval_scaling': [],
+                                           'lengths': [],
+                                           'milestones': [1],
+                                           'name': 'multistep',
+                                           'schedulers': [],
+                                           'start_value': 0.1,
+                                           'update_interval': 'epoch',
+                                           'value': 0.1,
+                                           'values': [0.00078125, 7.813e-05]}},
+               'regularize_bias': True,
+               'regularize_bn': False,
+               'use_larc': False,
+               'weight_decay': 0.0001},
+ 'PERF_STAT_FREQUENCY': -1,
+ 'ROLLING_BTIME_FREQ': -1,
+ 'SEED_VALUE': 0,
+ 'SVM': {'cls_list': [],
+         'costs': {'base': -1.0,
+                   'costs_list': [0.1, 0.01],
+                   'power_range': [4, 20]},
+         'cross_val_folds': 3,
+         'dual': True,
+         'force_retrain': False,
+         'loss': 'squared_hinge',
+         'low_shot': {'dataset_name': 'voc',
+                      'k_values': [1, 2, 4, 8, 16, 32, 64, 96],
+                      'sample_inds': [1, 2, 3, 4, 5]},
+         'max_iter': 2000,
+         'normalize': True,
+         'penalty': 'l2'},
+ 'TENSORBOARD_SETUP': {'EXPERIMENT_LOG_DIR': '',
+                       'FLUSH_EVERY_N_MIN': 5,
+                       'LOG_ACTIVATIONS': True,
+                       'LOG_DIR': '.',
+                       'USE_TENSORBOARD': True},
+ 'TEST_EVERY_NUM_EPOCH': 1,
+ 'TEST_MODEL': True,
+ 'TEST_ONLY': False,
+ 'TRAINER': {'TRAIN_STEP_NAME': 'standard_train_step'},
+ 'VERBOSE': True}
+INFO 2021-01-13 20:39:09,218 train.py:  65: System config:
+-------------------  ---------------------------------------------------------------
+sys.platform         linux
+Python               3.6.9 (default, Oct  8 2020, 12:12:24) [GCC 8.4.0]
+numpy                1.19.5
+Pillow               7.0.0
+vissl                0.1.3 @/usr/local/lib/python3.6/dist-packages/vissl
+GPU available        True
+GPU 0                Tesla T4
+CUDA_HOME            /usr/local/cuda
+torchvision          0.6.1+cu101 @/usr/local/lib/python3.6/dist-packages/torchvision
+hydra                1.0.5 @/usr/local/lib/python3.6/dist-packages/hydra
+classy_vision        0.5.0 @/usr/local/lib/python3.6/dist-packages/classy_vision
+tensorboard          1.15.0
+apex                 0.1 @/usr/local/lib/python3.6/dist-packages/apex
+cv2                  4.1.2
+PyTorch              1.5.1+cu101 @/usr/local/lib/python3.6/dist-packages/torch
+PyTorch debug build  False
+-------------------  ---------------------------------------------------------------
+PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2019.0.5 Product Build 20190808 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v0.21.1 (Git Hash 7d2fd500bc78936d1d648ca713b901012f470dbc)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 10.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 7.6.3
+  - Magma 2.5.2
+  - Build settings: BLAS=MKL, BUILD_TYPE=Release, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -fopenmp -DNDEBUG -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DUSE_INTERNAL_THREADPOOL_IMPL -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, USE_CUDA=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, USE_STATIC_DISPATCH=OFF, 
+
+CPU info:
+-------------------  ------------------------------
+Architecture         x86_64
+CPU op-mode(s)       32-bit, 64-bit
+Byte Order           Little Endian
+CPU(s)               2
+On-line CPU(s) list  0,1
+Thread(s) per core   2
+Core(s) per socket   1
+Socket(s)            1
+NUMA node(s)         1
+Vendor ID            GenuineIntel
+CPU family           6
+Model                79
+Model name           Intel(R) Xeon(R) CPU @ 2.20GHz
+Stepping             0
+CPU MHz              2200.000
+BogoMIPS             4400.00
+Hypervisor vendor    KVM
+Virtualization type  full
+L1d cache            32K
+L1i cache            32K
+L2 cache             256K
+L3 cache             56320K
+NUMA node0 CPU(s)    0,1
+-------------------  ------------------------------
+INFO 2021-01-13 20:39:09,219 tensorboard.py:  28: Tensorboard dir: ./checkpoints/tb_logs
+2021-01-13 20:39:09.340265: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+INFO 2021-01-13 20:39:10,795 tensorboard_hook.py:  52: Setting up SSL Tensorboard Hook...
+INFO 2021-01-13 20:39:10,795 train_task.py: 121: Setting amp args: None
+INFO 2021-01-13 20:39:10,796 trainer_main.py:  61: Using Distributed init method: tcp://localhost:59709, world_size: 1, rank: 0
+INFO 2021-01-13 20:39:10,797 trainer_main.py:  82: | initialized host 010ea261cff2 as rank 0 (0)
+INFO 2021-01-13 20:39:10,797 ssl_dataset.py:  68: Rank: 0 Data files:
+['/content/dummy_data/val']
+INFO 2021-01-13 20:39:10,797 ssl_dataset.py:  69: Rank: 0 Label files:
+['/content/dummy_data/val']
+INFO 2021-01-13 20:39:10,797 disk_dataset.py:  77: Loaded 10 samples from folder /content/dummy_data/val
+INFO 2021-01-13 20:39:10,798 ssl_dataset.py:  68: Rank: 0 Data files:
+['/content/dummy_data/train']
+INFO 2021-01-13 20:39:10,798 ssl_dataset.py:  69: Rank: 0 Label files:
+['/content/dummy_data/train']
+INFO 2021-01-13 20:39:10,798 disk_dataset.py:  77: Loaded 10 samples from folder /content/dummy_data/train
+INFO 2021-01-13 20:39:10,798 misc.py:  68: Set start method of multiprocessing to fork
+INFO 2021-01-13 20:39:10,798 __init__.py:  64: Created the Distributed Sampler....
+INFO 2021-01-13 20:39:10,798 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 20:39:10,799 __init__.py: 106: Wrapping the dataloader to async device copies
+INFO 2021-01-13 20:39:15,324 misc.py:  68: Set start method of multiprocessing to fork
+INFO 2021-01-13 20:39:15,324 __init__.py:  64: Created the Distributed Sampler....
+INFO 2021-01-13 20:39:15,324 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 20:39:15,324 __init__.py: 106: Wrapping the dataloader to async device copies
+INFO 2021-01-13 20:39:15,324 train_task.py: 280: Building model....
+INFO 2021-01-13 20:39:15,324 resnext.py:  58: ResNeXT trunk, supports activation checkpointing. Deactivated
+INFO 2021-01-13 20:39:15,325 resnext.py:  72: Building model: ResNeXt50-1x64d-w1-BatchNorm2d
+INFO 2021-01-13 20:39:15,947 train_task.py: 437: Broadcast model BN buffers from master on every forward pass
+INFO 2021-01-13 20:39:15,947 classification_task.py: 341: Synchronized Batch Normalization is disabled
+INFO 2021-01-13 20:39:15,948 train_task.py: 222: Building loss...
+INFO 2021-01-13 20:39:15,991 optimizer_helper.py:  86: Traininable params: 161, Non-Traininable params: 0, Regularized Parameters: 55, Unregularized Parameters 106
+INFO 2021-01-13 20:39:15,992 trainer_main.py: 168: Training 2 epochs. One epoch = 5 iterations
+INFO 2021-01-13 20:39:15,992 trainer_main.py: 170: Total 10 iterations for training
+INFO 2021-01-13 20:39:15,992 trainer_main.py: 171: Total 10 samples in one epoch
+INFO 2021-01-13 20:39:16,139 logger.py:  66: Wed Jan 13 20:39:16 2021       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 460.27.04    Driver Version: 418.67       CUDA Version: 10.1     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla T4            Off  | 00000000:00:04.0 Off |                    0 |
+| N/A   36C    P0    26W /  70W |   1031MiB / 15079MiB |      0%      Default |
+|                               |                      |                 ERR! |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+
+INFO 2021-01-13 20:39:16,141 trainer_main.py: 103: Model is:
+ Classy &lt;class 'vissl.models.base_ssl_model.BaseSSLMultiInputOutputModel'&gt;:
+BaseSSLMultiInputOutputModel(
+  (_heads): ModuleDict()
+  (trunk): ResNeXt(
+    (_feature_blocks): ModuleDict(
+      (conv1): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+      (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv1_relu): ReLU(inplace=True)
+      (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+      (layer1): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer2): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (3): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer3): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (3): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (4): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (5): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer4): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(&lt;SUPPORTED_L4_STRIDE.two: 2&gt;, &lt;SUPPORTED_L4_STRIDE.two: 2&gt;), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(&lt;SUPPORTED_L4_STRIDE.two: 2&gt;, &lt;SUPPORTED_L4_STRIDE.two: 2&gt;), bias=False)
+            (1): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
+      (flatten): Flatten()
+    )
+  )
+  (heads): ModuleList(
+    (0): MLP(
+      (clf): Sequential(
+        (0): Linear(in_features=2048, out_features=1000, bias=True)
+      )
+    )
+  )
+)
+INFO 2021-01-13 20:39:16,237 trainer_main.py: 104: Loss is: CrossEntropyMultipleOutputSingleTargetLoss(
+  (_losses): ModuleList()
+)
+INFO 2021-01-13 20:39:16,237 trainer_main.py: 105: Starting training....
+INFO 2021-01-13 20:39:16,238 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 20:39:16,523 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:16,524 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:16,526 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:16,527 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:16,538 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:16,806 trainer_main.py: 205: Phase advanced. Rank: 0
+INFO 2021-01-13 20:39:19,771 state_update_hooks.py:  90: Starting phase 0 [train]
+INFO 2021-01-13 20:39:20,539 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 1; lr: 0.00078; loss: 7.07915; btime(ms): 4546; eta: 0:00:40; peak_mem: 2595M
+INFO 2021-01-13 20:39:20,800 tensorboard_hook.py:  92: Logging metrics. Iteration 5
+INFO 2021-01-13 20:39:20,809 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 5; lr: 0.00078; loss: 0.83814; btime(ms): 963; eta: 0:00:04; peak_mem: 2595M
+INFO 2021-01-13 20:39:20,810 trainer_main.py: 123: Meters synced
+INFO 2021-01-13 20:39:23,796 log_hooks.py: 228: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 60.0}}
+INFO 2021-01-13 20:39:23,796 io.py:  16: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:23,797 io.py:  30: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:23,797 log_hooks.py: 182: [phase: 0] Saving checkpoint to ./checkpoints
+INFO 2021-01-13 20:39:24,130 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_phase0.torch
+INFO 2021-01-13 20:39:24,130 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 1, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 20:39:24,437 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:24,437 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:24,453 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:24,460 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:24,483 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:24,683 trainer_main.py: 205: Phase advanced. Rank: 0
+INFO 2021-01-13 20:39:24,684 state_update_hooks.py:  90: Starting phase 1 [test]
+INFO 2021-01-13 20:39:24,900 trainer_main.py: 123: Meters synced
+INFO 2021-01-13 20:39:24,901 log_hooks.py: 228: Rank: 0, name: test_accuracy_list_meter, value: {'top_1': {0: 50.0}, 'top_5': {0: 100.0}}
+INFO 2021-01-13 20:39:24,901 io.py:  16: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:24,901 io.py:  30: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:24,902 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 2, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 20:39:25,197 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:25,197 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:25,217 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:25,218 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:25,225 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-13 20:39:25,366 trainer_main.py: 205: Phase advanced. Rank: 0
+INFO 2021-01-13 20:39:25,367 state_update_hooks.py:  90: Starting phase 2 [train]
+INFO 2021-01-13 20:39:25,827 tensorboard_hook.py:  92: Logging metrics. Iteration 10
+INFO 2021-01-13 20:39:25,841 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 10; lr: 8e-05; loss: 1.30581; btime(ms): 656; eta: 0:00:00; peak_mem: 492M
+INFO 2021-01-13 20:39:25,841 trainer_main.py: 123: Meters synced
+INFO 2021-01-13 20:39:28,788 log_hooks.py: 228: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 100.0}}
+INFO 2021-01-13 20:39:28,788 io.py:  16: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:28,788 io.py:  30: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:28,789 log_hooks.py: 182: [phase: 2] Saving checkpoint to ./checkpoints
+INFO 2021-01-13 20:39:29,200 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_final_checkpoint_phase2.torch
+INFO 2021-01-13 20:39:29,200 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 3, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 20:39:29,505 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:29,505 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:29,519 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:29,522 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:29,529 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-13 20:39:29,646 trainer_main.py: 205: Phase advanced. Rank: 0
+INFO 2021-01-13 20:39:29,647 state_update_hooks.py:  90: Starting phase 3 [test]
+INFO 2021-01-13 20:39:29,957 trainer_main.py: 123: Meters synced
+INFO 2021-01-13 20:39:29,957 log_hooks.py: 228: Rank: 0, name: test_accuracy_list_meter, value: {'top_1': {0: 50.0}, 'top_5': {0: 100.0}}
+INFO 2021-01-13 20:39:29,957 io.py:  16: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:29,958 io.py:  30: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:30,152 train.py:  86: All Done!
+INFO 2021-01-13 20:39:30,152 logger.py:  59: Shutting down loggers...
+INFO 2021-01-13 20:39:30,153 run_distributed_engines.py:  95: All Done!
+INFO 2021-01-13 20:39:30,153 logger.py:  59: Shutting down loggers...
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And we are done!! We have a Supervised ResNet-50 model trained on our dummy data and available in <code>checkpoints/model_final_checkpoint_phase2.torch</code>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Training-logs,-checkpoints,-metrics">Training logs, checkpoints, metrics<a class="anchor-link" href="#Training-logs,-checkpoints,-metrics">¶</a></h2><p>VISSL dumps model checkpoints in the checkpoint directory specified by user. In above example, we used <code>./checkpoints</code> directory. Let's take a look at the content of directory.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ls</span> <span class="n">checkpoints</span><span class="o">/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>log.txt       model_final_checkpoint_phase1.torch  <span class="ansi-blue-intense-fg ansi-bold">tb_logs</span>/
+metrics.json  model_phase0.torch
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We notice:</p>
+<ul>
+<li>model checkpoints <code>.torch</code> files after every epoch, </li>
+<li>model training log <code>log.txt</code> which has the full stdout but saved in file</li>
+<li><code>metrics.json</code> if your training calculated some metrics, those metrics values will be saved there..</li>
+<li><code>tb_logs</code> which are the tensorboard events</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Understanding-Training-Command">Understanding Training Command<a class="anchor-link" href="#Understanding-Training-Command">¶</a></h1><p>Let's understand the training command we used above. We override the settings in our configuration file to train our desired setting of the model. In our example, we override the dataset to use, #images/gou, number of gpus to use and optimizer settings like #epochs and learning rate drops.</p>
+<pre><code>!python3 run_distributed_engines.py \
+    hydra.verbose=true \
+    config=supervised_1gpu_resnet_example \
+    config.DATA.TRAIN.DATA_SOURCES=[disk_folder] \
+    config.DATA.TRAIN.LABEL_SOURCES=[disk_folder] \
+    config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder] \
+    config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2 \
+    config.DATA.TEST.DATA_SOURCES=[disk_folder] \
+    config.DATA.TEST.LABEL_SOURCES=[disk_folder] \
+    config.DATA.TEST.DATASET_NAMES=[dummy_data_folder] \
+    config.DATA.TEST.BATCHSIZE_PER_REPLICA=2 \
+    config.DISTRIBUTED.NUM_NODES=1 \
+    config.DISTRIBUTED.NUM_PROC_PER_NODE=1 \
+    config.OPTIMIZER.num_epochs=2 \
+    config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001] \
+    config.OPTIMIZER.param_schedulers.lr.milestones=[1] \
+    config.TENSORBOARD_SETUP.USE_TENSORBOARD=true \
+    config.CHECKPOINT.DIR="./checkpoints"</code></pre>
+<p>We can understand each line as below:</p>
+<ul>
+<li><code>config=supervised_1gpu_resnet_example</code> -&gt; specify the config file for supervised training</li>
+<li><code>config.DATA.TRAIN.DATA_SOURCES=[disk_folder] config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]</code> -&gt; specify the data source for train i.e. <code>disk_folder</code></li>
+<li><code>config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]</code> -&gt; specify the dataset name i.e. <code>dummy_data_folder</code>. We registered this dataset above.</li>
+<li><code>config.DATA.TEST.DATA_SOURCES=[disk_folder] config.DATA.TEST.LABEL_SOURCES=[disk_folder] config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]</code> -&gt; similar settings for Test dataset.</li>
+<li><p><code>config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2 config.DATA.TEST.BATCHSIZE_PER_REPLICA=2</code> -&gt; specify 2 img/gpu to use for both <code>TRAIN</code> and <code>TEST</code>.</p>
+</li>
+<li><p><code>config.DISTRIBUTED.NUM_NODES=1 config.DISTRIBUTED.NUM_PROC_PER_NODE=1</code> -&gt; specify the #gpus=1 and #machines=1</p>
+</li>
+<li><p><code>config.OPTIMIZER.num_epochs=2 config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001] config.OPTIMIZER.param_schedulers.lr.milestones=[1]</code> -&gt; specify #epochs=2 and drop learning rate after 1 epoch.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Understanding-Training-stdout">Understanding Training stdout<a class="anchor-link" href="#Understanding-Training-stdout">¶</a></h1><p>The following output indicates that the training is starting on <code>rank=0</code>. Similar output will be printed for each rank.</p>
+<pre><code>####### overrides: ['hydra.verbose=true', 'config=supervised_1gpu_resnet_example', 'config.DATA.TRAIN.DATA_SOURCES=[disk_folder]', 'config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]', 'config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TEST.DATA_SOURCES=[disk_folder]', 'config.DATA.TEST.LABEL_SOURCES=[disk_folder]', 'config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]', 'config.DISTRIBUTED.NUM_NODES=1', 'config.DISTRIBUTED.NUM_PROC_PER_NODE=1', 'config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2', 'config.DATA.TEST.BATCHSIZE_PER_REPLICA=2', 'config.OPTIMIZER.num_epochs=2', 'config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001]', 'config.OPTIMIZER.param_schedulers.lr.milestones=[1]', 'config.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'config.CHECKPOINT.DIR=./checkpoints', 'hydra.verbose=true']
+INFO 2021-01-13 20:39:08,772 __init__.py:  32: Provided Config has latest version: 1
+INFO 2021-01-13 20:39:08,772 run_distributed_engines.py: 121: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:59709
+INFO 2021-01-13 20:39:08,773 train.py:  42: Env set for rank: 0, dist_rank: 0</code></pre>
+<p>VISSL is designed for reproducible research, so the training script will first print out the running configuration -- the environment variables, versions of various libraries, the full training config, data size, model etc.</p>
+<p>The training will start afterwards and we see output like:</p>
+<pre><code>INFO 2021-01-13 20:39:19,771 state_update_hooks.py:  90: Starting phase 0 [train]
+INFO 2021-01-13 20:39:20,539 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 1; lr: 0.00078; loss: 7.07915; btime(ms): 4546; eta: 0:00:40; peak_mem: 2595M
+INFO 2021-01-13 20:39:20,800 tensorboard_hook.py:  92: Logging metrics. Iteration 5
+INFO 2021-01-13 20:39:20,809 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 5; lr: 0.00078; loss: 0.83814; btime(ms): 963; eta: 0:00:04; peak_mem: 2595M
+INFO 2021-01-13 20:39:20,810 trainer_main.py: 123: Meters synced
+INFO 2021-01-13 20:39:23,796 log_hooks.py: 228: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 60.0}}
+INFO 2021-01-13 20:39:23,796 io.py:  16: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:23,797 io.py:  30: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-13 20:39:23,797 log_hooks.py: 182: [phase: 0] Saving checkpoint to ./checkpoints
+INFO 2021-01-13 20:39:24,130 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_phase0.torch</code></pre>
+<p>You can see the training stats printed out like LR, batch time, etc. VISSL also prints out the GPU memory usage and the ETA (approximate time for the experiment to finish).</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Understanding-YAML-Config-File">Understanding YAML Config File<a class="anchor-link" href="#Understanding-YAML-Config-File">¶</a></h1><p>We can now try to understand the train config file.</p>
+<h2 id="Data">Data<a class="anchor-link" href="#Data">¶</a></h2><p>The input data and labels needed to train the model are specified under the <code>DATA</code> key. The training and testing data are specified under <code>DATA.TRAIN</code> and <code>DATA.TEST</code>. For example,</p>
+<div class="highlight"><pre><span></span><span class="nt">DATA</span><span class="p">:</span>
+  <span class="nt">TRAIN</span><span class="p">:</span>
+    <span class="nt">DATA_SOURCES</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">disk_folder</span><span class="p p-Indicator">]</span>
+    <span class="nt">DATA_PATHS</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">"&lt;path</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">train</span><span class="nv"> </span><span class="s">folder&gt;"</span><span class="p p-Indicator">]</span>
+    <span class="nt">LABEL_SOURCES</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">disk_folder</span><span class="p p-Indicator">]</span>
+    <span class="nt">DATASET_NAMES</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">imagenet1k_folder</span><span class="p p-Indicator">]</span>
+    <span class="nt">BATCHSIZE_PER_REPLICA</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">32</span>
+</pre></div>
+<p>This specifies that the model will train on the images provided in the folder <code>DATA.TRAIN.DATA_PATHS</code> and infer the labels from the directory structure of the images. The model is trained with a batchsize of 32 images/GPU. VISSL provides a <code>configs/config/dataset_catalog.json</code> to easily specify dataset paths in one place rather than repeat them in each config file. In our example above, we saw how to use the <code>dataset_catalog.json</code>.</p>
+<h2 id="Data-Transforms">Data Transforms<a class="anchor-link" href="#Data-Transforms">¶</a></h2><p>The image transforms are specified in <code>TRANSFORMS</code> and generally wrap the torchvision image transforms. One can easily compose together multiple transforms by specifying them in the config file, or implement their own custom image transforms. VISSL uses such compositionality of data transforms for implementing many self-supervised methods as well.
+For example, in our training, we specify the transforms as below:</p>
+<div class="highlight"><pre><span></span><span class="nt">TRANSFORMS</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">RandomResizedCrop</span>
+    <span class="nt">size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">224</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">RandomHorizontalFlip</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ColorJitter</span>
+    <span class="nt">brightness</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.4</span>
+    <span class="nt">contrast</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.4</span>
+    <span class="nt">saturation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.4</span>
+    <span class="nt">hue</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.4</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ToTensor</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Normalize</span>
+    <span class="nt">mean</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.485</span><span class="p p-Indicator">,</span> <span class="nv">0.456</span><span class="p p-Indicator">,</span> <span class="nv">0.406</span><span class="p p-Indicator">]</span>
+    <span class="nt">std</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.229</span><span class="p p-Indicator">,</span> <span class="nv">0.224</span><span class="p p-Indicator">,</span> <span class="nv">0.225</span><span class="p p-Indicator">]</span>
+</pre></div>
+<h2 id="Model">Model<a class="anchor-link" href="#Model">¶</a></h2><p>VISSL specifies the model as a <code>TRUNK</code> (the base ConvNet) and a <code>HEAD</code> (the classification or task-specific parameters). This allows one to cleanly separate the logic between the task itself and the ConvNet. Multiple model trunks (see listing under <code>vissl/model/trunks</code>) can be used for the same task.</p>
+<p>A ResNet-50 model that outputs classification scores for 1000 classes (the number of classes in ImageNet) is specified as</p>
+<div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+  <span class="nt">TRUNK</span><span class="p">:</span>
+    <span class="nt">NAME</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">resnet</span>
+    <span class="nt">TRUNK_PARAMS</span><span class="p">:</span>
+      <span class="nt">RESNETS</span><span class="p">:</span>
+        <span class="nt">DEPTH</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">50</span>
+  <span class="nt">HEAD</span><span class="p">:</span>
+    <span class="nt">PARAMS</span><span class="p">:</span> <span class="p p-Indicator">[</span>
+      <span class="p p-Indicator">[</span><span class="s">"mlp"</span><span class="p p-Indicator">,</span> <span class="p p-Indicator">{</span><span class="s">"dims"</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">2048</span><span class="p p-Indicator">,</span> <span class="nv">1000</span><span class="p p-Indicator">]}],</span>
+    <span class="p p-Indicator">]</span>
+</pre></div>
+<p>Here <code>TRUNK</code> specifies the base ConvNet architecture, and <code>HEAD</code> specifies a single fully connected layer (special case of a MLP) that produces 1000 outputs.</p>
+<p>VISSL automatically sets the model to eval mode when using the data in <code>DATA.TEST</code>. This ensures that layers such as <code>BatchNorm</code>, <code>Dropout</code> behave correctly when used to report test set accuracies.</p>
+<h2 id="Loss-and-Optimizer">Loss and Optimizer<a class="anchor-link" href="#Loss-and-Optimizer">¶</a></h2><p>The loss and optimizer are specified under the <code>LOSS</code> and <code>OPTIMIZER</code> keys. VISSL losses behave similar to the default <code>torch.nn</code> losses.</p>
+<p>Example: we used cross entropy loss</p>
+<div class="highlight"><pre><span></span><span class="nt">LOSS</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cross_entropy_multiple_output_single_target</span>
+  <span class="nt">cross_entropy_multiple_output_single_target</span><span class="p">:</span>
+    <span class="nt">ignore_index</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-1</span>
+</pre></div>
+<p>Example, we used the optimizer (after overriding with command line params:
+The <code>OPTIMIZER</code> contains information about the base optimizer (SGD in this case) and the learning rate scheduler (<code>OPTIMIZER.param_schedulers</code>).</p>
+<div class="highlight"><pre><span></span><span class="nt">OPTIMIZER</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sgd</span>
+  <span class="nt">weight_decay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0001</span>
+  <span class="nt">momentum</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.9</span>
+  <span class="nt">num_epochs</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">105</span>
+  <span class="nt">nesterov</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+  <span class="nt">regularize_bn</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+  <span class="nt">regularize_bias</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+  <span class="nt">param_schedulers</span><span class="p">:</span>
+    <span class="nt">lr</span><span class="p">:</span>
+      <span class="c1"># learning rate is automatically scaled based on batch size</span>
+      <span class="nt">auto_lr_scaling</span><span class="p">:</span> 
+        <span class="nt">auto_scale</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+        <span class="nt">base_value</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+        <span class="nt">base_lr_batch_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">256</span> <span class="c1"># learning rate of 0.1 is used for batch size of 256</span>
+      <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">multistep</span>
+      <span class="c1"># We want the learning rate to drop by 1/10 at epochs [1]</span>
+      <span class="nt">milestones</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">]</span> <span class="c1"># epochs at which to drop the learning rate (N vals)</span>
+      <span class="nt">values</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.01</span><span class="p p-Indicator">,</span><span class="nv">0.001</span><span class="p p-Indicator">]</span> <span class="c1"># the exact values of learning rate (N+1 vals)</span>
+      <span class="nt">update_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">epoch</span>
+</pre></div>
+<h2 id="Measuring-Accuracy">Measuring Accuracy<a class="anchor-link" href="#Measuring-Accuracy">¶</a></h2><p>Accuracy meters are specified under <code>METERS</code> and measure the top-1 and top-5 accuracies.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><span class="nt">METERS</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">accuracy_list_meter</span>
+  <span class="nt">accuracy_list_meter</span><span class="p">:</span>
+    <span class="nt">num_meters</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">topk_values</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span> <span class="nv">5</span><span class="p p-Indicator">]</span>
+</pre></div>
+<h2 id="Number-of-gpus">Number of gpus<a class="anchor-link" href="#Number-of-gpus">¶</a></h2><p>The number of GPUs and number of nodes are specified under <code>DISTRIBUTED</code>. VISSL seamlessly runs the same code on either a single GPU or across multiple nodes/GPUs.</p>
+<p>Example:</p>
+<pre><code>DISTRIBUTED:
+  BACKEND: nccl
+  NUM_NODES: 1
+  NUM_PROC_PER_NODE: 1 # 1 GPU
+  RUN_ID: auto</code></pre>
+<p>If running on more than one node, you will need to run this command on each of the nodes.</p>
+<p><strong>NOTE</strong>: The batch size specified in the configs under <code>DATA.TRAIN.BATCHSIZE_PER_REPLICA</code> (denoted as <code>B</code>) is per GPU. So if you run your code on <code>N</code> nodes with <code>G</code> gpus each, then the total effective batch size is <code>B*N*G</code>.
+Since running on multiple GPUs changes the effective batch size, you may also want to use learning rate warmup (see the <a href="https://arxiv.org/abs/1706.02677">ImageNet in 1 hour paper</a>).
+Scaling the learning rate according to the batch size is important for distributed training. VISSL can automatically do this for you.</p>
+<h3 id="Auto-scaling-the-LR">Auto-scaling the LR<a class="anchor-link" href="#Auto-scaling-the-LR">¶</a></h3><p>To make distributed training even simpler, VISSL can automatically scale the learning rate depending on the total batch size used. This is controlled by the flag <code>OPTIMIZER.param_schedulers.lr.auto_lr_scaling</code> which can be set to True to enable auto-scaling. By default the learning rate is scaled linearly with the batch size (see the <a href="https://arxiv.org/abs/1706.02677">ImageNet in 1 hour paper</a>).</p>
+<p>We specify a <code>base_lr_batch_size</code> when creating the learning rate scheduler. At run time, the learning rate, VISSL automatically computes the run_time_batch_size and the learning rate used is multiplied by (<code>run_time_batch_size / base_lr_batch_size</code>). The autoscaling magic resides in <code>vissl/utils/hydra_config.py</code>.</p>
+<div class="highlight"><pre><span></span><span class="nt">OPTIMIZER</span><span class="p">:</span>
+  <span class="nt">param_schedulers</span><span class="p">:</span>
+    <span class="nt">lr</span><span class="p">:</span>
+      <span class="nt">auto_lr_scaling</span><span class="p">:</span> <span class="c1"># learning rate is automatically scaled based on batch size</span>
+        <span class="nt">auto_scale</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+        <span class="nt">base_value</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+        <span class="nt">base_lr_batch_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">256</span> <span class="c1"># learning rate of 0.1 is used for batch size of 256</span>
+</pre></div>
+<h2 id="Mixed-Precision-or-FP16-training">Mixed Precision or FP16 training<a class="anchor-link" href="#Mixed-Precision-or-FP16-training">¶</a></h2><p>If you installed Apex above, you can easily train the model using mixed precision. This requires adding the following lines to the config file under the MODEL</p>
+<div class="highlight"><pre><span></span><span class="nt">AMP_PARAMS</span><span class="p">:</span>
+  <span class="nt">USE_AMP</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+  <span class="nt">AMP_ARGS</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="s">"opt_level"</span><span class="p p-Indicator">:</span> <span class="s">"O1"</span><span class="p p-Indicator">}</span>
+</pre></div>
+<p>This will run the model using the <code>O1</code> setting in apex which should generally result in stable training while saving GPU memory (and possibly faster training depending on the GPU architecture). See the <a href="https://nvidia.github.io/apex/amp.html#opt-levels">apex documentation for more information on what the different mixed precision flags</a>.</p>
+<h2 id="Using-SyncBatchNorm-in-the-model">Using SyncBatchNorm in the model<a class="anchor-link" href="#Using-SyncBatchNorm-in-the-model">¶</a></h2><p>This can be specified in the config under the <code>MODEL</code></p>
+<div class="highlight"><pre><span></span><span class="nt">SYNC_BN_CONFIG</span><span class="p">:</span>
+  <span class="nt">CONVERT_BN_TO_SYNC_BN</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+  <span class="nt">SYNC_BN_TYPE</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">pytorch</span>
+</pre></div>
+<p>If you have apex installed, you can use a faster version of <code>SyncBatchNorm</code> by</p>
+<div class="highlight"><pre><span></span><span class="nt">SYNC_BN_CONFIG</span><span class="p">:</span>
+  <span class="nt">CONVERT_BN_TO_SYNC_BN</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+  <span class="nt">SYNC_BN_TYPE</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">apex</span>
+  <span class="nt">GROUP_SIZE</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8</span> <span class="c1"># set to number of GPUs per node for fast performance.</span>
+</pre></div>
+<p>Our model definitions are written such that one can easily replace <code>BatchNorm</code> with other normalization functions (<code>LayerNorm, GroupNorm</code> etc.) by changing arguments in the config file.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [63]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">less</span> <span class="n">configs</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">supervised_1gpu_resnet_example</span><span class="o">.</span><span class="n">yaml</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Visualizing-Tensorboard-Logs">Visualizing Tensorboard Logs<a class="anchor-link" href="#Visualizing-Tensorboard-Logs">¶</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If you have enabled <code>config.TENSORBOARD_SETUP.USE_TENSORBOARD=true</code> , you will see the tensorboard events dumped in <code>tb_logs/</code> directory. You can use this to visualize the events in tensorboard as follows:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Look at training curves in tensorboard:</span>
+<span class="o">!</span><span class="nb">kill</span> <span class="m">490</span>
+<span class="o">%</span><span class="k">reload_ext</span> tensorboard
+<span class="o">%</span><span class="k">tensorboard</span> --logdir checkpoints/tb_logs
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>/bin/bash: line 0: kill: (490) - No such process
+</pre>
+</div>
+</div>
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_html rendered_html output_subarea">
+<div id="root"></div>
+<script>
+      (function() {
+        window.TENSORBOARD_ENV = window.TENSORBOARD_ENV || {};
+        window.TENSORBOARD_ENV["IN_COLAB"] = true;
+        document.querySelector("base").href = "https://localhost:6009";
+        function fixUpTensorboard(root) {
+          const tftb = root.querySelector("tf-tensorboard");
+          // Disable the fragment manipulation behavior in Colab. Not
+          // only is the behavior not useful (as the iframe's location
+          // is not visible to the user), it causes TensorBoard's usage
+          // of `window.replace` to navigate away from the page and to
+          // the `localhost:<port>` URL specified by the base URI, which
+          // in turn causes the frame to (likely) crash.
+          tftb.removeAttribute("use-hash");
+        }
+        function executeAllScripts(root) {
+          // When `script` elements are inserted into the DOM by
+          // assigning to an element's `innerHTML`, the scripts are not
+          // executed. Thus, we manually re-insert these scripts so that
+          // TensorBoard can initialize itself.
+          for (const script of root.querySelectorAll("script")) {
+            const newScript = document.createElement("script");
+            newScript.type = script.type;
+            newScript.textContent = script.textContent;
+            root.appendChild(newScript);
+            script.remove();
+          }
+        }
+        function setHeight(root, height) {
+          // We set the height dynamically after the TensorBoard UI has
+          // been initialized. This avoids an intermediate state in
+          // which the container plus the UI become taller than the
+          // final width and cause the Colab output frame to be
+          // permanently resized, eventually leading to an empty
+          // vertical gap below the TensorBoard UI. It's not clear
+          // exactly what causes this problematic intermediate state,
+          // but setting the height late seems to fix it.
+          root.style.height = `${height}px`;
+        }
+        const root = document.getElementById("root");
+        fetch(".")
+          .then((x) => x.text())
+          .then((html) => void (root.innerHTML = html))
+          .then(() => fixUpTensorboard(root))
+          .then(() => executeAllScripts(root))
+          .then(() => setHeight(root, 800));
+      })();
+    </script>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><div class="social"><a class="github-button" href="https://github.com/facebookresearch/vissl" data-count-href="https://github.com/facebookresearch/vissl/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star VISSL on GitHub">vissl</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2021 Your Name or Your Company Name<br/>Legal:<a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></section></footer></div></body></html>

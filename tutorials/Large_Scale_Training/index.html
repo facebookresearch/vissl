@@ -1,0 +1,280 @@
+<!DOCTYPE html><html lang=""><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>VISSL · A library for state-of-the-art self-supervised learning</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:title" content="VISSL · A library for state-of-the-art self-supervised learning"/><meta property="og:type" content="website"/><meta property="og:url" content="https://vissl.ai/"/><meta property="og:description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:image" content="https://vissl.ai/img/vissllogo.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://vissl.ai/img/vissllogo.svg"/><link rel="shortcut icon" href="/img/visslfavicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-172675973-1', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/visslfavicon.png" alt="VISSL"/><h2 class="headerTitleWithLogo">VISSL</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/tutorials" target="_self">Tutorials</a></li><li class=""><a href="https://vissl.readthedocs.io/" target="_self">Docs</a></li><li class=""><a href="https://github.com/facebookresearch/vissl" target="_self">GitHub</a></li><li class=""><a target="_self"></a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span></span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Tutorials</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Installation">Installation</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Understanding_VISSL_Training_and_YAML_Config">Understanding VISSL Training and YAML Config</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Train_SimCLR_on_1_gpu">Train SimCLR on 1-gpu</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Feature Extraction</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Feature_Extraction">Feature Extraction</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Benchmark</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K">Benchmark Linear Image Classification on ImageNet-1K</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Full_Finetuning_on_ImageNet_1K">Benchmark Full-Finetuning on ImageNet-1K</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Large Scale Training</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/tutorials/Large_Scale_Training">Large Scale Training with VISSL (fp16, LARC, ZeRO, etc)</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="tutorialButtonsWrapper"><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Large_Scale_Training.ipynb" target="_blank"><img class="colabButton" align="left" src="/img/colab_icon.png"/>Run in Google Colab</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Large_Scale_Training.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Large_Scale_Training.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div><div class="tutorialBody">
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js">
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
+</script>
+<div class="notebook">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Large-Scale-Training-with-VISSL-Training-(mixed-precision,-LARC,-ZeRO-etc)">Large Scale Training with VISSL Training (mixed precision, LARC, ZeRO etc)<a class="anchor-link" href="#Large-Scale-Training-with-VISSL-Training-(mixed-precision,-LARC,-ZeRO-etc)">¶</a></h1><p>In this tutorial, show configuration settings that users can set for training large models.</p>
+<p>You can make a copy of this tutorial by <code>File -&gt; Open in playground mode</code> and make changes there. DO NOT request access to this tutorial.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-LARC">Using LARC<a class="anchor-link" href="#Using-LARC">¶</a></h1><p>ARC (Large Batch Training of Convolutional Networks) is a technique proposed by <strong>Yang You, Igor Gitman, Boris Ginsburg</strong> in <a href="https://arxiv.org/abs/1708.03888">https://arxiv.org/abs/1708.03888</a> for improving the convergence of large batch size trainings.
+LARC uses the ratio between gradient and parameter magnitudes is used to calculate an adaptive local learning rate for each individual parameter.</p>
+<p>See the <a href="https://arxiv.org/abs/1708.03888">LARC paper</a> for calculation of learning rate. In practice, it modifies the gradients of parameters as a proxy
+for modifying the learning rate of the parameters.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="How-to-enable-LARC">How to enable LARC<a class="anchor-link" href="#How-to-enable-LARC">¶</a></h2><p>VISSL supports the LARC implementation from <a href="https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py">NVIDIA's Apex LARC</a>. To use LARC, users need to set config option
+:code:<code>OPTIMIZER.use_larc=True</code>. VISSL exposes LARC parameters that users can tune. Full list of LARC parameters exposed by VISSL:</p>
+<div class="highlight"><pre><span></span><span class="nt">OPTIMIZER</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="s">"sgd"</span>
+  <span class="nt">use_larc</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>  <span class="c1"># supported for SGD only for now</span>
+  <span class="nt">larc_config</span><span class="p">:</span>
+    <span class="nt">clip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+    <span class="nt">eps</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1e-08</span>
+    <span class="nt">trust_coefficient</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.001</span>
+</pre></div>
+<p><strong>NOTE:</strong> LARC is currently supported for SGD optimizer only in VISSL.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-Apex">Using Apex<a class="anchor-link" href="#Using-Apex">¶</a></h1><p>In order to use Apex, VISSL provides <code>anaconda</code> and <code>pip</code> packages of Apex (compiled with Optimzed C++ extensions/CUDA kernels). The Apex
+packages are provided for all versions of <code>CUDA (9.2, 10.0, 10.1, 10.2, 11.0), PyTorch &gt;= 1.4 and Python &gt;=3.6 and &lt;=3.9</code>.</p>
+<p>Follow VISSL's instructions to <a href="https://github.com/facebookresearch/vissl/blob/master/INSTALL.md#step-2-install-pytorch-opencv-and-apex-pip">install apex in pip</a> and instructions to <a href="https://github.com/facebookresearch/vissl/blob/master/INSTALL.md#step-3-install-apex-conda&gt;">install apex in conda</a>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-Mixed-Precision">Using Mixed Precision<a class="anchor-link" href="#Using-Mixed-Precision">¶</a></h1><p>Many self-supervised approaches leverage mixed precision training by default for better training speed and reducing the model memory requirement.
+For this, we use <a href="https://nvidia.github.io/apex/amp.html#o1-mixed-precision-recommended-for-typical-use">NVIDIA Apex Library with AMP</a>.</p>
+<p>Users can tune the AMP level to the levels supported by NVIDIA. See <a href="https://nvidia.github.io/apex/amp.html#opt-levels">this for details on Apex amp levels</a>.</p>
+<p>To use Mixed precision training, one needs to set the following parameters in configuration file:</p>
+<div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+  <span class="nt">AMP_PARAMS</span><span class="p">:</span>
+    <span class="nt">USE_AMP</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="c1"># Use O1 as it is robust and stable than O3. If you want to use O3, we recommend</span>
+    <span class="c1"># the following setting:</span>
+    <span class="c1"># {"opt_level": "O3", "keep_batchnorm_fp32": True, "master_weights": True, "loss_scale": "dynamic"}</span>
+    <span class="nt">AMP_ARGS</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="s">"opt_level"</span><span class="p p-Indicator">:</span> <span class="s">"O1"</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-ZeRO">Using ZeRO<a class="anchor-link" href="#Using-ZeRO">¶</a></h1><p><strong>ZeRO: Memory Optimizations Toward Training Trillion Parameter Models</strong> is a technique developed by <strong>Samyam Rajbhandari, Jeff Rasley, Olatunji Ruwase, Yuxiong He</strong> in <a href="https://arxiv.org/abs/1910.02054">this paper</a>.
+When training models with billions of parameters, GPU memory becomes a bottleneck. ZeRO can offer 4x to 8x memory reductions in memory thus allowing to fit larger models in memory.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="How-ZeRO-works?">How ZeRO works?<a class="anchor-link" href="#How-ZeRO-works?">¶</a></h2><p>Memory requirement of a model can be broken down roughly into:</p>
+<ol>
+<li>activations memory</li>
+<li>model parameters</li>
+<li>parameters momentum buffers (optimizer state)</li>
+<li>parameters gradients</li>
+</ol>
+<p>ZeRO <em>shards</em> the optimizer state and the parameter gradients onto different devices and reduces the memory needed per device.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="How-to-use-ZeRO-in-VISSL?">How to use ZeRO in VISSL?<a class="anchor-link" href="#How-to-use-ZeRO-in-VISSL?">¶</a></h2><p>VISSL uses <a href="https://github.com/facebookresearch/fairscale">FAIRScale</a>_ library which implements ZeRO in PyTorch.
+Using VISSL in ZeRO involves no code changes and can simply be done by setting some configuration options in the yaml files.</p>
+<p>In order to use ZeRO, user needs to set <code>OPTIMIZER.name=zero</code> and nest the desired optimizer (for example SGD) settings in <code>OPTIMIZER.base_optimizer</code>.</p>
+<p>An example for using ZeRO with LARC and SGD optimization:</p>
+<div class="highlight"><pre><span></span><span class="nt">OPTIMIZER</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">zero</span>
+  <span class="nt">base_optimizer</span><span class="p">:</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sgd</span>
+    <span class="nt">use_larc</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+    <span class="nt">larc_config</span><span class="p">:</span>
+      <span class="nt">clip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+      <span class="nt">trust_coefficient</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.001</span>
+      <span class="nt">eps</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.00000001</span>
+    <span class="nt">weight_decay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.000001</span>
+    <span class="nt">momentum</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.9</span>
+    <span class="nt">nesterov</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+</pre></div>
+<p><strong>NOTE</strong>: ZeRO works seamlessly with LARC and mixed precision training. Using ZeRO with activation checkpointing is not yet enabled primarily due to manual gradient reduction need for activation checkpointing.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-Stateful-Data-Sampler">Using Stateful Data Sampler<a class="anchor-link" href="#Using-Stateful-Data-Sampler">¶</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Issue-with-PyTorch-DataSampler-for-large-data-training">Issue with PyTorch DataSampler for large data training<a class="anchor-link" href="#Issue-with-PyTorch-DataSampler-for-large-data-training">¶</a></h2><p>PyTorch default <a href="https://github.com/pytorch/pytorch/blob/master/torch/utils/data/distributed.py#L12">torch.utils.data.distributed.DistributedSampler</a> is the default sampler used for many trainings. However, it becomes limiting to use this sampler in case of large batch size trainings for 2 reasons:</p>
+<ul>
+<li><p>Using PyTorch <code>DataSampler</code>, each trainer shuffles the full data (assuming shuffling is used) and then each trainer gets a view of this shuffled data. If the dataset is large (100 millions, 1 billion or more), generating very large permutation
+on each trainer can lead to large CPU memory consumption per machine. Hence, it becomes difficult to use the PyTorch default <code>DataSampler</code> when user wants to train on large data and for several epochs (for example: 10 epochs of 100M images).</p>
+</li>
+<li><p>When using PyTorch <code>DataSampler</code> and the training is resumed, the sampler will serve the full dataset. However, in case of large data trainings (like 1 billion images or more), one mostly trains for 1 epoch only.
+In such cases, when the training resumes from the middle of the epoch, the sampler will serve the full 1 billion images which is not what we want.</p>
+</li>
+</ul>
+<p>To solve both the above issues, VISSL provides a custom samplier <code>StatefulDistributedSampler</code> which inherits from the PyTorch <code>DistributedSampler</code> and fixes the above issues in following manner:</p>
+<ul>
+<li><p>Sampler creates the view of the data per trainer and then shuffles only the data that trainer is supposed to view. This keeps the CPU memory requirement expected.</p>
+</li>
+<li><p>Sampler adds a member <code>start_iter</code> which tracks what iteration number of the given epoch model is at. When the training is used, the <code>start_iter</code> will be properly set to the last iteration number and the sampler will serve only the remainder of data.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="How-to-use-VISSL-custom-DataSampler">How to use VISSL custom DataSampler<a class="anchor-link" href="#How-to-use-VISSL-custom-DataSampler">¶</a></h2><p>Using VISSL provided custom samplier <code>StatefulDistributedSampler</code> is extremely easy and involves simply setting the correct configuration options as below:</p>
+<div class="highlight"><pre><span></span><span class="nt">DATA</span><span class="p">:</span>
+  <span class="nt">TRAIN</span><span class="p">:</span>
+    <span class="nt">USE_STATEFUL_DISTRIBUTED_SAMPLER</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+  <span class="nt">TEST</span><span class="p">:</span>
+    <span class="nt">USE_STATEFUL_DISTRIBUTED_SAMPLER</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+<p><strong>NOTE</strong>: Users can use <code>StatefulDistributedSampler</code> for only training dataset and use PyTorch default :code:<code>DataSampler</code> if desired i.e. it is not mandatory to use the same sampler type for all data splits.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Activation-Checkpointing">Activation Checkpointing<a class="anchor-link" href="#Activation-Checkpointing">¶</a></h1><p>Activation checkpointing is a very powerful technique to reduce the memory requirement of a model. This is especially useful when training very large models with billions of parameters.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="How-it-works?">How it works?<a class="anchor-link" href="#How-it-works?">¶</a></h2><p>Activation checkpointing trades compute for memory. It discards intermediate activations during the forward pass, and recomputes them during the backward pass. In
+our experiments, using activation checkpointing, we observe negligible compute overhead in memory-bound settings while getting big memory savings.</p>
+<p>In summary, This technique offers 2 benefits:</p>
+<ul>
+<li>saves gpu memory that can be used to fit large models</li>
+<li>allows increasing training batch size for a given model</li>
+</ul>
+<p>We recommend users to read the documentation available <a href="https://pytorch.org/docs/stable/checkpoint.html">here</a> for further details on activation checkpointing.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="How-to-use-activation-checkpointing-in-VISSL?">How to use activation checkpointing in VISSL?<a class="anchor-link" href="#How-to-use-activation-checkpointing-in-VISSL?">¶</a></h2><p>VISSL integrates activation checkpointing implementation directly from PyTorch available <a href="https://pytorch.org/docs/stable/checkpoint.html">here</a>.
+Using activation checkpointing in VISSL is extremely easy and doable with simple settings in the configuration file. The settings required are as below:</p>
+<div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+  <span class="nt">ACTIVATION_CHECKPOINTING</span><span class="p">:</span>
+    <span class="c1"># whether to use activation checkpointing or not</span>
+    <span class="nt">USE_ACTIVATION_CHECKPOINTING</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="c1"># how many times the model should be checkpointed. User should tune this parameter</span>
+    <span class="c1"># and find the number that offers best memory saving and compute tradeoff.</span>
+    <span class="nt">NUM_ACTIVATION_CHECKPOINTING_SPLITS</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="nt">DISTRIBUTED</span><span class="p">:</span>
+  <span class="c1"># if True, does the gradient reduction in DDP manually. This is useful during the</span>
+  <span class="c1"># activation checkpointing and sometimes saving the memory from the pytorch gradient</span>
+  <span class="c1"># buckets.</span>
+  <span class="nt">MANUAL_GRADIENT_REDUCTION</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><div class="social"><a class="github-button" href="https://github.com/facebookresearch/vissl" data-count-href="https://github.com/facebookresearch/vissl/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star VISSL on GitHub">vissl</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2021 Your Name or Your Company Name<br/>Legal:<a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></section></footer></div></body></html>

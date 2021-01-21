@@ -1,0 +1,1536 @@
+<!DOCTYPE html><html lang=""><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>VISSL · A library for state-of-the-art self-supervised learning</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:title" content="VISSL · A library for state-of-the-art self-supervised learning"/><meta property="og:type" content="website"/><meta property="og:url" content="https://vissl.ai/"/><meta property="og:description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:image" content="https://vissl.ai/img/vissllogo.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://vissl.ai/img/vissllogo.svg"/><link rel="shortcut icon" href="/img/visslfavicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-172675973-1', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/visslfavicon.png" alt="VISSL"/><h2 class="headerTitleWithLogo">VISSL</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/tutorials" target="_self">Tutorials</a></li><li class=""><a href="https://vissl.readthedocs.io/" target="_self">Docs</a></li><li class=""><a href="https://github.com/facebookresearch/vissl" target="_self">GitHub</a></li><li class=""><a target="_self"></a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span></span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Tutorials</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Installation">Installation</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Understanding_VISSL_Training_and_YAML_Config">Understanding VISSL Training and YAML Config</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Train_SimCLR_on_1_gpu">Train SimCLR on 1-gpu</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Feature Extraction</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/tutorials/Feature_Extraction">Feature Extraction</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Benchmark</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K">Benchmark Linear Image Classification on ImageNet-1K</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Full_Finetuning_on_ImageNet_1K">Benchmark Full-Finetuning on ImageNet-1K</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Large Scale Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Large_Scale_Training">Large Scale Training with VISSL (fp16, LARC, ZeRO, etc)</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="tutorialButtonsWrapper"><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Feature_Extraction.ipynb" target="_blank"><img class="colabButton" align="left" src="/img/colab_icon.png"/>Run in Google Colab</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Feature_Extraction.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Feature_Extraction.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div><div class="tutorialBody">
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js">
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
+</script>
+<div class="notebook">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Feature-Extraction">Feature Extraction<a class="anchor-link" href="#Feature-Extraction">¶</a></h1><p>In this tutorial, we look at a simple example of how to use VISSL to extract features for <a href="https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py#L16">ResNet-50 Torchvision pre-trained model</a>.</p>
+<p>You can make a copy of this tutorial by <code>File -&gt; Open in playground mode</code> and make changes there. DO NOT request access to this tutorial.</p>
+<p><strong>NOTE:</strong> Please ensure your Collab Notebook has GPU available. To ensure/select this, simple follow: <code>Edit -&gt; Notebook Settings -&gt; select GPU</code>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Install-VISSL">Install VISSL<a class="anchor-link" href="#Install-VISSL">¶</a></h2><p>Installing VISSL is pretty straightfoward. We will use pip binaries of VISSL and follow instructions from <a href="https://github.com/facebookresearch/vissl/blob/master/INSTALL.md#install-vissl-pip-package">here</a>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Install: PyTorch (we assume 1.5.1 but VISSL works with all PyTorch versions &gt;=1.4)</span>
+<span class="o">!</span>pip install <span class="nv">torch</span><span class="o">==</span><span class="m">1</span>.5.1+cu101 <span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+
+<span class="c1"># install opencv</span>
+<span class="o">!</span>pip install opencv-python
+
+<span class="c1"># install apex by checking system settings: cuda version, pytorch version, python version</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="n">version_str</span><span class="o">=</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+    <span class="sa">f</span><span class="s2">"py3</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">_cu"</span><span class="p">,</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span><span class="s2">""</span><span class="p">),</span>
+    <span class="sa">f</span><span class="s2">"_pyt</span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+<span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">version_str</span><span class="p">)</span>
+
+<span class="c1"># install apex (pre-compiled with optimizer C++ extensions and CUDA kernels)</span>
+<span class="o">!</span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/<span class="o">{</span>version_str<span class="o">}</span>/download.html
+
+<span class="c1"># install VISSL</span>
+<span class="o">!</span>pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>VISSL should be successfuly installed by now and all the dependencies should be available.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">vissl</span>
+<span class="kn">import</span> <span class="nn">tensorboard</span>
+<span class="kn">import</span> <span class="nn">apex</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="YAML-config-file-for-Feature-Extraction">YAML config file for Feature Extraction<a class="anchor-link" href="#YAML-config-file-for-Feature-Extraction">¶</a></h2><p>VISSL provides yaml configuration files for extracting features <a href="https://github.com/facebookresearch/vissl/tree/master/configs/config/feature_extraction">here</a>.</p>
+<p>For the purpose of this tutorial, we will use the config file for extracting features from several layers in the trunk of ResNet-50 supervised model on 1-gpu. Let's go ahead and download the <a href="https://github.com/facebookresearch/vissl/blob/master/configs/config/feature_extraction/extract_resnet_in1k_8gpu.yaml">example config file</a> and <a href="https://github.com/facebookresearch/vissl/blob/master/configs/config/feature_extraction/trunk_only/rn50_layers.yaml">feature settings for trunk layers</a>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [2]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>mkdir -p configs/config/trunk_only
+<span class="o">!</span>wget -q -O configs/__init__.py https://dl.fbaipublicfiles.com/vissl/tutorials/configs/__init__.py 
+<span class="o">!</span>wget -q -O configs/config/extract_resnet_in1k_8gpu.yaml https://dl.fbaipublicfiles.com/vissl/tutorials/configs/extract_resnet_in1k_8gpu.yaml
+<span class="o">!</span>wget -q -O configs/config/trunk_only/rn50_layers.yaml https://dl.fbaipublicfiles.com/vissl/tutorials/configs/trunk_only/rn50_layers.yaml
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Download-the-ResNet-50-weights-from-Torchvision">Download the ResNet-50 weights from Torchvision<a class="anchor-link" href="#Download-the-ResNet-50-weights-from-Torchvision">¶</a></h2><p>We download the weights from the <a href="https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py#L16">torchvision ResNet50 model</a>:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>wget https://download.pytorch.org/models/resnet50-19c8e357.pth
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Builtin-feature-extraction-tool-in-VISSL">Builtin feature extraction tool in VISSL<a class="anchor-link" href="#Builtin-feature-extraction-tool-in-VISSL">¶</a></h2><p>VISSL also provides a <a href="https://github.com/facebookresearch/vissl/blob/master/tools/run_distributed_engines.py">helper python tool</a> that allows to use VISSL for training purposes. This tool offers:</p>
+<ul>
+<li>allows training and feature extraction both using VISSL. </li>
+<li>also allows training on 1-gpu or multi-gpu. </li>
+<li>can be used to launch multi-machine distributed training.</li>
+</ul>
+<p>Let's go ahead and download this tool directly.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>wget https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Creating-a-custom-data">Creating a custom data<a class="anchor-link" href="#Creating-a-custom-data">¶</a></h2><p>For the purpose of this tutorial, since we don't have ImageNet on the disk, we will create a dummy dataset by copying an image from COCO dataset in ImageNet dataset folder style as below:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [6]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>mkdir -p dummy_data/train/class1
+<span class="o">!</span>mkdir -p dummy_data/train/class2
+<span class="o">!</span>mkdir -p dummy_data/val/class1
+<span class="o">!</span>mkdir -p dummy_data/val/class2
+
+<span class="c1"># create 2 classes in train and add 2 images per class</span>
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img5.jpg
+
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img5.jpg
+
+<span class="c1"># create 2 classes in val and add 2 images per class</span>
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img5.jpg
+
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img1.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img2.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img3.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img4.jpg
+<span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class2/img5.jpg
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Using-the-custom-data-in-VISSL">Using the custom data in VISSL<a class="anchor-link" href="#Using-the-custom-data-in-VISSL">¶</a></h2><p>Next step for us is to register the dummy data we created above with VISSL. Registering the dataset involves telling VISSL about the dataset name and the paths for the dataset. For this, we create a simple json file with the metadata and save it to <code>configs/config/dataset_catalog.py</code> file.</p>
+<p><strong>NOTE</strong>: VISSL uses the specific <code>dataset_catalog.json</code> under the path <code>configs/config/dataset_catalog.json</code>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [7]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">json_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"dummy_data_folder"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"train"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"/content/dummy_data/train"</span><span class="p">,</span> <span class="s2">"/content/dummy_data/train"</span>
+      <span class="p">],</span>
+      <span class="s2">"val"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"/content/dummy_data/val"</span><span class="p">,</span> <span class="s2">"/content/dummy_data/val"</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># use VISSL's api to save or you can use your custom code.</span>
+<span class="kn">from</span> <span class="nn">vissl.utils.io</span> <span class="kn">import</span> <span class="n">save_file</span>
+<span class="n">save_file</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s2">"/content/configs/config/dataset_catalog.json"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Next, we verify that the dataset is registered with VISSL. For that we query VISSL's dataset catalog as below:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [8]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">vissl.data.dataset_catalog</span> <span class="kn">import</span> <span class="n">VisslDatasetCatalog</span>
+
+<span class="c1"># list all the datasets that exist in catalog</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">VisslDatasetCatalog</span><span class="o">.</span><span class="n">list</span><span class="p">())</span>
+
+<span class="c1"># get the metadata of dummy_data_folder dataset</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">VisslDatasetCatalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dummy_data_folder"</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>['dummy_data_folder']
+{'train': ['/content/dummy_data/train', '/content/dummy_data/train'], 'val': ['/content/dummy_data/val', '/content/dummy_data/val']}
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Extract-the-features">Extract the features<a class="anchor-link" href="#Extract-the-features">¶</a></h2><p>We are ready to extract features now. For the purpose of this tutorial, we will use synthetic dataset and train on dummy images. VISSL supports training on wide range of datasets and allows adding custom datasets. Please see VISSL documentation on how to use the datasets. To train on ImageNet instead: assuming your ImageNet dataset folder path is <code>/path/to/my/imagenet/folder/</code>, you can add the following command line 
+input to your training command:</p>
+<pre><code>config.DATA.TRAIN.DATASET_NAMES=[imagenet1k_folder] \
+config.DATA.TRAIN.DATA_SOURCES=[disk_folder] \
+config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
+config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]</code></pre>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The feature extraction command looks like:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [15]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>python3 run_distributed_engines.py <span class="err">\</span>
+    <span class="n">hydra</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="n">true</span> \
+    <span class="n">config</span><span class="o">=</span><span class="n">extract_resnet_in1k_8gpu</span> \
+    <span class="o">+</span><span class="n">config</span><span class="o">/</span><span class="n">trunk_only</span><span class="o">=</span><span class="n">rn50_layers</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATA_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">LABEL_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATASET_NAMES</span><span class="o">=</span><span class="p">[</span><span class="n">dummy_data_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">BATCHSIZE_PER_REPLICA</span><span class="o">=</span><span class="mi">2</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">DATA_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">LABEL_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">DATASET_NAMES</span><span class="o">=</span><span class="p">[</span><span class="n">dummy_data_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">BATCHSIZE_PER_REPLICA</span><span class="o">=</span><span class="mi">2</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="o">.</span><span class="n">NUM_NODES</span><span class="o">=</span><span class="mi">1</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="o">.</span><span class="n">NUM_PROC_PER_NODE</span><span class="o">=</span><span class="mi">1</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">CHECKPOINT</span><span class="o">.</span><span class="n">DIR</span><span class="o">=</span><span class="s2">"./checkpoints"</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">MODEL</span><span class="o">.</span><span class="n">WEIGHTS_INIT</span><span class="o">.</span><span class="n">PARAMS_FILE</span><span class="o">=</span><span class="s2">"/content/resnet50-19c8e357.pth"</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">MODEL</span><span class="o">.</span><span class="n">WEIGHTS_INIT</span><span class="o">.</span><span class="n">APPEND_PREFIX</span><span class="o">=</span><span class="s2">"trunk.base_model._feature_blocks."</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">MODEL</span><span class="o">.</span><span class="n">WEIGHTS_INIT</span><span class="o">.</span><span class="n">STATE_DICT_KEY_NAME</span><span class="o">=</span><span class="s2">""</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+####### overrides: ['hydra.verbose=true', 'config=extract_resnet_in1k_8gpu', '+config/trunk_only=rn50_layers', 'config.DATA.TRAIN.DATA_SOURCES=[disk_folder]', 'config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]', 'config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2', 'config.DATA.TEST.DATA_SOURCES=[disk_folder]', 'config.DATA.TEST.LABEL_SOURCES=[disk_folder]', 'config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TEST.BATCHSIZE_PER_REPLICA=2', 'config.DISTRIBUTED.NUM_NODES=1', 'config.DISTRIBUTED.NUM_PROC_PER_NODE=1', 'config.CHECKPOINT.DIR=./checkpoints', 'config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/content/resnet50-19c8e357.pth', 'config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model._feature_blocks.', 'config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=', 'hydra.verbose=true']
+INFO 2021-01-13 21:41:12,823 __init__.py:  32: Provided Config has latest version: 1
+INFO 2021-01-13 21:41:12,823 run_distributed_engines.py: 121: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:45459
+INFO 2021-01-13 21:41:12,824 misc.py:  68: Set start method of multiprocessing to forkserver
+INFO 2021-01-13 21:41:12,824 extract_features.py:  28: Setting seed....
+INFO 2021-01-13 21:41:12,824 misc.py:  77: MACHINE SEED: 0
+INFO 2021-01-13 21:41:12,861 hydra_config.py: 122: Training with config:
+INFO 2021-01-13 21:41:12,865 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR_RUN_ID': False,
+                'AUTO_RESUME': True,
+                'BACKEND': 'disk',
+                'CHECKPOINT_FREQUENCY': 1,
+                'CHECKPOINT_ITER_FREQUENCY': -1,
+                'DIR': './checkpoints',
+                'LATEST_CHECKPOINT_RESUME_FILE_NUM': 1,
+                'OVERWRITE_EXISTING': False},
+ 'CLUSTERFIT': {'CLUSTER_BACKEND': 'faiss',
+                'FEATURES': {'DATASET_NAME': '',
+                             'DATA_PARTITION': 'TRAIN',
+                             'LAYER_NAME': ''},
+                'NUM_CLUSTERS': 16000,
+                'N_ITER': 50},
+ 'DATA': {'ENABLE_ASYNC_GPU_COPY': True,
+          'NUM_DATALOADER_WORKERS': 5,
+          'PIN_MEMORY': True,
+          'TEST': {'BATCHSIZE_PER_REPLICA': 2,
+                   'COLLATE_FUNCTION': 'default_collate',
+                   'COPY_DESTINATION_DIR': '/tmp/imagenet1k/',
+                   'COPY_TO_LOCAL_DISK': False,
+                   'DATASET_NAMES': ['dummy_data_folder'],
+                   'DATA_LIMIT': -1,
+                   'DATA_PATHS': [],
+                   'DATA_SOURCES': ['disk_folder'],
+                   'DEFAULT_GRAY_IMG_SIZE': 224,
+                   'DROP_LAST': False,
+                   'ENABLE_QUEUE_DATASET': False,
+                   'INPUT_KEY_NAMES': ['data'],
+                   'LABEL_PATHS': [],
+                   'LABEL_SOURCES': ['disk_folder'],
+                   'LABEL_TYPE': 'standard',
+                   'MMAP_MODE': False,
+                   'TARGET_KEY_NAMES': ['label'],
+                   'TRANSFORMS': [{'name': 'Resize', 'size': 256},
+                                  {'name': 'CenterCrop', 'size': 224},
+                                  {'name': 'ToTensor'},
+                                  {'mean': [0.485, 0.456, 0.406],
+                                   'name': 'Normalize',
+                                   'std': [0.229, 0.224, 0.225]}],
+                   'USE_STATEFUL_DISTRIBUTED_SAMPLER': False},
+          'TRAIN': {'BATCHSIZE_PER_REPLICA': 2,
+                    'COLLATE_FUNCTION': 'default_collate',
+                    'COPY_DESTINATION_DIR': '/tmp/imagenet1k/',
+                    'COPY_TO_LOCAL_DISK': False,
+                    'DATASET_NAMES': ['dummy_data_folder'],
+                    'DATA_LIMIT': -1,
+                    'DATA_PATHS': [],
+                    'DATA_SOURCES': ['disk_folder'],
+                    'DEFAULT_GRAY_IMG_SIZE': 224,
+                    'DROP_LAST': False,
+                    'ENABLE_QUEUE_DATASET': False,
+                    'INPUT_KEY_NAMES': ['data'],
+                    'LABEL_PATHS': [],
+                    'LABEL_SOURCES': ['disk_folder'],
+                    'LABEL_TYPE': 'standard',
+                    'MMAP_MODE': False,
+                    'TARGET_KEY_NAMES': ['label'],
+                    'TRANSFORMS': [{'name': 'Resize', 'size': 256},
+                                   {'name': 'CenterCrop', 'size': 224},
+                                   {'name': 'ToTensor'},
+                                   {'mean': [0.485, 0.456, 0.406],
+                                    'name': 'Normalize',
+                                    'std': [0.229, 0.224, 0.225]}],
+                    'USE_STATEFUL_DISTRIBUTED_SAMPLER': False}},
+ 'DISTRIBUTED': {'BACKEND': 'nccl',
+                 'BROADCAST_BUFFERS': True,
+                 'INIT_METHOD': 'tcp',
+                 'MANUAL_GRADIENT_REDUCTION': False,
+                 'NCCL_DEBUG': False,
+                 'NUM_NODES': 1,
+                 'NUM_PROC_PER_NODE': 1,
+                 'RUN_ID': 'auto'},
+ 'IMG_RETRIEVAL': {'DATASET_PATH': '',
+                   'EVAL_BINARY_PATH': '',
+                   'EVAL_DATASET_NAME': 'Paris',
+                   'FEATS_PROCESSING_TYPE': '',
+                   'GEM_POOL_POWER': 4.0,
+                   'N_PCA': 512,
+                   'RESIZE_IMG': 1024,
+                   'SHOULD_TRAIN_PCA_OR_WHITENING': True,
+                   'SPATIAL_LEVELS': 3,
+                   'TEMP_DIR': '/tmp/instance_retrieval/',
+                   'TRAIN_DATASET_NAME': 'Oxford',
+                   'WHITEN_IMG_LIST': ''},
+ 'LOG_FREQUENCY': 10,
+ 'LOSS': {'CrossEntropyLoss': {'ignore_index': -1},
+          'cross_entropy_multiple_output_single_target': {'ignore_index': -1,
+                                                          'normalize_output': False,
+                                                          'reduction': 'mean',
+                                                          'weight': None},
+          'deepclusterv2_loss': {'BATCHSIZE_PER_REPLICA': 256,
+                                 'DROP_LAST': True,
+                                 'kmeans_iters': 10,
+                                 'memory_params': {'crops_for_mb': [0],
+                                                   'embedding_dim': 128},
+                                 'num_clusters': [3000, 3000, 3000],
+                                 'num_crops': 2,
+                                 'num_train_samples': -1,
+                                 'temperature': 0.1},
+          'moco_loss': {'embedding_dim': 128,
+                        'momentum': 0.999,
+                        'queue_size': 65536,
+                        'temperature': 0.2},
+          'multicrop_simclr_info_nce_loss': {'buffer_params': {'effective_batch_size': 4096,
+                                                               'embedding_dim': 128,
+                                                               'world_size': 64},
+                                             'num_crops': 2,
+                                             'temperature': 0.1},
+          'name': 'CrossEntropyLoss',
+          'nce_loss_with_memory': {'loss_type': 'nce',
+                                   'loss_weights': [1.0],
+                                   'memory_params': {'embedding_dim': 128,
+                                                     'memory_size': -1,
+                                                     'momentum': 0.5,
+                                                     'norm_init': True,
+                                                     'update_mem_on_forward': True},
+                                   'negative_sampling_params': {'num_negatives': 16000,
+                                                                'type': 'random'},
+                                   'norm_constant': -1,
+                                   'norm_embedding': True,
+                                   'num_train_samples': -1,
+                                   'temperature': 0.07,
+                                   'update_mem_with_emb_index': -100},
+          'simclr_info_nce_loss': {'buffer_params': {'effective_batch_size': 4096,
+                                                     'embedding_dim': 128,
+                                                     'world_size': 64},
+                                   'temperature': 0.1},
+          'swav_loss': {'crops_for_assign': [0, 1],
+                        'embedding_dim': 128,
+                        'epsilon': 0.05,
+                        'normalize_last_layer': True,
+                        'num_crops': 2,
+                        'num_iters': 3,
+                        'num_prototypes': [3000],
+                        'queue': {'local_queue_length': 0,
+                                  'queue_length': 0,
+                                  'start_iter': 0},
+                        'temperature': 0.1,
+                        'use_double_precision': False}},
+ 'MACHINE': {'DEVICE': 'gpu'},
+ 'METERS': {'accuracy_list_meter': {'meter_names': ['conv1',
+                                                    'res2',
+                                                    'res3',
+                                                    'res4',
+                                                    'res5',
+                                                    'res5avg'],
+                                    'num_meters': 6,
+                                    'topk_values': [1]}},
+ 'MODEL': {'ACTIVATION_CHECKPOINTING': {'NUM_ACTIVATION_CHECKPOINTING_SPLITS': 2,
+                                        'USE_ACTIVATION_CHECKPOINTING': False},
+           'AMP_PARAMS': {'AMP_ARGS': {'opt_level': 'O1'}, 'USE_AMP': False},
+           'FEATURE_EVAL_SETTINGS': {'EVAL_MODE_ON': True,
+                                     'EVAL_TRUNK_AND_HEAD': False,
+                                     'EXTRACT_TRUNK_FEATURES_ONLY': True,
+                                     'FREEZE_TRUNK_AND_HEAD': False,
+                                     'FREEZE_TRUNK_ONLY': True,
+                                     'LINEAR_EVAL_FEAT_POOL_OPS_MAP': [['conv1',
+                                                                        ['AvgPool2d',
+                                                                         [[10,
+                                                                           10],
+                                                                          10,
+                                                                          4]]],
+                                                                       ['res2',
+                                                                        ['AvgPool2d',
+                                                                         [[16,
+                                                                           16],
+                                                                          8,
+                                                                          0]]],
+                                                                       ['res3',
+                                                                        ['AvgPool2d',
+                                                                         [[13,
+                                                                           13],
+                                                                          5,
+                                                                          0]]],
+                                                                       ['res4',
+                                                                        ['AvgPool2d',
+                                                                         [[8,
+                                                                           8],
+                                                                          3,
+                                                                          0]]],
+                                                                       ['res5',
+                                                                        ['AvgPool2d',
+                                                                         [[6,
+                                                                           6],
+                                                                          1,
+                                                                          0]]],
+                                                                       ['res5avg',
+                                                                        ['Identity',
+                                                                         []]]],
+                                     'SHOULD_FLATTEN_FEATS': False},
+           'HEAD': {'BATCHNORM_EPS': 1e-05,
+                    'BATCHNORM_MOMENTUM': 0.1,
+                    'PARAMS': []},
+           'INPUT_TYPE': 'rgb',
+           'MODEL_COMPLEXITY': {'COMPUTE_COMPLEXITY': False,
+                                'INPUT_SHAPE': [3, 224, 224]},
+           'MULTI_INPUT_HEAD_MAPPING': [],
+           'NON_TRAINABLE_PARAMS': [],
+           'SYNC_BN_CONFIG': {'CONVERT_BN_TO_SYNC_BN': False,
+                              'GROUP_SIZE': -1,
+                              'SYNC_BN_TYPE': 'pytorch'},
+           'TEMP_FROZEN_PARAMS_ITER_MAP': [],
+           'TRUNK': {'NAME': 'resnet',
+                     'TRUNK_PARAMS': {'EFFICIENT_NETS': {},
+                                      'REGNETS': {},
+                                      'RESNETS': {'DEPTH': 50,
+                                                  'GROUPS': 1,
+                                                  'LAYER4_STRIDE': 2,
+                                                  'NORM': 'BatchNorm',
+                                                  'WIDTH_MULTIPLIER': 1,
+                                                  'WIDTH_PER_GROUP': 64,
+                                                  'ZERO_INIT_RESIDUAL': False}}},
+           'WEIGHTS_INIT': {'APPEND_PREFIX': 'trunk.base_model._feature_blocks.',
+                            'PARAMS_FILE': '/content/resnet50-19c8e357.pth',
+                            'REMOVE_PREFIX': '',
+                            'SKIP_LAYERS': ['num_batches_tracked'],
+                            'STATE_DICT_KEY_NAME': ''}},
+ 'MONITOR_PERF_STATS': False,
+ 'MULTI_PROCESSING_METHOD': 'forkserver',
+ 'NEAREST_NEIGHBOR': {'L2_NORM_FEATS': False, 'SIGMA': 0.1, 'TOPK': 200},
+ 'OPTIMIZER': {'larc_config': {'clip': False,
+                               'eps': 1e-08,
+                               'trust_coefficient': 0.001},
+               'momentum': 0.9,
+               'name': 'sgd',
+               'nesterov': False,
+               'num_epochs': 90,
+               'param_schedulers': {'lr': {'auto_lr_scaling': {'auto_scale': False,
+                                                               'base_lr_batch_size': 256,
+                                                               'base_value': 0.1},
+                                           'end_value': 0.0,
+                                           'interval_scaling': [],
+                                           'lengths': [],
+                                           'milestones': [30, 60],
+                                           'name': 'multistep',
+                                           'schedulers': [],
+                                           'start_value': 0.1,
+                                           'update_interval': 'epoch',
+                                           'value': 0.1,
+                                           'values': [0.1, 0.01, 0.001]}},
+               'regularize_bias': True,
+               'regularize_bn': False,
+               'use_larc': False,
+               'weight_decay': 0.0001},
+ 'PERF_STAT_FREQUENCY': -1,
+ 'ROLLING_BTIME_FREQ': -1,
+ 'SEED_VALUE': 0,
+ 'SVM': {'cls_list': [],
+         'costs': {'base': -1.0,
+                   'costs_list': [0.1, 0.01],
+                   'power_range': [4, 20]},
+         'cross_val_folds': 3,
+         'dual': True,
+         'force_retrain': False,
+         'loss': 'squared_hinge',
+         'low_shot': {'dataset_name': 'voc',
+                      'k_values': [1, 2, 4, 8, 16, 32, 64, 96],
+                      'sample_inds': [1, 2, 3, 4, 5]},
+         'max_iter': 2000,
+         'normalize': True,
+         'penalty': 'l2'},
+ 'TENSORBOARD_SETUP': {'EXPERIMENT_LOG_DIR': '',
+                       'FLUSH_EVERY_N_MIN': 5,
+                       'LOG_ACTIVATIONS': True,
+                       'LOG_DIR': '.',
+                       'USE_TENSORBOARD': False},
+ 'TEST_EVERY_NUM_EPOCH': 1,
+ 'TEST_MODEL': True,
+ 'TEST_ONLY': False,
+ 'TRAINER': {'TRAIN_STEP_NAME': 'standard_train_step'},
+ 'VERBOSE': False}
+INFO 2021-01-13 21:41:13,210 extract_features.py:  35: System config:
+-------------------  ---------------------------------------------------------------
+sys.platform         linux
+Python               3.6.9 (default, Oct  8 2020, 12:12:24) [GCC 8.4.0]
+numpy                1.19.5
+Pillow               7.0.0
+vissl                0.1.3 @/usr/local/lib/python3.6/dist-packages/vissl
+GPU available        True
+GPU 0                Tesla T4
+CUDA_HOME            /usr/local/cuda
+torchvision          0.6.1+cu101 @/usr/local/lib/python3.6/dist-packages/torchvision
+hydra                1.0.5 @/usr/local/lib/python3.6/dist-packages/hydra
+classy_vision        0.5.0 @/usr/local/lib/python3.6/dist-packages/classy_vision
+tensorboard          1.15.0
+apex                 0.1 @/usr/local/lib/python3.6/dist-packages/apex
+cv2                  4.1.2
+PyTorch              1.5.1+cu101 @/usr/local/lib/python3.6/dist-packages/torch
+PyTorch debug build  False
+-------------------  ---------------------------------------------------------------
+PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2019.0.5 Product Build 20190808 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v0.21.1 (Git Hash 7d2fd500bc78936d1d648ca713b901012f470dbc)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 10.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 7.6.3
+  - Magma 2.5.2
+  - Build settings: BLAS=MKL, BUILD_TYPE=Release, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -fopenmp -DNDEBUG -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DUSE_INTERNAL_THREADPOOL_IMPL -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, USE_CUDA=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, USE_STATIC_DISPATCH=OFF, 
+
+CPU info:
+-------------------  ------------------------------
+Architecture         x86_64
+CPU op-mode(s)       32-bit, 64-bit
+Byte Order           Little Endian
+CPU(s)               2
+On-line CPU(s) list  0,1
+Thread(s) per core   2
+Core(s) per socket   1
+Socket(s)            1
+NUMA node(s)         1
+Vendor ID            GenuineIntel
+CPU family           6
+Model                79
+Model name           Intel(R) Xeon(R) CPU @ 2.20GHz
+Stepping             0
+CPU MHz              2199.998
+BogoMIPS             4399.99
+Hypervisor vendor    KVM
+Virtualization type  full
+L1d cache            32K
+L1i cache            32K
+L2 cache             256K
+L3 cache             56320K
+NUMA node0 CPU(s)    0,1
+-------------------  ------------------------------
+INFO 2021-01-13 21:41:13,211 train_task.py: 121: Setting amp args: None
+INFO 2021-01-13 21:41:13,211 trainer_main.py:  61: Using Distributed init method: tcp://localhost:45459, world_size: 1, rank: 0
+INFO 2021-01-13 21:41:13,212 trainer_main.py:  82: | initialized host b596c200d6c8 as rank 0 (0)
+INFO 2021-01-13 21:41:13,212 ssl_dataset.py:  68: Rank: 0 Data files:
+['/content/dummy_data/val']
+INFO 2021-01-13 21:41:13,212 ssl_dataset.py:  69: Rank: 0 Label files:
+['/content/dummy_data/val']
+INFO 2021-01-13 21:41:13,213 disk_dataset.py:  77: Loaded 10 samples from folder /content/dummy_data/val
+INFO 2021-01-13 21:41:13,213 ssl_dataset.py:  68: Rank: 0 Data files:
+['/content/dummy_data/train']
+INFO 2021-01-13 21:41:13,213 ssl_dataset.py:  69: Rank: 0 Label files:
+['/content/dummy_data/train']
+INFO 2021-01-13 21:41:13,213 disk_dataset.py:  77: Loaded 10 samples from folder /content/dummy_data/train
+INFO 2021-01-13 21:41:13,213 misc.py:  68: Set start method of multiprocessing to forkserver
+INFO 2021-01-13 21:41:13,213 __init__.py:  64: Created the Distributed Sampler....
+INFO 2021-01-13 21:41:13,213 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 21:41:13,214 __init__.py: 106: Wrapping the dataloader to async device copies
+INFO 2021-01-13 21:41:16,882 misc.py:  68: Set start method of multiprocessing to forkserver
+INFO 2021-01-13 21:41:16,882 __init__.py:  64: Created the Distributed Sampler....
+INFO 2021-01-13 21:41:16,882 __init__.py:  52: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
+INFO 2021-01-13 21:41:16,882 __init__.py: 106: Wrapping the dataloader to async device copies
+INFO 2021-01-13 21:41:16,883 train_task.py: 280: Building model....
+INFO 2021-01-13 21:41:16,883 feature_extractor.py:  23: Creating Feature extractor trunk...
+INFO 2021-01-13 21:41:16,883 resnext.py:  58: ResNeXT trunk, supports activation checkpointing. Deactivated
+INFO 2021-01-13 21:41:16,883 resnext.py:  72: Building model: ResNeXt50-1x64d-w1-BatchNorm2d
+INFO 2021-01-13 21:41:17,447 feature_extractor.py:  46: Freezing model trunk...
+INFO 2021-01-13 21:41:17,447 train_task.py: 298: config.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY=True, will freeze trunk...
+INFO 2021-01-13 21:41:17,447 base_ssl_model.py: 151: Freezing model trunk...
+INFO 2021-01-13 21:41:17,448 train_task.py: 253: Initializing model from: /content/resnet50-19c8e357.pth
+INFO 2021-01-13 21:41:17,704 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.conv1.weight                              of shape: torch.Size([64, 3, 7, 7]) from checkpoint
+INFO 2021-01-13 21:41:17,704 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.bn1.weight                                of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,704 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.bn1.bias                                  of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,704 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.bn1.running_mean                          of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.bn1.running_var                           of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.conv1.weight                     of shape: torch.Size([64, 64, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn1.weight                       of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn1.bias                         of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn1.running_mean                 of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn1.running_var                  of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.0.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.conv2.weight                     of shape: torch.Size([64, 64, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn2.weight                       of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn2.bias                         of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn2.running_mean                 of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn2.running_var                  of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.0.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,705 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.conv3.weight                     of shape: torch.Size([256, 64, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn3.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn3.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn3.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.bn3.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.0.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.downsample.0.weight              of shape: torch.Size([256, 64, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.downsample.1.weight              of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.downsample.1.bias                of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.downsample.1.running_mean        of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.0.downsample.1.running_var         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.0.downsample.1.num_batches_tracked
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.conv1.weight                     of shape: torch.Size([64, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn1.weight                       of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn1.bias                         of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn1.running_mean                 of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn1.running_var                  of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,706 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.1.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.conv2.weight                     of shape: torch.Size([64, 64, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn2.weight                       of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn2.bias                         of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn2.running_mean                 of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn2.running_var                  of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.1.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.conv3.weight                     of shape: torch.Size([256, 64, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn3.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn3.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn3.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.1.bn3.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.1.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,707 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.conv1.weight                     of shape: torch.Size([64, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn1.weight                       of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn1.bias                         of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn1.running_mean                 of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn1.running_var                  of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.2.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.conv2.weight                     of shape: torch.Size([64, 64, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn2.weight                       of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn2.bias                         of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn2.running_mean                 of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn2.running_var                  of shape: torch.Size([64]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.2.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.conv3.weight                     of shape: torch.Size([256, 64, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn3.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn3.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn3.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer1.2.bn3.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,708 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer1.2.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.conv1.weight                     of shape: torch.Size([128, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn1.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn1.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn1.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn1.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.0.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.conv2.weight                     of shape: torch.Size([128, 128, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn2.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn2.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn2.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn2.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.0.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,709 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.conv3.weight                     of shape: torch.Size([512, 128, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn3.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn3.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn3.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.bn3.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.0.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.downsample.0.weight              of shape: torch.Size([512, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.downsample.1.weight              of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.downsample.1.bias                of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.downsample.1.running_mean        of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.0.downsample.1.running_var         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.0.downsample.1.num_batches_tracked
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.conv1.weight                     of shape: torch.Size([128, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,710 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn1.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn1.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn1.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn1.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.1.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.conv2.weight                     of shape: torch.Size([128, 128, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn2.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn2.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,711 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn2.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,773 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn2.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,773 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.1.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,774 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.conv3.weight                     of shape: torch.Size([512, 128, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,774 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn3.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,774 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn3.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,775 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn3.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,775 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.1.bn3.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,775 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.1.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,775 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.conv1.weight                     of shape: torch.Size([128, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,776 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn1.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,776 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn1.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,776 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn1.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,776 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn1.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,777 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.2.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,777 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.conv2.weight                     of shape: torch.Size([128, 128, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,777 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn2.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,777 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn2.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,777 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn2.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,777 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn2.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,777 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.2.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.conv3.weight                     of shape: torch.Size([512, 128, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn3.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn3.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn3.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.2.bn3.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.2.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.conv1.weight                     of shape: torch.Size([128, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn1.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn1.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn1.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn1.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,778 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.3.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.conv2.weight                     of shape: torch.Size([128, 128, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn2.weight                       of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn2.bias                         of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn2.running_mean                 of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn2.running_var                  of shape: torch.Size([128]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.3.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.conv3.weight                     of shape: torch.Size([512, 128, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn3.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn3.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn3.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer2.3.bn3.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer2.3.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,779 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.conv1.weight                     of shape: torch.Size([256, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,780 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn1.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,780 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn1.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,780 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn1.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,780 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn1.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,780 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.0.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,780 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.conv2.weight                     of shape: torch.Size([256, 256, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,780 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn2.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn2.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn2.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn2.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.0.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.conv3.weight                     of shape: torch.Size([1024, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn3.weight                       of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn3.bias                         of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn3.running_mean                 of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.bn3.running_var                  of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,781 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.0.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.downsample.0.weight              of shape: torch.Size([1024, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.downsample.1.weight              of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.downsample.1.bias                of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.downsample.1.running_mean        of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.0.downsample.1.running_var         of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.0.downsample.1.num_batches_tracked
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.conv1.weight                     of shape: torch.Size([256, 1024, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,782 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn1.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn1.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn1.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn1.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.1.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.conv2.weight                     of shape: torch.Size([256, 256, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn2.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn2.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,783 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn2.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn2.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.1.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.conv3.weight                     of shape: torch.Size([1024, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn3.weight                       of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn3.bias                         of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn3.running_mean                 of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.1.bn3.running_var                  of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.1.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,784 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.conv1.weight                     of shape: torch.Size([256, 1024, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn1.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn1.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn1.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn1.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.2.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.conv2.weight                     of shape: torch.Size([256, 256, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn2.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn2.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,785 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn2.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn2.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.2.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.conv3.weight                     of shape: torch.Size([1024, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn3.weight                       of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn3.bias                         of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn3.running_mean                 of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.2.bn3.running_var                  of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.2.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,786 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.conv1.weight                     of shape: torch.Size([256, 1024, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn1.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn1.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn1.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn1.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.3.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.conv2.weight                     of shape: torch.Size([256, 256, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn2.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,787 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn2.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,878 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn2.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,878 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn2.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,878 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.3.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,879 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.conv3.weight                     of shape: torch.Size([1024, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,879 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn3.weight                       of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,879 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn3.bias                         of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,880 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn3.running_mean                 of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,880 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.3.bn3.running_var                  of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,880 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.3.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,881 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.conv1.weight                     of shape: torch.Size([256, 1024, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,881 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn1.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,881 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn1.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,881 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn1.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,881 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn1.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,881 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.4.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,882 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.conv2.weight                     of shape: torch.Size([256, 256, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,882 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn2.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,882 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn2.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,882 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn2.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,882 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn2.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,882 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.4.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,882 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.conv3.weight                     of shape: torch.Size([1024, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,883 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn3.weight                       of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,883 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn3.bias                         of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,883 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn3.running_mean                 of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,883 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.4.bn3.running_var                  of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,883 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.4.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,883 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.conv1.weight                     of shape: torch.Size([256, 1024, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,883 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn1.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,884 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn1.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,884 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn1.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,884 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn1.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,884 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.5.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,884 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.conv2.weight                     of shape: torch.Size([256, 256, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,884 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn2.weight                       of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,884 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn2.bias                         of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn2.running_mean                 of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn2.running_var                  of shape: torch.Size([256]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.5.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.conv3.weight                     of shape: torch.Size([1024, 256, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn3.weight                       of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn3.bias                         of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn3.running_mean                 of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer3.5.bn3.running_var                  of shape: torch.Size([1024]) from checkpoint
+INFO 2021-01-13 21:41:17,885 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer3.5.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,886 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.conv1.weight                     of shape: torch.Size([512, 1024, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,886 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn1.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,886 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn1.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,886 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn1.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,886 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn1.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,886 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.0.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,888 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.conv2.weight                     of shape: torch.Size([512, 512, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,888 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn2.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,889 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn2.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,889 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn2.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,889 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn2.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,889 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.0.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,890 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.conv3.weight                     of shape: torch.Size([2048, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,890 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn3.weight                       of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,890 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn3.bias                         of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,890 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn3.running_mean                 of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,890 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.bn3.running_var                  of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,890 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.0.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,892 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.downsample.0.weight              of shape: torch.Size([2048, 1024, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,892 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.downsample.1.weight              of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,892 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.downsample.1.bias                of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,892 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.downsample.1.running_mean        of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,892 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.0.downsample.1.running_var         of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,892 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.0.downsample.1.num_batches_tracked
+INFO 2021-01-13 21:41:17,893 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.conv1.weight                     of shape: torch.Size([512, 2048, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,893 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn1.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,893 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn1.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,893 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn1.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,893 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn1.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,893 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.1.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,895 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.conv2.weight                     of shape: torch.Size([512, 512, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,895 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn2.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,895 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn2.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,895 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn2.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,895 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn2.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,895 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.1.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,896 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.conv3.weight                     of shape: torch.Size([2048, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,896 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn3.weight                       of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,896 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn3.bias                         of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,896 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn3.running_mean                 of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,897 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.1.bn3.running_var                  of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,897 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.1.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,897 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.conv1.weight                     of shape: torch.Size([512, 2048, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,898 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn1.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,898 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn1.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,898 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn1.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,898 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn1.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,898 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.2.bn1.num_batches_tracked
+INFO 2021-01-13 21:41:17,900 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.conv2.weight                     of shape: torch.Size([512, 512, 3, 3]) from checkpoint
+INFO 2021-01-13 21:41:17,900 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn2.weight                       of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,900 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn2.bias                         of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,900 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn2.running_mean                 of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,900 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn2.running_var                  of shape: torch.Size([512]) from checkpoint
+INFO 2021-01-13 21:41:17,900 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.2.bn2.num_batches_tracked
+INFO 2021-01-13 21:41:17,901 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.conv3.weight                     of shape: torch.Size([2048, 512, 1, 1]) from checkpoint
+INFO 2021-01-13 21:41:17,901 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn3.weight                       of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,901 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn3.bias                         of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,901 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn3.running_mean                 of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,901 checkpoint.py: 405: Loaded: trunk.base_model._feature_blocks.layer4.2.bn3.running_var                  of shape: torch.Size([2048]) from checkpoint
+INFO 2021-01-13 21:41:17,901 checkpoint.py: 377: Ignored layer:	trunk.base_model._feature_blocks.layer4.2.bn3.num_batches_tracked
+INFO 2021-01-13 21:41:17,901 checkpoint.py: 420: Extra layers not loaded from checkpoint: ['trunk.base_model._feature_blocks.fc.weight', 'trunk.base_model._feature_blocks.fc.bias']
+INFO 2021-01-13 21:41:17,945 trainer_main.py: 214: Model is:
+ Classy &lt;class 'vissl.models.base_ssl_model.BaseSSLMultiInputOutputModel'&gt;:
+BaseSSLMultiInputOutputModel(
+  (_heads): ModuleDict()
+  (trunk): FeatureExtractorModel(
+    (base_model): ResNeXt(
+      (_feature_blocks): ModuleDict(
+        (conv1): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv1_relu): ReLU(inplace=True)
+        (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+        (layer1): Sequential(
+          (0): Bottleneck(
+            (conv1): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+            (downsample): Sequential(
+              (0): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+          (1): Bottleneck(
+            (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (2): Bottleneck(
+            (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+        )
+        (layer2): Sequential(
+          (0): Bottleneck(
+            (conv1): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+            (downsample): Sequential(
+              (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+              (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+          (1): Bottleneck(
+            (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (2): Bottleneck(
+            (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (3): Bottleneck(
+            (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+        )
+        (layer3): Sequential(
+          (0): Bottleneck(
+            (conv1): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+            (downsample): Sequential(
+              (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+              (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+          (1): Bottleneck(
+            (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (2): Bottleneck(
+            (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (3): Bottleneck(
+            (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (4): Bottleneck(
+            (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (5): Bottleneck(
+            (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+        )
+        (layer4): Sequential(
+          (0): Bottleneck(
+            (conv1): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(&lt;SUPPORTED_L4_STRIDE.two: 2&gt;, &lt;SUPPORTED_L4_STRIDE.two: 2&gt;), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+            (downsample): Sequential(
+              (0): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(&lt;SUPPORTED_L4_STRIDE.two: 2&gt;, &lt;SUPPORTED_L4_STRIDE.two: 2&gt;), bias=False)
+              (1): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+          (1): Bottleneck(
+            (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+          (2): Bottleneck(
+            (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (relu): ReLU(inplace=True)
+          )
+        )
+        (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
+        (flatten): Flatten()
+      )
+    )
+    (feature_pool_ops): ModuleList(
+      (0): AvgPool2d(kernel_size=[10, 10], stride=10, padding=4)
+      (1): AvgPool2d(kernel_size=[16, 16], stride=8, padding=0)
+      (2): AvgPool2d(kernel_size=[13, 13], stride=5, padding=0)
+      (3): AvgPool2d(kernel_size=[8, 8], stride=3, padding=0)
+      (4): AvgPool2d(kernel_size=[6, 6], stride=1, padding=0)
+      (5): Identity()
+    )
+  )
+  (heads): ModuleList()
+)
+INFO 2021-01-13 21:41:17,983 trainer_main.py: 225: Extracting features for partition: test
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+INFO 2021-01-13 21:41:24,020 trainer_main.py: 252: Model set to eval mode during feature extraction...
+INFO 2021-01-13 21:41:24,445 trainer_main.py: 230: Done getting features for partition: test
+INFO 2021-01-13 21:41:24,445 trainer_main.py: 225: Extracting features for partition: train
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+INFO 2021-01-13 21:41:30,399 trainer_main.py: 252: Model set to eval mode during feature extraction...
+INFO 2021-01-13 21:41:30,494 trainer_main.py: 230: Done getting features for partition: train
+INFO 2021-01-13 21:41:30,574 extract_features.py:  42: ============== Split: test =======================
+INFO 2021-01-13 21:41:30,574 extract_features.py:  54: Saving extracted features: conv1 (10, 9216) to: ./checkpoints/rank0_test_conv1_features.npy
+INFO 2021-01-13 21:41:30,574 io.py:  16: Saving data to file: ./checkpoints/rank0_test_conv1_features.npy
+INFO 2021-01-13 21:41:30,575 io.py:  30: Saved data to file: ./checkpoints/rank0_test_conv1_features.npy
+INFO 2021-01-13 21:41:30,575 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_test_conv1_targets.npy
+INFO 2021-01-13 21:41:30,575 io.py:  16: Saving data to file: ./checkpoints/rank0_test_conv1_targets.npy
+INFO 2021-01-13 21:41:30,576 io.py:  30: Saved data to file: ./checkpoints/rank0_test_conv1_targets.npy
+INFO 2021-01-13 21:41:30,576 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_test_conv1_inds.npy
+INFO 2021-01-13 21:41:30,576 io.py:  16: Saving data to file: ./checkpoints/rank0_test_conv1_inds.npy
+INFO 2021-01-13 21:41:30,576 io.py:  30: Saved data to file: ./checkpoints/rank0_test_conv1_inds.npy
+INFO 2021-01-13 21:41:30,576 extract_features.py:  54: Saving extracted features: res2 (10, 9216) to: ./checkpoints/rank0_test_res2_features.npy
+INFO 2021-01-13 21:41:30,576 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res2_features.npy
+INFO 2021-01-13 21:41:30,577 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res2_features.npy
+INFO 2021-01-13 21:41:30,577 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_test_res2_targets.npy
+INFO 2021-01-13 21:41:30,577 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res2_targets.npy
+INFO 2021-01-13 21:41:30,577 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res2_targets.npy
+INFO 2021-01-13 21:41:30,578 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_test_res2_inds.npy
+INFO 2021-01-13 21:41:30,578 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res2_inds.npy
+INFO 2021-01-13 21:41:30,578 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res2_inds.npy
+INFO 2021-01-13 21:41:30,578 extract_features.py:  54: Saving extracted features: res3 (10, 8192) to: ./checkpoints/rank0_test_res3_features.npy
+INFO 2021-01-13 21:41:30,578 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res3_features.npy
+INFO 2021-01-13 21:41:30,579 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res3_features.npy
+INFO 2021-01-13 21:41:30,579 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_test_res3_targets.npy
+INFO 2021-01-13 21:41:30,579 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res3_targets.npy
+INFO 2021-01-13 21:41:30,579 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res3_targets.npy
+INFO 2021-01-13 21:41:30,579 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_test_res3_inds.npy
+INFO 2021-01-13 21:41:30,579 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res3_inds.npy
+INFO 2021-01-13 21:41:30,579 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res3_inds.npy
+INFO 2021-01-13 21:41:30,580 extract_features.py:  54: Saving extracted features: res4 (10, 9216) to: ./checkpoints/rank0_test_res4_features.npy
+INFO 2021-01-13 21:41:30,580 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res4_features.npy
+INFO 2021-01-13 21:41:30,580 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res4_features.npy
+INFO 2021-01-13 21:41:30,580 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_test_res4_targets.npy
+INFO 2021-01-13 21:41:30,580 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res4_targets.npy
+INFO 2021-01-13 21:41:30,581 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res4_targets.npy
+INFO 2021-01-13 21:41:30,581 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_test_res4_inds.npy
+INFO 2021-01-13 21:41:30,581 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res4_inds.npy
+INFO 2021-01-13 21:41:30,581 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res4_inds.npy
+INFO 2021-01-13 21:41:30,581 extract_features.py:  54: Saving extracted features: res5 (10, 8192) to: ./checkpoints/rank0_test_res5_features.npy
+INFO 2021-01-13 21:41:30,581 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res5_features.npy
+INFO 2021-01-13 21:41:30,582 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res5_features.npy
+INFO 2021-01-13 21:41:30,582 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_test_res5_targets.npy
+INFO 2021-01-13 21:41:30,582 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res5_targets.npy
+INFO 2021-01-13 21:41:30,582 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res5_targets.npy
+INFO 2021-01-13 21:41:30,582 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_test_res5_inds.npy
+INFO 2021-01-13 21:41:30,582 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res5_inds.npy
+INFO 2021-01-13 21:41:30,583 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res5_inds.npy
+INFO 2021-01-13 21:41:30,583 extract_features.py:  54: Saving extracted features: res5avg (10, 2048) to: ./checkpoints/rank0_test_res5avg_features.npy
+INFO 2021-01-13 21:41:30,583 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res5avg_features.npy
+INFO 2021-01-13 21:41:30,583 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res5avg_features.npy
+INFO 2021-01-13 21:41:30,583 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_test_res5avg_targets.npy
+INFO 2021-01-13 21:41:30,583 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res5avg_targets.npy
+INFO 2021-01-13 21:41:30,584 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res5avg_targets.npy
+INFO 2021-01-13 21:41:30,584 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_test_res5avg_inds.npy
+INFO 2021-01-13 21:41:30,584 io.py:  16: Saving data to file: ./checkpoints/rank0_test_res5avg_inds.npy
+INFO 2021-01-13 21:41:30,584 io.py:  30: Saved data to file: ./checkpoints/rank0_test_res5avg_inds.npy
+INFO 2021-01-13 21:41:30,584 extract_features.py:  42: ============== Split: train =======================
+INFO 2021-01-13 21:41:30,584 extract_features.py:  54: Saving extracted features: conv1 (10, 9216) to: ./checkpoints/rank0_train_conv1_features.npy
+INFO 2021-01-13 21:41:30,584 io.py:  16: Saving data to file: ./checkpoints/rank0_train_conv1_features.npy
+INFO 2021-01-13 21:41:30,585 io.py:  30: Saved data to file: ./checkpoints/rank0_train_conv1_features.npy
+INFO 2021-01-13 21:41:30,585 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_train_conv1_targets.npy
+INFO 2021-01-13 21:41:30,585 io.py:  16: Saving data to file: ./checkpoints/rank0_train_conv1_targets.npy
+INFO 2021-01-13 21:41:30,585 io.py:  30: Saved data to file: ./checkpoints/rank0_train_conv1_targets.npy
+INFO 2021-01-13 21:41:30,585 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_train_conv1_inds.npy
+INFO 2021-01-13 21:41:30,585 io.py:  16: Saving data to file: ./checkpoints/rank0_train_conv1_inds.npy
+INFO 2021-01-13 21:41:30,586 io.py:  30: Saved data to file: ./checkpoints/rank0_train_conv1_inds.npy
+INFO 2021-01-13 21:41:30,586 extract_features.py:  54: Saving extracted features: res2 (10, 9216) to: ./checkpoints/rank0_train_res2_features.npy
+INFO 2021-01-13 21:41:30,586 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res2_features.npy
+INFO 2021-01-13 21:41:30,586 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res2_features.npy
+INFO 2021-01-13 21:41:30,586 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_train_res2_targets.npy
+INFO 2021-01-13 21:41:30,586 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res2_targets.npy
+INFO 2021-01-13 21:41:30,587 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res2_targets.npy
+INFO 2021-01-13 21:41:30,587 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_train_res2_inds.npy
+INFO 2021-01-13 21:41:30,587 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res2_inds.npy
+INFO 2021-01-13 21:41:30,587 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res2_inds.npy
+INFO 2021-01-13 21:41:30,587 extract_features.py:  54: Saving extracted features: res3 (10, 8192) to: ./checkpoints/rank0_train_res3_features.npy
+INFO 2021-01-13 21:41:30,587 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res3_features.npy
+INFO 2021-01-13 21:41:30,588 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res3_features.npy
+INFO 2021-01-13 21:41:30,588 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_train_res3_targets.npy
+INFO 2021-01-13 21:41:30,588 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res3_targets.npy
+INFO 2021-01-13 21:41:30,588 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res3_targets.npy
+INFO 2021-01-13 21:41:30,588 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_train_res3_inds.npy
+INFO 2021-01-13 21:41:30,589 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res3_inds.npy
+INFO 2021-01-13 21:41:30,589 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res3_inds.npy
+INFO 2021-01-13 21:41:30,589 extract_features.py:  54: Saving extracted features: res4 (10, 9216) to: ./checkpoints/rank0_train_res4_features.npy
+INFO 2021-01-13 21:41:30,589 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res4_features.npy
+INFO 2021-01-13 21:41:30,590 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res4_features.npy
+INFO 2021-01-13 21:41:30,590 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_train_res4_targets.npy
+INFO 2021-01-13 21:41:30,590 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res4_targets.npy
+INFO 2021-01-13 21:41:30,590 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res4_targets.npy
+INFO 2021-01-13 21:41:30,590 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_train_res4_inds.npy
+INFO 2021-01-13 21:41:30,590 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res4_inds.npy
+INFO 2021-01-13 21:41:30,590 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res4_inds.npy
+INFO 2021-01-13 21:41:30,590 extract_features.py:  54: Saving extracted features: res5 (10, 8192) to: ./checkpoints/rank0_train_res5_features.npy
+INFO 2021-01-13 21:41:30,591 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res5_features.npy
+INFO 2021-01-13 21:41:30,591 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res5_features.npy
+INFO 2021-01-13 21:41:30,591 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_train_res5_targets.npy
+INFO 2021-01-13 21:41:30,591 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res5_targets.npy
+INFO 2021-01-13 21:41:30,592 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res5_targets.npy
+INFO 2021-01-13 21:41:30,592 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_train_res5_inds.npy
+INFO 2021-01-13 21:41:30,592 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res5_inds.npy
+INFO 2021-01-13 21:41:30,592 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res5_inds.npy
+INFO 2021-01-13 21:41:30,592 extract_features.py:  54: Saving extracted features: res5avg (10, 2048) to: ./checkpoints/rank0_train_res5avg_features.npy
+INFO 2021-01-13 21:41:30,592 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res5avg_features.npy
+INFO 2021-01-13 21:41:30,592 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res5avg_features.npy
+INFO 2021-01-13 21:41:30,593 extract_features.py:  60: Saving extracted targets: (10, 1) to: ./checkpoints/rank0_train_res5avg_targets.npy
+INFO 2021-01-13 21:41:30,593 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res5avg_targets.npy
+INFO 2021-01-13 21:41:30,593 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res5avg_targets.npy
+INFO 2021-01-13 21:41:30,593 extract_features.py:  66: Saving extracted indices: (10,) to: ./checkpoints/rank0_train_res5avg_inds.npy
+INFO 2021-01-13 21:41:30,593 io.py:  16: Saving data to file: ./checkpoints/rank0_train_res5avg_inds.npy
+INFO 2021-01-13 21:41:30,593 io.py:  30: Saved data to file: ./checkpoints/rank0_train_res5avg_inds.npy
+INFO 2021-01-13 21:41:30,593 extract_features.py:  70: All Done!
+INFO 2021-01-13 21:41:30,593 logger.py:  59: Shutting down loggers...
+INFO 2021-01-13 21:41:30,594 run_distributed_engines.py:  95: All Done!
+INFO 2021-01-13 21:41:30,595 logger.py:  59: Shutting down loggers...
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And we are done!! We have the features for layers <code>conv1, res2, res3, res4, res5, res5avg</code> in <code>checkpoints/*.npy</code>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [17]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ls</span> <span class="n">checkpoints</span><span class="o">/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>rank0_test_conv1_features.npy    rank0_train_conv1_features.npy
+rank0_test_conv1_inds.npy        rank0_train_conv1_inds.npy
+rank0_test_conv1_targets.npy     rank0_train_conv1_targets.npy
+rank0_test_res2_features.npy     rank0_train_res2_features.npy
+rank0_test_res2_inds.npy         rank0_train_res2_inds.npy
+rank0_test_res2_targets.npy      rank0_train_res2_targets.npy
+rank0_test_res3_features.npy     rank0_train_res3_features.npy
+rank0_test_res3_inds.npy         rank0_train_res3_inds.npy
+rank0_test_res3_targets.npy      rank0_train_res3_targets.npy
+rank0_test_res4_features.npy     rank0_train_res4_features.npy
+rank0_test_res4_inds.npy         rank0_train_res4_inds.npy
+rank0_test_res4_targets.npy      rank0_train_res4_targets.npy
+rank0_test_res5avg_features.npy  rank0_train_res5avg_features.npy
+rank0_test_res5avg_inds.npy      rank0_train_res5avg_inds.npy
+rank0_test_res5avg_targets.npy   rank0_train_res5avg_targets.npy
+rank0_test_res5_features.npy     rank0_train_res5_features.npy
+rank0_test_res5_inds.npy         rank0_train_res5_inds.npy
+rank0_test_res5_targets.npy      rank0_train_res5_targets.npy
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Loading-Pre-trained-models-in-VISSL">Loading Pre-trained models in VISSL<a class="anchor-link" href="#Loading-Pre-trained-models-in-VISSL">¶</a></h1><p>VISSL supports Torchvision models out of the box. Generally, for loading any non-VISSL model, one needs to correctly set the following configuration options:</p>
+<div class="highlight"><pre><span></span><span class="nt">WEIGHTS_INIT</span><span class="p">:</span>
+  <span class="c1"># path to the .torch weights files</span>
+  <span class="nt">PARAMS_FILE</span><span class="p">:</span> <span class="s">""</span>
+  <span class="c1"># name of the state dict. checkpoint = {"classy_state_dict": {layername:value}}. Options:</span>
+  <span class="c1">#   1. classy_state_dict - if model is trained and checkpointed with VISSL.</span>
+  <span class="c1">#      checkpoint = {"classy_state_dict": {layername:value}}</span>
+  <span class="c1">#   2. "" - if the model_file is not a nested dictionary for model weights i.e.</span>
+  <span class="c1">#      checkpoint = {layername:value}</span>
+  <span class="c1">#   3. key name that your model checkpoint uses for state_dict key name.</span>
+  <span class="c1">#      checkpoint = {"your_key_name": {layername:value}}</span>
+  <span class="nt">STATE_DICT_KEY_NAME</span><span class="p">:</span> <span class="s">"classy_state_dict"</span>
+  <span class="c1"># specify what layer should not be loaded. Layer names with this key are not copied</span>
+  <span class="c1"># By default, set to BatchNorm stats "num_batches_tracked" to be skipped.</span>
+  <span class="nt">SKIP_LAYERS</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">"num_batches_tracked"</span><span class="p p-Indicator">]</span>
+  <span class="c1">####### If loading a non-VISSL trained model, set the following two args carefully #########</span>
+  <span class="c1"># to make the checkpoint compatible with VISSL, if you need to remove some names</span>
+  <span class="c1"># from the checkpoint keys, specify the name</span>
+  <span class="nt">REMOVE_PREFIX</span><span class="p">:</span> <span class="s">""</span>
+  <span class="c1"># In order to load the model (if not trained with VISSL) with VISSL, there are 2 scenarios:</span>
+  <span class="c1">#    1. If you are interested in evaluating the model features and freeze the trunk.</span>
+  <span class="c1">#       Set APPEND_PREFIX="trunk.base_model." This assumes that your model is compatible</span>
+  <span class="c1">#       with the VISSL trunks. The VISSL trunks start with "_feature_blocks." prefix. If</span>
+  <span class="c1">#       your model doesn't have these prefix you can append them. For example:</span>
+  <span class="c1">#       For TorchVision ResNet trunk, set APPEND_PREFIX="trunk.base_model._feature_blocks."</span>
+  <span class="c1">#    2. where you want to load the model simply and finetune the full model.</span>
+  <span class="c1">#       Set APPEND_PREFIX="trunk."</span>
+  <span class="c1">#       This assumes that your model is compatible with the VISSL trunks. The VISSL</span>
+  <span class="c1">#       trunks start with "_feature_blocks." prefix. If your model doesn't have these</span>
+  <span class="c1">#       prefix you can append them.</span>
+  <span class="c1">#       For TorchVision ResNet trunk, set APPEND_PREFIX="trunk._feature_blocks."</span>
+  <span class="c1"># NOTE: the prefix is appended to all the layers in the model</span>
+  <span class="nt">APPEND_PREFIX</span><span class="p">:</span> <span class="s">""</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><div class="social"><a class="github-button" href="https://github.com/facebookresearch/vissl" data-count-href="https://github.com/facebookresearch/vissl/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star VISSL on GitHub">vissl</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2021 Your Name or Your Company Name<br/>Legal:<a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></section></footer></div></body></html>

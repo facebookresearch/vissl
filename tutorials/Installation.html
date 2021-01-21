@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang=""><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>VISSL · A library for state-of-the-art self-supervised learning</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:title" content="VISSL · A library for state-of-the-art self-supervised learning"/><meta property="og:type" content="website"/><meta property="og:url" content="https://vissl.ai/"/><meta property="og:description" content="A library for state-of-the-art self-supervised learning"/><meta property="og:image" content="https://vissl.ai/img/vissllogo.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://vissl.ai/img/vissllogo.svg"/><link rel="shortcut icon" href="/img/visslfavicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-172675973-1', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/visslfavicon.png" alt="VISSL"/><h2 class="headerTitleWithLogo">VISSL</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/tutorials" target="_self">Tutorials</a></li><li class=""><a href="https://vissl.readthedocs.io/" target="_self">Docs</a></li><li class=""><a href="https://github.com/facebookresearch/vissl" target="_self">GitHub</a></li><li class=""><a target="_self"></a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span></span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Tutorials</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/tutorials/Installation">Installation</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Understanding_VISSL_Training_and_YAML_Config">Understanding VISSL Training and YAML Config</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Train_SimCLR_on_1_gpu">Train SimCLR on 1-gpu</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Feature Extraction</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Feature_Extraction">Feature Extraction</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Benchmark</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K">Benchmark Linear Image Classification on ImageNet-1K</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Full_Finetuning_on_ImageNet_1K">Benchmark Full-Finetuning on ImageNet-1K</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Large Scale Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Large_Scale_Training">Large Scale Training with VISSL (fp16, LARC, ZeRO, etc)</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="tutorialButtonsWrapper"><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Installation.ipynb" target="_blank"><img class="colabButton" align="left" src="/img/colab_icon.png"/>Run in Google Colab</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Installation.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Installation.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div><div class="tutorialBody">
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js">
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
+</script>
+<div class="notebook">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Installation">Installation<a class="anchor-link" href="#Installation">¶</a></h1><p>VISSL installation is simple and we provide pre-built binaries (pip, conda) and also instructions for building from source (pip, conda).</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Requirements">Requirements<a class="anchor-link" href="#Requirements">¶</a></h2><p>At a high level, project requires following system dependencies.</p>
+<ul>
+<li>Linux</li>
+<li>Python&gt;=3.6.2 and &lt;3.9</li>
+<li>PyTorch&gt;=1.4</li>
+<li>torchvision (matching PyTorch install)</li>
+<li>CUDA (must be a version supported by the pytorch version)</li>
+<li>OpenCV</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Installing-VISSL-from-pre-built-binaries">Installing VISSL from pre-built binaries<a class="anchor-link" href="#Installing-VISSL-from-pre-built-binaries">¶</a></h2><p>VISSL provides conda and pip binaries pre-built.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Install-VISSL-conda-package">Install VISSL conda package<a class="anchor-link" href="#Install-VISSL-conda-package">¶</a></h3><p>This assumes you have conda 10.2.</p>
+<div class="highlight"><pre><span></span>conda create -n vissl <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
+conda activate vissl
+conda install -c pytorch <span class="nv">pytorch</span><span class="o">=</span><span class="m">1</span>.7.1 torchvision <span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">10</span>.2
+conda install -c vissl apex vissl
+</pre></div>
+<p>For other versions of PyTorch, Python, CUDA, please modify the above instructions with the
+desired version. VISSL provides Apex packages for all combinations of pytorch, python and compatible cuda.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Install-VISSL-pip-package">Install VISSL pip package<a class="anchor-link" href="#Install-VISSL-pip-package">¶</a></h3><p>This example is with pytorch 1.5.1 and cuda 10.1. Please modify the PyTorch version, cuda version and accordingly apex version below for the desired settings.</p>
+<ul>
+<li>We use <code>PyTorch=1.5.1</code> with <code>CUDA 10.1</code> in the following instruction (user can chose their desired version).</li>
+<li>There are several ways to install opencv, one possibility is as follows.</li>
+<li>For APEX, we provide pre-built binary built with optimized C++/CUDA extensions provided by APEX.
+Note that, for the APEX install, you need to get the versions of CUDA, PyTorch, and Python correct in the URL. We provide APEX versions with all possible combinations of Python, PyTorch, CUDA. Select the right APEX Wheels if you desire a different combination.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Install: PyTorch (we assume 1.5.1 but VISSL works with all PyTorch versions &gt;=1.4)</span>
+<span class="o">!</span>pip install <span class="nv">torch</span><span class="o">==</span><span class="m">1</span>.5.1+cu101 <span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+
+<span class="c1"># install opencv</span>
+<span class="o">!</span>pip install opencv-python
+
+<span class="c1"># install apex by checking system settings: cuda version, pytorch version, python version</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="n">version_str</span><span class="o">=</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+    <span class="sa">f</span><span class="s2">"py3</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">_cu"</span><span class="p">,</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span><span class="s2">""</span><span class="p">),</span>
+    <span class="sa">f</span><span class="s2">"_pyt</span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+<span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">version_str</span><span class="p">)</span>
+
+<span class="c1"># install apex (pre-compiled with optimizer C++ extensions and CUDA kernels)</span>
+<span class="o">!</span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/<span class="o">{</span>version_str<span class="o">}</span>/download.html
+
+<span class="c1"># install VISSL</span>
+<span class="o">!</span>pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Installing-VISSL-from-source">Installing VISSL from source<a class="anchor-link" href="#Installing-VISSL-from-source">¶</a></h2><p>The following instructions assume that you have desired CUDA version installed and working.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Install-from-source-in-PIP-environment">Install from source in PIP environment<a class="anchor-link" href="#Install-from-source-in-PIP-environment">¶</a></h3><p><strong>Step 1: Create Virtual environment (pip)</strong></p>
+<div class="highlight"><pre><span></span>python3 -m venv ~/venv
+. ~/venv/bin/activate
+</pre></div>
+<p><strong>Step 2: Install PyTorch (pip)</strong></p>
+<div class="highlight"><pre><span></span>pip install <span class="nv">torch</span><span class="o">==</span><span class="m">1</span>.7.1+cu101 <span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.8.2+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+</pre></div>
+<p><strong>Step 3: Install APEX (pip)</strong></p>
+<div class="highlight"><pre><span></span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt171/download.html
+</pre></div>
+<p><strong>Step 4: Install VISSL</strong></p>
+<pre><code># clone vissl repository
+cd $HOME &amp;&amp; git clone --recursive https://github.com/facebookresearch/vissl.git &amp;&amp; cd $HOME/vissl/
+# install vissl dependencies
+pip install --progress-bar off -r requirements.txt
+pip install opencv-python
+# update classy vision install to current master
+pip uninstall -y classy_vision
+pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
+# install vissl dev mode (e stands for editable)
+pip install -e .[dev]
+# verify installation
+python -c 'import vissl, apex, cv2'</code></pre>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Install-from-source-in-Conda-environment">Install from source in Conda environment<a class="anchor-link" href="#Install-from-source-in-Conda-environment">¶</a></h3><p><strong>Step 1: Create Conda environment</strong></p>
+<p>If you don't have anaconda, <a href="https://github.com/facebookresearch/vissl/blob/master/docker/common/install_conda.sh">run this bash scrip to install conda</a>.</p>
+<div class="highlight"><pre><span></span>conda create -n vissl <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7
+<span class="nb">source</span> activate vissl_env
+</pre></div>
+<p><strong>Step 2: Install PyTorch (conda)</strong></p>
+<div class="highlight"><pre><span></span>conda install pytorch torchvision <span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">10</span>.1 -c pytorch
+</pre></div>
+<p><strong>Step 3: Install APEX (conda)</strong></p>
+<div class="highlight"><pre><span></span>conda install -c vissl apex vissl
+</pre></div>
+<p><strong>Step 4: Install VISSL</strong>
+Follow <a href="#step-4-install-vissl-from-source">step4 instructions from the PIP installation</a></p>
+<p>That's it! You are now ready to use VISSL.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>VISSL should be successfuly installed by now and all the dependencies should be available.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">vissl</span>
+<span class="kn">import</span> <span class="nn">tensorboard</span>
+<span class="kn">import</span> <span class="nn">apex</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><div class="social"><a class="github-button" href="https://github.com/facebookresearch/vissl" data-count-href="https://github.com/facebookresearch/vissl/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star VISSL on GitHub">vissl</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2021 Your Name or Your Company Name<br/>Legal:<a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></section></footer></div></body></html>
