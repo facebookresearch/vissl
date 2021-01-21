@@ -45,6 +45,20 @@ class Tutorial extends React.Component {
         <TutorialSidebar currentTutorialID={tutorialID} />
         <Container className="mainContainer">
           <div className="tutorialButtonsWrapper">
+          <div className="tutorialButtonWrapper buttonWrapper">
+              <a
+                className="tutorialButton button"
+                download
+                href={`https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/${tutorialID}.ipynb`}
+                target="_blank">
+                <img
+                  className="colabButton"
+                  align="left"
+                  src={`${baseUrl}img/colab_icon.png`}
+                />
+                {'Run in Google Colab'}
+              </a>
+            </div>
             <div className="tutorialButtonWrapper buttonWrapper">
               <a
                 className="tutorialButton button"

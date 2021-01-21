@@ -15,10 +15,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Make temporary directory
 WORK_DIR=$(mktemp -d)
 cd "${WORK_DIR}" || exit
+echo "${WORK_DIR}"
 
 # Clone both master & gh-pages branches
-git clone git@github.com:facebookresearch/vissl.git vissl-master
-git clone --branch gh-pages git@github.com:facebookresearch/vissl.git vissl-gh-pages
+git clone https://github.com/facebookresearch/vissl.git vissl-master
+git clone --branch gh-pages https://github.com/facebookresearch/vissl.git vissl-gh-pages
 
 cd vissl-master/website || exit
 

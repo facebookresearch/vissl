@@ -31,15 +31,41 @@ class TutorialHome extends React.Component {
               <p>
                 These tutorials will help you understand how to use VISSL from examples which are in the form of ipython notebooks.
               </p>
-              <h3> Run locally </h3>
+              <h3> Run tutorials interactively </h3>
               <p>
-                {' '}
-                You can download the notebooks and source code to run the tutorials locally. You can modify the notebook to experiment with different settings. Remember to install pytorch, torchvision and
-              vissl in the first cell of the notebook by running:{' '}
+                Each tutorial can be run interactively in{' '}
+                <a href="https://colab.research.google.com/notebooks/intro.ipynb">
+                  {' '}
+                  Google Colaboratory{' '}
+                </a>{' '}
+                which allows running the code directly in browser with access to GPUs. To run the tutorial in Colab, simply click
+                on the button{' '}
+                <strong>"Run in Google Colab"</strong> which looks like this:
               </p>
-              <MarkdownBlock>{bash`!pip install torch torchvision
-!pip install 'git+https://github.com/facebookresearch/vissl.git@master'`}</MarkdownBlock>
-            This installs the latest version of VISSL from github.
+              <div className="tutorialButtonsWrapper">
+              <div className="tutorialButtonWrapper buttonWrapper">
+                <a className="tutorialButton button" target="_blank">
+                  <img
+                    className="colabButton"
+                    align="left"
+                    src="/img/colab_icon.png"
+                  />
+                  {'Run in Google Colab'}
+                </a>
+              </div>
+            </div>
+            <p>
+              {' '}
+              Every tutorial is standalone meaning that tutorial contain instructions for accessing data as well.
+              At the start of every tutorial, the installation instructions are provided. We recommend to follow the tutorial steps
+              to get started.{' '}
+            </p>
+            <h3> Run locally </h3>
+            <p>
+              {' '}
+              There is also a button to download the notebook and source code to
+              run it locally.{' '}
+            </p>
             </body>
           </div>
         </Container>
