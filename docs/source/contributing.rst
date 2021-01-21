@@ -25,12 +25,10 @@ make sure to have a corresponding issue to discuss your motivation and proposals
 before sending a PR. We do not always accept new features, and we take the following
 factors into consideration:
 
-1. Whether the same feature can be achieved without modifying vissl.
-VISSL is designed to be extensible so that it's easy to extend any modular component and train custom models. If some part is not as extensible, you can also bring up the issue to make it more extensible.
+1. Whether the same feature can be achieved without modifying vissl.VISSL is designed to be extensible so that it's easy to extend any modular component and train custom models. If some part is not as extensible, you can also bring up the issue to make it more extensible.
 2. Whether the feature is potentially useful to a large audience, or only to a small portion of users.
 3. Whether the proposed solution has a good design / interface.
-4. Whether the proposed solution adds extra mental/practical overhead to users who don't
-   need such feature.
+4. Whether the proposed solution adds extra mental/practical overhead to users who don't need such feature.
 5. Whether the proposed solution breaks existing APIs.
 
 When sending a PR, please do:
@@ -53,9 +51,9 @@ Contributor License Agreement ("CLA")
 In order to accept your pull request, we need you to submit a CLA. You only need
 to do this once to work on any of Facebook's open source projects.
 
-Complete your CLA here: <https://code.facebook.com/cla>
+Complete your CLA `here <https://code.facebook.com/cla>`_.
 
 License
 ------------------------
 By contributing to ssl_framework, you agree that your contributions will be licensed
-under the LICENSE file in the root directory of this source tree.
+under the `LICENSE <https://github.com/facebookresearch/vissl/blob/master/LICENSE>`_ file in the root directory of this source tree.

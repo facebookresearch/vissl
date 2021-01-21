@@ -2,7 +2,7 @@ Train ClusterFit model
 ===============================
 
 VISSL reproduces the self-supervised approach **ClusterFit: Improving Generalization of Visual Representations**
-proposed by ** Xueting Yan*, Ishan Misra*, Abhinav Gupta, Deepti Ghadiyaram*, Dhruv Mahajan* ** in `this paper <https://openaccess.thecvf.com/content_CVPR_2020/papers/Yan_ClusterFit_Improving_Generalization_of_Visual_Representations_CVPR_2020_paper.pdf>`_.
+proposed by **Xueting Yan, Ishan Misra, Abhinav Gupta, Deepti Ghadiyaram, Dhruv Mahajan** in `this paper <https://openaccess.thecvf.com/content_CVPR_2020/papers/Yan_ClusterFit_Improving_Generalization_of_Visual_Representations_CVPR_2020_paper.pdf>`_.
 
 How to train ClusterFit model
 ---------------------------------

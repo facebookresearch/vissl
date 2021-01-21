@@ -1,23 +1,23 @@
 Using Tensorboard in VISSL
 ==================================
 
-VISSL provides integration of `Tensorboard <https://www.tensorflow.org/tensorboard>`_ to facilitate self-supervised training and experimentation.
+VISSL provides integration of `Tensorboard <https://www.tensorflow.org/tensorboard>`_ to facilitate self-supervised training and experimentation. VISSL logs many useful scalars and non-scalars to Tensorboard that provide useful insights into an ongoing training.:
 
-VISSL logs many useful scalars and non-scalars to Tensorboard that provide useful insights into an ongoing training.:
+- **Scalars**:
 
-**Scalars**
-- Training Loss
-- Learning Rate
-- Average Training iteration time
-- Batch size per gpu
-- Number of images per sec per gpu
-- Training ETA
-- GPU memory used
-- Peak GPU memory allocated
+    - Training Loss
+    - Learning Rate
+    - Average Training iteration time
+    - Batch size per gpu
+    - Number of images per sec per gpu
+    - Training ETA
+    - GPU memory used
+    - Peak GPU memory allocated
 
-**Non-scalars**
-- Model parameters (at the start of every epoch and/or after N iterations)
-- Model parameter gradients (at the start of every epoch and/or after N iterations)
+- **Non-scalars**:
+
+    - Model parameters (at the start of every epoch and/or after N iterations)
+    - Model parameter gradients (at the start of every epoch and/or after N iterations)
 
 
 How to use Tensorboard in VISSL

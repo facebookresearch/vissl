@@ -22,9 +22,7 @@ The main entry point for any training or feature extraction workflows in VISSL i
 
 Training workflow
 ~~~~~~~~~~~~~~~~~~~~
-The training workflows executes the following steps:
-
-We get the training loop to use (vissl default is :code:`standard_train_step` but the user can create their own training loop and specify the name :code:`TRAINER.TRAIN_STEP_NAME`). The training happens:
+The training workflows executes the following steps. We get the training loop to use (vissl default is :code:`standard_train_step` but the user can create their own training loop and specify the name :code:`TRAINER.TRAIN_STEP_NAME`). The training happens:
 
 1. Execute any hooks at the start of training (mostly resets the variable like iteration num phase_num etc)
 
