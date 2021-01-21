@@ -2,6 +2,16 @@
 
 Our installation is simple and we provide pre-built binaries (pip, conda) and also instructions for building from source (pip, conda).
 
+## Table of Contents
+- [Requirements](#requirements)
+- [Installing VISSL from pre-built binaries](#Installing-VISSL-from-pre-built-binaries)
+   - [Install VISSL conda package](#Install-VISSL-conda-package)
+   - [Install VISSL pip package](#Install-VISSL-pip-package)
+- [Installing VISSL from source](#Installing-VISSL-from-source)
+    - [Install from source in PIP environment](#Install-from-source-in-PIP-environment)
+    - [Install from source in Conda environment](#Install-from-source-in-Conda-environment)
+
+
 ## Requirements
 
 At a high level, project requires following system dependencies.
