@@ -30,11 +30,11 @@ config:
       NAME: alexnet_colorization
     HEAD:
       PARAMS: [
-        ["eval_mlp", {"in_channels": 96, "dims": [9600, 205]}],
-        ["eval_mlp", {"in_channels": 256, "dims": [9216, 205]}],
-        ["eval_mlp", {"in_channels": 384, "dims": [9600, 205]}],
-        ["eval_mlp", {"in_channels": 384, "dims": [9600, 205]}],
-        ["eval_mlp", {"in_channels": 256, "dims": [9216, 205]}],
+        ["eval_mlp", {"in_channels": 96, "dims": [9600, 1000]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
+        ["eval_mlp", {"in_channels": 384, "dims": [9600, 1000]}],
+        ["eval_mlp", {"in_channels": 384, "dims": [9600, 1000]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
       ]
   OPTIMIZER:
     nesterov: True

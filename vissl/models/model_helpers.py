@@ -26,6 +26,10 @@ if is_apex_available():
 
 
 def transform_model_input_data_type(model_input, model_config):
+    """
+    Default model input follow RGB format. Based the model input specified,
+    change the type. Supported types: RGB, BGR, LAB
+    """
     model_output = model_input
     # In case the model takes BGR input type, we convert the RGB to BGR
     if model_config.INPUT_TYPE == "bgr":
@@ -38,6 +42,12 @@ def transform_model_input_data_type(model_input, model_config):
 
 
 def is_feature_extractor_model(model_config):
+    """
+    If the model is a feature extractor model:
+        - evaluation model is on
+        - trunk is frozen
+        - number of features specified for features extratction > 0
+    """
     if (
         model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
         and model_config.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
@@ -48,8 +58,11 @@ def is_feature_extractor_model(model_config):
 
 
 def get_trunk_output_feature_names(model_config):
-    # get the feature names which we will output. If Feature eval mode is set, we
-    # get feature names from config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP.
+    """
+    Get the feature names which we will use to associate the features witl.
+    If Feature eval mode is set, we get feature names from
+    config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP.
+    """
     feature_names = []
     if is_feature_extractor_model(model_config):
         feat_ops_map = model_config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
@@ -58,9 +71,9 @@ def get_trunk_output_feature_names(model_config):
 
 
 class Wrap(nn.Module):
-    """Wrap a free function into a nn.Module
-    Can be useful to build a model block, and include activations or
-    light tensor alterations
+    """
+    Wrap a free function into a nn.Module.
+    Can be useful to build a model block, and include activations or light tensor alterations
     """
 
     def __init__(self, function):
@@ -72,14 +85,42 @@ class Wrap(nn.Module):
 
 
 class SyncBNTypes(str, Enum):
+    """
+    Supported SyncBN types
+    """
+
     apex = "apex"
     pytorch = "pytorch"
 
 
 def convert_sync_bn(config, model):
+    """
+    Convert the BatchNorm layers in the model to the SyncBatchNorm layers.
+
+    For SyncBatchNorm, we support two sources: Apex and PyTorch. The optimized
+    SyncBN kernels provided by apex run faster.
+
+    Args:
+        config (AttrDict): configuration file
+        model: Pytorch model whose BatchNorm layers should be converted to SyncBN
+               layers.
+
+    NOTE: Since SyncBatchNorm layer synchronize the BN stats across machines, using
+          the syncBN layer can be slow. In order to speed up training while using
+          syncBN, we recommend using process_groups which are very well supported
+          for Apex.
+          To set the process groups, set SYNC_BN_CONFIG.GROUP_SIZE following below:
+          1) if group_size=-1 -> use the VISSL default setting. We synchronize within a
+             machine and hence will set group_size=num_gpus per node. This gives the best
+             speedup.
+          2) if group_size>0 -> will set group_size=value set by user.
+          3) if group_size=0 -> no groups are created and process_group=None. This means
+             global sync is done.
+    """
     sync_bn_config = config.MODEL.SYNC_BN_CONFIG
 
     def get_group_size():
+
         world_size = config.DISTRIBUTED.NUM_PROC_PER_NODE * config.DISTRIBUTED.NUM_NODES
         if sync_bn_config["GROUP_SIZE"] > 0:
             # if the user specifies group_size to create, we use that.
@@ -146,22 +187,39 @@ def convert_sync_bn(config, model):
 
 
 class Flatten(nn.Module):
+    """
+    Flatten module attached in the model. It basically flattens the input tensor.
+    """
+
     def __init__(self, dim=-1):
         super(Flatten, self).__init__()
         self.dim = dim
 
     def forward(self, feat):
+        """
+        flatten the input feat
+        """
         return torch.flatten(feat, start_dim=self.dim)
 
     def flops(self, x):
+        """
+        number of floating point operations performed. 0 for this module.
+        """
         return 0
 
 
 class Identity(nn.Module):
+    """
+    A helper module that outputs the input as is
+    """
+
     def __init__(self, args=None):
         super().__init__()
 
     def forward(self, x):
+        """
+        Return the input as the output
+        """
         return x
 
 
@@ -179,11 +237,19 @@ class LayerNorm2d(nn.GroupNorm):
 
 
 class RESNET_NORM_LAYER(str, Enum):
+    """
+    Types of Norms supported in ResNe(X)t trainings. can be easily set and modified
+    from the config file.
+    """
+
     BatchNorm = "BatchNorm"
     LayerNorm = "LayerNorm"
 
 
 def _get_norm(layer_name):
+    """
+    return the normalization layer to use in the model based on the layer name
+    """
     return {
         RESNET_NORM_LAYER.BatchNorm: nn.BatchNorm2d,
         RESNET_NORM_LAYER.LayerNorm: LayerNorm2d,
@@ -219,6 +285,35 @@ def parse_out_keys_arg(
     return out_feat_keys, max_out_feat
 
 
+def get_trunk_forward_outputs_module_list(
+    feat: torch.Tensor,
+    out_feat_keys: List[str],
+    feature_blocks: nn.ModuleList,
+    all_feat_names: List[str] = None,
+) -> List[torch.Tensor]:
+    """
+    Args:
+        feat: model input.
+        out_feat_keys: a list/tuple with the feature names of the features that
+            the function should return. By default the last feature of the network
+            is returned.
+        feature_blocks: list of feature blocks in the model
+        feature_mapping: name of the layers in the model
+
+    Returns:
+        out_feats: a list with the asked output features placed in the same order as in
+        `out_feat_keys`.
+    """
+    out_feat_keys, max_out_feat = parse_out_keys_arg(out_feat_keys, all_feat_names)
+    out_feats = [None] * len(out_feat_keys)
+    for f in range(max_out_feat + 1):
+        feat = feature_blocks[f](feat)
+        key = all_feat_names[f]
+        if key in out_feat_keys:
+            out_feats[out_feat_keys.index(key)] = feat
+    return out_feats
+
+
 def get_trunk_forward_outputs(
     feat: torch.Tensor,
     out_feat_keys: List[str],
@@ -233,11 +328,11 @@ def get_trunk_forward_outputs(
         out_feat_keys: a list/tuple with the feature names of the features that
             the function should return. By default the last feature of the network
             is returned.
-        feature_blocks: list of feature blocks in the model
+        feature_blocks: ModuleDict containing feature blocks in the model
         feature_mapping: an optional correspondence table in between the requested
             feature names and the model's.
 
-    Return:
+    Returns:
         out_feats: a list with the asked output features placed in the same order as in
         `out_feat_keys`.
     """

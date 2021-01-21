@@ -12,6 +12,13 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 
 
 class SwAVMomentumHook(ClassyHook):
+    """
+    This hook is for the extension of the SwAV loss proposed in paper
+    https://arxiv.org/abs/2006.09882 by Caron et al. The loss combines
+    the benefits of using the SwAV approach with the momentum encoder
+    as used in MoCo.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
@@ -27,6 +34,14 @@ class SwAVMomentumHook(ClassyHook):
         momentum_eval_mode_iter_start: int,
         crops_for_assign: List[int],
     ):
+        """
+        Args:
+            momentum (float): for the momentum encoder
+            momentum_eval_mode_iter_start (int): from what iteration should the
+                            momentum encoder network be in eval mode
+            crops_for_assign (List[int]): what crops to use for assignment
+        """
+
         super().__init__()
         self.momentum = momentum
         self.inv_momentum = 1.0 - momentum
@@ -35,7 +50,10 @@ class SwAVMomentumHook(ClassyHook):
         self.momentum_eval_mode_iter_start = momentum_eval_mode_iter_start
 
     def _build_momentum_network(self, task: tasks.ClassyTask) -> None:
-        # Create the encoder, which will slowly track the model
+        """
+        Create the model replica called the encoder. This will slowly track
+        the main model.
+        """
         logging.info(
             "Building momentum encoder - rank %s %s", *get_machine_local_and_dist_rank()
         )
@@ -96,7 +114,9 @@ class SwAVMomentumHook(ClassyHook):
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
         """
-        Forward pass with momentum network
+        Forward pass with momentum network. We forward momentum encoder
+        only on the single resolution crops that are used for assignment
+        in the swav loss.
         """
 
         # Update the momentum encoder
@@ -120,6 +140,12 @@ class SwAVMomentumHook(ClassyHook):
 
 
 class SwAVMomentumNormalizePrototypesHook(ClassyHook):
+    """
+    L2 Normalize the prototypes in swav training. Optional.
+    We normalize the momentum_encoder output prototypes as well
+    additionally.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop

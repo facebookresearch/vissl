@@ -8,6 +8,11 @@ from vissl.models.model_helpers import (  # noqa
 
 
 def build_model(model_config, optimizer_config):
+    """
+    Given the model config and the optimizer config, construct the model.
+    The returned model is not copied to gpu yet (if using gpu) and neither
+    wrapped with DDP yet. This is done later train_task.py .prepare()
+    """
     return BaseSSLMultiInputOutputModel(model_config, optimizer_config)
 
 

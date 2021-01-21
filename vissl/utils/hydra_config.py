@@ -87,6 +87,18 @@ class AttrDict(dict):
 
 
 def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
+    """
+    Given the user input Hydra Config, and some command line input options
+    to override the config file:
+    1. merge and override the command line options in the config
+    2. Convert the Hydra OmegaConf to AttrDict structure to make it easy
+       to access the keys in the config file
+    3. Also check the config version used is compatible and supported in vissl.
+       In future, we would want to support upgrading the old config versions if
+       we make changes to the VISSL default config structure (deleting, renaming keys)
+    4. We infer values of some parameters in the config file using the other
+       parameter values.
+    """
     if cmdline_args:
         # convert the command line args to DictConfig
         sys.argv = cmdline_args
@@ -109,6 +121,9 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
 
 
 def is_hydra_available():
+    """
+    Check if Hydra is available. Simply python import to test.
+    """
     try:
         import hydra  # NOQA
 
@@ -119,6 +134,9 @@ def is_hydra_available():
 
 
 def print_cfg(cfg):
+    """
+    Supports printing both Hydra DictConfig and also the AttrDict config
+    """
     logging.info("Training with config:")
     if isinstance(cfg, DictConfig):
         logging.info(cfg.pretty())
@@ -127,6 +145,15 @@ def print_cfg(cfg):
 
 
 def resolve_linear_schedule(cfg, param_schedulers):
+    """
+    For the given composite schedulers, for each linear schedule,
+    if the training is 1 node only, the https://arxiv.org/abs/1706.02677 linear
+    warmup rule has to be checked if the rule is applicable and necessary.
+
+    We set the end_value = scaled_lr (assuming it's a linear warmup).
+    In case only 1 machine is used in training, the start_lr = scaled_lr and then
+    the linear warmup is not needed.
+    """
     # compute what should be the linear warmup start LR value.
     # this depends on batchsize per node.
     num_nodes = cfg.DISTRIBUTED.NUM_NODES
@@ -161,6 +188,32 @@ def resolve_linear_schedule(cfg, param_schedulers):
 
 
 def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
+    """
+    Scale learning rate value for different Learning rate types. See assert_learning_rate()
+    for how the scaled LR is calculated.
+
+    Values changed for learning rate schedules:
+    1. cosine:
+        end_value = scaled_lr * (end_value / start_value)
+        start_value = scaled_lr and
+    2. multistep:
+        gamma = values[1] / values[0]
+        values = [scaled_lr * pow(gamma, idx) for idx in range(len(values))]
+    3. step_with_fixed_gamma
+        base_value = scaled_lr
+    4. linear:
+       end_value = scaled_lr
+    5. inverse_sqrt:
+       start_value = scaled_lr
+    6. constant:
+       value = scaled_lr
+    7. composite:
+        recursively call to scale each composition. If the composition consists of a linear
+        schedule, we assume that a linear warmup is applied. If the linear warmup is
+        applied, it's possible the warmup is not necessary if the global batch_size is smaller
+        than the base_lr_batch_size and in that case, we remove the linear warmup from the
+        schedule.
+    """
     if "cosine" in param_schedulers["name"]:
         start_value = param_schedulers["start_value"]
         end_value = param_schedulers["end_value"]
@@ -206,9 +259,26 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
 
 
 def assert_learning_rate(cfg):
-    # assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
-    # to turn this automatic scaling off,
-    # set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
+    """
+    1) Assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
+    to turn this automatic scaling off,
+    set config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=false
+
+    scaled_lr is calculated:
+        given base_lr_batch_size = batch size for which the base learning rate is specified,
+              base_value = base learning rate value that will be scaled,
+              The current batch size is used to determine how to scale the base learning rate
+              value.
+        scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size
+
+    We perform this auto-scaling for head learning rate as well if user wants to use a different
+    learning rate for the head
+
+    2) infer the model head params weight decay: if the head should use a different weight
+       decay value than the trunk.
+       If using different weight decay value for the head, set here. otherwise, the
+       same value as trunk will be automatically used.
+    """
     if cfg.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale:
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
@@ -256,6 +326,13 @@ def assert_learning_rate(cfg):
 
 
 def assert_losses(cfg):
+    """
+    Infer settings for various self-supervised losses. Takes care of setting various loss
+    parameters correctly like world size, batch size per gpu, effective global batch size,
+    collator etc.
+    Each loss has additional set of parameters that can be inferred to ensure smooth
+    training in case user forgets to adjust all the parameters.
+    """
     # some inference for the Info-NCE loss.
     if "simclr_info_nce_loss" in cfg.LOSS.name:
         cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"] = (
@@ -279,6 +356,7 @@ def assert_losses(cfg):
         world_size = cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.world_size
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         total_num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.world_size = world_size
         cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.effective_batch_size = (
             batch_size * world_size
         )
@@ -348,6 +426,21 @@ def assert_losses(cfg):
 
 
 def assert_hydra_conf(cfg):
+    """
+    Infer values of few parameters in the config file using the value of other config parameters
+    1. Inferring losses
+    2. Auto scale learning rate if user has specified auto scaling to be True.
+    3. Infer meter names (model layer name being evaluated) since we support list meters
+       that have multiple output and same target. This is very common in self-supervised
+       learning where we want to evaluate metric for several layers of the models. VISSL
+       supports running evaluation for multiple model layers in a single training run.
+    4. Support multi-gpu DDP eval model by attaching a dummy parameter. This is particularly
+       helpful for the multi-gpu feature extraction especially when the dataset is large for
+       which features are being extracted.
+    5. Infer what kind of labels are being used. If user has specified a labels source, we set
+       LABEL_TYPE to "standard" (also vissl default), otherwise if no label is specified, we
+       set the LABEL_TYPE to "sample_index".
+    """
     cfg = assert_losses(cfg)
     cfg = assert_learning_rate(cfg)
 
@@ -392,3 +485,17 @@ def assert_hydra_conf(cfg):
         cfg.DATA.TRAIN.LABEL_TYPE = "sample_index"
     if len(cfg.DATA.TEST.LABEL_SOURCES) == 0:
         cfg.DATA.TEST.LABEL_TYPE = "sample_index"
+
+    # if the user has specified the model initialization from a params_file, we check if
+    # the params_file is a url. If it is, we download the file to a local cache directory
+    # and use that instead
+    from vissl.utils.checkpoint import get_checkpoint_folder
+    from vissl.utils.io import cache_url, is_url
+
+    if is_url(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
+        checkpoint_dir = get_checkpoint_folder(cfg)
+        cache_dir = f"{checkpoint_dir}/params_file_cache/"
+        cached_url_path = cache_url(
+            url=cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE, cache_dir=cache_dir
+        )
+        cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE = cached_url_path

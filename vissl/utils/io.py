@@ -6,14 +6,39 @@ import os
 import pickle
 import re
 import time
+from urllib.parse import urlparse
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from fvcore.common.download import download
+from fvcore.common.file_io import PathManager, file_lock
 from vissl.utils.slurm import get_slurm_dir
+
+
+def cache_url(url: str, cache_dir: str) -> str:
+    """
+    This implementation downloads the remote resource and caches it locally.
+    The resource will only be downloaded if not previously requested.
+    """
+    parsed_url = urlparse(url)
+    dirname = os.path.join(cache_dir, os.path.dirname(parsed_url.path.lstrip("/")))
+    makedir(dirname)
+    filename = url.split("/")[-1]
+    cached = os.path.join(dirname, filename)
+    with file_lock(cached):
+        if not os.path.isfile(cached):
+            logging.info(f"Downloading {url} to {cached} ...")
+            cached = download(url, dirname, filename=filename)
+    logging.info(f"URL {url} cached in {cached}")
+    return cached
 
 
 # TODO (prigoyal): convert this into RAII-style API
 def create_file_symlink(file1, file2):
+    """
+    Simply create the symlinks for a given file1 to file2.
+    Useful during model checkpointing to symlinks to the
+    latest successful checkpoint.
+    """
     try:
         if PathManager.exists(file2):
             PathManager.rm(file2)
@@ -23,6 +48,11 @@ def create_file_symlink(file1, file2):
 
 
 def save_file(data, filename):
+    """
+    Common i/o utility to handle saving data to various file formats.
+    Supported:
+        .pkl, .pickle, .npy, .json
+    """
     logging.info(f"Saving data to file: {filename}")
     file_ext = os.path.splitext(filename)[1]
     if file_ext in [".pkl", ".pickle"]:
@@ -41,6 +71,14 @@ def save_file(data, filename):
 
 
 def load_file(filename, mmap_mode=None):
+    """
+    Common i/o utility to handle loading data from various file formats.
+    Supported:
+        .pkl, .pickle, .npy, .json
+    For the npy files, we support reading the files in mmap_mode.
+    If the mmap_mode of reading is not successful, we load data without the
+    mmap_mode.
+    """
     logging.info(f"Loading data from file: {filename}")
     file_ext = os.path.splitext(filename)[1]
     if file_ext in [".pkl", ".pickle"]:
@@ -73,6 +111,9 @@ def load_file(filename, mmap_mode=None):
 
 
 def makedir(dir_path):
+    """
+    Create the directory if it does not exist.
+    """
     is_success = False
     try:
         if not PathManager.exists(dir_path):
@@ -84,11 +125,18 @@ def makedir(dir_path):
 
 
 def is_url(input_url):
+    """
+    Check if an input string is a url. look for http(s):// and ignoring the case
+    """
     is_url = re.match(r"^(?:http)s?://", input_url, re.IGNORECASE) is not None
     return is_url
 
 
 def cleanup_dir(dir):
+    """
+    Utility for deleting a directory. Useful for cleaning the storage space
+    that contains various training artifacts like checkpoints, data etc.
+    """
     if PathManager.exists(dir):
         logging.info(f"Deleting directory: {dir}")
         os.system(f"rm -rf {dir}")
@@ -96,11 +144,31 @@ def cleanup_dir(dir):
 
 
 def get_file_size(filename):
+    """
+    Given a file, get the size of file in MB
+    """
     size_in_mb = os.path.getsize(filename) / float(1024 ** 2)
     return size_in_mb
 
 
 def copy_file(input_file, destination_dir, tmp_destination_dir):
+    """
+    Copy a given input_file from source to the destination directory.
+
+    Steps:
+    1. We use PathManager to extract the data to local path.
+    2. we simply move the files from the PathManager cached local directory
+       to the user specified destination directory. We use rsync.
+       How destination dir is chosen:
+            a) If user is using slurm, we set destination_dir = slurm_dir (see get_slurm_dir)
+            b) If the local path used by PathManafer is same as the input_file path,
+               and the destination directory is not specified, we set
+               destination_dir = tmp_destination_dir
+
+    Returns:
+        output_file (str): the new path of the file
+        destination_dir (str): the destination dir that was actually used
+    """
     # we first extract the local path for the files. PathManager
     # determines the local path itself and copies data there.
     logging.info(f"Copying {input_file} to local path...")
@@ -141,6 +209,20 @@ def copy_file(input_file, destination_dir, tmp_destination_dir):
 
 
 def copy_dir(input_dir, destination_dir, num_threads):
+    """
+    Copy contents of one directory to the specified destination directory
+    using the number of threads to speed up the copy. When the data is
+    copied successfully, we create a copy_complete file in the
+    destination_dir folder to mark the completion. If the destination_dir
+    folder already exists and has the copy_complete file, we don't
+    copy the file.
+
+    useful for copying datasets like ImageNet to speed up dataloader.
+    Using 20 threads for imagenet takes about 20 minutes to copy.
+
+    Returns:
+        destination_dir (str): directory where the contents were copied
+    """
     # remove the backslash if user added it
     data_name = input_dir.strip("/").split("/")[-1]
     if "SLURM_JOBID" in os.environ:
@@ -166,6 +248,15 @@ def copy_dir(input_dir, destination_dir, num_threads):
 
 
 def copy_data(input_file, destination_dir, num_threads, tmp_destination_dir):
+    """
+    Copy data from one source to the other using num_threads. The data to copy
+    can be a single file or a directory. We check what type of data and
+    call the relevant functions.
+
+    Returns:
+        output_file (str): the new path of the data (could be file or dir)
+        destination_dir (str): the destination dir that was actually used
+    """
     # return whatever the input is: whether "", None or anything else.
     logging.info(f"Creating directory: {destination_dir}")
     if not (destination_dir is None or destination_dir == ""):
@@ -186,6 +277,15 @@ def copy_data(input_file, destination_dir, num_threads, tmp_destination_dir):
 def copy_data_to_local(
     input_files, destination_dir, num_threads=40, tmp_destination_dir=None
 ):
+    """
+    Iteratively copy the list of data to a destination directory.
+    Each data to copy could be a single file or a directory.
+
+    Returns:
+        output_file (str): the new path of the file. If there were
+                           no files to copy, simply return the input_files
+        destination_dir (str): the destination dir that was actually used
+    """
     # it might be possible that we don't use the labels and hence don't have
     # label files. In that case, we return the input_files itself as we have
     # nothing to copy.

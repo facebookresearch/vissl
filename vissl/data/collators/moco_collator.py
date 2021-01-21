@@ -8,24 +8,27 @@ from vissl.data.collators import register_collator
 
 @register_collator("moco_collator")
 def moco_collator(batch: List[Dict[str, Any]]) -> Dict[str, List[torch.Tensor]]:
-
     """
-    The collators collates the batch for the following input:
-    input:
-    [
-        {"data" : [img1_0, ..., img1_k], ..},
-        {"data" : [img2_0, ..., img2_k], ...},
-         ...
-    ]
+    This collator is specific to MoCo approach http://arxiv.org/abs/1911.05722
 
-    output:
-    [
-        {"data" :
-            torch.tensor([img1_0, ..., img1_k], [img2_0, ..., img2_k]) ..},
+    The collators collates the batch for the following input (assuming k-copies of image):
 
-    ]
+    Input:
+        batch: Example
+                batch = [
+                    {"data" : [img1_0, ..., img1_k], ..},
+                    {"data" : [img2_0, ..., img2_k], ...},
+                    ...
+                ]
 
-    Dimensions become [num_positives x Batch x C x H x W]
+    Returns: Example output:
+                output = [
+                    {
+                        "data": torch.tensor([img1_0, ..., img1_k], [img2_0, ..., img2_k]) ..
+                    },
+                ]
+
+             Dimensions become [num_positives x Batch x C x H x W]
     """
     assert "data" in batch[0], "data not found in sample"
     assert "label" in batch[0], "label not found in sample"

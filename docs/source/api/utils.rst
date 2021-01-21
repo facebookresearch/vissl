@@ -1,13 +1,76 @@
 vissl.utils package
 ===========================
 
-vissl.utils.svm_utils module
----------------------------------------
+vissl.utils.instance_retrieval_utils.data_util module
+-----------------------------------------------------------
 
-.. automodule:: vissl.utils.svm_utils
+.. automodule:: vissl.utils.instance_retrieval_utils.data_util
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+vissl.utils.instance_retrieval_utils.evaluate module
+----------------------------------------------------------
+
+.. automodule:: vissl.utils.instance_retrieval_utils.evaluate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.utils.instance_retrieval_utils.pca module
+----------------------------------------------------
+
+.. automodule:: vissl.utils.instance_retrieval_utils.pca
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.utils.instance_retrieval_utils.rmac module
+----------------------------------------------------
+
+.. automodule:: vissl.utils.instance_retrieval_utils.rmac
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.utils.svm_utils.evaluate module
+-------------------------------------------
+
+.. automodule:: vissl.utils.svm_utils.evaluate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.utils.svm_utils.svm_trainer module
+----------------------------------------------
+
+.. automodule:: vissl.utils.svm_utils.svm_trainer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+vissl.utils.svm_utils.svm_low_shot_trainer module
+----------------------------------------------------
+
+.. automodule:: vissl.utils.svm_utils.svm_low_shot_trainer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+vissl.utils.activation_checkpointing module
+-------------------------------------------------
+
+.. automodule:: vissl.utils.activation_checkpointing
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 vissl.utils.checkpoint module
 ---------------------------------------

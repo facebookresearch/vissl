@@ -1,7 +1,7 @@
 Getting Started with VISSL
 ==========================
 
-todo
+This document provides a brief introduction of usage of built-in command line tools provided by VISSL.
 
 
 Training a self-supervised model

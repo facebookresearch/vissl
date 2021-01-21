@@ -26,10 +26,23 @@ class CosineWaveTypes(str, Enum):
 class CosineWarmRestartScheduler(ClassyParamScheduler):
     """
     Changes the param value after every epoch based on a `cosine schedule <https:
-    //arxiv.org/pdf/1608.03983.pdf>`_.
-    Can be used for either cosine decay or cosine warmup schedules based on
-    start and end values.
-    The schedule is updated after every train step by default.
+    //arxiv.org/pdf/1608.03983.pdf>`_. The schedule is updated after every train
+    step by default.
+
+    Can be used for cosine learning rate with warm restarts. For restarts, we calculate
+    what will be the maximum learning rate after every restart. There are 3 options:
+        - Option 1: LR after every restart is same as original max LR
+        - Option 2: LR after every restart decays with a fixed LR multiplier
+        - Option 3: LR after every restart is adaptively calculated such that the resulting
+                    max LR matches the original cosine wave LR.
+
+    Args:
+        wave_type: half | full
+        lr_multiplier: float value -> LR after every restart decays with a fixed LR multiplier
+        is_adaptive: True -> if after every restart, maximum LR is adaptively calculated such
+                    that the resulting max LR matches the original cosine wave LR.
+        update_interval: step | epoch -> if the LR should be updated after every training
+                         iteration or after training epoch
 
     Example:
 
@@ -115,7 +128,8 @@ class CosineWarmRestartScheduler(ClassyParamScheduler):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "CosineWarmRestartScheduler":
-        """Instantiates a CosineParamScheduler from a configuration.
+        """
+        Instantiates a CosineWarmRestartScheduler from a configuration.
 
         Args:
             config: A configuration for a CosineWarmRestartScheduler.

@@ -72,6 +72,11 @@ class PerfTimer:
         return False  # re-raise if there was exception
 
     def start(self):
+        """
+        Start the recording if the perfTimer should not be skipped or if the
+        recording is not already in progress.
+        If using cuda, we record time of cuda events as well.
+        """
         if self.skip or self._is_running:
             return
 
@@ -83,6 +88,11 @@ class PerfTimer:
             self._start_event.record()
 
     def stop(self):
+        """
+        Stop the recording and update the recording interaval, total time elapsed
+        from the beginning of perfTimer recording. If using CUDA, we measure time for
+        cuda events and append to cuda interval.
+        """
         if self.skip or not self._is_running:
             return
 
@@ -98,6 +108,10 @@ class PerfTimer:
         self._is_running = False
 
     def record(self):
+        """
+        Update the timer. We should only do this if the timer is Not skipped and also
+        if the timer has already been stopped.
+        """
         if self.skip:
             return
         assert not self._is_running
@@ -137,6 +151,9 @@ class PerfMetric:
         self.num_updates += 1
 
     def get_avg(self):
+        """
+        Get the mean value of the metrics recorded.
+        """
         if self.num_updates == 0:
             return 0.0
         else:

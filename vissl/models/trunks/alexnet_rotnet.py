@@ -3,7 +3,7 @@
 # Adapted from https://github.com/gidariss/FeatureLearningRotNet
 
 import torch.nn as nn
-from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs
+from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs_module_list
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict
 
@@ -62,11 +62,10 @@ class AlexNetRotNet(nn.Module):
 
     def forward(self, x, out_feat_keys=None):
         feat = x
-        out_feats = get_trunk_forward_outputs(
+        out_feats = get_trunk_forward_outputs_module_list(
             feat,
             out_feat_keys,
             self._feature_blocks,
             self.all_feat_names,
-            use_checkpointing=False,
         )
         return out_feats

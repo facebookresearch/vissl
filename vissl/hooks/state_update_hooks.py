@@ -29,6 +29,11 @@ class SSLModelComplexityHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_start(self, task) -> None:
+        """
+        Before the training starts, run one forward only pass of the model on the
+        dummy input of shape specified by user in MODEL.MODEL_COMPLEXITY.INPUT_SHAPE
+        We calculate the flops, activations and number of params in the model.
+        """
         self.num_flops, self.num_activations, self.num_parameters = 0, 0, 0
         input_shape = task.config["MODEL"]["MODEL_COMPLEXITY"]["INPUT_SHAPE"]
         try:
@@ -75,7 +80,10 @@ class SetDataSamplerEpochHook(ClassyHook):
 
     def on_phase_start(self, task: "tasks.ClassyTask") -> None:
         """
-        Called at the start of each epoch or phase
+        Called at the start of each epoch or phase to set the data
+        sampler epoch. This is important to ensure the data
+        is shuffled and the shuffling can be reproduced deterministically
+        if the training is resumed from a checkpoint.
         """
         task.phase_start_time = time.time()
         task.batches = 0
@@ -91,6 +99,12 @@ class SetDataSamplerEpochHook(ClassyHook):
 
 
 class UpdateBatchesSeenHook(ClassyHook):
+    """
+    Book-keeping only hook. Tracks how many forward passes have been done.
+    aka how many batches have been seen by the trainer irrespective of
+    the train or test phase. updates task.batches
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
@@ -109,6 +123,11 @@ class UpdateBatchesSeenHook(ClassyHook):
 
 
 class UpdateTrainIterationNumHook(ClassyHook):
+    """
+    Book-keeping hook: updates the training iteration number (only updated
+    if it's a training phase). task.iteration is updated.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
@@ -129,6 +148,11 @@ class UpdateTrainIterationNumHook(ClassyHook):
 
 
 class UpdateTrainBatchTimeHook(ClassyHook):
+    """
+    After after parameters update step (training phase), we update the batch
+    time aka the training time for the current iteration.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop
@@ -151,6 +175,13 @@ class UpdateTrainBatchTimeHook(ClassyHook):
 
 
 class UpdateTestBatchTimeHook(ClassyHook):
+    """
+    Include the batch time for test phase as well and called every
+    time loss has been computed. Only updates task.batch_time if
+    it's a test phase and train phase is already updated by
+    UpdateTrainBatchTimeHook hook.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop
@@ -174,6 +205,11 @@ class UpdateTestBatchTimeHook(ClassyHook):
 
 
 class CheckNanLossHook(ClassyHook):
+    """
+    After every loss computation, verify the loss is not infinite.
+    Called for both training/test phase.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop
@@ -197,6 +233,13 @@ class CheckNanLossHook(ClassyHook):
 
 
 class FreezeParametersHook(ClassyHook):
+    """
+    Hook that helps to freeze some specified model parameters for certain
+    number of training iterations. The parameters
+    are specified in a dictionary containing {param_name: frozen_iterations}.
+    Used in SwAV training.
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_forward = ClassyHook._noop
@@ -207,6 +250,11 @@ class FreezeParametersHook(ClassyHook):
     on_end = ClassyHook._noop
 
     def on_backward(self, task: "tasks.ClassyTask") -> None:
+        """
+        After every backward pass and before updating the parameters,
+        check if there are parameters that should stay frozen.
+        Set the grad to None for those params.
+        """
         if len(task.config.MODEL.TEMP_FROZEN_PARAMS_ITER_MAP) == 0:
             return
         map_params_to_iters = {}

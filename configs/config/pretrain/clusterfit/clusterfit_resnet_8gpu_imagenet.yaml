@@ -10,7 +10,7 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [disk_folder]
+      DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]  # npy file containing the cluster labels
       DATASET_NAMES: [imagenet1k_clusters_rotnetin1k]
       BATCHSIZE_PER_REPLICA: 32

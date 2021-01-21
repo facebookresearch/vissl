@@ -13,6 +13,9 @@ from vissl.utils.io import load_file
 
 
 def is_apex_available():
+    """
+    Check if apex is available with simple python imports.
+    """
     try:
         import apex  # NOQA
 
@@ -23,6 +26,10 @@ def is_apex_available():
 
 
 def find_free_tcp_port():
+    """
+    Find the free port that can be used for Rendezvous on the local machine.
+    We use this for 1 machine training where the port is automatically detected.
+    """
     import socket
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,8 +43,14 @@ def find_free_tcp_port():
 
 def get_dist_run_id(cfg, num_nodes):
     """
-    for 1node: use init_method=tcp and run_id=auto
-    for multi-node, use init_method=tcp and specify run_id={master_node}:{port}
+    For multi-gpu training with PyTorch, we have to specify
+    how the gpus are going to rendezvous. This requires specifying
+    the communication method: file, tcp and the unique rendezvous run_id that
+    is specific to 1 run.
+
+    We recommend:
+        1) for 1-node: use init_method=tcp and run_id=auto
+        2) for multi-node, use init_method=tcp and specify run_id={master_node}:{port}
     """
     init_method = cfg.DISTRIBUTED.INIT_METHOD
     run_id = cfg.DISTRIBUTED.RUN_ID
@@ -63,6 +76,11 @@ def get_dist_run_id(cfg, num_nodes):
 
 
 def setup_multiprocessing_method(method_name: str):
+    """
+    PyTorch supports several multiprocessing options: forkserver | spawn | fork
+
+    We recommend and use forkserver as the default method in VISSL.
+    """
     try:
         mp.set_start_method(method_name, force=True)
         logging.info("Set start method of multiprocessing to {}".format(method_name))
@@ -71,6 +89,10 @@ def setup_multiprocessing_method(method_name: str):
 
 
 def set_seeds(cfg, node_id=0):
+    """
+    Set the python random, numpy and torch seed for each gpu. Also set the CUDA
+    seeds if the CUDA is available. This ensures deterministic nature of the training.
+    """
     node_seed = cfg.SEED_VALUE
     if cfg.DISTRIBUTED.NUM_NODES > 1:
         node_seed = node_seed * 2 * node_id
@@ -84,7 +106,7 @@ def set_seeds(cfg, node_id=0):
 
 def get_indices_sparse(data):
     """
-    Is faster than np.argwhere.
+    Is faster than np.argwhere. Used in loss functions like swav loss, etc
     """
     cols = np.arange(data.size)
     M = csr_matrix((cols, (data.ravel(), cols)), shape=(data.max() + 1, data.size))
@@ -92,6 +114,26 @@ def get_indices_sparse(data):
 
 
 def merge_features(output_dir, split, layer, cfg):
+    """
+    For multi-gpu feature extraction, each gpu saves features corresponding to its
+    share of the data. We can merge the features across all gpus to get the features
+    for the full data.
+
+    The features are saved along with the data indexes and label. The data indexes can
+    be used to sort the data and ensure the uniqueness.
+
+    We organize the features, targets corresponding to the data index of each feature,
+    ensure the uniqueness and return.
+
+    Args:
+        output_dir (str): input path where the features are dumped
+        split (str): whether the features are train or test data features
+        layer (str): the features correspond to what layer of the model
+        cfg (AttrDict): the input configuration specified by user
+
+    Returns:
+        output (Dict): contains features, targets, inds as the keys
+    """
     logging.info(f"Merging features: {split} {layer}")
     output_feats, output_targets = {}, {}
     for local_rank in range(0, cfg.DISTRIBUTED.NUM_PROC_PER_NODE):
@@ -127,6 +169,10 @@ def merge_features(output_dir, split, layer, cfg):
 
 
 def get_json_data_catalog_file():
+    """
+    Searches for the dataset_catalog.json file that contains information about
+    the dataset paths if set by user.
+    """
     json_catalog_path = pkg_resources.resource_filename(
         "configs", "config/dataset_catalog.json"
     )

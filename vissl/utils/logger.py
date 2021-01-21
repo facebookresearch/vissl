@@ -10,6 +10,11 @@ from vissl.utils.io import makedir
 
 
 def setup_logging(name, output_dir=None, rank=0):
+    """
+    Setup various logging streams: stdout and file handlers.
+
+    For file handlers, we only setup for the master gpu.
+    """
     # get the filename if we want to log to the file as well
     log_filename = None
     if output_dir:
@@ -55,6 +60,9 @@ def _cached_log_stream(filename):
 
 
 def shutdown_logging():
+    """
+    After training is done, we ensure to shut down all the logger streams.
+    """
     logging.info("Shutting down loggers...")
     handlers = logging.root.handlers
     for handler in handlers:
@@ -62,10 +70,17 @@ def shutdown_logging():
 
 
 def log_gpu_stats():
+    """
+    Log nvidia-smi snapshot. Useful to capture the configuration of gpus.
+    """
     logging.info(subprocess.check_output(["nvidia-smi"]).decode("utf-8"))
 
 
 def print_gpu_memory_usage():
+    """
+    Parse the nvidia-smi output and extract the memory used stats.
+    Not recommended to use.
+    """
     sp = subprocess.Popen(
         ["nvidia-smi", "--query-gpu=memory.used", "--format=csv"],
         stdout=subprocess.PIPE,

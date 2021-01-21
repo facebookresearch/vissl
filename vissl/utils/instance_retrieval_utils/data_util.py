@@ -22,18 +22,31 @@ from vissl.utils.io import load_file
 
 
 def is_revisited_dataset(dataset_name: str):
+    """
+    Computes whether the specified dataseet name is a revisited version of
+    the oxford and paris datasets. simply looks for pattern "roxford5k"
+    and "rparis6k" in specified dataset_name.
+    """
     if dataset_name in ["roxford5k", "rparis6k"]:
         return True
     return False
 
 
 def is_instre_dataset(dataset_name: str):
+    """
+    Returns True if the dataset name is "instre". Helper function used in code
+    at several places.
+    """
     if dataset_name == "instre":
         return True
     return False
 
 
 def is_whiten_dataset(dataset_name: str):
+    """
+    Returns if the dataset specified has name "whitening". User can use any
+    dataset they want for whitening.
+    """
     if dataset_name == "whitening":
         return True
     return False
@@ -42,6 +55,9 @@ def is_whiten_dataset(dataset_name: str):
 # pooling + whitening
 # Credits: Matthijs Douze
 def add_bias_channel(x, dim: int = 1):
+    """
+    Adds a bias channel useful during pooling + whitening operation.
+    """
     bias_size = list(x.size())
     bias_size[dim] = 1
     one = x.new_ones(bias_size)
@@ -69,6 +85,23 @@ def gem(
     add_bias: bool = False,
     keepdims: bool = False,
 ):
+    """
+    Gem pooling on the given tensor.
+
+    Args:
+        x (torch.Tensor): tensor on which the pooling should be done
+        p (int): pooling number.
+                 If p=inf then simply perform max_pool2d
+                 If p=1 and x tensor has grad, simply perform avg_pool2d
+                 else, perform Gem pooling for specified p
+        eps (float): if clamping the x tensor, use the eps for clamping
+        clamp (float): whether to clamp the tensor
+        add_bias (bool): whether to add the biad channel
+        keepdims (bool): whether to flatten or keep the dimensions as is
+
+    Returns:
+        x (torch.Tensor): Gem pooled tensor
+    """
     if p == math.inf or p == "inf":
         x = F.max_pool2d(x, (x.size(-2), x.size(-1)))
     elif p == 1 and not (torch.is_tensor(p) and p.requires_grad):
@@ -86,6 +119,17 @@ def gem(
 
 # Credits: Matthijs Douze
 def l2n(x: torch.Tensor, eps: float = 1e-6, dim: int = 1):
+    """
+    L2 normalize the input tensor along the specified dimension
+
+    Args:
+        x (torch.Tensor): the tensor to normalize
+        eps (float): epsilon to use to normalize to avoid the inf output
+        dim (int): along which dimension to L2 normalize
+
+    Returns:
+        x (torch.Tensor): L2 normalized tensor
+    """
     x = x / (torch.norm(x, p=2, dim=dim, keepdim=True) + eps).expand_as(x)
     return x
 
@@ -95,6 +139,7 @@ class MultigrainResize(transforms.Resize):
     """
     Resize with a `largest=False` argument
     allowing to resize to a common largest side without cropping
+    Approach used in the Multigrain paper https://arxiv.org/pdf/1902.05509.pdf
     """
 
     def __init__(self, size: int, largest: bool = False, **kwargs):
@@ -123,7 +168,9 @@ class MultigrainResize(transforms.Resize):
 
 # Credits: Matthijs Douze
 class WhiteningTrainingImageDataset:
-    """ A set of training images for whitening """
+    """
+    A set of training images for whitening
+    """
 
     def __init__(self, base_dir: str, image_list_file: str, num_samples: int = 0):
         with PathManager.open(image_list_file) as fopen:
@@ -142,6 +189,11 @@ class WhiteningTrainingImageDataset:
 
 
 class InstreDataset:
+    """
+    A dataset class that reads and parses the Instre Dataset so it's ready to be used
+    in the code for retrieval evaluations
+    """
+
     def __init__(self, dataset_path: str, num_samples: int = 0):
         self.base_dir = dataset_path
         gnd_instre = scipy.io.loadmat(f"{self.base_dir}/gnd_instre.mat")
@@ -164,22 +216,40 @@ class InstreDataset:
         )
 
     def get_num_images(self):
+        """
+        Number of images in the dataset
+        """
         return self.N_images
 
     def get_num_query_images(self):
+        """
+        Number of query images in the dataset
+        """
         return self.N_queries
 
     def get_filename(self, i: int):
+        """
+        Return the image filepath for the db image
+        """
         return f"{self.base_dir}/{self.db_imlist[i]}"
 
     def get_query_filename(self, i: int):
+        """
+        Reutrn the image filepath for the query image
+        """
         return f"{self.base_dir}/{self.qimlist[i]}"
 
     def get_query_roi(self, i: int):
-        # INSTRE dataset has no notion of ROI so we return None
+        """
+        INSTRE dataset has no notion of ROI so we return None.
+        """
         return None
 
     def eval_from_ranks(self, ranks):
+        """
+        Return the mean average precision value or the train and validation both
+        provided the ranks (scores of the model).
+        """
         nq, nb = ranks.shape
         gnd = self.gnd
         sum_ap = 0
@@ -196,6 +266,9 @@ class InstreDataset:
         return sum_ap / nq, sum_ap_val / len(self.val_subset)
 
     def score(self, scores, temp_dir, verbose=True):
+        """
+        For the input scores of the model, calculate the AP metric
+        """
         ranks = scores.argsort(axis=1)[:, ::-1]
         mAP, mAP_val = self.eval_from_ranks(ranks)
         if verbose:
@@ -204,6 +277,12 @@ class InstreDataset:
 
 
 class RevisitedInstanceRetrievalDataset:
+    """
+    A dataset class used for the Revisited Instance retrieval datasets: Revisited
+    Oxford and Revisited Paris. The object reads and parses the datasets so it's
+    ready to be used in the code for retrieval evaluations.
+    """
+
     def __init__(self, dataset: str, dir_main: str):
         # Credits: https://github.com/filipradenovic/revisitop/blob/master/python/dataset.py#L6     # NOQA
 
@@ -232,21 +311,40 @@ class RevisitedInstanceRetrievalDataset:
         )
 
     def get_filename(self, i: int):
+        """
+        Return the image filepath for the db image
+        """
         return f"{self.cfg['dir_images']}/{self.cfg['imlist'][i] + self.cfg['ext']}"
 
     def get_query_filename(self, i: int):
+        """
+        Reutrn the image filepath for the query image
+        """
         return f"{self.cfg['dir_images']}/{self.cfg['qimlist'][i] + self.cfg['qext']}"
 
     def get_num_images(self):
+        """
+        Number of images in the dataset
+        """
         return self.cfg["n"]
 
     def get_num_query_images(self):
+        """
+        Number of query images in the dataset
+        """
         return self.cfg["nq"]
 
     def get_query_roi(self, i: int):
+        """
+        Get the ROI for the query image that we want to test retrieval
+        """
         return self.cfg["gnd"][i]["bbx"]
 
     def score(self, sim, temp_dir: str):
+        """
+        For the input similarity scores of the model, calculate the mean AP metric
+        and mean Precision@k metrics.
+        """
         sim = sim.T
         # Credits: https://github.com/filipradenovic/revisitop/blob/master/python/example_evaluate.py  # NOQA
         ranks = np.argsort(-sim, axis=0)
@@ -304,11 +402,18 @@ class RevisitedInstanceRetrievalDataset:
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
 # Adapted by: Priya Goyal (prigoyal@fb.com)
 class InstanceRetrievalImageLoader:
+    """
+    The custom loader for the Paris and Oxford Instance Retrieval datasets.
+    """
+
     def __init__(self, S, transforms):
         self.S = S
         self.transforms = transforms
 
     def apply_img_transform(self, im):
+        """
+        Apply the pre-defined transforms on the image.
+        """
         im_size_hw = np.array((im.size[1], im.size[0]))
         if self.S == -1:
             ratio = 1.0
@@ -326,6 +431,10 @@ class InstanceRetrievalImageLoader:
         return im_resized, ratio
 
     def load_and_prepare_whitening_image(self, fname):
+        """
+        from the filename, load the whitening image and prepare it to be used by
+        applying data transforms
+        """
         with PathManager.open(fname, "rb") as f:
             im = Image.open(f)
         if im.mode != "RGB":
@@ -335,6 +444,10 @@ class InstanceRetrievalImageLoader:
         return im
 
     def load_and_prepare_instre_image(self, fname):
+        """
+        from the filename, load the db or query image and prepare it to be used by
+        applying data transforms
+        """
         with PathManager.open(fname, "rb") as f:
             im = Image.open(f)
         if self.transforms is not None:
@@ -342,6 +455,11 @@ class InstanceRetrievalImageLoader:
         return im
 
     def load_and_prepare_image(self, fname, roi=None):
+        """
+        Read image, get aspect ratio, and resize such as the largest side equals S.
+        If there is a roi, adapt the roi to the new size and crop. Do not rescale
+        the image once again. ROI format is (xmin,ymin,xmax,ymax)
+        """
         # Read image, get aspect ratio, and resize such as the largest side equals S
         with PathManager.open(fname, "rb") as f:
             im = Image.open(f).convert(mode="RGB")
@@ -355,6 +473,10 @@ class InstanceRetrievalImageLoader:
         return im_resized
 
     def load_and_prepare_revisited_image(self, img_path, roi=None):
+        """
+        Load the image, crop the roi from the image if the roi is not None,
+        apply the image transforms.
+        """
         # to avoid crashing for truncated (corrupted images)
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         # open path as file to avoid ResourceWarning
@@ -367,9 +489,16 @@ class InstanceRetrievalImageLoader:
         return im_resized
 
 
-# Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
-# Adapted by: Priya Goyal (prigoyal@fb.com)
 class InstanceRetrievalDataset:
+    """
+    A dataset class used for the Instance retrieval datasets:
+    Oxford and Paris. The object reads and parses the datasets so it's
+    ready to be used in the code for retrieval evaluations.
+
+    Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
+    Adapted by: Priya Goyal (prigoyal@fb.com)
+    """
+
     def __init__(self, path, eval_binary_path, num_samples=None):
         self.path = path
         self.eval_binary_path = eval_binary_path
@@ -407,12 +536,21 @@ class InstanceRetrievalDataset:
         self.load(num_samples=num_samples)
 
     def get_num_images(self):
+        """
+        Number of images in the dataset
+        """
         return self.N_images
 
     def get_num_query_images(self):
+        """
+        Number of query images in the dataset
+        """
         return self.N_queries
 
     def load(self, num_samples=None):
+        """
+        Load the data ground truth and parse the data so it's ready to be used.
+        """
         # Load the dataset GT
         self.lab_root = f"{self.path}/lab/"
         self.img_root = f"{self.path}/jpg/"
@@ -488,6 +626,9 @@ class InstanceRetrievalDataset:
             self.N_images = min(self.N_images, num_samples)
 
     def score(self, sim, temp_dir):
+        """
+        From the input similarity score, compute the mean average precision
+        """
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
         idx = np.argsort(sim, axis=1)[:, ::-1]
@@ -500,6 +641,9 @@ class InstanceRetrievalDataset:
         logging.info("Mean: {0:.2f}".format(100 * np.mean(maps)))
 
     def score_rnk_partial(self, i, idx, temp_dir):
+        """
+        Compute the mean AP for a given single query
+        """
         rnk = np.array(self.img_filenames[: self.N_images])[idx]
         with PathManager.open(f"{temp_dir}/{self.q_names[i]}.rnk", "w") as f:
             f.write("\n".join(rnk) + "\n")
@@ -515,14 +659,23 @@ class InstanceRetrievalDataset:
         return map_
 
     def get_filename(self, i):
+        """
+        Return the image filepath for the db image
+        """
         return os.path.normpath(
             "{0}/{1}.jpg".format(self.img_root, self.img_filenames[i])
         )
 
     def get_query_filename(self, i):
+        """
+        Reutrn the image filepath for the query image
+        """
         return os.path.normpath(
             f"{self.img_root}/{self.img_filenames[self.q_index[i]]}.jpg"
         )
 
     def get_query_roi(self, i):
+        """
+        Get the ROI for the query image that we want to test retrieval
+        """
         return self.q_roi[self.q_names[i]]

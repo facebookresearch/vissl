@@ -9,6 +9,5 @@ API Documentation
     losses
     hooks
     optimizers
-    tasks
     trainer
     utils

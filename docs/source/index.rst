@@ -17,28 +17,19 @@ from designing a new self-supervised task to evaluating the learned representati
    :maxdepth: 1
    :caption: Index
 
+   what_is_vissl
+   installation
    getting_started
 
-
 .. toctree::
    :maxdepth: 1
-   :caption: Installation
-
-   installation
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: VISSL Configuration files
+   :caption: Notes
 
    hydra_config
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Visualization
-
    visualization
+   compatibility_libraries
+   contributing
+   contacts
 
 
 .. toctree::
@@ -69,6 +60,7 @@ from designing a new self-supervised task to evaluating the learned representati
    ssl_approaches/pirl
    ssl_approaches/simclr
    ssl_approaches/moco
+   ssl_approaches/deepclusterv2
    ssl_approaches/swav
 
 
@@ -81,6 +73,9 @@ from designing a new self-supervised task to evaluating the learned representati
    evaluations/nearest_neighbor
    evaluations/semi_supervised
    evaluations/object_detection
+   evaluations/feature_extraction
+   evaluations/feature_eval_settings
+   evaluations/load_models
 
 
 .. toctree::
@@ -115,32 +110,15 @@ from designing a new self-supervised task to evaluating the learned representati
 
 .. toctree::
    :maxdepth: 1
-   :caption: Large Scale Self-Supervised learning
+   :caption: Large Scale Training
 
+   large_scale/activation_checkpointing
    large_scale/larc
    large_scale/queue_dataset
    large_scale/stateful_sampler
    large_scale/mixed_precision
    large_scale/distributed_training
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Compatibility with other Libraries
-
-   compatibility_libraries
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contributing
-
-   contributing
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contact
-
-   contacts
+   large_scale/zero
 
 
 .. toctree::

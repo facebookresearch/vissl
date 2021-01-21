@@ -21,7 +21,7 @@ class ShuffleImgPatches(ClassyTransform):
     This is a common operation used in Jigsaw approach https://arxiv.org/abs/1603.09246
     """
 
-    def __init__(self, perm_file):
+    def __init__(self, perm_file: str):
         """
         Args:
             perm_file (string): path to the file containing pre-defined permutations.
@@ -63,5 +63,14 @@ class ShuffleImgPatches(ClassyTransform):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ShuffleImgPatches":
+        """
+        Instantiates ShuffleImgPatches from configuration.
+
+        Args:
+            config (Dict): arguments for for the transform
+
+        Returns:
+            ShuffleImgPatches instance.
+        """
         assert "perm_file" in config, "Please specify the perm_file"
         return cls(perm_file=config["perm_file"])

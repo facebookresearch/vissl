@@ -30,6 +30,20 @@ if is_apex_available():
 
 @register_task("self_supervision_task")
 class SelfSupervisionTask(ClassificationTask):
+    """
+    A task prepares and holds all the components of a training like optimizer, datasets,
+    dataloaders, losses, meters etc. Task also contains the variable like training iteration,
+    epoch number etc. that are updated during the training.
+
+    We prepare every single component according to the parameter settings user wants
+    and specified in the yaml config file.
+
+    Task also supports 2 additional things:
+    1) converts the model BatchNorm layers to the synchronized batchnorm
+    2) sets mixed precision (apex and pytorch both supported)
+
+    """
+
     def __init__(self, config: AttrDict):
         super().__init__()
         self.config = config
@@ -98,8 +112,14 @@ class SelfSupervisionTask(ClassificationTask):
         # set the bucket_cap_mb for gradient reduction. This can be tuned to overlap
         # communication as much as possible
         self.set_ddp_bucket_cap_mb()
+        self.use_gpu = self.device.type == "cuda"
 
     def set_device(self):
+        """
+        Set the training device: whether gpu or cpu. We use the self.device
+        in the rest of the workflow to determine if we should do cpu only training
+        or use gpu. set MACHINE.DEVICE = "gpu" or "cpu"
+        """
         try:
             self.device = torch.device(
                 "cuda" if self.config.MACHINE.DEVICE == "gpu" else "cpu"
@@ -108,11 +128,20 @@ class SelfSupervisionTask(ClassificationTask):
             self.device = torch.device("cuda")
 
     def set_ddp_bucket_cap_mb(self):
+        """
+        PyTorch DDP supports setting the bucket_cap_mb for all reduce. Tuning
+        this parameter can help with the speed of the model. We use the default
+        pytorch value of 25MB.
+        """
         self.ddp_bucket_cap_mb = self.config.DATA.DDP_BUCKET_CAP_MB
         assert self.ddp_bucket_cap_mb > 0, "bucket_cap_mb must be positive"
 
     def set_available_splits(self):
-        # self.available_splits = list(self.config["DATA"].keys())
+        """
+        Given the data settings, we determine if we are using both train and test
+        datasets. If TEST_MODEL=true, we will add the test to the available_splits.
+        If TEST_ONLY=false, we add train to the split as well.
+        """
         if self.config.TEST_MODEL:
             self.available_splits.append("TEST")
         if not self.config.TEST_ONLY:
@@ -121,14 +150,14 @@ class SelfSupervisionTask(ClassificationTask):
 
     def set_amp_args(self):
         """
-        Two automatic mixed precision implementations are available: Apex's and Pytorch's.
+        Two automatic mixed precision implementations are available: Apex's and PyTorch's.
 
         - If Apex's AMP is enabled, amp_args is a dictionary containing arguments
         to be passed to amp.initialize. Set to None to disable amp.
         To enable mixed precision training, pass amp_args={"opt_level": "O1"} here.
         See https://nvidia.github.io/apex/amp.html for more info.
 
-        - If Pytorch's AMP is enabled, no arguments are needed
+        - If Pytorch's AMP is enabled, no arguments are needed.
         """
 
         if self.config.MODEL.AMP_PARAMS.USE_AMP:
@@ -163,35 +192,54 @@ class SelfSupervisionTask(ClassificationTask):
             logging.info("Not using Automatic Mixed Precision")
 
     def set_checkpoint_path(self, checkpoint_path: str):
+        """
+        Set the checkpoint path for the training
+        """
         self.checkpoint_path = checkpoint_path
 
     def set_checkpoint_folder(self, checkpoint_folder: str):
+        """
+        Set the checkpoint folder for the training
+        """
         self.checkpoint_folder = checkpoint_folder
 
     def set_iteration(self, iteration):
+        """
+        Set the iteration number.
+        we maintain and store the iteration in the state itself. It counts
+        total number of iterations we do in training phases. Updated
+        after every forward pass of training step in UpdateTrainIterationNumHook.
+        Starts from 1
+        """
         assert iteration >= 0, "Iteration number must be positive"
         self.iteration = iteration
 
     @classmethod
     def from_config(cls, config):
+        """
+        Create the task from the yaml config input.
+        """
         test_only = config.TEST_ONLY
         return cls(config).set_available_splits().set_test_only(test_only)
 
     # We keep the function because this is used by hooks like checkpoint etc.
     def get_config(self):
+        """
+        Utility function to store and use the config that was used for the given
+        training.
+        """
         return {"config": self.config}
 
     def _build_phases(self):
         """
-        Returns list of phases from config.  These phases will look like:
+        Returns list of phases from config. These phases will look like:
         {
           train: is this a train or test phase (bool)?
         }
         If this is a test only run, then only test phases will be
-        generated, if this is a training run, then x phases = x train
-        phases + x test phases, interleaved. We also add the test phases
-        every TEST_EVERY_NUM_EPOCH if we don't want the tst to run after every test
-        phase.
+        generated, if this is a training run, then #phases = #train-phases + #test-phases,
+        interleaved. We also add the test phases every TEST_EVERY_NUM_EPOCH if
+        we don't want the tst to run after every test phase.
         """
         num_epochs = self.config["OPTIMIZER"]["num_epochs"]
         if not self.config["TEST_ONLY"]:
@@ -216,6 +264,10 @@ class SelfSupervisionTask(ClassificationTask):
         return output_phases
 
     def build_datasets(self):
+        """
+        Get the datasets for the data splits we will use in the training. The
+        set_available_splits variable determines the splits used in the training.
+        """
         datasets, data_and_label_keys = {}, {}
         for split in self.available_splits:
             datasets[split] = build_dataset(self.config, split)
@@ -224,7 +276,10 @@ class SelfSupervisionTask(ClassificationTask):
         return datasets, data_and_label_keys
 
     def build_dataloaders(self, pin_memory: bool) -> torch.utils.data.DataLoader:
-
+        """
+        Build PyTorch dataloaders for all the available_splits. We construct the
+        standard PyTorch Dataloader and allow setting all dataloader options.
+        """
         self.datasets, self.data_and_label_keys = self.build_datasets()
 
         loaders = {
@@ -242,13 +297,22 @@ class SelfSupervisionTask(ClassificationTask):
         return loaders
 
     def get_global_batchsize(self):
-        """Return global batchsize across all trainers"""
+        """
+        Return global batchsize used in the training across all the trainers.
+        We check what phase we  are in (train or test) and get the dataset
+        used in that phase. We call get_global_batchsize() of the dataset.
+        """
         for phase_type in self.datasets:
             if phase_type.lower() == self.phase_type.lower():
                 return self.datasets[phase_type].get_global_batchsize()
         raise ValueError(f"{self.phase_type} not found in self.datasets")
 
     def _build_optimizer(self):
+        """
+        Build optimizers using the optimizer settings specified by user.
+        For SGD, we support LARC as well. In order to use LARC, Apex must
+        be installed.
+        """
         optimizer_config = self.config["OPTIMIZER"]
         if optimizer_config.use_larc:
             assert is_apex_available(), "Apex must be available to use LARC"
@@ -256,9 +320,21 @@ class SelfSupervisionTask(ClassificationTask):
         return optim
 
     def _build_optimizer_schedulers(self):
+        """
+        Build the param schedulers to be used in training.
+        """
         return build_optimizer_schedulers(self.config["OPTIMIZER"])
 
     def _build_loss(self):
+        """
+        Build the loss used in training. Supports all PyTorch losses
+        and custom defined losses.
+
+        For some losses that require memory banks (for example in info_nce loss),
+        we need to store the size of data as we use it to allocate memory.
+        Since dataset size is not known at the time of config parsing, we set
+        the data size parameter here.
+        """
         # in some cases like memory bank, we need to store the size of data
         # as we use it to allocate memory. Hence we set that parameter here.
         logging.info("Building loss...")
@@ -290,6 +366,13 @@ class SelfSupervisionTask(ClassificationTask):
         return [build_meter(meter_config)]
 
     def _restore_model_weights(self, model):
+        """
+        If using a weights file to initialize the model, we load the weights
+        and initialize the model. Since the weights file specified
+        by user might not be VISSL trained weights, we expose several config
+        options like APPEND_PREFIX, etc to allow successful loading of the weights.
+        See MODEL.WEIGHTS_INIT description in vissl/config/defaults.yaml for details.
+        """
         params_from_file = self.config["MODEL"]["WEIGHTS_INIT"]
         init_weights_path = params_from_file["PARAMS_FILE"]
         logging.info(f"Initializing model from: {init_weights_path}")
@@ -319,7 +402,19 @@ class SelfSupervisionTask(ClassificationTask):
 
     def _build_model(self):
         """
-        Returns model for task.
+        - Builds and returns model used for task. The returned model is not copied to
+          gpu yet (if using gpu) and neither wrapped with DDP yet. This is done later
+          by self.prepare()
+
+        - We also convert the model BatchNorm layers to SyncBatchNorm if user
+          has set the config option. We support PyTorch and Apex SyncBatchNorms
+          both.
+
+        - If the model is set to be in evaluation model and the full model must be frozen,
+          we freeze the model.
+
+        - If the model must be initialized from a checkpoint or user passed weights file
+          we initialize the model from the checkpoint or the weights.
         """
         logging.info("Building model....")
 
@@ -369,11 +464,15 @@ class SelfSupervisionTask(ClassificationTask):
         return model
 
     def recreate_data_iterator(self, phase_type, epoch, compute_start_iter):
-        """Recreate data iterator (including multiprocessing workers)
+        """
+        Recreate data iterator (including multiprocessing workers) and destroy the
+        previous iterators.
 
-        This is called when we load a new checkpoint or when phase changes.
-        Sampler may need to be informed on those events, so we call them
-        here.
+        This is called when we load a new checkpoint or when phase changes during
+        the training (one epoch to the next).
+        DataSampler may need to be informed on those events to update the
+        epoch and start_iteration so that the data is deterministically shuffled,
+        so we call them here.
         """
         if hasattr(self.dataloaders[phase_type], "sampler"):
             sampler = self.dataloaders[phase_type].sampler
@@ -403,7 +502,13 @@ class SelfSupervisionTask(ClassificationTask):
 
     def _set_classy_state(self, state):
         """
-        We overwrite the classy state setting here to match our dataloader calls
+        We load/set the model state setting here to resume correctly from the
+        specified state. Usually called when resuming training from a previous
+        model checkpoint.
+        We set the model phase (train or eval), model weights,
+        copy the model to correct device, initialize meters, initialize optimizers
+        initialize amp state, set loss state, set the train phase number, iteration,
+        recreate data iterators, etc.
         """
         logging.info("=======Updating classy state_dict from checkpoint=======")
         # here we load the state specific things only. The other extra variables
@@ -478,7 +583,9 @@ class SelfSupervisionTask(ClassificationTask):
         return self
 
     def _set_ddp_options(self):
-        # set DDP options if the user has supplied them
+        """
+        set DDP options if the user has supplied them
+        """
         broadcast_buffers = self.config["DISTRIBUTED"]["BROADCAST_BUFFERS"]
         if broadcast_buffers:
             logging.info("Broadcast model BN buffers from master on every forward pass")
@@ -487,12 +594,18 @@ class SelfSupervisionTask(ClassificationTask):
                 broadcast_buffers_mode=broadcast_buffers_enum_mode
             )  # NOQA
 
-    # override the ClassyTask run_hook function
     def run_hooks(self, hook_function_name):
+        """
+        Override the ClassyTask run_hook function and run the hooks whenever called
+        """
         for hook in self.hooks:
             getattr(hook, hook_function_name)(self)
 
     def prepare_optimizer(self):
+        """
+        Constructs the optimizer using the user defined settings in the yaml config.
+        The model must be on the correct device (cuda or cpu) by this point.
+        """
         param_groups = get_optimizer_param_groups(
             model=self.base_model,
             model_config=self.config["MODEL"],
@@ -503,9 +616,17 @@ class SelfSupervisionTask(ClassificationTask):
 
     def prepare(self, pin_memory: bool = False):
         """
-        Prepares the task.
+        Prepares the task:
+        - dataloaders
+        - model
+        - copy model to correct device
+        - meters
+        - loss
+        - optimizer
+        - LR schedulers
+        - AMP state
+        - resume from a checkpoint if available
         """
-
         self.dataloaders = self.build_dataloaders(pin_memory=pin_memory)
         self.phases = self._build_phases()
         train_phases = [phase for phase in self.phases if phase["train"]]
@@ -565,7 +686,9 @@ class SelfSupervisionTask(ClassificationTask):
 
     @property
     def enable_manual_gradient_reduction(self) -> bool:
-        """ Lazily initial the enable flag once when model is not None. """
+        """
+        Lazily initial the enable flag once when model is not None.
+        """
         if self._enable_manual_gradient_reduction is None and self.model is not None:
             self.set_manual_gradient_reduction()
         if self._enable_manual_gradient_reduction:
@@ -573,7 +696,9 @@ class SelfSupervisionTask(ClassificationTask):
         return False
 
     def set_manual_gradient_reduction(self) -> None:
-        """ Called during __init__ to set a flag if manual gradient reduction is enabled. """
+        """
+        Called during __init__ to set a flag if manual gradient reduction is enabled.
+        """
         assert self.model is not None
         self._enable_manual_gradient_reduction = manual_gradient_reduction(
             self.model, self.config["DISTRIBUTED"]["MANUAL_GRADIENT_REDUCTION"]
