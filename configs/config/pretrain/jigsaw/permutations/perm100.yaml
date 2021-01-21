@@ -21,7 +21,7 @@ config:
           num_patches: 9
           patch_jitter: 21
         - name: ShuffleImgPatches
-          perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/naroozi_perms_100_max.npy                  # perm 100
+          perm_file: https://dl.fbaipublicfiles.com/fair_self_supervision_benchmark/jigsaw_permutations/naroozi_perms_100_patches_9_max.npy                  # perm 100
   MODEL:
     HEAD:
       PARAMS: [

@@ -25,7 +25,7 @@ MODEL:
     NUM_CONV: 4
     POOLER_RESOLUTION: 14
   MASK_ON: True
-  WEIGHTS: "/mnt/vol/gfsai-bistro-east/ai-group/users/rbg/regnet/RegNetX-3.2GF_dds_8gpu_id160906139.pyth"
+  WEIGHTS: "specify your model weights"
   PIXEL_STD: [57.375, 57.120, 58.395]
   BACKBONE:
     NAME: "build_regnet_fpn_backbone"

@@ -29,7 +29,7 @@ config:
           num_patches: 9
           patch_jitter: 21
         - name: ShuffleImgPatches
-          perm_file: /mnt/vol/gfsai-east/ai-group/users/prigoyal/caffe2/resnet/gen/hamming_perms_2000_patches_9_max_avg.npy   # perm 2K
+          perm_file: https://dl.fbaipublicfiles.com/fair_self_supervision_benchmark/jigsaw_permutations/hamming_perms_2000_patches_9_max_avg.npy   # perm 2K
       COLLATE_FUNCTION: siamese_collator
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
