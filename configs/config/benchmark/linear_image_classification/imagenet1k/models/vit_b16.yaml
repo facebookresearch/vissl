@@ -2,7 +2,7 @@
 config:
   VERBOSE: False
   LOG_FREQUENCY: 10
-  TEST_ONLY: False
+  TEST_ONLY: True
   TEST_MODEL: True
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
@@ -51,7 +51,8 @@ config:
   MODEL:
     FEATURE_EVAL_SETTINGS:
       EVAL_MODE_ON: True
-      FREEZE_TRUNK_ONLY: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
     TRUNK:
       NAME: vision_transformer
       TRUNK_PARAMS:
