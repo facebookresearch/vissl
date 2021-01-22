@@ -1,0 +1,27 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer_deit
+      TRUNK_PARAMS:
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 12
+          HIDDEN_DIM: 768
+          MLP_DIM: 3072
+          DROPOUT_RATE: 0.1
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
+    HEAD:
+      PARAMS: [
+      ["swav_head", {"dims": [768, 2048, 128], "use_bn": True, "num_clusters":
+        [3000]}],
+      ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+    ['module.heads.0.prototypes0.weight', 313],
+    ]
