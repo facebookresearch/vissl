@@ -122,12 +122,18 @@ class SSLTensorboardHook(ClassyHook):
             if self.log_params_gradients:
                 for name, parameter in task.base_model.named_parameters():
                     if parameter.grad is not None:
-                        self.tb_writer.add_histogram(
-                            f"Gradients/{name}",
-                            parameter.grad,
-                            global_step=task.train_phase_idx,
-                        )
-
+                        try:
+                            self.tb_writer.add_histogram(
+                                f"Gradients/{name}",
+                                parameter.grad,
+                                global_step=task.train_phase_idx,
+                            )
+                        except ValueError:
+                            logging.info(
+                                f"Gradient histogram empty for {name}, "
+                                f"iteration {task.iteration}. Unable to "
+                                f"log gradient."
+                            )
             # Reset the GPU Memory counter
             if torch.cuda.is_available():
                 torch.cuda.reset_max_memory_allocated()

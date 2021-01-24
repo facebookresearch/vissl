@@ -4,6 +4,6 @@ config:
     TRAIN:
       DATASET_NAMES: [google-imagenet1k-per10]
     TEST:
-      DATASET_NAMES: [google-imagenet1k-per01]
+      DATASET_NAMES: [google-imagenet1k-per10]
   OPTIMIZER:
     num_epochs: 30

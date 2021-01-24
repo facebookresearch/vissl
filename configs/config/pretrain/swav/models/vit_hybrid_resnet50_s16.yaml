@@ -2,7 +2,7 @@
 config:
   DATA:
     TRAIN:
-      BATCHSIZE_PER_REPLICA: 64
+      BATCHSIZE_PER_REPLICA: 128
   MODEL:
     TRUNK:
       NAME: vision_transformer_deit
@@ -12,16 +12,16 @@ config:
           PATCH_SIZE: 16
           NUM_LAYERS: 12
           NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
+          HIDDEN_DIM: 384
+          MLP_DIM: 1536
           DROPOUT_RATE: 0
           ATTENTION_DROPOUT_RATE: 0
           CLASSIFIER: token
           DROP_PATH_RATE: 0.1
+          HYBRID: resnet50
     HEAD:
       PARAMS: [
-      ["swav_head", {"dims": [768, 2048, 258fnhhvkulfkbljtcu], "use_bn": True,
-                     "num_clusters":
+      ["swav_head", {"dims": [384, 2048, 256], "use_bn": True, "num_clusters":
         [3000]}],
       ]
     TEMP_FROZEN_PARAMS_ITER_MAP: [
