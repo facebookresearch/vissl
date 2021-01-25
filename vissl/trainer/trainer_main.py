@@ -222,7 +222,12 @@ class SelfSupervisionTrainer(object):
         phase_idx, iteration_num = -1, -1
         task.num_phases = len(task.phases)
         task.num_epochs = task.num_train_phases
-        task.max_iteration = task.num_epochs * len(task.dataloaders["train"])
+        # Ensure that train loader exists. Will NOT exist if config.TEST_ONLY is True
+        if 'train' in task.dataloaders.keys():
+            loader_key = "train"
+        else:
+            loader_key = "test"        
+        task.max_iteration = task.num_epochs * len(task.dataloaders[loader_key])
 
         if task.checkpoint is not None:
             phase_idx = task.checkpoint["phase_idx"]
@@ -232,8 +237,8 @@ class SelfSupervisionTrainer(object):
         else:
             task.iteration = 0
             task.local_iteration_num = iteration_num
-        num_iter_in_epoch = len(task.dataloaders["train"])
-        num_samples = task.dataloaders["train"].dataset.num_samples()
+        num_iter_in_epoch = len(task.dataloaders[loader_key])
+        num_samples = task.dataloaders[loader_key].dataset.num_samples()
         task.start_time = time.time()
         task.batch_time = []
         task.metrics = {}
