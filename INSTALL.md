@@ -36,6 +36,8 @@ conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
 conda install -c vissl apex vissl
 ```
 
+The package also contains code for the fairscale and ClassyVision libraries. Ensure you do not have them installed separately.
+
 For other versions of PyTorch, Python, CUDA, please modify the above instructions with the
 desired version. VISSL provides Apex packages for all combinations of pytorch, python and compatible cuda.
 
@@ -82,6 +84,8 @@ pip install vissl
 # verify installation
 python -c 'import vissl'
 ```
+
+The package also contains code for the ClassyVision library. Ensure you do not have it installed separately.
 
 ## Installing VISSL from source
 The following instructions assume that you have desired CUDA version installed and working.

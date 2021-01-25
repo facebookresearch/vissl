@@ -27,7 +27,6 @@ requirements:
     - iopath
     - importlib_resources
     - hydra-core
-    - classy_vision
     - tabulate
     - pycocotools>=2.0.1
 
@@ -36,7 +35,6 @@ test:
     - torch
     - torch.cuda
     - vissl
-    - classy_vision
     - apex
     - tensorboard
     - hydra
