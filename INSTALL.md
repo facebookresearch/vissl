@@ -78,7 +78,7 @@ version_str="".join([
 #### Step 3: Install VISSL
 
 ```bash
-pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+pip install vissl
 # verify installation
 python -c 'import vissl'
 ```

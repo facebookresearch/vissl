@@ -79,7 +79,7 @@ On Google Colab, everything until this point is already set up. You install APEX
 
 .. code-block:: bash
 
-    pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+    pip install vissl
     # verify installation
     python -c 'import vissl'
 
