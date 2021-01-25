@@ -1,4 +1,6 @@
 
+# Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
+
 # Install: PyTorch (we assume 1.5.1 but VISSL works with all PyTorch versions >=1.4)
 !pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
@@ -19,7 +21,7 @@ print(version_str)
 !pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
 
 # install VISSL
-!pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+!pip install vissl
 
 import vissl
 import tensorboard
@@ -39,7 +41,7 @@ import torch
 !mkdir -p dummy_data/val/class1
 !mkdir -p dummy_data/val/class2
 
-# create 2 classes in train and add 2 images per class
+# create 2 classes in train and add 5 images per class
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img1.jpg
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img2.jpg
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img3.jpg
@@ -52,7 +54,7 @@ import torch
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img4.jpg
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img5.jpg
 
-# create 2 classes in val and add 2 images per class
+# create 2 classes in val and add 5 images per class
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img1.jpg
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img2.jpg
 !wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img3.jpg

@@ -1,4 +1,6 @@
 
+# Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
+
 # Install: PyTorch (we assume 1.5.1 but VISSL works with all PyTorch versions >=1.4)
 !pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
@@ -19,7 +21,7 @@ print(version_str)
 !pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
 
 # install VISSL
-!pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+!pip install vissl
 
 import vissl
 import tensorboard

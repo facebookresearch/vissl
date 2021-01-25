@@ -70,6 +70,17 @@
   src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
 </script>
 <div class="notebook">
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
@@ -113,7 +124,7 @@
 <span class="o">!</span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/<span class="o">{</span>version_str<span class="o">}</span>/download.html
 
 <span class="c1"># install VISSL</span>
-<span class="o">!</span>pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+<span class="o">!</span>pip install vissl
 </pre></div>
 </div>
 </div>
@@ -206,7 +217,7 @@
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [60]:</div>
+<div class="prompt input_prompt">In [5]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>mkdir -p dummy_data/train/class1
@@ -214,7 +225,7 @@
 <span class="o">!</span>mkdir -p dummy_data/val/class1
 <span class="o">!</span>mkdir -p dummy_data/val/class2
 
-<span class="c1"># create 2 classes in train and add 2 images per class</span>
+<span class="c1"># create 2 classes in train and add 5 images per class</span>
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img1.jpg
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img2.jpg
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class1/img3.jpg
@@ -227,7 +238,7 @@
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img4.jpg
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/train/class2/img5.jpg
 
-<span class="c1"># create 2 classes in val and add 2 images per class</span>
+<span class="c1"># create 2 classes in val and add 5 images per class</span>
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img1.jpg
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img2.jpg
 <span class="o">!</span>wget http://images.cocodataset.org/val2017/000000439715.jpg -q -O dummy_data/val/class1/img3.jpg
@@ -248,6 +259,38 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Now let's verify that the data is successfully downloaded:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [6]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>ls dummy_data/val/class1/
+<span class="o">!</span>ls dummy_data/train/class1/
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>img1.jpg  img2.jpg  img3.jpg  img4.jpg	img5.jpg
+img1.jpg  img2.jpg  img3.jpg  img4.jpg	img5.jpg
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Using-the-custom-data-in-VISSL">Using the custom data in VISSL<a class="anchor-link" href="#Using-the-custom-data-in-VISSL">¶</a></h2><p>Next step for us is to register the dummy data we created above with VISSL. Registering the dataset involves telling VISSL about the dataset name and the paths for the dataset. For this, we create a simple json file with the metadata and save it to <code>configs/config/dataset_catalog.py</code> file.</p>
 <p><strong>NOTE</strong>: VISSL uses the specific <code>dataset_catalog.json</code> under the path <code>configs/config/dataset_catalog.json</code>.</p>
 </div>
@@ -255,7 +298,7 @@
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [45]:</div>
+<div class="prompt input_prompt">In [7]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">json_data</span> <span class="o">=</span> <span class="p">{</span>
@@ -276,6 +319,20 @@
 </div>
 </div>
 </div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
@@ -287,7 +344,7 @@
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [46]:</div>
+<div class="prompt input_prompt">In [8]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">vissl.data.dataset_catalog</span> <span class="kn">import</span> <span class="n">VisslDatasetCatalog</span>
@@ -337,7 +394,7 @@ config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]</code></pre>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [62]:</div>
+<div class="prompt input_prompt">In [15]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>python3 run_distributed_engines.py <span class="err">\</span>
@@ -346,10 +403,12 @@ config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]</code></pre>
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATA_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">LABEL_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATASET_NAMES</span><span class="o">=</span><span class="p">[</span><span class="n">dummy_data_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATA_PATHS</span><span class="o">=</span><span class="p">[</span><span class="o">/</span><span class="n">content</span><span class="o">/</span><span class="n">dummy_data</span><span class="o">/</span><span class="n">train</span><span class="p">]</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">BATCHSIZE_PER_REPLICA</span><span class="o">=</span><span class="mi">2</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">DATA_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">LABEL_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">disk_folder</span><span class="p">]</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">DATASET_NAMES</span><span class="o">=</span><span class="p">[</span><span class="n">dummy_data_folder</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">DATA_PATHS</span><span class="o">=</span><span class="p">[</span><span class="o">/</span><span class="n">content</span><span class="o">/</span><span class="n">dummy_data</span><span class="o">/</span><span class="n">val</span><span class="p">]</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">BATCHSIZE_PER_REPLICA</span><span class="o">=</span><span class="mi">2</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="o">.</span><span class="n">NUM_NODES</span><span class="o">=</span><span class="mi">1</span> \
     <span class="n">config</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="o">.</span><span class="n">NUM_PROC_PER_NODE</span><span class="o">=</span><span class="mi">1</span> \
@@ -371,83 +430,164 @@ config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]</code></pre>
 ** Please migrate to the version in iopath repo. **
 https://github.com/facebookresearch/iopath 
 
-####### overrides: ['hydra.verbose=true', 'config=supervised_1gpu_resnet_example', 'config.DATA.TRAIN.DATA_SOURCES=[disk_folder]', 'config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]', 'config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TEST.DATA_SOURCES=[disk_folder]', 'config.DATA.TEST.LABEL_SOURCES=[disk_folder]', 'config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]', 'config.DISTRIBUTED.NUM_NODES=1', 'config.DISTRIBUTED.NUM_PROC_PER_NODE=1', 'config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2', 'config.DATA.TEST.BATCHSIZE_PER_REPLICA=2', 'config.OPTIMIZER.num_epochs=2', 'config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001]', 'config.OPTIMIZER.param_schedulers.lr.milestones=[1]', 'config.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'config.CHECKPOINT.DIR=./checkpoints', 'hydra.verbose=true']
-INFO 2021-01-13 20:39:08,772 __init__.py:  32: Provided Config has latest version: 1
-INFO 2021-01-13 20:39:08,772 run_distributed_engines.py: 121: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:59709
-INFO 2021-01-13 20:39:08,773 train.py:  42: Env set for rank: 0, dist_rank: 0
-INFO 2021-01-13 20:39:08,773 env.py:  24: CLICOLOR:	1
-INFO 2021-01-13 20:39:08,773 env.py:  24: CLOUDSDK_CONFIG:	/content/.config
-INFO 2021-01-13 20:39:08,773 env.py:  24: CLOUDSDK_PYTHON:	python3
-INFO 2021-01-13 20:39:08,773 env.py:  24: COLAB_GPU:	1
-INFO 2021-01-13 20:39:08,773 env.py:  24: CUDA_PKG_VERSION:	10-1=10.1.243-1
-INFO 2021-01-13 20:39:08,773 env.py:  24: CUDA_VERSION:	10.1.243
-INFO 2021-01-13 20:39:08,773 env.py:  24: CUDNN_VERSION:	7.6.5.32
-INFO 2021-01-13 20:39:08,773 env.py:  24: DATALAB_SETTINGS_OVERRIDES:	{"kernelManagerProxyPort":6000,"kernelManagerProxyHost":"172.28.0.3","jupyterArgs":["--ip=\"172.28.0.2\""],"debugAdapterMultiplexerPath":"/usr/local/bin/dap_multiplexer"}
-INFO 2021-01-13 20:39:08,773 env.py:  24: DEBIAN_FRONTEND:	noninteractive
-INFO 2021-01-13 20:39:08,774 env.py:  24: ENV:	/root/.bashrc
-INFO 2021-01-13 20:39:08,774 env.py:  24: GCE_METADATA_TIMEOUT:	0
-INFO 2021-01-13 20:39:08,774 env.py:  24: GCS_READ_CACHE_BLOCK_SIZE_MB:	16
-INFO 2021-01-13 20:39:08,774 env.py:  24: GIT_PAGER:	cat
-INFO 2021-01-13 20:39:08,774 env.py:  24: GLIBCPP_FORCE_NEW:	1
-INFO 2021-01-13 20:39:08,774 env.py:  24: GLIBCXX_FORCE_NEW:	1
-INFO 2021-01-13 20:39:08,774 env.py:  24: HOME:	/root
-INFO 2021-01-13 20:39:08,774 env.py:  24: HOSTNAME:	010ea261cff2
-INFO 2021-01-13 20:39:08,774 env.py:  24: JPY_PARENT_PID:	53
-INFO 2021-01-13 20:39:08,774 env.py:  24: LANG:	en_US.UTF-8
-INFO 2021-01-13 20:39:08,774 env.py:  24: LAST_FORCED_REBUILD:	20210105
-INFO 2021-01-13 20:39:08,774 env.py:  24: LD_LIBRARY_PATH:	/usr/lib64-nvidia
-INFO 2021-01-13 20:39:08,774 env.py:  24: LD_PRELOAD:	/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
-INFO 2021-01-13 20:39:08,774 env.py:  24: LIBRARY_PATH:	/usr/local/cuda/lib64/stubs
-INFO 2021-01-13 20:39:08,774 env.py:  24: LOCAL_RANK:	0
-INFO 2021-01-13 20:39:08,774 env.py:  24: MPLBACKEND:	module://ipykernel.pylab.backend_inline
-INFO 2021-01-13 20:39:08,774 env.py:  24: NCCL_VERSION:	2.7.8
-INFO 2021-01-13 20:39:08,774 env.py:  24: NO_GCE_CHECK:	True
-INFO 2021-01-13 20:39:08,774 env.py:  24: NVIDIA_DRIVER_CAPABILITIES:	compute,utility
-INFO 2021-01-13 20:39:08,775 env.py:  24: NVIDIA_REQUIRE_CUDA:	cuda&gt;=10.1 brand=tesla,driver&gt;=396,driver&lt;397 brand=tesla,driver&gt;=410,driver&lt;411 brand=tesla,driver&gt;=418,driver&lt;419
-INFO 2021-01-13 20:39:08,775 env.py:  24: NVIDIA_VISIBLE_DEVICES:	all
-INFO 2021-01-13 20:39:08,775 env.py:  24: OLDPWD:	/
-INFO 2021-01-13 20:39:08,775 env.py:  24: PAGER:	cat
-INFO 2021-01-13 20:39:08,775 env.py:  24: PATH:	/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/node/bin:/tools/google-cloud-sdk/bin:/opt/bin
-INFO 2021-01-13 20:39:08,775 env.py:  24: PWD:	/content
-INFO 2021-01-13 20:39:08,775 env.py:  24: PYTHONPATH:	/env/python
-INFO 2021-01-13 20:39:08,775 env.py:  24: PYTHONWARNINGS:	ignore:::pip._internal.cli.base_command
-INFO 2021-01-13 20:39:08,775 env.py:  24: RANK:	0
-INFO 2021-01-13 20:39:08,775 env.py:  24: SHELL:	/bin/bash
-INFO 2021-01-13 20:39:08,775 env.py:  24: SHLVL:	1
-INFO 2021-01-13 20:39:08,775 env.py:  24: TBE_CREDS_ADDR:	172.28.0.1:8008
-INFO 2021-01-13 20:39:08,775 env.py:  24: TERM:	xterm-color
-INFO 2021-01-13 20:39:08,775 env.py:  24: TF_FORCE_GPU_ALLOW_GROWTH:	true
-INFO 2021-01-13 20:39:08,775 env.py:  24: WORLD_SIZE:	1
-INFO 2021-01-13 20:39:08,775 env.py:  24: _:	/usr/bin/python3
-INFO 2021-01-13 20:39:08,775 env.py:  24: __EGL_VENDOR_LIBRARY_DIRS:	/usr/lib64-nvidia:/usr/share/glvnd/egl_vendor.d/
-INFO 2021-01-13 20:39:08,775 misc.py:  68: Set start method of multiprocessing to fork
-INFO 2021-01-13 20:39:08,776 train.py:  53: Setting seed....
-INFO 2021-01-13 20:39:08,776 misc.py:  77: MACHINE SEED: 0
-INFO 2021-01-13 20:39:08,817 hydra_config.py: 122: Training with config:
-INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR_RUN_ID': False,
+####### overrides: ['hydra.verbose=true', 'config=supervised_1gpu_resnet_example', 'config.DATA.TRAIN.DATA_SOURCES=[disk_folder]', 'config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]', 'config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TRAIN.DATA_PATHS=[/content/dummy_data/train]', 'config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2', 'config.DATA.TEST.DATA_SOURCES=[disk_folder]', 'config.DATA.TEST.LABEL_SOURCES=[disk_folder]', 'config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TEST.DATA_PATHS=[/content/dummy_data/val]', 'config.DATA.TEST.BATCHSIZE_PER_REPLICA=2', 'config.DISTRIBUTED.NUM_NODES=1', 'config.DISTRIBUTED.NUM_PROC_PER_NODE=1', 'config.OPTIMIZER.num_epochs=2', 'config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001]', 'config.OPTIMIZER.param_schedulers.lr.milestones=[1]', 'config.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'config.CHECKPOINT.DIR=./checkpoints', 'hydra.verbose=true']
+INFO 2021-01-25 20:04:50,636 __init__.py:  32: Provided Config has latest version: 1
+[PathManager] Attempting to register prefix 'http://' from the following call stack:
+  File "run_distributed_engines.py", line 194, in &lt;module&gt;
+    hydra_main(overrides=overrides)
+  File "run_distributed_engines.py", line 179, in hydra_main
+    hook_generator=default_hook_generator,
+  File "run_distributed_engines.py", line 77, in launch_distributed
+    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'http://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'https://' from the following call stack:
+  File "run_distributed_engines.py", line 194, in &lt;module&gt;
+    hydra_main(overrides=overrides)
+  File "run_distributed_engines.py", line 179, in hydra_main
+    hook_generator=default_hook_generator,
+  File "run_distributed_engines.py", line 77, in launch_distributed
+    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'https://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'ftp://' from the following call stack:
+  File "run_distributed_engines.py", line 194, in &lt;module&gt;
+    hydra_main(overrides=overrides)
+  File "run_distributed_engines.py", line 179, in hydra_main
+    hook_generator=default_hook_generator,
+  File "run_distributed_engines.py", line 77, in launch_distributed
+    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'ftp://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+INFO 2021-01-25 20:04:50,638 run_distributed_engines.py: 163: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:56229
+[PathManager] Attempting to register prefix 'http://' from the following call stack:
+  File "run_distributed_engines.py", line 166, in _distributed_worker
+    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+  File "run_distributed_engines.py", line 159, in process_main
+    hook_generator=hook_generator,
+  File "/usr/local/lib/python3.6/dist-packages/vissl/engines/train.py", line 60, in train_main
+    set_env_vars(local_rank, node_id, cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'http://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'https://' from the following call stack:
+  File "run_distributed_engines.py", line 166, in _distributed_worker
+    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+  File "run_distributed_engines.py", line 159, in process_main
+    hook_generator=hook_generator,
+  File "/usr/local/lib/python3.6/dist-packages/vissl/engines/train.py", line 60, in train_main
+    set_env_vars(local_rank, node_id, cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'https://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'ftp://' from the following call stack:
+  File "run_distributed_engines.py", line 166, in _distributed_worker
+    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+  File "run_distributed_engines.py", line 159, in process_main
+    hook_generator=hook_generator,
+  File "/usr/local/lib/python3.6/dist-packages/vissl/engines/train.py", line 60, in train_main
+    set_env_vars(local_rank, node_id, cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'ftp://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+INFO 2021-01-25 20:04:50,638 train.py:  66: Env set for rank: 0, dist_rank: 0
+INFO 2021-01-25 20:04:50,638 env.py:  41: CLICOLOR:	1
+INFO 2021-01-25 20:04:50,639 env.py:  41: CLOUDSDK_CONFIG:	/content/.config
+INFO 2021-01-25 20:04:50,639 env.py:  41: CLOUDSDK_PYTHON:	python3
+INFO 2021-01-25 20:04:50,639 env.py:  41: COLAB_GPU:	1
+INFO 2021-01-25 20:04:50,639 env.py:  41: CUDA_PKG_VERSION:	10-1=10.1.243-1
+INFO 2021-01-25 20:04:50,639 env.py:  41: CUDA_VERSION:	10.1.243
+INFO 2021-01-25 20:04:50,639 env.py:  41: CUDNN_VERSION:	7.6.5.32
+INFO 2021-01-25 20:04:50,639 env.py:  41: DATALAB_SETTINGS_OVERRIDES:	{"kernelManagerProxyPort":6000,"kernelManagerProxyHost":"172.28.0.3","jupyterArgs":["--ip=\"172.28.0.2\""],"debugAdapterMultiplexerPath":"/usr/local/bin/dap_multiplexer"}
+INFO 2021-01-25 20:04:50,639 env.py:  41: DEBIAN_FRONTEND:	noninteractive
+INFO 2021-01-25 20:04:50,639 env.py:  41: ENV:	/root/.bashrc
+INFO 2021-01-25 20:04:50,639 env.py:  41: GCE_METADATA_TIMEOUT:	0
+INFO 2021-01-25 20:04:50,639 env.py:  41: GCS_READ_CACHE_BLOCK_SIZE_MB:	16
+INFO 2021-01-25 20:04:50,639 env.py:  41: GIT_PAGER:	cat
+INFO 2021-01-25 20:04:50,639 env.py:  41: GLIBCPP_FORCE_NEW:	1
+INFO 2021-01-25 20:04:50,639 env.py:  41: GLIBCXX_FORCE_NEW:	1
+INFO 2021-01-25 20:04:50,639 env.py:  41: HOME:	/root
+INFO 2021-01-25 20:04:50,639 env.py:  41: HOSTNAME:	afa74bb7b737
+INFO 2021-01-25 20:04:50,639 env.py:  41: JPY_PARENT_PID:	50
+INFO 2021-01-25 20:04:50,640 env.py:  41: LANG:	en_US.UTF-8
+INFO 2021-01-25 20:04:50,640 env.py:  41: LAST_FORCED_REBUILD:	20210119
+INFO 2021-01-25 20:04:50,640 env.py:  41: LD_LIBRARY_PATH:	/usr/lib64-nvidia
+INFO 2021-01-25 20:04:50,640 env.py:  41: LD_PRELOAD:	/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+INFO 2021-01-25 20:04:50,640 env.py:  41: LIBRARY_PATH:	/usr/local/cuda/lib64/stubs
+INFO 2021-01-25 20:04:50,640 env.py:  41: LOCAL_RANK:	0
+INFO 2021-01-25 20:04:50,640 env.py:  41: MPLBACKEND:	module://ipykernel.pylab.backend_inline
+INFO 2021-01-25 20:04:50,640 env.py:  41: NCCL_VERSION:	2.8.3
+INFO 2021-01-25 20:04:50,640 env.py:  41: NO_GCE_CHECK:	True
+INFO 2021-01-25 20:04:50,640 env.py:  41: NVIDIA_DRIVER_CAPABILITIES:	compute,utility
+INFO 2021-01-25 20:04:50,640 env.py:  41: NVIDIA_REQUIRE_CUDA:	cuda&gt;=10.1 brand=tesla,driver&gt;=396,driver&lt;397 brand=tesla,driver&gt;=410,driver&lt;411 brand=tesla,driver&gt;=418,driver&lt;419
+INFO 2021-01-25 20:04:50,640 env.py:  41: NVIDIA_VISIBLE_DEVICES:	all
+INFO 2021-01-25 20:04:50,640 env.py:  41: OLDPWD:	/
+INFO 2021-01-25 20:04:50,640 env.py:  41: PAGER:	cat
+INFO 2021-01-25 20:04:50,640 env.py:  41: PATH:	/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/node/bin:/tools/google-cloud-sdk/bin:/opt/bin
+INFO 2021-01-25 20:04:50,640 env.py:  41: PWD:	/content
+INFO 2021-01-25 20:04:50,640 env.py:  41: PYTHONPATH:	/env/python
+INFO 2021-01-25 20:04:50,640 env.py:  41: PYTHONWARNINGS:	ignore:::pip._internal.cli.base_command
+INFO 2021-01-25 20:04:50,640 env.py:  41: RANK:	0
+INFO 2021-01-25 20:04:50,641 env.py:  41: SHELL:	/bin/bash
+INFO 2021-01-25 20:04:50,641 env.py:  41: SHLVL:	1
+INFO 2021-01-25 20:04:50,641 env.py:  41: TBE_CREDS_ADDR:	172.28.0.1:8008
+INFO 2021-01-25 20:04:50,641 env.py:  41: TERM:	xterm-color
+INFO 2021-01-25 20:04:50,641 env.py:  41: TF_FORCE_GPU_ALLOW_GROWTH:	true
+INFO 2021-01-25 20:04:50,641 env.py:  41: WORLD_SIZE:	1
+INFO 2021-01-25 20:04:50,641 env.py:  41: _:	/usr/bin/python3
+INFO 2021-01-25 20:04:50,641 env.py:  41: __EGL_VENDOR_LIBRARY_DIRS:	/usr/lib64-nvidia:/usr/share/glvnd/egl_vendor.d/
+INFO 2021-01-25 20:04:50,641 misc.py:  86: Set start method of multiprocessing to fork
+INFO 2021-01-25 20:04:50,641 train.py:  77: Setting seed....
+INFO 2021-01-25 20:04:50,641 misc.py:  99: MACHINE SEED: 0
+INFO 2021-01-25 20:04:50,677 hydra_config.py: 140: Training with config:
+INFO 2021-01-25 20:04:50,681 hydra_config.py: 144: {'CHECKPOINT': {'APPEND_DISTR_RUN_ID': False,
                 'AUTO_RESUME': True,
                 'BACKEND': 'disk',
                 'CHECKPOINT_FREQUENCY': 1,
                 'CHECKPOINT_ITER_FREQUENCY': -1,
                 'DIR': './checkpoints',
                 'LATEST_CHECKPOINT_RESUME_FILE_NUM': 1,
-                'OVERWRITE_EXISTING': False},
+                'OVERWRITE_EXISTING': False,
+                'USE_SYMLINK_CHECKPOINT_FOR_RESUME': False},
  'CLUSTERFIT': {'CLUSTER_BACKEND': 'faiss',
                 'FEATURES': {'DATASET_NAME': '',
                              'DATA_PARTITION': 'TRAIN',
                              'LAYER_NAME': ''},
                 'NUM_CLUSTERS': 16000,
                 'N_ITER': 50},
- 'DATA': {'ENABLE_ASYNC_GPU_COPY': True,
+ 'DATA': {'DDP_BUCKET_CAP_MB': 25,
+          'ENABLE_ASYNC_GPU_COPY': True,
           'NUM_DATALOADER_WORKERS': 5,
           'PIN_MEMORY': True,
           'TEST': {'BATCHSIZE_PER_REPLICA': 2,
                    'COLLATE_FUNCTION': 'default_collate',
+                   'COLLATE_FUNCTION_PARAMS': {},
                    'COPY_DESTINATION_DIR': '',
                    'COPY_TO_LOCAL_DISK': False,
                    'DATASET_NAMES': ['dummy_data_folder'],
                    'DATA_LIMIT': -1,
-                   'DATA_PATHS': ['&lt;path to test folder&gt;'],
+                   'DATA_PATHS': ['/content/dummy_data/val'],
                    'DATA_SOURCES': ['disk_folder'],
                    'DEFAULT_GRAY_IMG_SIZE': 224,
                    'DROP_LAST': False,
@@ -467,11 +607,12 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                    'USE_STATEFUL_DISTRIBUTED_SAMPLER': False},
           'TRAIN': {'BATCHSIZE_PER_REPLICA': 2,
                     'COLLATE_FUNCTION': 'default_collate',
+                    'COLLATE_FUNCTION_PARAMS': {},
                     'COPY_DESTINATION_DIR': '',
                     'COPY_TO_LOCAL_DISK': False,
                     'DATASET_NAMES': ['dummy_data_folder'],
                     'DATA_LIMIT': -1,
-                    'DATA_PATHS': ['&lt;path to train folder&gt;'],
+                    'DATA_PATHS': ['/content/dummy_data/train'],
                     'DATA_SOURCES': ['disk_folder'],
                     'DEFAULT_GRAY_IMG_SIZE': 224,
                     'DROP_LAST': False,
@@ -499,6 +640,7 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                  'INIT_METHOD': 'tcp',
                  'MANUAL_GRADIENT_REDUCTION': False,
                  'NCCL_DEBUG': False,
+                 'NCCL_SOCKET_NTHREADS': '',
                  'NUM_NODES': 1,
                  'NUM_PROC_PER_NODE': 1,
                  'RUN_ID': 'auto'},
@@ -516,9 +658,13 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                    'WHITEN_IMG_LIST': ''},
  'LOG_FREQUENCY': 100,
  'LOSS': {'CrossEntropyLoss': {'ignore_index': -1},
+          'bce_logits_multiple_output_single_target': {'normalize_output': False,
+                                                       'reduction': 'none',
+                                                       'world_size': 1},
           'cross_entropy_multiple_output_single_target': {'ignore_index': -1,
                                                           'normalize_output': False,
                                                           'reduction': 'mean',
+                                                          'temperature': 1.0,
                                                           'weight': None},
           'deepclusterv2_loss': {'BATCHSIZE_PER_REPLICA': 256,
                                  'DROP_LAST': True,
@@ -564,18 +710,43 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                         'num_crops': 2,
                         'num_iters': 3,
                         'num_prototypes': [3000],
+                        'output_dir': '',
                         'queue': {'local_queue_length': 0,
                                   'queue_length': 0,
                                   'start_iter': 0},
+                        'temp_hard_assignment_iters': 0,
                         'temperature': 0.1,
-                        'use_double_precision': False}},
+                        'use_double_precision': False},
+          'swav_momentum_loss': {'crops_for_assign': [0, 1],
+                                 'embedding_dim': 128,
+                                 'epsilon': 0.05,
+                                 'momentum': 0.99,
+                                 'momentum_eval_mode_iter_start': 0,
+                                 'normalize_last_layer': True,
+                                 'num_crops': 2,
+                                 'num_iters': 3,
+                                 'num_prototypes': [3000],
+                                 'queue': {'local_queue_length': 0,
+                                           'queue_length': 0,
+                                           'start_iter': 0},
+                                 'temperature': 0.1,
+                                 'use_double_precision': False}},
  'MACHINE': {'DEVICE': 'gpu'},
  'METERS': {'accuracy_list_meter': {'meter_names': [],
                                     'num_meters': 1,
-                                    'topk_values': [1, 5]}},
+                                    'topk_values': [1, 5]},
+            'enable_training_meter': True,
+            'mean_ap_list_meter': {'max_cpu_capacity': -1,
+                                   'meter_names': [],
+                                   'num_classes': 9605,
+                                   'num_meters': 1},
+            'name': 'accuracy_list_meter'},
  'MODEL': {'ACTIVATION_CHECKPOINTING': {'NUM_ACTIVATION_CHECKPOINTING_SPLITS': 2,
                                         'USE_ACTIVATION_CHECKPOINTING': False},
-           'AMP_PARAMS': {'AMP_ARGS': {'opt_level': 'O1'}, 'USE_AMP': False},
+           'AMP_PARAMS': {'AMP_ARGS': {'opt_level': 'O1'},
+                          'AMP_TYPE': 'apex',
+                          'USE_AMP': False},
+           'CUDA_CACHE': {'CLEAR_CUDA_CACHE': False, 'CLEAR_FREQ': 100},
            'FEATURE_EVAL_SETTINGS': {'EVAL_MODE_ON': False,
                                      'EVAL_TRUNK_AND_HEAD': False,
                                      'EXTRACT_TRUNK_FEATURES_ONLY': False,
@@ -585,19 +756,21 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                                      'SHOULD_FLATTEN_FEATS': True},
            'HEAD': {'BATCHNORM_EPS': 1e-05,
                     'BATCHNORM_MOMENTUM': 0.1,
-                    'PARAMS': [['mlp', {'dims': [2048, 1000]}]]},
+                    'PARAMS': [['mlp', {'dims': [2048, 1000]}]],
+                    'PARAMS_MULTIPLIER': 1.0},
            'INPUT_TYPE': 'rgb',
            'MODEL_COMPLEXITY': {'COMPUTE_COMPLEXITY': False,
                                 'INPUT_SHAPE': [3, 224, 224]},
            'MULTI_INPUT_HEAD_MAPPING': [],
            'NON_TRAINABLE_PARAMS': [],
+           'SINGLE_PASS_EVERY_CROP': False,
            'SYNC_BN_CONFIG': {'CONVERT_BN_TO_SYNC_BN': False,
                               'GROUP_SIZE': -1,
                               'SYNC_BN_TYPE': 'pytorch'},
            'TEMP_FROZEN_PARAMS_ITER_MAP': [],
            'TRUNK': {'NAME': 'resnet',
                      'TRUNK_PARAMS': {'EFFICIENT_NETS': {},
-                                      'REGNETS': {},
+                                      'REGNET': {},
                                       'RESNETS': {'DEPTH': 50,
                                                   'GROUPS': 1,
                                                   'LAYER4_STRIDE': 2,
@@ -613,7 +786,10 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
  'MONITOR_PERF_STATS': False,
  'MULTI_PROCESSING_METHOD': 'fork',
  'NEAREST_NEIGHBOR': {'L2_NORM_FEATS': False, 'SIGMA': 0.1, 'TOPK': 200},
- 'OPTIMIZER': {'larc_config': {'clip': False,
+ 'OPTIMIZER': {'head_optimizer_params': {'use_different_lr': False,
+                                         'use_different_wd': False,
+                                         'weight_decay': 0.0001},
+               'larc_config': {'clip': False,
                                'eps': 1e-08,
                                'trust_coefficient': 0.001},
                'momentum': 0.9,
@@ -632,7 +808,21 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                                            'start_value': 0.1,
                                            'update_interval': 'epoch',
                                            'value': 0.1,
-                                           'values': [0.00078125, 7.813e-05]}},
+                                           'values': [0.00078125, 7.813e-05]},
+                                    'lr_head': {'auto_lr_scaling': {'auto_scale': True,
+                                                                    'base_lr_batch_size': 256,
+                                                                    'base_value': 0.1},
+                                                'end_value': 0.0,
+                                                'interval_scaling': [],
+                                                'lengths': [],
+                                                'milestones': [1],
+                                                'name': 'multistep',
+                                                'schedulers': [],
+                                                'start_value': 0.1,
+                                                'update_interval': 'epoch',
+                                                'value': 0.1,
+                                                'values': [0.00078125,
+                                                           7.813e-05]}},
                'regularize_bias': True,
                'regularize_bn': False,
                'use_larc': False,
@@ -654,29 +844,32 @@ INFO 2021-01-13 20:39:08,821 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
          'max_iter': 2000,
          'normalize': True,
          'penalty': 'l2'},
- 'TENSORBOARD_SETUP': {'EXPERIMENT_LOG_DIR': '',
+ 'TENSORBOARD_SETUP': {'EXPERIMENT_LOG_DIR': 'tensorboard',
                        'FLUSH_EVERY_N_MIN': 5,
-                       'LOG_ACTIVATIONS': True,
                        'LOG_DIR': '.',
+                       'LOG_PARAMS': True,
+                       'LOG_PARAMS_EVERY_N_ITERS': 310,
+                       'LOG_PARAMS_GRADIENTS': True,
                        'USE_TENSORBOARD': True},
  'TEST_EVERY_NUM_EPOCH': 1,
  'TEST_MODEL': True,
  'TEST_ONLY': False,
- 'TRAINER': {'TRAIN_STEP_NAME': 'standard_train_step'},
+ 'TRAINER': {'TASK_NAME': 'self_supervision_task',
+             'TRAIN_STEP_NAME': 'standard_train_step'},
  'VERBOSE': True}
-INFO 2021-01-13 20:39:09,218 train.py:  65: System config:
+INFO 2021-01-25 20:04:50,973 train.py:  89: System config:
 -------------------  ---------------------------------------------------------------
 sys.platform         linux
 Python               3.6.9 (default, Oct  8 2020, 12:12:24) [GCC 8.4.0]
 numpy                1.19.5
 Pillow               7.0.0
-vissl                0.1.3 @/usr/local/lib/python3.6/dist-packages/vissl
+vissl                0.1.5 @/usr/local/lib/python3.6/dist-packages/vissl
 GPU available        True
 GPU 0                Tesla T4
 CUDA_HOME            /usr/local/cuda
 torchvision          0.6.1+cu101 @/usr/local/lib/python3.6/dist-packages/torchvision
 hydra                1.0.5 @/usr/local/lib/python3.6/dist-packages/hydra
-classy_vision        0.5.0 @/usr/local/lib/python3.6/dist-packages/classy_vision
+classy_vision        0.6.0.dev @/usr/local/lib/python3.6/dist-packages/classy_vision
 tensorboard          1.15.0
 apex                 0.1 @/usr/local/lib/python3.6/dist-packages/apex
 cv2                  4.1.2
@@ -713,8 +906,8 @@ CPU family           6
 Model                79
 Model name           Intel(R) Xeon(R) CPU @ 2.20GHz
 Stepping             0
-CPU MHz              2200.000
-BogoMIPS             4400.00
+CPU MHz              2199.998
+BogoMIPS             4399.99
 Hypervisor vendor    KVM
 Virtualization type  full
 L1d cache            32K
@@ -723,52 +916,60 @@ L2 cache             256K
 L3 cache             56320K
 NUMA node0 CPU(s)    0,1
 -------------------  ------------------------------
-INFO 2021-01-13 20:39:09,219 tensorboard.py:  28: Tensorboard dir: ./checkpoints/tb_logs
-2021-01-13 20:39:09.340265: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
-INFO 2021-01-13 20:39:10,795 tensorboard_hook.py:  52: Setting up SSL Tensorboard Hook...
-INFO 2021-01-13 20:39:10,795 train_task.py: 121: Setting amp args: None
-INFO 2021-01-13 20:39:10,796 trainer_main.py:  61: Using Distributed init method: tcp://localhost:59709, world_size: 1, rank: 0
-INFO 2021-01-13 20:39:10,797 trainer_main.py:  82: | initialized host 010ea261cff2 as rank 0 (0)
-INFO 2021-01-13 20:39:10,797 ssl_dataset.py:  68: Rank: 0 Data files:
+INFO 2021-01-25 20:04:50,974 tensorboard.py:  46: Tensorboard dir: ./checkpoints/tb_logs
+2021-01-25 20:04:51.093870: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+INFO 2021-01-25 20:04:52,628 tensorboard_hook.py:  61: Setting up SSL Tensorboard Hook...
+INFO 2021-01-25 20:04:52,628 tensorboard_hook.py:  67: Tensorboard config: log_params: True, log_params_freq: 310, log_params_gradients: True
+INFO 2021-01-25 20:04:52,628 train_task.py: 192: Not using Automatic Mixed Precision
+INFO 2021-01-25 20:04:52,629 trainer_main.py: 109: Using Distributed init method: tcp://localhost:56229, world_size: 1, rank: 0
+INFO 2021-01-25 20:04:52,630 trainer_main.py: 130: | initialized host afa74bb7b737 as rank 0 (0)
+INFO 2021-01-25 20:04:52,630 ssl_dataset.py: 130: Rank: 0 split: TEST Data files:
 ['/content/dummy_data/val']
-INFO 2021-01-13 20:39:10,797 ssl_dataset.py:  69: Rank: 0 Label files:
+INFO 2021-01-25 20:04:52,630 ssl_dataset.py: 133: Rank: 0 split: TEST Label files:
 ['/content/dummy_data/val']
-INFO 2021-01-13 20:39:10,797 disk_dataset.py:  77: Loaded 10 samples from folder /content/dummy_data/val
-INFO 2021-01-13 20:39:10,798 ssl_dataset.py:  68: Rank: 0 Data files:
+INFO 2021-01-25 20:04:52,631 disk_dataset.py:  81: Loaded 10 samples from folder /content/dummy_data/val
+INFO 2021-01-25 20:04:52,631 ssl_dataset.py: 130: Rank: 0 split: TRAIN Data files:
 ['/content/dummy_data/train']
-INFO 2021-01-13 20:39:10,798 ssl_dataset.py:  69: Rank: 0 Label files:
+INFO 2021-01-25 20:04:52,631 ssl_dataset.py: 133: Rank: 0 split: TRAIN Label files:
 ['/content/dummy_data/train']
-INFO 2021-01-13 20:39:10,798 disk_dataset.py:  77: Loaded 10 samples from folder /content/dummy_data/train
-INFO 2021-01-13 20:39:10,798 misc.py:  68: Set start method of multiprocessing to fork
-INFO 2021-01-13 20:39:10,798 __init__.py:  64: Created the Distributed Sampler....
-INFO 2021-01-13 20:39:10,798 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 20:04:52,631 disk_dataset.py:  81: Loaded 10 samples from folder /content/dummy_data/train
+INFO 2021-01-25 20:04:52,632 misc.py:  86: Set start method of multiprocessing to fork
+INFO 2021-01-25 20:04:52,632 __init__.py:  91: Created the Distributed Sampler....
+INFO 2021-01-25 20:04:52,632 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
-INFO 2021-01-13 20:39:10,799 __init__.py: 106: Wrapping the dataloader to async device copies
-INFO 2021-01-13 20:39:15,324 misc.py:  68: Set start method of multiprocessing to fork
-INFO 2021-01-13 20:39:15,324 __init__.py:  64: Created the Distributed Sampler....
-INFO 2021-01-13 20:39:15,324 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 20:04:52,632 __init__.py: 155: Wrapping the dataloader to async device copies
+INFO 2021-01-25 20:04:57,011 misc.py:  86: Set start method of multiprocessing to fork
+INFO 2021-01-25 20:04:57,011 __init__.py:  91: Created the Distributed Sampler....
+INFO 2021-01-25 20:04:57,011 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
-INFO 2021-01-13 20:39:15,324 __init__.py: 106: Wrapping the dataloader to async device copies
-INFO 2021-01-13 20:39:15,324 train_task.py: 280: Building model....
-INFO 2021-01-13 20:39:15,324 resnext.py:  58: ResNeXT trunk, supports activation checkpointing. Deactivated
-INFO 2021-01-13 20:39:15,325 resnext.py:  72: Building model: ResNeXt50-1x64d-w1-BatchNorm2d
-INFO 2021-01-13 20:39:15,947 train_task.py: 437: Broadcast model BN buffers from master on every forward pass
-INFO 2021-01-13 20:39:15,947 classification_task.py: 341: Synchronized Batch Normalization is disabled
-INFO 2021-01-13 20:39:15,948 train_task.py: 222: Building loss...
-INFO 2021-01-13 20:39:15,991 optimizer_helper.py:  86: Traininable params: 161, Non-Traininable params: 0, Regularized Parameters: 55, Unregularized Parameters 106
-INFO 2021-01-13 20:39:15,992 trainer_main.py: 168: Training 2 epochs. One epoch = 5 iterations
-INFO 2021-01-13 20:39:15,992 trainer_main.py: 170: Total 10 iterations for training
-INFO 2021-01-13 20:39:15,992 trainer_main.py: 171: Total 10 samples in one epoch
-INFO 2021-01-13 20:39:16,139 logger.py:  66: Wed Jan 13 20:39:16 2021       
+INFO 2021-01-25 20:04:57,011 __init__.py: 155: Wrapping the dataloader to async device copies
+INFO 2021-01-25 20:04:57,011 train_task.py: 419: Building model....
+INFO 2021-01-25 20:04:57,012 resnext.py:  63: ResNeXT trunk, supports activation checkpointing. Deactivated
+INFO 2021-01-25 20:04:57,012 resnext.py:  83: Building model: ResNeXt50-1x64d-w1-BatchNorm2d
+INFO 2021-01-25 20:04:57,606 train_task.py: 591: Broadcast model BN buffers from master on every forward pass
+INFO 2021-01-25 20:04:57,606 classification_task.py: 359: Synchronized Batch Normalization is disabled
+INFO 2021-01-25 20:04:57,606 train_task.py: 340: Building loss...
+INFO 2021-01-25 20:04:57,650 optimizer_helper.py: 157: 
+Trainable params: 161, 
+Non-Trainable params: 0, 
+Trunk Regularized Parameters: 53, 
+Trunk Unregularized Parameters 106, 
+Head Regularized Parameters: 2, 
+Head Unregularized Parameters: 0 
+Remaining Regularized Parameters: 0 
+INFO 2021-01-25 20:04:57,650 trainer_main.py: 241: Training 2 epochs. One epoch = 5 iterations
+INFO 2021-01-25 20:04:57,650 trainer_main.py: 243: Total 10 iterations for training
+INFO 2021-01-25 20:04:57,650 trainer_main.py: 244: Total 10 samples in one epoch
+INFO 2021-01-25 20:04:57,795 logger.py:  76: Mon Jan 25 20:04:57 2021       
 +-----------------------------------------------------------------------------+
-| NVIDIA-SMI 460.27.04    Driver Version: 418.67       CUDA Version: 10.1     |
+| NVIDIA-SMI 460.32.03    Driver Version: 418.67       CUDA Version: 10.1     |
 |-------------------------------+----------------------+----------------------+
 | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
 | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
 |                               |                      |               MIG M. |
 |===============================+======================+======================|
 |   0  Tesla T4            Off  | 00000000:00:04.0 Off |                    0 |
-| N/A   36C    P0    26W /  70W |   1031MiB / 15079MiB |      0%      Default |
+| N/A   37C    P0    27W /  70W |   1031MiB / 15079MiB |      7%      Default |
 |                               |                      |                 ERR! |
 +-------------------------------+----------------------+----------------------+
                                                                                
@@ -780,7 +981,7 @@ INFO 2021-01-13 20:39:16,139 logger.py:  66: Wed Jan 13 20:39:16 2021
 |  No running processes found                                                 |
 +-----------------------------------------------------------------------------+
 
-INFO 2021-01-13 20:39:16,141 trainer_main.py: 103: Model is:
+INFO 2021-01-25 20:04:57,796 trainer_main.py: 166: Model is:
  Classy &lt;class 'vissl.models.base_ssl_model.BaseSSLMultiInputOutputModel'&gt;:
 BaseSSLMultiInputOutputModel(
   (_heads): ModuleDict()
@@ -970,75 +1171,80 @@ BaseSSLMultiInputOutputModel(
     )
   )
 )
-INFO 2021-01-13 20:39:16,237 trainer_main.py: 104: Loss is: CrossEntropyMultipleOutputSingleTargetLoss(
+INFO 2021-01-25 20:04:57,855 trainer_main.py: 167: Loss is: CrossEntropyMultipleOutputSingleTargetLoss(
   (_losses): ModuleList()
 )
-INFO 2021-01-13 20:39:16,237 trainer_main.py: 105: Starting training....
-INFO 2021-01-13 20:39:16,238 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 20:04:57,855 trainer_main.py: 168: Starting training....
+INFO 2021-01-25 20:04:57,855 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
-INFO 2021-01-13 20:39:16,523 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:16,524 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:16,526 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:16,527 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:16,538 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:16,806 trainer_main.py: 205: Phase advanced. Rank: 0
-INFO 2021-01-13 20:39:19,771 state_update_hooks.py:  90: Starting phase 0 [train]
-INFO 2021-01-13 20:39:20,539 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 1; lr: 0.00078; loss: 7.07915; btime(ms): 4546; eta: 0:00:40; peak_mem: 2595M
-INFO 2021-01-13 20:39:20,800 tensorboard_hook.py:  92: Logging metrics. Iteration 5
-INFO 2021-01-13 20:39:20,809 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 5; lr: 0.00078; loss: 0.83814; btime(ms): 963; eta: 0:00:04; peak_mem: 2595M
-INFO 2021-01-13 20:39:20,810 trainer_main.py: 123: Meters synced
-INFO 2021-01-13 20:39:23,796 log_hooks.py: 228: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 60.0}}
-INFO 2021-01-13 20:39:23,796 io.py:  16: Saving data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:23,797 io.py:  30: Saved data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:23,797 log_hooks.py: 182: [phase: 0] Saving checkpoint to ./checkpoints
-INFO 2021-01-13 20:39:24,130 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_phase0.torch
-INFO 2021-01-13 20:39:24,130 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 20:04:58,145 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:04:58,146 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:04:58,146 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:04:58,145 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:04:58,160 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:04:58,416 trainer_main.py: 296: Phase advanced. Rank: 0
+INFO 2021-01-25 20:05:01,116 state_update_hooks.py:  98: Starting phase 0 [train]
+INFO 2021-01-25 20:05:04,574 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 1; lr: 0.00078; loss: 7.07915; btime(ms): 6923; eta: 0:01:02; peak_mem: 2595M
+INFO 2021-01-25 20:05:04,828 tensorboard_hook.py: 188: Logging metrics. Iteration 5
+INFO 2021-01-25 20:05:04,839 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 5; lr: 0.00078; loss: 0.81495; btime(ms): 1437; eta: 0:00:07; peak_mem: 2595M
+INFO 2021-01-25 20:05:04,839 trainer_main.py: 194: Meters synced
+INFO 2021-01-25 20:05:10,516 log_hooks.py: 346: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 60.0}}
+INFO 2021-01-25 20:05:10,516 io.py:  56: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:10,516 io.py:  70: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:10,517 log_hooks.py: 283: [phase: 0] Saving checkpoint to ./checkpoints
+INFO 2021-01-25 20:05:10,839 log_hooks.py: 312: Saved checkpoint: ./checkpoints/model_phase0.torch
+INFO 2021-01-25 20:05:10,839 log_hooks.py: 316: Creating symlink...
+INFO 2021-01-25 20:05:10,839 log_hooks.py: 320: Created symlink: ./checkpoints/checkpoint.torch
+INFO 2021-01-25 20:05:10,840 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 1, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
-INFO 2021-01-13 20:39:24,437 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:24,437 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:24,453 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:24,460 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:24,483 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:24,683 trainer_main.py: 205: Phase advanced. Rank: 0
-INFO 2021-01-13 20:39:24,684 state_update_hooks.py:  90: Starting phase 1 [test]
-INFO 2021-01-13 20:39:24,900 trainer_main.py: 123: Meters synced
-INFO 2021-01-13 20:39:24,901 log_hooks.py: 228: Rank: 0, name: test_accuracy_list_meter, value: {'top_1': {0: 50.0}, 'top_5': {0: 100.0}}
-INFO 2021-01-13 20:39:24,901 io.py:  16: Saving data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:24,901 io.py:  30: Saved data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:24,902 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 20:05:11,150 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:11,150 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:11,164 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:11,171 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:11,178 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:11,325 trainer_main.py: 296: Phase advanced. Rank: 0
+INFO 2021-01-25 20:05:11,325 state_update_hooks.py:  98: Starting phase 1 [test]
+INFO 2021-01-25 20:05:11,580 trainer_main.py: 194: Meters synced
+INFO 2021-01-25 20:05:11,581 log_hooks.py: 346: Rank: 0, name: test_accuracy_list_meter, value: {'top_1': {0: 50.0}, 'top_5': {0: 100.0}}
+INFO 2021-01-25 20:05:11,581 io.py:  56: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:11,581 io.py:  70: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:11,581 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 2, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
-INFO 2021-01-13 20:39:25,197 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:25,197 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:25,217 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:25,218 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:25,225 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/train
-INFO 2021-01-13 20:39:25,366 trainer_main.py: 205: Phase advanced. Rank: 0
-INFO 2021-01-13 20:39:25,367 state_update_hooks.py:  90: Starting phase 2 [train]
-INFO 2021-01-13 20:39:25,827 tensorboard_hook.py:  92: Logging metrics. Iteration 10
-INFO 2021-01-13 20:39:25,841 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 10; lr: 8e-05; loss: 1.30581; btime(ms): 656; eta: 0:00:00; peak_mem: 492M
-INFO 2021-01-13 20:39:25,841 trainer_main.py: 123: Meters synced
-INFO 2021-01-13 20:39:28,788 log_hooks.py: 228: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 100.0}}
-INFO 2021-01-13 20:39:28,788 io.py:  16: Saving data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:28,788 io.py:  30: Saved data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:28,789 log_hooks.py: 182: [phase: 2] Saving checkpoint to ./checkpoints
-INFO 2021-01-13 20:39:29,200 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_final_checkpoint_phase2.torch
-INFO 2021-01-13 20:39:29,200 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 20:05:11,872 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:05:11,872 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:05:11,881 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:05:11,896 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:05:11,906 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/train
+INFO 2021-01-25 20:05:12,109 trainer_main.py: 296: Phase advanced. Rank: 0
+INFO 2021-01-25 20:05:12,109 state_update_hooks.py:  98: Starting phase 2 [train]
+INFO 2021-01-25 20:05:12,522 tensorboard_hook.py: 188: Logging metrics. Iteration 10
+INFO 2021-01-25 20:05:12,533 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 10; lr: 8e-05; loss: 1.29671; btime(ms): 992; eta: 0:00:00; peak_mem: 492M
+INFO 2021-01-25 20:05:12,533 trainer_main.py: 194: Meters synced
+INFO 2021-01-25 20:05:18,245 log_hooks.py: 346: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 100.0}}
+INFO 2021-01-25 20:05:18,245 io.py:  56: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:18,245 io.py:  70: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:18,245 log_hooks.py: 283: [phase: 2] Saving checkpoint to ./checkpoints
+INFO 2021-01-25 20:05:18,611 log_hooks.py: 312: Saved checkpoint: ./checkpoints/model_final_checkpoint_phase2.torch
+INFO 2021-01-25 20:05:18,611 log_hooks.py: 316: Creating symlink...
+Error in symlink - [Errno 17] File exists: './checkpoints/model_final_checkpoint_phase2.torch' -&gt; './checkpoints/checkpoint.torch'
+INFO 2021-01-25 20:05:18,611 log_hooks.py: 320: Created symlink: ./checkpoints/checkpoint.torch
+INFO 2021-01-25 20:05:18,612 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 3, 'num_samples': 10, 'total_size': 10, 'shuffle': True}
-INFO 2021-01-13 20:39:29,505 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:29,505 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:29,519 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:29,522 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:29,529 ssl_dataset.py:  98: Using disk_folder labels from /content/dummy_data/val
-INFO 2021-01-13 20:39:29,646 trainer_main.py: 205: Phase advanced. Rank: 0
-INFO 2021-01-13 20:39:29,647 state_update_hooks.py:  90: Starting phase 3 [test]
-INFO 2021-01-13 20:39:29,957 trainer_main.py: 123: Meters synced
-INFO 2021-01-13 20:39:29,957 log_hooks.py: 228: Rank: 0, name: test_accuracy_list_meter, value: {'top_1': {0: 50.0}, 'top_5': {0: 100.0}}
-INFO 2021-01-13 20:39:29,957 io.py:  16: Saving data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:29,958 io.py:  30: Saved data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:30,152 train.py:  86: All Done!
-INFO 2021-01-13 20:39:30,152 logger.py:  59: Shutting down loggers...
-INFO 2021-01-13 20:39:30,153 run_distributed_engines.py:  95: All Done!
-INFO 2021-01-13 20:39:30,153 logger.py:  59: Shutting down loggers...
+INFO 2021-01-25 20:05:18,923 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:18,924 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:18,924 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:18,926 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:18,936 ssl_dataset.py: 197: Using disk_folder labels from /content/dummy_data/val
+INFO 2021-01-25 20:05:19,141 trainer_main.py: 296: Phase advanced. Rank: 0
+INFO 2021-01-25 20:05:19,142 state_update_hooks.py:  98: Starting phase 3 [test]
+INFO 2021-01-25 20:05:19,345 trainer_main.py: 194: Meters synced
+INFO 2021-01-25 20:05:19,345 log_hooks.py: 346: Rank: 0, name: test_accuracy_list_meter, value: {'top_1': {0: 50.0}, 'top_5': {0: 100.0}}
+INFO 2021-01-25 20:05:19,345 io.py:  56: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:19,346 io.py:  70: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:19,543 train.py: 103: All Done!
+INFO 2021-01-25 20:05:19,543 logger.py:  66: Shutting down loggers...
+INFO 2021-01-25 20:05:19,544 run_distributed_engines.py: 133: All Done!
+INFO 2021-01-25 20:05:19,544 logger.py:  66: Shutting down loggers...
 </pre>
 </div>
 </div>
@@ -1063,7 +1269,7 @@ INFO 2021-01-13 20:39:30,153 logger.py:  59: Shutting down loggers...
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [ ]:</div>
+<div class="prompt input_prompt">In [16]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">ls</span> <span class="n">checkpoints</span><span class="o">/</span>
@@ -1076,8 +1282,8 @@ INFO 2021-01-13 20:39:30,153 logger.py:  59: Shutting down loggers...
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>log.txt       model_final_checkpoint_phase1.torch  <span class="ansi-blue-intense-fg ansi-bold">tb_logs</span>/
-metrics.json  model_phase0.torch
+<pre><span class="ansi-cyan-intense-fg ansi-bold">checkpoint.torch</span>@  metrics.json                         model_phase0.torch
+log.txt            model_final_checkpoint_phase2.torch  <span class="ansi-blue-intense-fg ansi-bold">tb_logs</span>/
 </pre>
 </div>
 </div>
@@ -1109,10 +1315,12 @@ metrics.json  model_phase0.torch
     config.DATA.TRAIN.DATA_SOURCES=[disk_folder] \
     config.DATA.TRAIN.LABEL_SOURCES=[disk_folder] \
     config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder] \
+    config.DATA.TRAIN.DATA_PATHS=[/content/dummy_data/train] \
     config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2 \
     config.DATA.TEST.DATA_SOURCES=[disk_folder] \
     config.DATA.TEST.LABEL_SOURCES=[disk_folder] \
     config.DATA.TEST.DATASET_NAMES=[dummy_data_folder] \
+    config.DATA.TEST.DATA_PATHS=[/content/dummy_data/val] \
     config.DATA.TEST.BATCHSIZE_PER_REPLICA=2 \
     config.DISTRIBUTED.NUM_NODES=1 \
     config.DISTRIBUTED.NUM_PROC_PER_NODE=1 \
@@ -1126,7 +1334,9 @@ metrics.json  model_phase0.torch
 <li><code>config=supervised_1gpu_resnet_example</code> -&gt; specify the config file for supervised training</li>
 <li><code>config.DATA.TRAIN.DATA_SOURCES=[disk_folder] config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]</code> -&gt; specify the data source for train i.e. <code>disk_folder</code></li>
 <li><code>config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]</code> -&gt; specify the dataset name i.e. <code>dummy_data_folder</code>. We registered this dataset above.</li>
+<li><code>config.DATA.TRAIN.DATA_PATHS=[/content/dummy_data/train]</code> -&gt; another way of specifying where the data is on the disk. The example config file provided has some dummy paths set. We must override those with our desired paths.</li>
 <li><code>config.DATA.TEST.DATA_SOURCES=[disk_folder] config.DATA.TEST.LABEL_SOURCES=[disk_folder] config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]</code> -&gt; similar settings for Test dataset.</li>
+<li><code>config.DATA.TEST.DATA_PATHS=[/content/dummy_data/val]</code> -&gt; another way of specifying where the data is on the disk. The example config file provided has some dummy paths set. We must override those with our desired paths.</li>
 <li><p><code>config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2 config.DATA.TEST.BATCHSIZE_PER_REPLICA=2</code> -&gt; specify 2 img/gpu to use for both <code>TRAIN</code> and <code>TEST</code>.</p>
 </li>
 <li><p><code>config.DISTRIBUTED.NUM_NODES=1 config.DISTRIBUTED.NUM_PROC_PER_NODE=1</code> -&gt; specify the #gpus=1 and #machines=1</p>
@@ -1142,22 +1352,24 @@ metrics.json  model_phase0.torch
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Understanding-Training-stdout">Understanding Training stdout<a class="anchor-link" href="#Understanding-Training-stdout">¶</a></h1><p>The following output indicates that the training is starting on <code>rank=0</code>. Similar output will be printed for each rank.</p>
-<pre><code>####### overrides: ['hydra.verbose=true', 'config=supervised_1gpu_resnet_example', 'config.DATA.TRAIN.DATA_SOURCES=[disk_folder]', 'config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]', 'config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TEST.DATA_SOURCES=[disk_folder]', 'config.DATA.TEST.LABEL_SOURCES=[disk_folder]', 'config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]', 'config.DISTRIBUTED.NUM_NODES=1', 'config.DISTRIBUTED.NUM_PROC_PER_NODE=1', 'config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2', 'config.DATA.TEST.BATCHSIZE_PER_REPLICA=2', 'config.OPTIMIZER.num_epochs=2', 'config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001]', 'config.OPTIMIZER.param_schedulers.lr.milestones=[1]', 'config.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'config.CHECKPOINT.DIR=./checkpoints', 'hydra.verbose=true']
-INFO 2021-01-13 20:39:08,772 __init__.py:  32: Provided Config has latest version: 1
-INFO 2021-01-13 20:39:08,772 run_distributed_engines.py: 121: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:59709
-INFO 2021-01-13 20:39:08,773 train.py:  42: Env set for rank: 0, dist_rank: 0</code></pre>
+<pre><code>####### overrides: ['hydra.verbose=true', 'config=supervised_1gpu_resnet_example', 'config.DATA.TRAIN.DATA_SOURCES=[disk_folder]', 'config.DATA.TRAIN.LABEL_SOURCES=[disk_folder]', 'config.DATA.TRAIN.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TRAIN.DATA_PATHS=[/content/dummy_data/train]', 'config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=2', 'config.DATA.TEST.DATA_SOURCES=[disk_folder]', 'config.DATA.TEST.LABEL_SOURCES=[disk_folder]', 'config.DATA.TEST.DATASET_NAMES=[dummy_data_folder]', 'config.DATA.TEST.DATA_PATHS=[/content/dummy_data/val]', 'config.DATA.TEST.BATCHSIZE_PER_REPLICA=2', 'config.DISTRIBUTED.NUM_NODES=1', 'config.DISTRIBUTED.NUM_PROC_PER_NODE=1', 'config.OPTIMIZER.num_epochs=2', 'config.OPTIMIZER.param_schedulers.lr.values=[0.01,0.001]', 'config.OPTIMIZER.param_schedulers.lr.milestones=[1]', 'config.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'config.CHECKPOINT.DIR=./checkpoints', 'hydra.verbose=true']
+INFO 2021-01-25 20:04:50,636 __init__.py:  32: Provided Config has latest version: 1
+INFO 2021-01-25 20:04:50,638 run_distributed_engines.py: 163: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:56229
+INFO 2021-01-25 20:04:50,638 train.py:  66: Env set for rank: 0, dist_rank: 0</code></pre>
 <p>VISSL is designed for reproducible research, so the training script will first print out the running configuration -- the environment variables, versions of various libraries, the full training config, data size, model etc.</p>
 <p>The training will start afterwards and we see output like:</p>
-<pre><code>INFO 2021-01-13 20:39:19,771 state_update_hooks.py:  90: Starting phase 0 [train]
-INFO 2021-01-13 20:39:20,539 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 1; lr: 0.00078; loss: 7.07915; btime(ms): 4546; eta: 0:00:40; peak_mem: 2595M
-INFO 2021-01-13 20:39:20,800 tensorboard_hook.py:  92: Logging metrics. Iteration 5
-INFO 2021-01-13 20:39:20,809 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 5; lr: 0.00078; loss: 0.83814; btime(ms): 963; eta: 0:00:04; peak_mem: 2595M
-INFO 2021-01-13 20:39:20,810 trainer_main.py: 123: Meters synced
-INFO 2021-01-13 20:39:23,796 log_hooks.py: 228: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 60.0}}
-INFO 2021-01-13 20:39:23,796 io.py:  16: Saving data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:23,797 io.py:  30: Saved data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 20:39:23,797 log_hooks.py: 182: [phase: 0] Saving checkpoint to ./checkpoints
-INFO 2021-01-13 20:39:24,130 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_phase0.torch</code></pre>
+<pre><code>INFO 2021-01-25 20:05:01,116 state_update_hooks.py:  98: Starting phase 0 [train]
+INFO 2021-01-25 20:05:04,574 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 1; lr: 0.00078; loss: 7.07915; btime(ms): 6923; eta: 0:01:02; peak_mem: 2595M
+INFO 2021-01-25 20:05:04,828 tensorboard_hook.py: 188: Logging metrics. Iteration 5
+INFO 2021-01-25 20:05:04,839 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 5; lr: 0.00078; loss: 0.81495; btime(ms): 1437; eta: 0:00:07; peak_mem: 2595M
+INFO 2021-01-25 20:05:04,839 trainer_main.py: 194: Meters synced
+INFO 2021-01-25 20:05:10,516 log_hooks.py: 346: Rank: 0, name: train_accuracy_list_meter, value: {'top_1': {0: 30.0}, 'top_5': {0: 60.0}}
+INFO 2021-01-25 20:05:10,516 io.py:  56: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:10,516 io.py:  70: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 20:05:10,517 log_hooks.py: 283: [phase: 0] Saving checkpoint to ./checkpoints
+INFO 2021-01-25 20:05:10,839 log_hooks.py: 312: Saved checkpoint: ./checkpoints/model_phase0.torch
+INFO 2021-01-25 20:05:10,839 log_hooks.py: 316: Creating symlink...
+INFO 2021-01-25 20:05:10,839 log_hooks.py: 320: Created symlink: ./checkpoints/checkpoint.torch</code></pre>
 <p>You can see the training stats printed out like LR, batch time, etc. VISSL also prints out the GPU memory usage and the ETA (approximate time for the experiment to finish).</p>
 </div>
 </div>
@@ -1290,7 +1502,7 @@ Scaling the learning rate according to the batch size is important for distribut
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [63]:</div>
+<div class="prompt input_prompt">In [ ]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">less</span> <span class="n">configs</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">supervised_1gpu_resnet_example</span><span class="o">.</span><span class="n">yaml</span>

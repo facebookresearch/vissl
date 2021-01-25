@@ -70,6 +70,17 @@
   src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
 </script>
 <div class="notebook">
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
@@ -128,7 +139,7 @@
 <span class="o">!</span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/<span class="o">{</span>version_str<span class="o">}</span>/download.html
 
 <span class="c1"># install VISSL</span>
-<span class="o">!</span>pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+<span class="o">!</span>pip install vissl
 </pre></div>
 </div>
 </div>
@@ -144,7 +155,7 @@
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [ ]:</div>
+<div class="prompt input_prompt">In [2]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">vissl</span>
@@ -202,11 +213,32 @@
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [ ]:</div>
+<div class="prompt input_prompt">In [4]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>wget https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
 </pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>--2021-01-25 19:47:58--  https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
+Resolving dl.fbaipublicfiles.com (dl.fbaipublicfiles.com)... 172.67.9.4, 104.22.75.142, 104.22.74.142, ...
+Connecting to dl.fbaipublicfiles.com (dl.fbaipublicfiles.com)|172.67.9.4|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 6568 (6.4K) [text/x-python]
+Saving to: ‘run_distributed_engines.py’
+
+run_distributed_eng 100%[===================&gt;]   6.41K  --.-KB/s    in 0s      
+
+2021-01-25 19:47:59 (25.1 MB/s) - ‘run_distributed_engines.py’ saved [6568/6568]
+
+</pre>
+</div>
 </div>
 </div>
 </div>
@@ -221,7 +253,7 @@
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [ ]:</div>
+<div class="prompt input_prompt">In [5]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>python3 run_distributed_engines.py <span class="err">\</span>
@@ -244,77 +276,158 @@
 https://github.com/facebookresearch/iopath 
 
 ####### overrides: ['hydra.verbose=true', 'config=quick_1gpu_resnet50_simclr', 'config.DATA.TRAIN.DATA_SOURCES=[synthetic]', 'config.CHECKPOINT.DIR=./checkpoints', 'config.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'hydra.verbose=true']
-INFO 2021-01-13 17:05:11,865 __init__.py:  32: Provided Config has latest version: 1
-INFO 2021-01-13 17:05:11,865 run_distributed_engines.py: 121: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:36665
-INFO 2021-01-13 17:05:11,865 train.py:  42: Env set for rank: 0, dist_rank: 0
-INFO 2021-01-13 17:05:11,866 env.py:  24: CLICOLOR:	1
-INFO 2021-01-13 17:05:11,866 env.py:  24: CLOUDSDK_CONFIG:	/content/.config
-INFO 2021-01-13 17:05:11,866 env.py:  24: CLOUDSDK_PYTHON:	python3
-INFO 2021-01-13 17:05:11,866 env.py:  24: COLAB_GPU:	1
-INFO 2021-01-13 17:05:11,866 env.py:  24: CUDA_PKG_VERSION:	10-1=10.1.243-1
-INFO 2021-01-13 17:05:11,866 env.py:  24: CUDA_VERSION:	10.1.243
-INFO 2021-01-13 17:05:11,866 env.py:  24: CUDNN_VERSION:	7.6.5.32
-INFO 2021-01-13 17:05:11,866 env.py:  24: DATALAB_SETTINGS_OVERRIDES:	{"kernelManagerProxyPort":6000,"kernelManagerProxyHost":"172.28.0.3","jupyterArgs":["--ip=\"172.28.0.2\""],"debugAdapterMultiplexerPath":"/usr/local/bin/dap_multiplexer"}
-INFO 2021-01-13 17:05:11,866 env.py:  24: DEBIAN_FRONTEND:	noninteractive
-INFO 2021-01-13 17:05:11,866 env.py:  24: ENV:	/root/.bashrc
-INFO 2021-01-13 17:05:11,866 env.py:  24: GCE_METADATA_TIMEOUT:	0
-INFO 2021-01-13 17:05:11,866 env.py:  24: GCS_READ_CACHE_BLOCK_SIZE_MB:	16
-INFO 2021-01-13 17:05:11,866 env.py:  24: GIT_PAGER:	cat
-INFO 2021-01-13 17:05:11,866 env.py:  24: GLIBCPP_FORCE_NEW:	1
-INFO 2021-01-13 17:05:11,866 env.py:  24: GLIBCXX_FORCE_NEW:	1
-INFO 2021-01-13 17:05:11,866 env.py:  24: HOME:	/root
-INFO 2021-01-13 17:05:11,866 env.py:  24: HOSTNAME:	b0185cc2f462
-INFO 2021-01-13 17:05:11,867 env.py:  24: JPY_PARENT_PID:	48
-INFO 2021-01-13 17:05:11,867 env.py:  24: LANG:	en_US.UTF-8
-INFO 2021-01-13 17:05:11,867 env.py:  24: LAST_FORCED_REBUILD:	20210105
-INFO 2021-01-13 17:05:11,867 env.py:  24: LD_LIBRARY_PATH:	/usr/lib64-nvidia
-INFO 2021-01-13 17:05:11,867 env.py:  24: LD_PRELOAD:	/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
-INFO 2021-01-13 17:05:11,867 env.py:  24: LIBRARY_PATH:	/usr/local/cuda/lib64/stubs
-INFO 2021-01-13 17:05:11,867 env.py:  24: LOCAL_RANK:	0
-INFO 2021-01-13 17:05:11,867 env.py:  24: MPLBACKEND:	module://ipykernel.pylab.backend_inline
-INFO 2021-01-13 17:05:11,867 env.py:  24: NCCL_VERSION:	2.7.8
-INFO 2021-01-13 17:05:11,867 env.py:  24: NO_GCE_CHECK:	True
-INFO 2021-01-13 17:05:11,867 env.py:  24: NVIDIA_DRIVER_CAPABILITIES:	compute,utility
-INFO 2021-01-13 17:05:11,867 env.py:  24: NVIDIA_REQUIRE_CUDA:	cuda&gt;=10.1 brand=tesla,driver&gt;=396,driver&lt;397 brand=tesla,driver&gt;=410,driver&lt;411 brand=tesla,driver&gt;=418,driver&lt;419
-INFO 2021-01-13 17:05:11,867 env.py:  24: NVIDIA_VISIBLE_DEVICES:	all
-INFO 2021-01-13 17:05:11,867 env.py:  24: OLDPWD:	/
-INFO 2021-01-13 17:05:11,867 env.py:  24: PAGER:	cat
-INFO 2021-01-13 17:05:11,867 env.py:  24: PATH:	/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/node/bin:/tools/google-cloud-sdk/bin:/opt/bin
-INFO 2021-01-13 17:05:11,867 env.py:  24: PWD:	/content
-INFO 2021-01-13 17:05:11,868 env.py:  24: PYTHONPATH:	/env/python
-INFO 2021-01-13 17:05:11,868 env.py:  24: PYTHONWARNINGS:	ignore:::pip._internal.cli.base_command
-INFO 2021-01-13 17:05:11,868 env.py:  24: RANK:	0
-INFO 2021-01-13 17:05:11,868 env.py:  24: SHELL:	/bin/bash
-INFO 2021-01-13 17:05:11,868 env.py:  24: SHLVL:	1
-INFO 2021-01-13 17:05:11,868 env.py:  24: TBE_CREDS_ADDR:	172.28.0.1:8008
-INFO 2021-01-13 17:05:11,868 env.py:  24: TERM:	xterm-color
-INFO 2021-01-13 17:05:11,868 env.py:  24: TF_FORCE_GPU_ALLOW_GROWTH:	true
-INFO 2021-01-13 17:05:11,868 env.py:  24: WORLD_SIZE:	1
-INFO 2021-01-13 17:05:11,868 env.py:  24: _:	/usr/bin/python3
-INFO 2021-01-13 17:05:11,868 env.py:  24: __EGL_VENDOR_LIBRARY_DIRS:	/usr/lib64-nvidia:/usr/share/glvnd/egl_vendor.d/
-INFO 2021-01-13 17:05:11,868 misc.py:  68: Set start method of multiprocessing to forkserver
-INFO 2021-01-13 17:05:11,868 train.py:  53: Setting seed....
-INFO 2021-01-13 17:05:11,868 misc.py:  77: MACHINE SEED: 0
-INFO 2021-01-13 17:05:11,911 hydra_config.py: 122: Training with config:
-INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR_RUN_ID': False,
+INFO 2021-01-25 19:48:10,197 __init__.py:  32: Provided Config has latest version: 1
+[PathManager] Attempting to register prefix 'http://' from the following call stack:
+  File "run_distributed_engines.py", line 194, in &lt;module&gt;
+    hydra_main(overrides=overrides)
+  File "run_distributed_engines.py", line 179, in hydra_main
+    hook_generator=default_hook_generator,
+  File "run_distributed_engines.py", line 77, in launch_distributed
+    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'http://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'https://' from the following call stack:
+  File "run_distributed_engines.py", line 194, in &lt;module&gt;
+    hydra_main(overrides=overrides)
+  File "run_distributed_engines.py", line 179, in hydra_main
+    hook_generator=default_hook_generator,
+  File "run_distributed_engines.py", line 77, in launch_distributed
+    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'https://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'ftp://' from the following call stack:
+  File "run_distributed_engines.py", line 194, in &lt;module&gt;
+    hydra_main(overrides=overrides)
+  File "run_distributed_engines.py", line 179, in hydra_main
+    hook_generator=default_hook_generator,
+  File "run_distributed_engines.py", line 77, in launch_distributed
+    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'ftp://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+INFO 2021-01-25 19:48:10,199 run_distributed_engines.py: 163: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:58591
+[PathManager] Attempting to register prefix 'http://' from the following call stack:
+  File "run_distributed_engines.py", line 166, in _distributed_worker
+    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+  File "run_distributed_engines.py", line 159, in process_main
+    hook_generator=hook_generator,
+  File "/usr/local/lib/python3.6/dist-packages/vissl/engines/train.py", line 60, in train_main
+    set_env_vars(local_rank, node_id, cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'http://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'https://' from the following call stack:
+  File "run_distributed_engines.py", line 166, in _distributed_worker
+    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+  File "run_distributed_engines.py", line 159, in process_main
+    hook_generator=hook_generator,
+  File "/usr/local/lib/python3.6/dist-packages/vissl/engines/train.py", line 60, in train_main
+    set_env_vars(local_rank, node_id, cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'https://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+[PathManager] Attempting to register prefix 'ftp://' from the following call stack:
+  File "run_distributed_engines.py", line 166, in _distributed_worker
+    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+  File "run_distributed_engines.py", line 159, in process_main
+    hook_generator=hook_generator,
+  File "/usr/local/lib/python3.6/dist-packages/vissl/engines/train.py", line 60, in train_main
+    set_env_vars(local_rank, node_id, cfg)
+  File "/usr/local/lib/python3.6/dist-packages/vissl/utils/env.py", line 31, in set_env_vars
+    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
+  File "/usr/local/lib/python3.6/dist-packages/fvcore/common/file_io.py", line 287, in register_handler
+    + "".join(traceback.format_stack(limit=5))
+
+[PathManager] Prefix 'ftp://' is already registered by &lt;class 'iopath.common.file_io.HTTPURLHandler'&gt;. We will override the old handler. To avoid such conflicts, create a project-specific PathManager instead.
+INFO 2021-01-25 19:48:10,200 train.py:  66: Env set for rank: 0, dist_rank: 0
+INFO 2021-01-25 19:48:10,201 env.py:  41: CLICOLOR:	1
+INFO 2021-01-25 19:48:10,201 env.py:  41: CLOUDSDK_CONFIG:	/content/.config
+INFO 2021-01-25 19:48:10,201 env.py:  41: CLOUDSDK_PYTHON:	python3
+INFO 2021-01-25 19:48:10,201 env.py:  41: COLAB_GPU:	1
+INFO 2021-01-25 19:48:10,201 env.py:  41: CUDA_PKG_VERSION:	10-1=10.1.243-1
+INFO 2021-01-25 19:48:10,201 env.py:  41: CUDA_VERSION:	10.1.243
+INFO 2021-01-25 19:48:10,201 env.py:  41: CUDNN_VERSION:	7.6.5.32
+INFO 2021-01-25 19:48:10,201 env.py:  41: DATALAB_SETTINGS_OVERRIDES:	{"kernelManagerProxyPort":6000,"kernelManagerProxyHost":"172.28.0.3","jupyterArgs":["--ip=\"172.28.0.2\""],"debugAdapterMultiplexerPath":"/usr/local/bin/dap_multiplexer"}
+INFO 2021-01-25 19:48:10,201 env.py:  41: DEBIAN_FRONTEND:	noninteractive
+INFO 2021-01-25 19:48:10,201 env.py:  41: ENV:	/root/.bashrc
+INFO 2021-01-25 19:48:10,201 env.py:  41: GCE_METADATA_TIMEOUT:	0
+INFO 2021-01-25 19:48:10,201 env.py:  41: GCS_READ_CACHE_BLOCK_SIZE_MB:	16
+INFO 2021-01-25 19:48:10,201 env.py:  41: GIT_PAGER:	cat
+INFO 2021-01-25 19:48:10,201 env.py:  41: GLIBCPP_FORCE_NEW:	1
+INFO 2021-01-25 19:48:10,202 env.py:  41: GLIBCXX_FORCE_NEW:	1
+INFO 2021-01-25 19:48:10,202 env.py:  41: HOME:	/root
+INFO 2021-01-25 19:48:10,202 env.py:  41: HOSTNAME:	442a82988f4e
+INFO 2021-01-25 19:48:10,202 env.py:  41: JPY_PARENT_PID:	50
+INFO 2021-01-25 19:48:10,202 env.py:  41: LANG:	en_US.UTF-8
+INFO 2021-01-25 19:48:10,202 env.py:  41: LAST_FORCED_REBUILD:	20210119
+INFO 2021-01-25 19:48:10,202 env.py:  41: LD_LIBRARY_PATH:	/usr/lib64-nvidia
+INFO 2021-01-25 19:48:10,202 env.py:  41: LD_PRELOAD:	/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+INFO 2021-01-25 19:48:10,202 env.py:  41: LIBRARY_PATH:	/usr/local/cuda/lib64/stubs
+INFO 2021-01-25 19:48:10,202 env.py:  41: LOCAL_RANK:	0
+INFO 2021-01-25 19:48:10,202 env.py:  41: MPLBACKEND:	module://ipykernel.pylab.backend_inline
+INFO 2021-01-25 19:48:10,202 env.py:  41: NCCL_VERSION:	2.8.3
+INFO 2021-01-25 19:48:10,202 env.py:  41: NO_GCE_CHECK:	True
+INFO 2021-01-25 19:48:10,202 env.py:  41: NVIDIA_DRIVER_CAPABILITIES:	compute,utility
+INFO 2021-01-25 19:48:10,203 env.py:  41: NVIDIA_REQUIRE_CUDA:	cuda&gt;=10.1 brand=tesla,driver&gt;=396,driver&lt;397 brand=tesla,driver&gt;=410,driver&lt;411 brand=tesla,driver&gt;=418,driver&lt;419
+INFO 2021-01-25 19:48:10,203 env.py:  41: NVIDIA_VISIBLE_DEVICES:	all
+INFO 2021-01-25 19:48:10,203 env.py:  41: OLDPWD:	/
+INFO 2021-01-25 19:48:10,203 env.py:  41: PAGER:	cat
+INFO 2021-01-25 19:48:10,203 env.py:  41: PATH:	/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/node/bin:/tools/google-cloud-sdk/bin:/opt/bin
+INFO 2021-01-25 19:48:10,203 env.py:  41: PWD:	/content
+INFO 2021-01-25 19:48:10,203 env.py:  41: PYTHONPATH:	/env/python
+INFO 2021-01-25 19:48:10,203 env.py:  41: PYTHONWARNINGS:	ignore:::pip._internal.cli.base_command
+INFO 2021-01-25 19:48:10,203 env.py:  41: RANK:	0
+INFO 2021-01-25 19:48:10,203 env.py:  41: SHELL:	/bin/bash
+INFO 2021-01-25 19:48:10,203 env.py:  41: SHLVL:	1
+INFO 2021-01-25 19:48:10,203 env.py:  41: TBE_CREDS_ADDR:	172.28.0.1:8008
+INFO 2021-01-25 19:48:10,203 env.py:  41: TERM:	xterm-color
+INFO 2021-01-25 19:48:10,203 env.py:  41: TF_FORCE_GPU_ALLOW_GROWTH:	true
+INFO 2021-01-25 19:48:10,203 env.py:  41: WORLD_SIZE:	1
+INFO 2021-01-25 19:48:10,203 env.py:  41: _:	/usr/bin/python3
+INFO 2021-01-25 19:48:10,203 env.py:  41: __EGL_VENDOR_LIBRARY_DIRS:	/usr/lib64-nvidia:/usr/share/glvnd/egl_vendor.d/
+INFO 2021-01-25 19:48:10,203 misc.py:  86: Set start method of multiprocessing to forkserver
+INFO 2021-01-25 19:48:10,204 train.py:  77: Setting seed....
+INFO 2021-01-25 19:48:10,204 misc.py:  99: MACHINE SEED: 0
+INFO 2021-01-25 19:48:10,242 hydra_config.py: 140: Training with config:
+INFO 2021-01-25 19:48:10,247 hydra_config.py: 144: {'CHECKPOINT': {'APPEND_DISTR_RUN_ID': False,
                 'AUTO_RESUME': True,
                 'BACKEND': 'disk',
                 'CHECKPOINT_FREQUENCY': 1,
                 'CHECKPOINT_ITER_FREQUENCY': -1,
                 'DIR': './checkpoints',
                 'LATEST_CHECKPOINT_RESUME_FILE_NUM': 1,
-                'OVERWRITE_EXISTING': True},
+                'OVERWRITE_EXISTING': True,
+                'USE_SYMLINK_CHECKPOINT_FOR_RESUME': False},
  'CLUSTERFIT': {'CLUSTER_BACKEND': 'faiss',
                 'FEATURES': {'DATASET_NAME': '',
                              'DATA_PARTITION': 'TRAIN',
                              'LAYER_NAME': ''},
                 'NUM_CLUSTERS': 16000,
                 'N_ITER': 50},
- 'DATA': {'ENABLE_ASYNC_GPU_COPY': True,
+ 'DATA': {'DDP_BUCKET_CAP_MB': 25,
+          'ENABLE_ASYNC_GPU_COPY': True,
           'NUM_DATALOADER_WORKERS': 5,
           'PIN_MEMORY': True,
           'TEST': {'BATCHSIZE_PER_REPLICA': 256,
                    'COLLATE_FUNCTION': 'default_collate',
+                   'COLLATE_FUNCTION_PARAMS': {},
                    'COPY_DESTINATION_DIR': '',
                    'COPY_TO_LOCAL_DISK': False,
                    'DATASET_NAMES': ['imagenet1k_folder'],
@@ -334,6 +447,7 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                    'USE_STATEFUL_DISTRIBUTED_SAMPLER': False},
           'TRAIN': {'BATCHSIZE_PER_REPLICA': 32,
                     'COLLATE_FUNCTION': 'simclr_collator',
+                    'COLLATE_FUNCTION_PARAMS': {},
                     'COPY_DESTINATION_DIR': '/tmp/imagenet1k',
                     'COPY_TO_LOCAL_DISK': False,
                     'DATASET_NAMES': ['imagenet1k_filelist'],
@@ -368,6 +482,7 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                  'INIT_METHOD': 'tcp',
                  'MANUAL_GRADIENT_REDUCTION': False,
                  'NCCL_DEBUG': False,
+                 'NCCL_SOCKET_NTHREADS': '',
                  'NUM_NODES': 1,
                  'NUM_PROC_PER_NODE': 1,
                  'RUN_ID': 'auto'},
@@ -385,9 +500,13 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                    'WHITEN_IMG_LIST': ''},
  'LOG_FREQUENCY': 1,
  'LOSS': {'CrossEntropyLoss': {'ignore_index': -1},
+          'bce_logits_multiple_output_single_target': {'normalize_output': False,
+                                                       'reduction': 'none',
+                                                       'world_size': 1},
           'cross_entropy_multiple_output_single_target': {'ignore_index': -1,
                                                           'normalize_output': False,
                                                           'reduction': 'mean',
+                                                          'temperature': 1.0,
                                                           'weight': None},
           'deepclusterv2_loss': {'BATCHSIZE_PER_REPLICA': 256,
                                  'DROP_LAST': True,
@@ -433,20 +552,46 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                         'num_crops': 2,
                         'num_iters': 3,
                         'num_prototypes': [3000],
+                        'output_dir': '',
                         'queue': {'local_queue_length': 0,
                                   'queue_length': 0,
                                   'start_iter': 0},
+                        'temp_hard_assignment_iters': 0,
                         'temperature': 0.1,
-                        'use_double_precision': False}},
+                        'use_double_precision': False},
+          'swav_momentum_loss': {'crops_for_assign': [0, 1],
+                                 'embedding_dim': 128,
+                                 'epsilon': 0.05,
+                                 'momentum': 0.99,
+                                 'momentum_eval_mode_iter_start': 0,
+                                 'normalize_last_layer': True,
+                                 'num_crops': 2,
+                                 'num_iters': 3,
+                                 'num_prototypes': [3000],
+                                 'queue': {'local_queue_length': 0,
+                                           'queue_length': 0,
+                                           'start_iter': 0},
+                                 'temperature': 0.1,
+                                 'use_double_precision': False}},
  'MACHINE': {'DEVICE': 'gpu'},
- 'METERS': None,
+ 'METERS': {'accuracy_list_meter': {'meter_names': [],
+                                    'num_meters': 1,
+                                    'topk_values': [1]},
+            'enable_training_meter': True,
+            'mean_ap_list_meter': {'max_cpu_capacity': -1,
+                                   'meter_names': [],
+                                   'num_classes': 9605,
+                                   'num_meters': 1},
+            'name': ''},
  'MODEL': {'ACTIVATION_CHECKPOINTING': {'NUM_ACTIVATION_CHECKPOINTING_SPLITS': 2,
                                         'USE_ACTIVATION_CHECKPOINTING': False},
            'AMP_PARAMS': {'AMP_ARGS': {'keep_batchnorm_fp32': True,
                                        'loss_scale': 'dynamic',
                                        'master_weights': True,
                                        'opt_level': 'O3'},
+                          'AMP_TYPE': 'apex',
                           'USE_AMP': False},
+           'CUDA_CACHE': {'CLEAR_CUDA_CACHE': False, 'CLEAR_FREQ': 100},
            'FEATURE_EVAL_SETTINGS': {'EVAL_MODE_ON': False,
                                      'EVAL_TRUNK_AND_HEAD': False,
                                      'EXTRACT_TRUNK_FEATURES_ONLY': False,
@@ -458,12 +603,14 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                     'BATCHNORM_MOMENTUM': 0.1,
                     'PARAMS': [['mlp',
                                 {'dims': [2048, 2048], 'use_relu': True}],
-                               ['mlp', {'dims': [2048, 128]}]]},
+                               ['mlp', {'dims': [2048, 128]}]],
+                    'PARAMS_MULTIPLIER': 1.0},
            'INPUT_TYPE': 'rgb',
            'MODEL_COMPLEXITY': {'COMPUTE_COMPLEXITY': False,
                                 'INPUT_SHAPE': [3, 224, 224]},
            'MULTI_INPUT_HEAD_MAPPING': [],
            'NON_TRAINABLE_PARAMS': [],
+           'SINGLE_PASS_EVERY_CROP': False,
            'SYNC_BN_CONFIG': {'CONVERT_BN_TO_SYNC_BN': True,
                               'GROUP_SIZE': -1,
                               'SYNC_BN_TYPE': 'pytorch'},
@@ -471,7 +618,7 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
            'TRUNK': {'NAME': 'resnet',
                      'RESNETS': {'DEPTH': 50},
                      'TRUNK_PARAMS': {'EFFICIENT_NETS': {},
-                                      'REGNETS': {},
+                                      'REGNET': {},
                                       'RESNETS': {'DEPTH': 50,
                                                   'GROUPS': 1,
                                                   'LAYER4_STRIDE': 2,
@@ -488,7 +635,8 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
  'MULTI_PROCESSING_METHOD': 'forkserver',
  'NEAREST_NEIGHBOR': {'L2_NORM_FEATS': False, 'SIGMA': 0.1, 'TOPK': 200},
  'OPTIMIZER': {'head_optimizer_params': {'use_different_lr': False,
-                                         'use_different_wd': False},
+                                         'use_different_wd': False,
+                                         'weight_decay': 1e-06},
                'larc_config': {'clip': False,
                                'eps': 1e-08,
                                'trust_coefficient': 0.001},
@@ -517,7 +665,29 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
                                            'start_value': 0.1,
                                            'update_interval': 'step',
                                            'value': 0.1,
-                                           'values': [0.1, 0.01, 0.001]}},
+                                           'values': [0.1, 0.01, 0.001]},
+                                    'lr_head': {'auto_lr_scaling': {'auto_scale': False,
+                                                                    'base_lr_batch_size': 256,
+                                                                    'base_value': 0.3},
+                                                'end_value': 0.0,
+                                                'interval_scaling': ['rescaled',
+                                                                     'rescaled'],
+                                                'lengths': [0.1, 0.9],
+                                                'milestones': [30, 60],
+                                                'name': 'composite',
+                                                'schedulers': [{'end_value': 4.8,
+                                                                'name': 'linear',
+                                                                'start_value': 0.6},
+                                                               {'end_value': 0.0048,
+                                                                'is_adaptive': True,
+                                                                'name': 'cosine_warm_restart',
+                                                                'restart_interval_length': 0.334,
+                                                                'start_value': 4.8,
+                                                                'wave_type': 'full'}],
+                                                'start_value': 0.1,
+                                                'update_interval': 'step',
+                                                'value': 0.1,
+                                                'values': [0.1, 0.01, 0.001]}},
                'regularize_bias': True,
                'regularize_bn': False,
                'use_larc': True,
@@ -539,29 +709,32 @@ INFO 2021-01-13 17:05:11,915 hydra_config.py: 126: {'CHECKPOINT': {'APPEND_DISTR
          'max_iter': 2000,
          'normalize': True,
          'penalty': 'l2'},
- 'TENSORBOARD_SETUP': {'EXPERIMENT_LOG_DIR': '',
+ 'TENSORBOARD_SETUP': {'EXPERIMENT_LOG_DIR': 'tensorboard',
                        'FLUSH_EVERY_N_MIN': 5,
-                       'LOG_ACTIVATIONS': True,
                        'LOG_DIR': '.',
+                       'LOG_PARAMS': True,
+                       'LOG_PARAMS_EVERY_N_ITERS': 310,
+                       'LOG_PARAMS_GRADIENTS': True,
                        'USE_TENSORBOARD': True},
  'TEST_EVERY_NUM_EPOCH': 1,
  'TEST_MODEL': False,
  'TEST_ONLY': False,
- 'TRAINER': {'TRAIN_STEP_NAME': 'standard_train_step'},
+ 'TRAINER': {'TASK_NAME': 'self_supervision_task',
+             'TRAIN_STEP_NAME': 'standard_train_step'},
  'VERBOSE': False}
-INFO 2021-01-13 17:05:12,185 train.py:  65: System config:
+INFO 2021-01-25 19:48:10,517 train.py:  89: System config:
 -------------------  ---------------------------------------------------------------
 sys.platform         linux
 Python               3.6.9 (default, Oct  8 2020, 12:12:24) [GCC 8.4.0]
 numpy                1.19.5
 Pillow               7.0.0
-vissl                0.1.3 @/usr/local/lib/python3.6/dist-packages/vissl
+vissl                0.1.5 @/usr/local/lib/python3.6/dist-packages/vissl
 GPU available        True
 GPU 0                Tesla T4
 CUDA_HOME            /usr/local/cuda
 torchvision          0.6.1+cu101 @/usr/local/lib/python3.6/dist-packages/torchvision
 hydra                1.0.5 @/usr/local/lib/python3.6/dist-packages/hydra
-classy_vision        0.5.0 @/usr/local/lib/python3.6/dist-packages/classy_vision
+classy_vision        0.6.0.dev @/usr/local/lib/python3.6/dist-packages/classy_vision
 tensorboard          1.15.0
 apex                 0.1 @/usr/local/lib/python3.6/dist-packages/apex
 cv2                  4.1.2
@@ -598,8 +771,8 @@ CPU family           6
 Model                79
 Model name           Intel(R) Xeon(R) CPU @ 2.20GHz
 Stepping             0
-CPU MHz              2200.000
-BogoMIPS             4400.00
+CPU MHz              2199.998
+BogoMIPS             4399.99
 Hypervisor vendor    KVM
 Virtualization type  full
 L1d cache            32K
@@ -608,47 +781,55 @@ L2 cache             256K
 L3 cache             56320K
 NUMA node0 CPU(s)    0,1
 -------------------  ------------------------------
-INFO 2021-01-13 17:05:12,185 tensorboard.py:  28: Tensorboard dir: ./checkpoints/tb_logs
-2021-01-13 17:05:12.312108: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
-INFO 2021-01-13 17:05:13,780 tensorboard_hook.py:  52: Setting up SSL Tensorboard Hook...
-INFO 2021-01-13 17:05:13,780 train_task.py: 121: Setting amp args: None
-INFO 2021-01-13 17:05:13,780 trainer_main.py:  61: Using Distributed init method: tcp://localhost:36665, world_size: 1, rank: 0
-INFO 2021-01-13 17:05:13,782 trainer_main.py:  82: | initialized host b0185cc2f462 as rank 0 (0)
-INFO 2021-01-13 17:05:13,782 img_replicate_pil.py:  40: ImgReplicatePil | Using num_times: 2
-INFO 2021-01-13 17:05:13,782 img_pil_color_distortion.py:  43: ImgPilColorDistortion | Using strength: 1.0
-INFO 2021-01-13 17:05:13,782 ssl_dataset.py:  68: Rank: 0 Data files:
+INFO 2021-01-25 19:48:10,518 tensorboard.py:  46: Tensorboard dir: ./checkpoints/tb_logs
+2021-01-25 19:48:12.717777: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+INFO 2021-01-25 19:48:15,052 tensorboard_hook.py:  61: Setting up SSL Tensorboard Hook...
+INFO 2021-01-25 19:48:15,052 tensorboard_hook.py:  67: Tensorboard config: log_params: True, log_params_freq: 310, log_params_gradients: True
+INFO 2021-01-25 19:48:15,052 train_task.py: 192: Not using Automatic Mixed Precision
+INFO 2021-01-25 19:48:15,053 trainer_main.py: 109: Using Distributed init method: tcp://localhost:58591, world_size: 1, rank: 0
+INFO 2021-01-25 19:48:15,055 trainer_main.py: 130: | initialized host 442a82988f4e as rank 0 (0)
+INFO 2021-01-25 19:48:15,055 img_replicate_pil.py:  49: ImgReplicatePil | Using num_times: 2
+INFO 2021-01-25 19:48:15,055 img_pil_color_distortion.py:  53: ImgPilColorDistortion | Using strength: 1.0
+INFO 2021-01-25 19:48:15,056 ssl_dataset.py: 130: Rank: 0 split: TRAIN Data files:
 ['']
-INFO 2021-01-13 17:05:13,782 ssl_dataset.py:  69: Rank: 0 Label files:
+INFO 2021-01-25 19:48:15,056 ssl_dataset.py: 133: Rank: 0 split: TRAIN Label files:
 []
-INFO 2021-01-13 17:05:13,782 misc.py:  68: Set start method of multiprocessing to forkserver
-INFO 2021-01-13 17:05:13,782 __init__.py:  64: Created the Distributed Sampler....
-INFO 2021-01-13 17:05:13,783 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 19:48:15,056 misc.py:  86: Set start method of multiprocessing to forkserver
+INFO 2021-01-25 19:48:15,056 __init__.py:  91: Created the Distributed Sampler....
+INFO 2021-01-25 19:48:15,056 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 500, 'total_size': 500, 'shuffle': True}
-INFO 2021-01-13 17:05:13,783 __init__.py: 106: Wrapping the dataloader to async device copies
-INFO 2021-01-13 17:05:18,340 train_task.py: 280: Building model....
-INFO 2021-01-13 17:05:18,340 resnext.py:  58: ResNeXT trunk, supports activation checkpointing. Deactivated
-INFO 2021-01-13 17:05:18,341 resnext.py:  72: Building model: ResNeXt50-1x64d-w1-BatchNorm2d
-INFO 2021-01-13 17:05:19,010 model_helpers.py:  85: Using SyncBN group size: 1
-INFO 2021-01-13 17:05:19,010 model_helpers.py: 100: Converting BN layers to PyTorch SyncBN
-WARNING 2021-01-13 17:05:19,011 model_helpers.py: 106: Process groups not supported with PyTorch SyncBN currently. Traning will be slow. Please consider installing Apex for SyncBN.
-INFO 2021-01-13 17:05:19,016 train_task.py: 437: Broadcast model BN buffers from master on every forward pass
-INFO 2021-01-13 17:05:19,016 classification_task.py: 341: Synchronized Batch Normalization is disabled
-INFO 2021-01-13 17:05:19,016 train_task.py: 222: Building loss...
-INFO 2021-01-13 17:05:19,020 simclr_info_nce_loss.py:  58: Creating Info-NCE loss on Rank: 0
-INFO 2021-01-13 17:05:19,066 optimizer_helper.py:  86: Traininable params: 163, Non-Traininable params: 0, Regularized Parameters: 57, Unregularized Parameters 106
-INFO 2021-01-13 17:05:19,066 trainer_main.py: 168: Training 2 epochs. One epoch = 15 iterations
-INFO 2021-01-13 17:05:19,066 trainer_main.py: 170: Total 30 iterations for training
-INFO 2021-01-13 17:05:19,066 trainer_main.py: 171: Total 500 samples in one epoch
-INFO 2021-01-13 17:05:19,204 logger.py:  66: Wed Jan 13 17:05:19 2021       
+INFO 2021-01-25 19:48:15,056 __init__.py: 155: Wrapping the dataloader to async device copies
+INFO 2021-01-25 19:48:29,063 train_task.py: 419: Building model....
+INFO 2021-01-25 19:48:29,063 resnext.py:  63: ResNeXT trunk, supports activation checkpointing. Deactivated
+INFO 2021-01-25 19:48:29,064 resnext.py:  83: Building model: ResNeXt50-1x64d-w1-BatchNorm2d
+INFO 2021-01-25 19:48:29,687 model_helpers.py: 138: Using SyncBN group size: 1
+INFO 2021-01-25 19:48:29,687 model_helpers.py: 153: Converting BN layers to PyTorch SyncBN
+WARNING 2021-01-25 19:48:29,687 model_helpers.py: 159: Process groups not supported with PyTorch SyncBN currently. Traning will be slow. Please consider installing Apex for SyncBN.
+INFO 2021-01-25 19:48:29,693 train_task.py: 591: Broadcast model BN buffers from master on every forward pass
+INFO 2021-01-25 19:48:29,693 classification_task.py: 359: Synchronized Batch Normalization is disabled
+INFO 2021-01-25 19:48:29,693 train_task.py: 340: Building loss...
+INFO 2021-01-25 19:48:29,703 simclr_info_nce_loss.py:  88: Creating Info-NCE loss on Rank: 0
+INFO 2021-01-25 19:48:29,752 optimizer_helper.py: 157: 
+Trainable params: 163, 
+Non-Trainable params: 0, 
+Trunk Regularized Parameters: 53, 
+Trunk Unregularized Parameters 106, 
+Head Regularized Parameters: 4, 
+Head Unregularized Parameters: 0 
+Remaining Regularized Parameters: 0 
+INFO 2021-01-25 19:48:29,752 trainer_main.py: 241: Training 2 epochs. One epoch = 15 iterations
+INFO 2021-01-25 19:48:29,752 trainer_main.py: 243: Total 30 iterations for training
+INFO 2021-01-25 19:48:29,752 trainer_main.py: 244: Total 500 samples in one epoch
+INFO 2021-01-25 19:48:29,890 logger.py:  76: Mon Jan 25 19:48:29 2021       
 +-----------------------------------------------------------------------------+
-| NVIDIA-SMI 460.27.04    Driver Version: 418.67       CUDA Version: 10.1     |
+| NVIDIA-SMI 460.32.03    Driver Version: 418.67       CUDA Version: 10.1     |
 |-------------------------------+----------------------+----------------------+
 | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
 | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
 |                               |                      |               MIG M. |
 |===============================+======================+======================|
 |   0  Tesla T4            Off  | 00000000:00:04.0 Off |                    0 |
-| N/A   42C    P0    27W /  70W |   1033MiB / 15079MiB |      3%      Default |
+| N/A   37C    P0    27W /  70W |   1033MiB / 15079MiB |      1%      Default |
 |                               |                      |                 ERR! |
 +-------------------------------+----------------------+----------------------+
                                                                                
@@ -660,7 +841,7 @@ INFO 2021-01-13 17:05:19,204 logger.py:  66: Wed Jan 13 17:05:19 2021
 |  No running processes found                                                 |
 +-----------------------------------------------------------------------------+
 
-INFO 2021-01-13 17:05:19,206 trainer_main.py: 103: Model is:
+INFO 2021-01-25 19:48:29,892 trainer_main.py: 166: Model is:
  Classy &lt;class 'vissl.models.base_ssl_model.BaseSSLMultiInputOutputModel'&gt;:
 BaseSSLMultiInputOutputModel(
   (_heads): ModuleDict()
@@ -856,14 +1037,14 @@ BaseSSLMultiInputOutputModel(
     )
   )
 )
-INFO 2021-01-13 17:05:19,278 trainer_main.py: 104: Loss is: { 'info_average': { 'dist_rank': 0,
+INFO 2021-01-25 19:48:29,945 trainer_main.py: 167: Loss is: { 'info_average': { 'dist_rank': 0,
   'name': 'SimclrInfoNCECriterion',
   'num_negatives': 62,
   'num_pos': 2,
   'temperature': 0.1},
   'name': 'SimclrInfoNCELoss'}
-INFO 2021-01-13 17:05:19,278 trainer_main.py: 105: Starting training....
-INFO 2021-01-13 17:05:19,278 __init__.py:  52: Distributed Sampler config:
+INFO 2021-01-25 19:48:29,945 trainer_main.py: 168: Starting training....
+INFO 2021-01-25 19:48:29,945 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 500, 'total_size': 500, 'shuffle': True}
 ** fvcore version of PathManager will be deprecated soon. **
 ** Please migrate to the version in iopath repo. **
@@ -885,64 +1066,66 @@ https://github.com/facebookresearch/iopath
 ** Please migrate to the version in iopath repo. **
 https://github.com/facebookresearch/iopath 
 
-INFO 2021-01-13 17:05:27,543 trainer_main.py: 205: Phase advanced. Rank: 0
-INFO 2021-01-13 17:05:31,881 state_update_hooks.py:  90: Starting phase 0 [train]
-INFO 2021-01-13 17:05:34,776 tensorboard_hook.py:  92: Logging metrics. Iteration 1
-INFO 2021-01-13 17:05:34,778 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 1; lr: 0.6; loss: 4.39553; btime(ms): 15711; eta: 0:07:35; peak_mem: 8007M
-INFO 2021-01-13 17:05:35,389 tensorboard_hook.py:  92: Logging metrics. Iteration 2
-INFO 2021-01-13 17:05:35,391 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 2; lr: 2.0; loss: 4.21251; btime(ms): 8162; eta: 0:03:48; peak_mem: 8007M
-INFO 2021-01-13 17:05:36,004 tensorboard_hook.py:  92: Logging metrics. Iteration 3
-INFO 2021-01-13 17:05:36,006 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 3; lr: 3.4; loss: 4.2109; btime(ms): 5646; eta: 0:02:32; peak_mem: 8007M
-INFO 2021-01-13 17:05:36,614 tensorboard_hook.py:  92: Logging metrics. Iteration 4
-INFO 2021-01-13 17:05:36,616 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 4; lr: 3.59685; loss: 4.31852; btime(ms): 4387; eta: 0:01:54; peak_mem: 8007M
-INFO 2021-01-13 17:05:37,219 tensorboard_hook.py:  92: Logging metrics. Iteration 5
-INFO 2021-01-13 17:05:37,221 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 5; lr: 3.48896; loss: 4.13893; btime(ms): 3630; eta: 0:01:30; peak_mem: 8007M; btime(5iters): 3630 ms; rolling_eta: 0:01:30
-INFO 2021-01-13 17:05:37,826 tensorboard_hook.py:  92: Logging metrics. Iteration 6
-INFO 2021-01-13 17:05:37,828 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 6; lr: 3.17827; loss: 4.16614; btime(ms): 3126; eta: 0:01:15; peak_mem: 8007M; btime(5iters): 609 ms; rolling_eta: 0:00:14
-INFO 2021-01-13 17:05:38,432 tensorboard_hook.py:  92: Logging metrics. Iteration 7
-INFO 2021-01-13 17:05:38,433 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 7; lr: 2.70209; loss: 4.1459; btime(ms): 2766; eta: 0:01:03; peak_mem: 8007M; btime(5iters): 608 ms; rolling_eta: 0:00:13
-INFO 2021-01-13 17:05:39,034 tensorboard_hook.py:  92: Logging metrics. Iteration 8
-INFO 2021-01-13 17:05:39,036 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 8; lr: 2.11763; loss: 4.14492; btime(ms): 2496; eta: 0:00:54; peak_mem: 8007M; btime(5iters): 606 ms; rolling_eta: 0:00:13
-INFO 2021-01-13 17:05:39,636 tensorboard_hook.py:  92: Logging metrics. Iteration 9
-INFO 2021-01-13 17:05:39,637 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 9; lr: 1.49511; loss: 4.14295; btime(ms): 2285; eta: 0:00:47; peak_mem: 8007M; btime(5iters): 604 ms; rolling_eta: 0:00:12
-INFO 2021-01-13 17:05:39,810 log_hooks.py: 298: Average train batch time (ms) for 10 batches: 1226
-INFO 2021-01-13 17:05:39,811 log_hooks.py: 307: Train step time breakdown (rank 0):
+INFO 2021-01-25 19:48:37,960 trainer_main.py: 296: Phase advanced. Rank: 0
+INFO 2021-01-25 19:48:42,223 state_update_hooks.py:  98: Starting phase 0 [train]
+INFO 2021-01-25 19:48:48,167 tensorboard_hook.py: 188: Logging metrics. Iteration 1
+INFO 2021-01-25 19:48:48,168 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 1; lr: 0.6; loss: 4.45957; btime(ms): 18415; eta: 0:08:54; peak_mem: 8007M
+INFO 2021-01-25 19:48:48,780 tensorboard_hook.py: 188: Logging metrics. Iteration 2
+INFO 2021-01-25 19:48:48,782 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 2; lr: 2.0; loss: 4.18492; btime(ms): 9514; eta: 0:04:26; peak_mem: 8007M
+INFO 2021-01-25 19:48:49,396 tensorboard_hook.py: 188: Logging metrics. Iteration 3
+INFO 2021-01-25 19:48:49,398 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 3; lr: 3.4; loss: 4.16275; btime(ms): 6548; eta: 0:02:56; peak_mem: 8007M
+INFO 2021-01-25 19:48:50,003 tensorboard_hook.py: 188: Logging metrics. Iteration 4
+INFO 2021-01-25 19:48:50,005 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 4; lr: 3.59685; loss: 4.16412; btime(ms): 5063; eta: 0:02:11; peak_mem: 8007M
+INFO 2021-01-25 19:48:50,603 tensorboard_hook.py: 188: Logging metrics. Iteration 5
+INFO 2021-01-25 19:48:50,605 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 5; lr: 3.48896; loss: 4.13283; btime(ms): 4170; eta: 0:01:44; peak_mem: 8007M; btime(5iters): 4170 ms; rolling_eta: 0:01:44
+INFO 2021-01-25 19:48:51,213 tensorboard_hook.py: 188: Logging metrics. Iteration 6
+INFO 2021-01-25 19:48:51,215 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 6; lr: 3.17827; loss: 4.17408; btime(ms): 3577; eta: 0:01:25; peak_mem: 8007M; btime(5iters): 609 ms; rolling_eta: 0:00:14
+INFO 2021-01-25 19:48:51,817 tensorboard_hook.py: 188: Logging metrics. Iteration 7
+INFO 2021-01-25 19:48:51,819 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 7; lr: 2.70209; loss: 4.15529; btime(ms): 3152; eta: 0:01:12; peak_mem: 8007M; btime(5iters): 607 ms; rolling_eta: 0:00:13
+INFO 2021-01-25 19:48:52,423 tensorboard_hook.py: 188: Logging metrics. Iteration 8
+INFO 2021-01-25 19:48:52,424 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 8; lr: 2.11763; loss: 4.13425; btime(ms): 2833; eta: 0:01:02; peak_mem: 8007M; btime(5iters): 605 ms; rolling_eta: 0:00:13
+INFO 2021-01-25 19:48:53,031 tensorboard_hook.py: 188: Logging metrics. Iteration 9
+INFO 2021-01-25 19:48:53,033 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 9; lr: 1.49511; loss: 4.14641; btime(ms): 2586; eta: 0:00:54; peak_mem: 8007M; btime(5iters): 605 ms; rolling_eta: 0:00:12
+INFO 2021-01-25 19:48:53,207 log_hooks.py: 416: Average train batch time (ms) for 10 batches: 1524
+INFO 2021-01-25 19:48:53,208 log_hooks.py: 425: Train step time breakdown (rank 0):
                Timer     Host    CudaEvent
-         read_sample:    1.09 ms    1.11 ms
-             forward:  122.24 ms  264.53 ms
-        loss_compute:    0.81 ms    0.35 ms
-     loss_all_reduce:    0.07 ms    0.02 ms
-            backward:  205.95 ms  532.88 ms
-      optimizer_step:  375.91 ms   49.17 ms
-    train_step_total:  861.18 ms  861.22 ms
-INFO 2021-01-13 17:05:40,242 tensorboard_hook.py:  92: Logging metrics. Iteration 10
-INFO 2021-01-13 17:05:40,244 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 10; lr: 0.90932; loss: 4.143; btime(ms): 2117; eta: 0:00:42; peak_mem: 8007M; btime(5iters): 604 ms; rolling_eta: 0:00:12
-INFO 2021-01-13 17:05:40,849 tensorboard_hook.py:  92: Logging metrics. Iteration 11
-INFO 2021-01-13 17:05:40,850 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 11; lr: 0.43064; loss: 4.14207; btime(ms): 1980; eta: 0:00:37; peak_mem: 8007M; btime(5iters): 604 ms; rolling_eta: 0:00:11
-INFO 2021-01-13 17:05:41,460 tensorboard_hook.py:  92: Logging metrics. Iteration 12
-INFO 2021-01-13 17:05:41,462 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 12; lr: 0.11656; loss: 4.14465; btime(ms): 1866; eta: 0:00:33; peak_mem: 8007M; btime(5iters): 605 ms; rolling_eta: 0:00:10
-INFO 2021-01-13 17:05:42,067 tensorboard_hook.py:  92: Logging metrics. Iteration 13
-INFO 2021-01-13 17:05:42,069 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 13; lr: 0.00484; loss: 4.14401; btime(ms): 1769; eta: 0:00:30; peak_mem: 8007M; btime(5iters): 606 ms; rolling_eta: 0:00:10
-INFO 2021-01-13 17:05:42,673 tensorboard_hook.py:  92: Logging metrics. Iteration 14
-INFO 2021-01-13 17:05:42,675 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 14; lr: 0.03928; loss: 4.14383; btime(ms): 1686; eta: 0:00:26; peak_mem: 8007M; btime(5iters): 607 ms; rolling_eta: 0:00:09
-INFO 2021-01-13 17:05:43,302 tensorboard_hook.py:  92: Logging metrics. Iteration 15
-INFO 2021-01-13 17:05:43,304 log_hooks.py: 119: Rank: 0; [ep: 0] iter: 15; lr: 0.1411; loss: 4.14426; btime(ms): 1615; eta: 0:00:24; peak_mem: 8007M; btime(5iters): 612 ms; rolling_eta: 0:00:09
-INFO 2021-01-13 17:05:43,305 trainer_main.py: 123: Meters synced
-INFO 2021-01-13 17:05:43,315 log_hooks.py: 298: Average train batch time (ms) for 15 batches: 1051
-INFO 2021-01-13 17:05:43,315 log_hooks.py: 307: Train step time breakdown (rank 0):
+         read_sample:    0.41 ms    0.44 ms
+             forward:  122.71 ms  266.00 ms
+        loss_compute:    0.96 ms    0.94 ms
+     loss_all_reduce:    0.08 ms    0.08 ms
+            backward:  227.54 ms  559.92 ms
+      optimizer_step:  376.12 ms   44.28 ms
+    train_step_total: 1200.40 ms 1200.44 ms
+INFO 2021-01-25 19:48:53,636 tensorboard_hook.py: 188: Logging metrics. Iteration 10
+INFO 2021-01-25 19:48:53,638 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 10; lr: 0.90932; loss: 4.18362; btime(ms): 2388; eta: 0:00:47; peak_mem: 8007M; btime(5iters): 606 ms; rolling_eta: 0:00:12
+INFO 2021-01-25 19:48:54,239 tensorboard_hook.py: 188: Logging metrics. Iteration 11
+INFO 2021-01-25 19:48:54,241 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 11; lr: 0.43064; loss: 4.16708; btime(ms): 2226; eta: 0:00:42; peak_mem: 8007M; btime(5iters): 605 ms; rolling_eta: 0:00:11
+INFO 2021-01-25 19:48:54,842 tensorboard_hook.py: 188: Logging metrics. Iteration 12
+INFO 2021-01-25 19:48:54,843 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 12; lr: 0.11656; loss: 4.13407; btime(ms): 2090; eta: 0:00:37; peak_mem: 8007M; btime(5iters): 604 ms; rolling_eta: 0:00:10
+INFO 2021-01-25 19:48:55,449 tensorboard_hook.py: 188: Logging metrics. Iteration 13
+INFO 2021-01-25 19:48:55,451 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 13; lr: 0.00484; loss: 4.14517; btime(ms): 1976; eta: 0:00:33; peak_mem: 8007M; btime(5iters): 605 ms; rolling_eta: 0:00:10
+INFO 2021-01-25 19:48:56,058 tensorboard_hook.py: 188: Logging metrics. Iteration 14
+INFO 2021-01-25 19:48:56,060 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 14; lr: 0.03928; loss: 4.14897; btime(ms): 1879; eta: 0:00:30; peak_mem: 8007M; btime(5iters): 605 ms; rolling_eta: 0:00:09
+INFO 2021-01-25 19:48:56,682 tensorboard_hook.py: 188: Logging metrics. Iteration 15
+INFO 2021-01-25 19:48:56,684 log_hooks.py: 155: Rank: 0; [ep: 0] iter: 15; lr: 0.1411; loss: 4.14156; btime(ms): 1795; eta: 0:00:26; peak_mem: 8007M; btime(5iters): 609 ms; rolling_eta: 0:00:09
+INFO 2021-01-25 19:48:56,685 trainer_main.py: 194: Meters synced
+INFO 2021-01-25 19:48:56,714 log_hooks.py: 416: Average train batch time (ms) for 15 batches: 1250
+INFO 2021-01-25 19:48:56,714 log_hooks.py: 425: Train step time breakdown (rank 0):
                Timer     Host    CudaEvent
-         read_sample:    2.25 ms    2.27 ms
-             forward:   85.81 ms  234.01 ms
-        loss_compute:    0.72 ms    0.25 ms
-     loss_all_reduce:    0.07 ms    0.01 ms
-            backward:  128.49 ms  474.20 ms
-      optimizer_step:  393.12 ms   47.60 ms
-    train_step_total:  761.01 ms  761.05 ms
-INFO 2021-01-13 17:05:46,495 io.py:  16: Saving data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 17:05:46,495 io.py:  30: Saved data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 17:05:46,495 log_hooks.py: 182: [phase: 0] Saving checkpoint to ./checkpoints
-INFO 2021-01-13 17:05:46,858 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_phase0.torch
-INFO 2021-01-13 17:05:46,858 __init__.py:  52: Distributed Sampler config:
+         read_sample:    1.63 ms    1.66 ms
+             forward:   85.81 ms  234.71 ms
+        loss_compute:    0.90 ms    0.88 ms
+     loss_all_reduce:    0.07 ms    0.08 ms
+            backward:  140.99 ms  490.35 ms
+      optimizer_step:  392.73 ms   43.91 ms
+    train_step_total:  963.55 ms  963.59 ms
+INFO 2021-01-25 19:49:02,998 io.py:  56: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 19:49:03,001 io.py:  70: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 19:49:03,001 log_hooks.py: 283: [phase: 0] Saving checkpoint to ./checkpoints
+INFO 2021-01-25 19:49:03,371 log_hooks.py: 312: Saved checkpoint: ./checkpoints/model_phase0.torch
+INFO 2021-01-25 19:49:03,371 log_hooks.py: 316: Creating symlink...
+INFO 2021-01-25 19:49:03,371 log_hooks.py: 320: Created symlink: ./checkpoints/checkpoint.torch
+INFO 2021-01-25 19:49:03,372 __init__.py:  72: Distributed Sampler config:
 {'num_replicas': 1, 'rank': 0, 'epoch': 1, 'num_samples': 500, 'total_size': 500, 'shuffle': True}
 ** fvcore version of PathManager will be deprecated soon. **
 ** Please migrate to the version in iopath repo. **
@@ -964,67 +1147,70 @@ https://github.com/facebookresearch/iopath
 ** Please migrate to the version in iopath repo. **
 https://github.com/facebookresearch/iopath 
 
-INFO 2021-01-13 17:05:54,709 trainer_main.py: 205: Phase advanced. Rank: 0
-INFO 2021-01-13 17:05:54,710 state_update_hooks.py:  90: Starting phase 1 [train]
-INFO 2021-01-13 17:05:55,528 tensorboard_hook.py:  92: Logging metrics. Iteration 16
-INFO 2021-01-13 17:05:55,543 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 16; lr: 0.29803; loss: 4.14203; btime(ms): 2279; eta: 0:00:31; peak_mem: 5673M; btime(5iters): 2937 ms; rolling_eta: 0:00:41
-INFO 2021-01-13 17:05:56,344 tensorboard_hook.py:  92: Logging metrics. Iteration 17
-INFO 2021-01-13 17:05:56,347 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 17; lr: 0.49122; loss: 4.14484; btime(ms): 2192; eta: 0:00:28; peak_mem: 5673M; btime(5iters): 2976 ms; rolling_eta: 0:00:38
-INFO 2021-01-13 17:05:57,062 tensorboard_hook.py:  92: Logging metrics. Iteration 18
-INFO 2021-01-13 17:05:57,064 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 18; lr: 0.69747; loss: 4.14703; btime(ms): 2110; eta: 0:00:25; peak_mem: 5673M; btime(5iters): 2998 ms; rolling_eta: 0:00:35
-INFO 2021-01-13 17:05:57,712 tensorboard_hook.py:  92: Logging metrics. Iteration 19
-INFO 2021-01-13 17:05:57,715 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 19; lr: 0.89198; loss: 4.14112; btime(ms): 2034; eta: 0:00:22; peak_mem: 5673M; btime(5iters): 3008 ms; rolling_eta: 0:00:33
-INFO 2021-01-13 17:05:58,320 tensorboard_hook.py:  92: Logging metrics. Iteration 20
-INFO 2021-01-13 17:05:58,322 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 20; lr: 1.0514; loss: 4.1464; btime(ms): 1962; eta: 0:00:19; peak_mem: 5673M; btime(5iters): 3003 ms; rolling_eta: 0:00:30
-INFO 2021-01-13 17:05:58,930 tensorboard_hook.py:  92: Logging metrics. Iteration 21
-INFO 2021-01-13 17:05:58,932 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 21; lr: 1.15658; loss: 4.14452; btime(ms): 1898; eta: 0:00:17; peak_mem: 5673M; btime(5iters): 678 ms; rolling_eta: 0:00:06
-INFO 2021-01-13 17:05:59,552 tensorboard_hook.py:  92: Logging metrics. Iteration 22
-INFO 2021-01-13 17:05:59,554 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 22; lr: 1.19487; loss: 4.14572; btime(ms): 1840; eta: 0:00:14; peak_mem: 5673M; btime(5iters): 641 ms; rolling_eta: 0:00:05
-INFO 2021-01-13 17:06:00,160 tensorboard_hook.py:  92: Logging metrics. Iteration 23
-INFO 2021-01-13 17:06:00,163 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 23; lr: 1.16167; loss: 4.14261; btime(ms): 1786; eta: 0:00:12; peak_mem: 5673M; btime(5iters): 619 ms; rolling_eta: 0:00:04
-INFO 2021-01-13 17:06:00,774 tensorboard_hook.py:  92: Logging metrics. Iteration 24
-INFO 2021-01-13 17:06:00,776 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 24; lr: 1.06098; loss: 4.14385; btime(ms): 1737; eta: 0:00:10; peak_mem: 5673M; btime(5iters): 612 ms; rolling_eta: 0:00:03
-INFO 2021-01-13 17:06:00,950 log_hooks.py: 298: Average train batch time (ms) for 10 batches: 624
-INFO 2021-01-13 17:06:00,951 log_hooks.py: 307: Train step time breakdown (rank 0):
+INFO 2021-01-25 19:49:10,289 trainer_main.py: 296: Phase advanced. Rank: 0
+INFO 2021-01-25 19:49:10,289 state_update_hooks.py:  98: Starting phase 1 [train]
+INFO 2021-01-25 19:49:11,696 tensorboard_hook.py: 188: Logging metrics. Iteration 16
+INFO 2021-01-25 19:49:11,709 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 16; lr: 0.29803; loss: 4.14494; btime(ms): 2622; eta: 0:00:36; peak_mem: 5673M; btime(5iters): 3493 ms; rolling_eta: 0:00:48
+INFO 2021-01-25 19:49:12,485 tensorboard_hook.py: 188: Logging metrics. Iteration 17
+INFO 2021-01-25 19:49:12,499 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 17; lr: 0.49122; loss: 4.14275; btime(ms): 2514; eta: 0:00:32; peak_mem: 5673M; btime(5iters): 3531 ms; rolling_eta: 0:00:45
+INFO 2021-01-25 19:49:13,213 tensorboard_hook.py: 188: Logging metrics. Iteration 18
+INFO 2021-01-25 19:49:13,216 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 18; lr: 0.69747; loss: 4.13617; btime(ms): 2414; eta: 0:00:28; peak_mem: 5673M; btime(5iters): 3552 ms; rolling_eta: 0:00:42
+INFO 2021-01-25 19:49:13,845 tensorboard_hook.py: 188: Logging metrics. Iteration 19
+INFO 2021-01-25 19:49:13,847 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 19; lr: 0.89198; loss: 4.136; btime(ms): 2320; eta: 0:00:25; peak_mem: 5673M; btime(5iters): 3557 ms; rolling_eta: 0:00:39
+INFO 2021-01-25 19:49:14,456 tensorboard_hook.py: 188: Logging metrics. Iteration 20
+INFO 2021-01-25 19:49:14,458 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 20; lr: 1.0514; loss: 4.16664; btime(ms): 2235; eta: 0:00:22; peak_mem: 5673M; btime(5iters): 3554 ms; rolling_eta: 0:00:35
+INFO 2021-01-25 19:49:15,070 tensorboard_hook.py: 188: Logging metrics. Iteration 21
+INFO 2021-01-25 19:49:15,072 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 21; lr: 1.15658; loss: 4.13782; btime(ms): 2158; eta: 0:00:19; peak_mem: 5673M; btime(5iters): 672 ms; rolling_eta: 0:00:06
+INFO 2021-01-25 19:49:15,674 tensorboard_hook.py: 188: Logging metrics. Iteration 22
+INFO 2021-01-25 19:49:15,676 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 22; lr: 1.19487; loss: 4.11828; btime(ms): 2087; eta: 0:00:16; peak_mem: 5673M; btime(5iters): 635 ms; rolling_eta: 0:00:05
+INFO 2021-01-25 19:49:16,288 tensorboard_hook.py: 188: Logging metrics. Iteration 23
+INFO 2021-01-25 19:49:16,290 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 23; lr: 1.16167; loss: 4.12; btime(ms): 2023; eta: 0:00:14; peak_mem: 5673M; btime(5iters): 614 ms; rolling_eta: 0:00:04
+INFO 2021-01-25 19:49:16,900 tensorboard_hook.py: 188: Logging metrics. Iteration 24
+INFO 2021-01-25 19:49:16,902 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 24; lr: 1.06098; loss: 4.189; btime(ms): 1964; eta: 0:00:11; peak_mem: 5673M; btime(5iters): 611 ms; rolling_eta: 0:00:03
+INFO 2021-01-25 19:49:17,078 log_hooks.py: 416: Average train batch time (ms) for 10 batches: 678
+INFO 2021-01-25 19:49:17,078 log_hooks.py: 425: Train step time breakdown (rank 0):
                Timer     Host    CudaEvent
-         read_sample:    1.20 ms    1.28 ms
-             forward:   25.49 ms  176.13 ms
-        loss_compute:    0.65 ms    0.07 ms
-     loss_all_reduce:    0.07 ms    0.01 ms
-            backward:   29.59 ms  388.79 ms
-      optimizer_step:  458.50 ms   99.51 ms
-    train_step_total:  673.72 ms  673.76 ms
-INFO 2021-01-13 17:06:01,383 tensorboard_hook.py:  92: Logging metrics. Iteration 25
-INFO 2021-01-13 17:06:01,385 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 25; lr: 0.90489; loss: 4.14434; btime(ms): 1692; eta: 0:00:08; peak_mem: 5673M; btime(5iters): 612 ms; rolling_eta: 0:00:03
-INFO 2021-01-13 17:06:02,005 tensorboard_hook.py:  92: Logging metrics. Iteration 26
-INFO 2021-01-13 17:06:02,007 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 26; lr: 0.71216; loss: 4.14376; btime(ms): 1651; eta: 0:00:06; peak_mem: 5673M; btime(5iters): 615 ms; rolling_eta: 0:00:02
-INFO 2021-01-13 17:06:02,615 tensorboard_hook.py:  92: Logging metrics. Iteration 27
-INFO 2021-01-13 17:06:02,617 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 27; lr: 0.50593; loss: 4.14222; btime(ms): 1612; eta: 0:00:04; peak_mem: 5673M; btime(5iters): 612 ms; rolling_eta: 0:00:01
-INFO 2021-01-13 17:06:03,227 tensorboard_hook.py:  92: Logging metrics. Iteration 28
-INFO 2021-01-13 17:06:03,229 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 28; lr: 0.31099; loss: 4.14072; btime(ms): 1577; eta: 0:00:03; peak_mem: 5673M; btime(5iters): 613 ms; rolling_eta: 0:00:01
-INFO 2021-01-13 17:06:03,838 tensorboard_hook.py:  92: Logging metrics. Iteration 29
-INFO 2021-01-13 17:06:03,840 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 29; lr: 0.15075; loss: 4.14418; btime(ms): 1543; eta: 0:00:01; peak_mem: 5673M; btime(5iters): 612 ms; rolling_eta: 0:00:00
-INFO 2021-01-13 17:06:04,471 tensorboard_hook.py:  92: Logging metrics. Iteration 30
-INFO 2021-01-13 17:06:04,473 log_hooks.py: 119: Rank: 0; [ep: 1] iter: 30; lr: 0.04446; loss: 4.14685; btime(ms): 1513; eta: 0:00:00; peak_mem: 5673M; btime(5iters): 617 ms; rolling_eta: 0:00:00
-INFO 2021-01-13 17:06:04,474 trainer_main.py: 123: Meters synced
-INFO 2021-01-13 17:06:04,474 log_hooks.py: 298: Average train batch time (ms) for 15 batches: 650
-INFO 2021-01-13 17:06:04,474 log_hooks.py: 307: Train step time breakdown (rank 0):
+         read_sample:   60.26 ms   60.28 ms
+             forward:   27.82 ms  179.48 ms
+        loss_compute:    1.01 ms    0.99 ms
+     loss_all_reduce:    0.09 ms    0.09 ms
+            backward:   22.86 ms  388.28 ms
+      optimizer_step:  451.73 ms   86.86 ms
+    train_step_total:  734.44 ms  734.47 ms
+INFO 2021-01-25 19:49:17,509 tensorboard_hook.py: 188: Logging metrics. Iteration 25
+INFO 2021-01-25 19:49:17,511 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 25; lr: 0.90489; loss: 4.154; btime(ms): 1910; eta: 0:00:09; peak_mem: 5673M; btime(5iters): 610 ms; rolling_eta: 0:00:03
+INFO 2021-01-25 19:49:18,126 tensorboard_hook.py: 188: Logging metrics. Iteration 26
+INFO 2021-01-25 19:49:18,128 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 26; lr: 0.71216; loss: 4.17906; btime(ms): 1860; eta: 0:00:07; peak_mem: 5673M; btime(5iters): 611 ms; rolling_eta: 0:00:02
+INFO 2021-01-25 19:49:18,742 tensorboard_hook.py: 188: Logging metrics. Iteration 27
+INFO 2021-01-25 19:49:18,744 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 27; lr: 0.50593; loss: 4.18055; btime(ms): 1814; eta: 0:00:05; peak_mem: 5673M; btime(5iters): 613 ms; rolling_eta: 0:00:01
+INFO 2021-01-25 19:49:19,351 tensorboard_hook.py: 188: Logging metrics. Iteration 28
+INFO 2021-01-25 19:49:19,353 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 28; lr: 0.31099; loss: 4.1435; btime(ms): 1771; eta: 0:00:03; peak_mem: 5673M; btime(5iters): 612 ms; rolling_eta: 0:00:01
+INFO 2021-01-25 19:49:19,968 tensorboard_hook.py: 188: Logging metrics. Iteration 29
+INFO 2021-01-25 19:49:19,971 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 29; lr: 0.15075; loss: 4.14251; btime(ms): 1731; eta: 0:00:01; peak_mem: 5673M; btime(5iters): 613 ms; rolling_eta: 0:00:00
+INFO 2021-01-25 19:49:20,605 tensorboard_hook.py: 188: Logging metrics. Iteration 30
+INFO 2021-01-25 19:49:20,607 log_hooks.py: 155: Rank: 0; [ep: 1] iter: 30; lr: 0.04446; loss: 4.1306; btime(ms): 1695; eta: 0:00:00; peak_mem: 5673M; btime(5iters): 619 ms; rolling_eta: 0:00:00
+INFO 2021-01-25 19:49:20,608 trainer_main.py: 194: Meters synced
+INFO 2021-01-25 19:49:20,608 log_hooks.py: 416: Average train batch time (ms) for 15 batches: 687
+INFO 2021-01-25 19:49:20,608 log_hooks.py: 425: Train step time breakdown (rank 0):
                Timer     Host    CudaEvent
-         read_sample:    2.25 ms    2.31 ms
-             forward:   21.24 ms  175.34 ms
-        loss_compute:    0.61 ms    0.07 ms
-     loss_all_reduce:    0.07 ms    0.01 ms
-            backward:   22.44 ms  388.66 ms
-      optimizer_step:  444.64 ms   78.62 ms
-    train_step_total:  650.59 ms  650.63 ms
-INFO 2021-01-13 17:06:07,564 io.py:  16: Saving data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 17:06:07,564 io.py:  30: Saved data to file: ./checkpoints/metrics.json
-INFO 2021-01-13 17:06:07,565 log_hooks.py: 182: [phase: 1] Saving checkpoint to ./checkpoints
-INFO 2021-01-13 17:06:07,920 log_hooks.py: 212: Saved checkpoint: ./checkpoints/model_final_checkpoint_phase1.torch
-INFO 2021-01-13 17:06:08,145 train.py:  86: All Done!
-INFO 2021-01-13 17:06:08,146 logger.py:  59: Shutting down loggers...
-INFO 2021-01-13 17:06:08,146 run_distributed_engines.py:  95: All Done!
-INFO 2021-01-13 17:06:08,147 logger.py:  59: Shutting down loggers...
+         read_sample:   42.41 ms   42.43 ms
+             forward:   21.99 ms  177.50 ms
+        loss_compute:    0.92 ms    0.89 ms
+     loss_all_reduce:    0.08 ms    0.09 ms
+            backward:   18.18 ms  389.82 ms
+      optimizer_step:  440.32 ms   69.23 ms
+    train_step_total:  687.53 ms  687.57 ms
+INFO 2021-01-25 19:49:26,668 io.py:  56: Saving data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 19:49:26,670 io.py:  70: Saved data to file: ./checkpoints/metrics.json
+INFO 2021-01-25 19:49:26,671 log_hooks.py: 283: [phase: 1] Saving checkpoint to ./checkpoints
+INFO 2021-01-25 19:49:27,047 log_hooks.py: 312: Saved checkpoint: ./checkpoints/model_final_checkpoint_phase1.torch
+INFO 2021-01-25 19:49:27,047 log_hooks.py: 316: Creating symlink...
+Error in symlink - [Errno 17] File exists: './checkpoints/model_final_checkpoint_phase1.torch' -&gt; './checkpoints/checkpoint.torch'
+INFO 2021-01-25 19:49:27,047 log_hooks.py: 320: Created symlink: ./checkpoints/checkpoint.torch
+INFO 2021-01-25 19:49:27,270 train.py: 103: All Done!
+INFO 2021-01-25 19:49:27,270 logger.py:  66: Shutting down loggers...
+INFO 2021-01-25 19:49:27,271 run_distributed_engines.py: 133: All Done!
+INFO 2021-01-25 19:49:27,271 logger.py:  66: Shutting down loggers...
 </pre>
 </div>
 </div>
@@ -1049,7 +1235,7 @@ INFO 2021-01-13 17:06:08,147 logger.py:  59: Shutting down loggers...
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [ ]:</div>
+<div class="prompt input_prompt">In [6]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">ls</span> <span class="n">checkpoints</span><span class="o">/</span>
@@ -1062,8 +1248,8 @@ INFO 2021-01-13 17:06:08,147 logger.py:  59: Shutting down loggers...
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>log.txt       model_final_checkpoint_phase1.torch  <span class="ansi-blue-intense-fg ansi-bold">tb_logs</span>/
-metrics.json  model_phase0.torch
+<pre><span class="ansi-cyan-intense-fg ansi-bold">checkpoint.torch</span>@  metrics.json                         model_phase0.torch
+log.txt            model_final_checkpoint_phase1.torch  <span class="ansi-blue-intense-fg ansi-bold">tb_logs</span>/
 </pre>
 </div>
 </div>
