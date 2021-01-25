@@ -225,7 +225,7 @@ class SelfSupervisionTrainer(object):
         # Ensure that train loader exists. Will NOT exist if config.TEST_ONLY is True
         if 'train' in task.dataloaders.keys():
             loader_key = "train"
-        else
+        else:
             loader_key = "test"        
         task.max_iteration = task.num_epochs * len(task.dataloaders[loader_key])
 
