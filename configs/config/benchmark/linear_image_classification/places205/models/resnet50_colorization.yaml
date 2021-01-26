@@ -1,0 +1,45 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomCrop
+          size: 224
+        - name: RandomHorizontalFlip
+        - name: ImgPil2LabTensor
+    TEST:
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ImgPil2LabTensor
+  MODEL:
+    INPUT_TYPE: lab
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+          ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+          ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+          ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+          ["res5", ["AvgPool2d", [[12, 12], 2, 0]]],
+      ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+          LAYER4_STRIDE: 1
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 64, "dims": [9216, 205]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 205]}],
+        ["eval_mlp", {"in_channels": 512, "dims": [8192, 205]}],
+        ["eval_mlp", {"in_channels": 1024, "dims": [9216, 205]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 205]}],
+      ]
+  OPTIMIZER:
+      weight_decay: 0.0001
+      regularize_bias: False

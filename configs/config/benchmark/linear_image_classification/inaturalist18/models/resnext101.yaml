@@ -1,0 +1,33 @@
+ # @package _global_
+ config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+          ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+          ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+          ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+          ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 101
+          ######## resnext101-32x4d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 4
+          ######## resnext101-32x8d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 8
+          ######## resnext101-32x16d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 16
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 64, "dims": [9216, 8142]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 8142]}],
+        ["eval_mlp", {"in_channels": 512, "dims": [8192, 8142]}],
+        ["eval_mlp", {"in_channels": 1024, "dims": [9216, 8142]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 8142]}],
+      ]

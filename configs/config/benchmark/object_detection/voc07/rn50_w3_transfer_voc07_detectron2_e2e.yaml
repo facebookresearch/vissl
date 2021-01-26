@@ -1,0 +1,10 @@
+_BASE_: "rn50_transfer_voc07_detectron2_e2e.yaml"
+MODEL:
+  RESNETS:
+    DEPTH: 50
+    NORM: "SyncBN"
+    STRIDE_IN_1X1: False
+    ######## for rn50-w2 ###########
+    WIDTH_PER_GROUP: 192
+    RES2_OUT_CHANNELS: 768
+    STEM_OUT_CHANNELS: 192

@@ -1,0 +1,42 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: True
+      INPUT_SHAPE: [3, 224, 224]
+    TRUNK:
+      NAME: efficientnet
+      TRUNK_PARAMS:
+        EFFICIENT_NETS:
+          model_version: B0
+          bn_momentum: 0.01
+          bn_epsilon: 0.001
+          drop_connect_rate: 0.2
+          width_divisor: 8
+          min_width: null
+          use_se: True
+    HEAD:
+      PARAMS: [
+        ######### B0 AND B1 ################
+        ["mlp", {"dims": [1280, 1280], "use_relu": True}],
+        ["mlp", {"dims": [1280, 128], "use_relu": False}],
+      ]

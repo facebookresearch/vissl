@@ -1,0 +1,68 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 6
+          size_crops: [224, 96]
+          num_crops: [2, 4]
+          crop_scales: [[0.14, 1], [0.05, 0.14]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          name: regnet_y_128gf
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [7392, 7392, 128], "use_bn": True, "num_clusters": [3000]}],
+      ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+      ['module.heads.0.prototypes0.weight', 625],
+    ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+  LOSS:
+    swav_loss:
+      queue:
+        queue_length: 2048
+        start_iter: 0
+  OPTIMIZER:
+      weight_decay: 0.00002
+      num_epochs: 400
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.4
+            base_lr_batch_size: 256
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.4
+              end_value: 3.2
+            - name: cosine
+              start_value: 3.2
+              end_value: 0.00
+          update_interval: step
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.025, 0.975]           # 400ep
+  DISTRIBUTED:
+    NUM_NODES: 16    # gives batch size of 20
+    NUM_PROC_PER_NODE: 8
+  CHECKPOINT:
+    CHECKPOINT_FREQUENCY: 1           # every phase since data is big

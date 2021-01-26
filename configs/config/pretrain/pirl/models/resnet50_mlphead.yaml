@@ -1,0 +1,41 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        # head 0 that operates on patches
+        [
+            ["mlp", {"dims": [2048, 2048, 128], "use_bn": False, "use_relu": True}],
+            ["siamese_concat_view", {"num_towers": 9}],
+            ["mlp", {"dims": [1152, 128]}],
+        ],
+        # head 1 that operates on images
+          [
+              ["mlp", {"dims": [2048, 2048, 128], "use_relu": True}]
+          ],
+        ]
+  LOSS:
+    name: nce_loss_with_memory
+    nce_loss_with_memory:
+      loss_type: "cross_entropy"
+      ignore_index: -1
+      norm_embedding: True
+      temperature: 0.1
+      loss_weights: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
+      norm_constant: -1
+      negative_sampling_params:
+        num_negatives: 32000
+        type: random
+      memory_params:
+        memory_size: -1 # auto_filled as num_train_samples
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: True
+        update_mem_on_forward: False
+      update_mem_with_emb_index: 1
+      num_train_samples: 1281167

@@ -1,0 +1,182 @@
+{
+    "params": {
+      "benchmarks": [
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/jigsaw_rn50_in1k_ep105_perm2k_jigsaw_8gpu_resnet_17_07_20.db174a43/model_final_checkpoint_phase104.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in1k_perm100_jigsaw",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/jigsaw_rn50_in1k_ep105_perm2k_jigsaw_8gpu_resnet_20_07_20.3d706467/model_final_checkpoint_phase104.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in1k_perm10k_jigsaw",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/jigsaw_rn50_in1k_ep105_perm2k_jigsaw_8gpu_resnet_17_07_20.cccee144/model_final_checkpoint_phase104.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in1k_perm2k_jigsaw",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_jigsaw_rn50_perm2k_in22k_8gpu_ep105.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in22k_perm2k_jigsaw",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_jigsaw_in1k_goyal19.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in1k_jigsaw_goyal",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_jigsaw_in22k_goyal19.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_in22k_jigsaw_goyal",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_jigsaw_yfcc100m_goyal19.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_yfcc100m_jigsaw_goyal",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_alexnet_8gpu_transfer_in1k_linear",
+            "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_jigsaw",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_alexnet_jigsaw_in1k_pretext.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "alexnet_in1k_jigsaw_goyal",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_alexnet_8gpu_transfer_in1k_linear",
+            "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_jigsaw",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_alexnet_jigsaw_in22k_pretext.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "alexnet_in22k_jigsaw_goyal",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        },
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/eval_alexnet_8gpu_transfer_in1k_linear",
+            "+config/benchmark/linear_image_classification/imagenet1k/models=alexnet_jigsaw",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model_state_dict",
+            "config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model.",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_alexnet_jigsaw_yfcc100m_pretext.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "alexnet_yfcc100m_jigsaw_goyal",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          }
+        }
+      ]
+    }
+  }

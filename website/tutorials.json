@@ -1,0 +1,38 @@
+{
+  "Getting Started": [
+     {
+      "id": "Installation",
+      "title": "Installation"
+     },{
+      "id": "Understanding_VISSL_Training_and_YAML_Config",
+      "title": "Understanding VISSL Training and YAML Config"
+     }
+  ],
+  "Training": [
+     {
+      "id": "Train_SimCLR_on_1_gpu",
+      "title": "Train SimCLR on 1-gpu"
+     }
+  ],
+  "Feature Extraction": [
+     {
+      "id": "Feature_Extraction",
+      "title": "Feature Extraction"
+     }
+  ],
+  "Benchmark": [
+     {
+      "id": "Benchmark_Linear_Image_Classification_on_ImageNet_1K",
+      "title": "Benchmark Linear Image Classification on ImageNet-1K"
+     },{
+      "id": "Benchmark_Full_Finetuning_on_ImageNet_1K",
+      "title": "Benchmark Full-Finetuning on ImageNet-1K"
+     }
+  ],
+   "Large Scale Training": [
+      {
+      "id": "Large_Scale_Training",
+      "title": "Large Scale Training with VISSL (fp16, LARC, ZeRO, etc)"
+      }
+   ]
+}

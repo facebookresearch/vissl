@@ -1,0 +1,21 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv1", ["AdaptiveMaxPool2d", [12]]],
+          ["conv2", ["AdaptiveMaxPool2d", [7]]],
+          ["conv3", ["AdaptiveMaxPool2d", [5]]],
+          ["conv4", ["AdaptiveMaxPool2d", [6]]],
+          ["conv5", ["AdaptiveMaxPool2d", [6]]],
+      ]
+    TRUNK:
+      NAME: alexnet_rotnet
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 64, "dims": [9216, 205]}],
+        ["eval_mlp", {"in_channels": 192, "dims": [9408, 205]}],
+        ["eval_mlp", {"in_channels": 384, "dims": [9600, 205]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 205]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 205]}],
+      ]

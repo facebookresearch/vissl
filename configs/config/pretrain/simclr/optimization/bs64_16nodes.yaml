@@ -1,0 +1,8 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+  DISTRIBUTED:
+    NUM_NODES: 16
+    NUM_PROC_PER_NODE: 8

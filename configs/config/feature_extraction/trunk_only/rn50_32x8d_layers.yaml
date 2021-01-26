@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+        ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+        ["res5avg", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+          GROUPS: 32
+          WIDTH_PER_GROUP: 8

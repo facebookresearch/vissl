@@ -1,0 +1,12 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 10
+    TRAIN:
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [yfcc100m]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/yfcc100m/
+      DROP_LAST: True
+  MACHINE:

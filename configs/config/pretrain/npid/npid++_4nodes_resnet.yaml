@@ -1,0 +1,89 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 100
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: False
+  DATA:
+    NUM_DATALOADER_WORKERS: 8
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      LABEL_TYPE: sample_index
+      TRANSFORMS:
+        - name: ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.4
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [["mlp", {"dims": [2048, 128]}]]
+  LOSS:
+    name: nce_loss_with_memory
+    nce_loss_with_memory:
+      ignore_index: -1
+      norm_embedding: True
+      temperature: 0.07
+      norm_constant: -1
+      negative_sampling_params:
+        num_negatives: 32000
+        type: random
+      memory_params:
+        memory_size: -1
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: True
+        update_mem_on_forward: True
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.0001
+      momentum: 0.9
+      num_epochs: 800
+      nesterov: False
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.03
+            base_lr_batch_size: 256
+          name: cosine
+          start_value: 0.12   # LR for batch size 256 * 4
+          end_value: 0.00012
+          update_interval: epoch
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 4
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    NCCL_DEBUG: True
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 10

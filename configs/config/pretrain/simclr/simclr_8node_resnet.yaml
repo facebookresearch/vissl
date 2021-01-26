@@ -1,0 +1,129 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  ROLLING_BTIME_FREQ: 313
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 64
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: simclr_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 128]}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: False
+      # USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
+  LOSS:
+      name: simclr_info_nce_loss
+      simclr_info_nce_loss:
+        temperature: 0.1
+        buffer_params:
+          embedding_dim: 128
+  OPTIMIZER:
+      name: sgd
+      use_larc: True
+      larc_config:
+        clip: False
+        trust_coefficient: 0.001
+        eps: 0.00000001
+      weight_decay: 0.000001
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 100
+      # num_epochs: 200
+      # num_epochs: 400
+      # num_epochs: 500
+      # num_epochs: 600
+      # num_epochs: 800
+      # num_epochs: 1000
+      # num_epochs: 1
+      # num_epochs: 2
+      # num_epochs: 5
+      regularize_bn: True
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.3
+            base_lr_batch_size: 256
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.6
+              end_value: 4.8
+            - name: cosine
+              start_value: 4.8
+              end_value: 0.0000
+          update_interval: step
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.1, 0.9]                 # 100ep
+          # lengths: [0.05, 0.95]             # 200ep
+          # lengths: [0.025, 0.975]           # 400ep
+          # lengths: [0.02, 0.98]             # 500ep
+          # lengths: [0.0166667, 0.9833333]   # 600ep
+          # lengths: [0.0125, 0.9875]         # 800ep
+          # lengths: [0.01, 0.99]             # 1000ep
+          # lengths: [0.0128, 0.9872]         # 1ep IG-1B
+          # lengths: [0.00641, 0.99359]       # 2ep IG-1B
+          # lengths: [0.002563, 0.997437]     # 5ep IG-1B = 50 ep IG-100M
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 8
+    NUM_PROC_PER_NODE: 8
+    RUN_ID: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    INIT_METHOD: tcp
+    NCCL_DEBUG: True
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 5
+    CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations

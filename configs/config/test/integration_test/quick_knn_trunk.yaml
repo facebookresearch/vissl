@@ -1,0 +1,72 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 4
+    TRAIN:
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DATA_LIMIT: 100
+    TEST:
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DATA_LIMIT: 100
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+          ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    WEIGHTS_INIT:
+      PARAMS_FILE: ""
+      STATE_DICT_KEY_NAME: classy_state_dict
+  DISTRIBUTED:
+    NUM_NODES: 1
+    # NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 1
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: .
+  NEAREST_NEIGHBOR:
+    SIGMA: 0.1
+    TOPK: 20
+    L2_NORM_FEATS: False

@@ -1,0 +1,33 @@
+# @package _global_
+config:
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.0001
+      momentum: 0.9
+      num_epochs: 105
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: True
+      head_optimizer_params:
+        use_different_lr: True
+        use_different_wd: True
+        weight_decay: 0.000001
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.1
+            base_lr_batch_size: 256
+          values: [0.1, 0.01, 0.001, 0.0001, 0.00001]
+          milestones: [30, 60, 90, 100]
+          name: multistep
+          update_interval: epoch
+        lr_head:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.1
+            base_lr_batch_size: 256
+          values: [0.1, 0.01, 0.001, 0.0001, 0.00001]
+          milestones: [30, 60, 90, 100]
+          name: multistep
+          update_interval: epoch

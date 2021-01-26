@@ -1,0 +1,23 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    num_epochs: 105
+    param_schedulers:
+      lr:
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.1
+            end_value: 0.4
+          - name: multistep
+            values: [0.4, 0.04, 0.004, 0.0004, 0.00004]
+            milestones: [30, 60, 90, 100]
+        update_interval: step
+        interval_scaling: [rescaled, fixed]
+        lengths: [0.047619, 0.952381]
+DISTRIBUTED:
+  BACKEND: nccl
+  NUM_NODES: 4
+  NUM_PROC_PER_NODE: 8
+  INIT_METHOD: tcp
+  NCCL_DEBUG: True

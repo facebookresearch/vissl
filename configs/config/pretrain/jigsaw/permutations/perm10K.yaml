@@ -1,0 +1,31 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomHorizontalFlip
+        - name: RandomCrop
+          size: 255
+        - name: RandomGrayscale
+          p: 0.66
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+        - name: ImgPatchesFromTensor
+          num_patches: 9
+          patch_jitter: 21
+        - name: ShuffleImgPatches
+          perm_file: https://dl.fbaipublicfiles.com/fair_self_supervision_benchmark/jigsaw_permutations/hamming_perms_10000_patches_9_max_avg.npy  # perm 10K
+  MODEL:
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 1000], "use_bn": True, "use_relu": True}],
+        ["siamese_concat_view", {"num_towers": 9}],
+        ["mlp", {"dims": [9000, 10000]}],   # perm 10K
+      ]

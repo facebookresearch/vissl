@@ -1,0 +1,95 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 100
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: False
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomHorizontalFlip
+        - name: RandomCrop
+          size: 255
+        - name: RandomGrayscale
+          p: 0.66
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+        - name: ImgPatchesFromTensor
+          num_patches: 9
+          patch_jitter: 21
+        - name: ShuffleImgPatches
+          perm_file: https://dl.fbaipublicfiles.com/fair_self_supervision_benchmark/jigsaw_permutations/hamming_perms_2000_patches_9_max_avg.npy   # perm 2K
+      COLLATE_FUNCTION: siamese_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1]
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 1000], "use_bn": True, "use_relu": True}],
+        ["siamese_concat_view", {"num_towers": 9}],
+        ["mlp", {"dims": [9000, 2000]}],    # perm 2K
+      ]
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
+      ignore_index: -1
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.0001
+      momentum: 0.9
+      num_epochs: 105
+      nesterov: False
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.1
+            base_lr_batch_size: 256
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.025
+              end_value: 0.1
+            - name: multistep
+              values: [0.1, 0.01, 0.001, 0.0001, 0.00001]
+              milestones: [30, 60, 90, 100]
+          update_interval: epoch
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.047619, 0.952381]
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 1

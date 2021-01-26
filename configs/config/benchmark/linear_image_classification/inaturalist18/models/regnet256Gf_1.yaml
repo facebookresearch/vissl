@@ -1,0 +1,32 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          depth: 27
+          w_0: 640
+          w_a: 230.83
+          w_m: 2.53
+          group_width: 373
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 4103, "dims": [8206, 1000]}],
+        ["eval_mlp", {"in_channels": 10444, "dims": [20888, 1000]}],
+        ["eval_mlp", {"in_channels": 10444, "dims": [10444, 1000]}],
+      ]
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 16
+    TEST:
+      BATCHSIZE_PER_REPLICA: 16
+  DISTRIBUTED:
+    NUM_NODES: 2  # we can't fit the model on 16GB machine so instead use 2 nodes
+    INIT_METHOD: tcp

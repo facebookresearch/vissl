@@ -1,0 +1,436 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  PIXEL_MEAN: [123.675, 116.280, 103.530]
+  PIXEL_STD: [58.395, 57.120, 57.375]
+  MASK_ON: False
+  RPN:
+    PRE_NMS_TOPK_TEST: 6000
+    POST_NMS_TOPK_TEST: 1000
+  WEIGHTS: ""
+  ROI_HEADS:
+    NAME: "Res5ROIHeadsExtraNorm"
+    NUM_CLASSES: 20
+  BACKBONE:
+    FREEZE_AT: 0
+  RESNETS:
+    DEPTH: 50
+    NORM: "SyncBN"
+    STRIDE_IN_1X1: False
+    ######## for rn50-w2 ###########
+    # WIDTH_PER_GROUP: 128
+    # RES2_OUT_CHANNELS: 512
+    # STEM_OUT_CHANNELS: 128
+    ######## for rn50-w3 ###########
+    # WIDTH_PER_GROUP: 192
+    # RES2_OUT_CHANNELS: 768
+    # STEM_OUT_CHANNELS: 192
+INPUT:
+  MIN_SIZE_TRAIN: (480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800)
+  MIN_SIZE_TEST: 800
+  FORMAT: "RGB" # torchvision models take RGB input
+DATASETS:
+  TRAIN: ('voc_2007_trainval', 'voc_2012_trainval')
+  TEST: ('voc_2007_test',)
+TEST:
+  PRECISE_BN:
+    ENABLED: True
+SOLVER:
+  STEPS: (18000, 22000)
+  MAX_ITER: 24000
+  WARMUP_ITERS: 100
+  IMS_PER_BATCH: 16
+  BASE_LR: 0.02
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt02_warm100_it25k_st-17k
+  # STEPS: (17000,)
+  # MAX_ITER: 25000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.02
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt02_warm100_it30k_st-22pt5k-27pt5k
+  # STEPS: (22500, 27500)
+  # MAX_ITER: 30000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.02
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt03_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.03
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt03_warm100_it25k_st-17k
+  # STEPS: (17000,)
+  # MAX_ITER: 25000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.03
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm100_it24k_st-12k
+  # STEPS: (12000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm100_it24k_st-18k
+  # STEPS: (18000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm100_it24k_st-20k-22k
+  # STEPS: (20000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm100_it24k_st-20k
+  # STEPS: (20000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm100_it25k_st-17k
+  # STEPS: (17000,)
+  # MAX_ITER: 25000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm100_slppt3_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm1600_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1600
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm200_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 200
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm400_it24k_st-20k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 400
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm50_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 50
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt04_warm800_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 800
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.04
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt05_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.05
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt06_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.06
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt07_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.07
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt08_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.08
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt09_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.09
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt12_warm100_it24k_st-12k
+  # STEPS: (12000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.12
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt12_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.12
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt12_warm100_slpt33_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.3333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.12
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt12_warm100_slpt4_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.4
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.12
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt12_warm1k_slpt33_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.3333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.12
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt12_warm50_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 50
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.12
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt12_warm50_slpt333_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 50
+  # WARMUP_FACTOR: 0.3333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.12
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt15_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.15
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_it24k_st-18k-20k-22k
+  # STEPS: (18000, 20000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_it24k_st-20k-22k
+  # STEPS: (20000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_it24k_st-20k
+  # STEPS: (20000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_it24k_st-21k-22k
+  # STEPS: (21000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_it24k_st-22k-23k
+  # STEPS: (22000, 23000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_it24k_st-22k
+  # STEPS: (22000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_slpt01_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.01
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_slpt1_it24k_st-18k-22k
+  #  STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.10
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_slpt25_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.25
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_slpt3_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_slpt4_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.40
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm100_slpt5_it24k_st-18k-22k
+  # TEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # WARMUP_FACTOR: 0.50
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm150_it24k_st-12k
+  # STEPS: (12000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 150
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_slpt01_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.01
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_slpt1_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.1
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_slpt25_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.25
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_slpt2_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.2
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_slpt33_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.3333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_slpt4_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.4
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm1k_slpt666_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 1000
+  # WARMUP_FACTOR: 0.666
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm200_it24k_st-12k
+  # STEPS: (12000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 200
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm200_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 200
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm400_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 400
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm500_slpt33_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 500
+  # WARMUP_FACTOR: 0.3333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm50_it24k_st-12k
+  # STEPS: (12000, )
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 50
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm50_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 50
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm50_slpt3_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 50
+  # WARMUP_FACTOR: 0.333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.1
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm800_slpt2_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 800
+  # WARMUP_FACTOR: 0.2
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt1_warm800_slpt33_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 800
+  # WARMUP_FACTOR: 0.3333
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.10
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt25_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.25
+  # # eval_voc0712_sBNextraNorm_precBN_lrpt2_warm100_it24k_st-18k-22k
+  # STEPS: (18000, 22000)
+  # MAX_ITER: 24000
+  # WARMUP_ITERS: 100
+  # IMS_PER_BATCH: 16
+  # BASE_LR: 0.2

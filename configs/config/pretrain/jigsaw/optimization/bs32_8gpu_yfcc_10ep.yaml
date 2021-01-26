@@ -1,0 +1,11 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    name: sgd
+    num_epochs: 10
+    param_schedulers:
+      lr:
+        name: multistep
+        values: [0.1, 0.01, 0.001, 0.0001]
+        milestones: [3, 6, 9]
+        update_interval: epoch

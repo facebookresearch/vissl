@@ -1,0 +1,123 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 2
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  PERF_STAT_FREQUENCY: 10
+  ROLLING_BTIME_FREQ: 5
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      LABEL_TYPE: sample_index
+      TRANSFORMS:
+        - name: ImgPilToPatchesAndImage
+          crop_scale_image: [0.08, 1.0]   # default PyTorch
+          crop_size_image: 224            # default PyTorch
+          crop_scale_patches: [0.6, 1.0]
+          crop_size_patches: 255          # default Jigsaw
+          num_patches: 9
+        - name: ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.2
+        - name: ImgPilRandomPhotometric
+        - name: RandomGrayscale
+          p: 0.2
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: "patch_and_image_collator"
+      INPUT_KEY_NAMES: ["patches", "images"] # keys produced by data that are `inputs' to the model
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      DATA_LIMIT: 500
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: False
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        # head 0 that operates on patches
+        [
+          ["mlp", {"dims": [2048, 128], "use_bn": False, "use_relu": False}],
+          ["siamese_concat_view", {"num_towers": 9}],
+          ["mlp", {"dims": [1152, 128]}],
+        ],
+        # head 1 that operates on images. Linear projection.
+        [
+          ["mlp", {"dims": [2048, 128]}]
+        ],
+      ]
+    MULTI_INPUT_HEAD_MAPPING: [
+        # "flatten" is the res5->avg->flatten feature from ResNet50
+        ["patches", ["flatten"]], # feature layer to extract from second input "patches"
+        ["images", ["flatten"]],  # feature layer to extract from first input "images"
+    ]
+  LOSS:
+    name: nce_loss_with_memory
+    nce_loss_with_memory:
+      ignore_index: -1
+      norm_embedding: True
+      temperature: 0.07
+      loss_weights: [0.5, 0.5]  # relative weight of Patches=>Mem and Images=>Mem
+      norm_constant: -1
+      negative_sampling_params:
+        num_negatives: 4096
+        type: random
+      memory_params:
+        memory_size: -1
+        embedding_dim: 128
+        momentum: 0.5
+        norm_init: True
+        update_mem_on_forward: False
+      update_mem_with_emb_index: 1
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.0001
+      momentum: 0.9
+      num_epochs: 2
+      nesterov: False
+      regularize_bn: False
+      regularize_bias: False
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.3
+            base_lr_batch_size: 256
+          name: cosine
+          start_value: 0.12   # LR for batch size 256*4
+          end_value: 0.00012
+          update_interval: epoch
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 5
+    OVERWRITE_EXISTING: true

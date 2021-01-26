@@ -1,0 +1,44 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomCrop
+          size: 227
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      TRANSFORMS:
+        - name: Resize
+          size: [256, 256]
+        - name: CenterCrop
+          size: 227
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["conv1", ["AvgPool2d", [[28, 28], 9, 0]]],
+          ["conv2", ["AvgPool2d", [[24, 24], 6, 0]]],
+          ["conv3", ["AvgPool2d", [[14, 14], 3, 0]]],
+          ["conv4", ["AvgPool2d", [[14, 14], 3, 0]]],
+          ["conv5", ["AvgPool2d", [[16, 16], 2, 0]]],
+      ]
+    TRUNK:
+      NAME: alexnet_jigsaw
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 96, "dims": [9600, 8142]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 8142]}],
+        ["eval_mlp", {"in_channels": 384, "dims": [9600, 8142]}],
+        ["eval_mlp", {"in_channels": 384, "dims": [9600, 8142]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 8142]}],
+      ]
+      BATCHNORM_MOMENTUM: 0.001

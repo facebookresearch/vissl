@@ -1,0 +1,27 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 101
+          ######## resnext101-32x4d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 4
+          ######## resnext101-32x8d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 8
+          ######## resnext101-32x16d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 16
+          ######## resnext101-32x32d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 32
+          ######## resnext101-32x48d #######
+          # GROUPS: 32
+          # WIDTH_PER_GROUP: 48
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
+      ]

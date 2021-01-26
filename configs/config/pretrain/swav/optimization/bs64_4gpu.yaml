@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 4
+  OPTIMIZER:
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.6
+            base_lr_batch_size: 256
+  LOSS:
+    swav_loss:
+      queue:
+        queue_length: 3840
+        start_iter: 75075  # 15 epochs where 1epoch = 5005 iterations

@@ -1,0 +1,16 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          # Other regnet model names can be found inside
+          # regnet.py in classy_vision's subdir. Please
+          # remember to change HEAD.PARAMS below accordingly
+          # as well.
+          name: regnet_y_400mf
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [440, 440, 128], "use_bn": True, "num_clusters": [3000]}],
+      ]

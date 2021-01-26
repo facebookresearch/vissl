@@ -1,0 +1,19 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 4
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  MACHINE:

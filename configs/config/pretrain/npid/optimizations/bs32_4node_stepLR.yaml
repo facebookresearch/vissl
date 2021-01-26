@@ -1,0 +1,31 @@
+# @package _global_
+config:
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.0001
+      momentum: 0.9
+      num_epochs: 200
+      # num_epochs: 400
+      # num_epochs: 800
+      nesterov: False
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          name: multistep
+          ########## 200ep ##############
+          values: [0.12, 0.012, 0.0012]
+          milestones: [120, 160]
+          ########## 400ep ##############
+          # values: [0.12, 0.012, 0.0012, 0.00012]
+          # milestones: [250, 300, 350]
+          ########## 800ep ##############
+          # values: [0.12, 0.012, 0.0012, 0.00012]
+          # milestones: [500, 600, 700]
+          update_interval: epoch
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 4
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    NCCL_DEBUG: True

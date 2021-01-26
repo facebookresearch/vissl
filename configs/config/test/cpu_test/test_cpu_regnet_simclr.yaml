@@ -1,0 +1,112 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 0
+    TRAIN:
+      DATA_SOURCES: [synthetic]
+      BATCHSIZE_PER_REPLICA: 2
+      LABEL_TYPE: sample_index
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: simclr_collator
+      MMAP_MODE: True
+      DATA_LIMIT: 4
+      DROP_LAST: True
+      COPY_TO_LOCAL_DISK: False
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      TRUNK_PARAMS:
+        REGNET:
+          # The w_0, w_a and w_m params will compute the following config, e.g. same as the json above.
+          #   depth: sum([1, 1, 4, 7]) = 13
+          #   width: [24, 56, 152, 368]
+          depth: 13
+          w_0: 24
+          w_a: 35.5
+          w_m: 2.49
+          group_width: 8
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [368, 368], "use_relu": True}],
+        ["mlp", {"dims": [368, 128]}]
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 2
+  LOSS:
+    name: simclr_info_nce_loss
+    simclr_info_nce_loss:
+      temperature: 0.1
+      buffer_params:
+        embedding_dim: 128
+  OPTIMIZER:
+      name: sgd
+      use_larc: True
+      larc_config:
+        clip: False
+        trust_coefficient: 0.001
+        eps: 0.00000001
+      weight_decay: 0.000001
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 1
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.3
+            base_lr_batch_size: 256
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.6
+              end_value: 1.2
+            - name: cosine
+              start_value: 1.2
+              end_value: 0.0000
+          update_interval: step
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.1, 0.9]             # 100ep
+  DISTRIBUTED:
+    BACKEND: gloo
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: cpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: false
+    CHECKPOINT_FREQUENCY: 5
+    OVERWRITE_EXISTING: true

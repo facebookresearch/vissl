@@ -1,0 +1,24 @@
+# @package _global_
+config:
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.0001
+      momentum: 0.9
+      num_epochs: 200
+      # num_epochs: 400
+      # num_epochs: 800
+      nesterov: False
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          name: cosine
+          start_value: 0.12   # LR for batch size 256
+          end_value: 0.00012
+          update_interval: epoch
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 4
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    NCCL_DEBUG: True

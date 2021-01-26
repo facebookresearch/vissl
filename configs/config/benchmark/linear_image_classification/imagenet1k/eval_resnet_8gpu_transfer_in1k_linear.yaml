@@ -1,0 +1,120 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 200
+  TEST_ONLY: False
+  TEST_EVERY_NUM_EPOCH: 1
+  TEST_MODEL: True
+  SEED_VALUE: 1
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 5
+      topk_values: [1, 5]
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+        ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+        ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+        ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+        ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      ]
+    TRUNK:
+      NAME: resnet
+      TRUNK_PARAMS:
+        RESNETS:
+          DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 64, "dims": [9216, 1000]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
+        ["eval_mlp", {"in_channels": 512, "dims": [8192, 1000]}],
+        ["eval_mlp", {"in_channels": 1024, "dims": [9216, 1000]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify the model weights"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      # STATE_DICT_KEY_NAME: model_state_dict
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
+      ignore_index: -1
+  OPTIMIZER:
+      name: sgd
+      # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
+      weight_decay: 0.0005
+      momentum: 0.9
+      num_epochs: 28
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.01
+            base_lr_batch_size: 256
+          name: multistep
+          values: [0.01, 0.001, 0.0001, 0.00001]
+          milestones: [8, 16, 24]
+          update_interval: epoch
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 1
