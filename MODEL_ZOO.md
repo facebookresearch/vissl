@@ -208,4 +208,4 @@ Further, there is also some standard deviation in linear results if we run the s
 
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
-| [MoCo-v2](https://arxiv.org/abs/2003.04297)   |    RN50 - 200 epochs - 256 batch-size         |    ImageNet-1K      | **TODO** | [model]()**TODO**
+| [MoCo-v2](https://arxiv.org/abs/2003.04297)   |    RN50 - 200 epochs - 256 batch-size         |    ImageNet-1K      | 66.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/moco_v2_1node_lr.03_step_b32_zero_init/model_final_checkpoint_phase199.torch)
