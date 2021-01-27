@@ -49,7 +49,7 @@ class Tutorial extends React.Component {
               <a
                 className="tutorialButton button"
                 download
-                href={`https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/${tutorialID}.ipynb`}
+                href={`https://colab.research.google.com/github/facebookresearch/vissl/blob/stable/tutorials/${tutorialID}.ipynb`}
                 target="_blank">
                 <img
                   className="colabButton"
