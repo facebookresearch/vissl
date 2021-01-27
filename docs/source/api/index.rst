@@ -1,4 +1,5 @@
 API Documentation
+====================
 
 .. toctree::
 
