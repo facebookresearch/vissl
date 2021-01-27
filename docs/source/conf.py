@@ -19,7 +19,7 @@ import sys
 
 import mock
 import sphinx_rtd_theme
-import vissl  # isort: skip
+# import vissl  # isort: skip
 from recommonmark.parser import CommonMarkParser
 
 
