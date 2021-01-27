@@ -1,0 +1,24 @@
+{
+    "params": {
+      "benchmarks": [
+        {
+          "config_files": [
+            "config=benchmark/linear_image_classification/imagenet1k/other_styles/eval_resnet_moco_8gpu_transfer_in1k_linear",
+            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
+            "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/moco_v2_1node_lr.03_step_b32_zero_init/model_final_checkpoint_phase199.torch"
+          ],
+          "workflow_type": "engine",
+          "expt_name": "rn50_moco_in1k_moco_style",
+          "machine_config": {
+            "num_gpus": 8,
+            "memory": "110g",
+            "num_cpus": 48,
+            "num_nodes": 1,
+            "gpu_type": ""
+          },
+          "cmdline_args": []
+        }
+      ]
+    }
+  }
