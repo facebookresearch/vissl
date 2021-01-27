@@ -19,7 +19,6 @@ import sys
 
 import mock
 import sphinx_rtd_theme
-import vissl  # isort: skip
 from recommonmark.parser import CommonMarkParser
 
 
@@ -51,9 +50,10 @@ except ImportError:
 
 
 # -- Project information -----------------------------------------------------
+import vissl  # isort: skip
 
 project = "VISSL"
-copyright = "2020, VISSL contributors"
+copyright = "2021, VISSL contributors"
 author = "VISSL contributors"
 
 # The full version, including alpha/beta/rc tags
