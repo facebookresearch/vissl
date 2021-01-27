@@ -14,7 +14,6 @@ import numpy as np
 from fvcore.common.file_io import PathManager
 
 # COCO API
-from pycocotools.coco import COCO
 from vissl.utils.io import makedir, save_file
 
 
@@ -54,6 +53,8 @@ def get_valid_objs(entry, objs):
 
 
 def get_coco_imgs_labels_info(split, data_source_dir, args):
+    from pycocotools.coco import COCO
+    
     json_file = f"{data_source_dir}/annotations/instances_{split}2014.json"
     assert PathManager.exists(json_file), "Annotations file does not exist. Abort"
     json_data = json.load(PathManager.open(json_file, "r"))
