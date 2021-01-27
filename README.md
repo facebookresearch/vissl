@@ -69,6 +69,6 @@ If you find VISSL useful in your research or wish to refer to the baseline resul
 
 ## News
 
-Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/pytorch3d/releases).
+Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
 
 **[January 2021]**: VISSL v0.1 released with [blog post announcement]().
