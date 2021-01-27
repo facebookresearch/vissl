@@ -25,7 +25,7 @@ make sure to have a corresponding issue to discuss your motivation and proposals
 before sending a PR. We do not always accept new features, and we take the following
 factors into consideration:
 
-1. Whether the same feature can be achieved without modifying vissl.VISSL is designed to be extensible so that it's easy to extend any modular component and train custom models. If some part is not as extensible, you can also bring up the issue to make it more extensible.
+1. Whether the same feature can be achieved without modifying VISSL. VISSL is designed to be extensible so that it's easy to extend any modular component and train custom models. If some part is not as extensible, you can also bring up the issue to make it more extensible.
 2. Whether the feature is potentially useful to a large audience, or only to a small portion of users.
 3. Whether the proposed solution has a good design / interface.
 4. Whether the proposed solution adds extra mental/practical overhead to users who don't need such feature.
