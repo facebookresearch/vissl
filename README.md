@@ -26,7 +26,9 @@ See [`INSTALL.md`](https://github.com/facebookresearch/vissl/blob/master/INSTALL
 Follow the [installation](https://github.com/facebookresearch/vissl/blob/master/INSTALL.md) instructions to install vissl.
 After installation, please see [Getting Started with VISSL](https://github.com/facebookresearch/vissl/blob/master/GETTING_STARTED.md) and the [Colab Notebook](https://colab.research.google.com/drive/1iigQmKL_DUuBLT6BqjrGXlW9ZIqKIFmt?usp=sharing) to learn about basic usage.
 
-Learn more about VISSL at our [documentation](https://vissl.readthedocs.org). And see the [projects/](projects/) for some projects built on top of VISSL.
+## Documentation
+
+Learn more about VISSL at our [documentation](https://vissl.readthedocs.io). And see the [projects/](projects/) for some projects built on top of VISSL.
 
 ## Tutorials
 
