@@ -118,7 +118,7 @@ python tools/run_distributed_engines.py config=test/integration_test/quick_simcl
 conda create -n vissl python=3.8
 conda activate vissl
 conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
-conda install -c vissl apex vissl
+conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex vissl
     `;
 
     const QuickStart = () => (
