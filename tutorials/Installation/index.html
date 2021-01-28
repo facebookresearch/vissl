@@ -121,7 +121,7 @@
 <div class="highlight"><pre><span></span>conda create -n vissl <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
 conda activate vissl
 conda install -c pytorch <span class="nv">pytorch</span><span class="o">=</span><span class="m">1</span>.7.1 torchvision <span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">10</span>.2
-conda install -c vissl apex vissl
+conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex vissl
 </pre></div>
 <p>For other versions of PyTorch, Python, CUDA, please modify the above instructions with the
 desired version. VISSL provides Apex packages for all combinations of pytorch, python and compatible cuda.</p>
@@ -196,18 +196,19 @@ Note that, for the APEX install, you need to get the versions of CUDA, PyTorch, 
 <div class="highlight"><pre><span></span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt171/download.html
 </pre></div>
 <p><strong>Step 4: Install VISSL</strong></p>
-<pre><code># clone vissl repository
-cd $HOME &amp;&amp; git clone --recursive https://github.com/facebookresearch/vissl.git &amp;&amp; cd $HOME/vissl/
-# install vissl dependencies
+<div class="highlight"><pre><span></span><span class="c1"># clone vissl repository</span>
+<span class="nb">cd</span> <span class="nv">$HOME</span> <span class="o">&amp;&amp;</span> git clone --recursive https://github.com/facebookresearch/vissl.git <span class="o">&amp;&amp;</span> <span class="nb">cd</span> <span class="nv">$HOME</span>/vissl/
+<span class="c1"># install vissl dependencies</span>
 pip install --progress-bar off -r requirements.txt
 pip install opencv-python
-# update classy vision install to current master
+<span class="c1"># update classy vision install to current master</span>
 pip uninstall -y classy_vision
 pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
-# install vissl dev mode (e stands for editable)
-pip install -e .[dev]
-# verify installation
-python -c 'import vissl, apex, cv2'</code></pre>
+<span class="c1"># install vissl dev mode (e stands for editable)</span>
+pip install -e .<span class="o">[</span>dev<span class="o">]</span>
+<span class="c1"># verify installation</span>
+python -c <span class="s1">'import vissl, apex, cv2'</span>
+</pre></div>
 </div>
 </div>
 </div>

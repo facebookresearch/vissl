@@ -17,8 +17,13 @@
 </span></div></div></div></div></div></div></div><div class="productShowcaseSection" id="quickstart" style="text-align:center"><h2>Get Started</h2><div class="container"><div class="wrapper"><ol><li><h4>Install VISSL:</h4><a>via conda:</a><div><span><pre><code class="hljs css language-bash">conda create -n vissl python=3.8
 conda activate vissl
 conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
-conda install -c vissl apex vissl
+conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex vissl
 </code></pre>
-</span></div></li><li><h4>Try training SimCLR model  </h4><div><span><pre><code class="hljs css language-bash">python tools/run_distributed_engines.py config=<span class="hljs-built_in">test</span>/integration_test/quick_simclr
+</span></div></li><li><h4>Download SimCLR yaml config and builtin distributed launcher:  </h4><div><span><pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /tmp/ &amp;&amp; mkdir -p /tmp/configs/config
+wget -q -O configs/__init__.py https://dl.fbaipublicfiles.com/vissl/tutorials/configs/__init__.py
+wget -q -O configs/config/quick_1gpu_resnet50_simclr.yaml https://dl.fbaipublicfiles.com/vissl/tutorials/configs/quick_1gpu_resnet50_simclr.yaml
+wget -q  https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
+</code></pre>
+</span></div></li><li><h4>Try training SimCLR model on 1-gpu:  </h4><div><span><pre><code class="hljs css language-bash">python3 run_distributed_engines.py config=quick_1gpu_resnet50_simclr config.DATA.TRAIN.DATA_SOURCES=[synthetic]
 </code></pre>
 </span></div></li></ol></div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><div class="social"><a class="github-button" href="https://github.com/facebookresearch/vissl" data-count-href="https://github.com/facebookresearch/vissl/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star VISSL on GitHub">vissl</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2021 Facebook Inc<br/>Legal:<a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></section></footer></div></body></html>
