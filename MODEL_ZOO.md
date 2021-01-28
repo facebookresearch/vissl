@@ -174,9 +174,6 @@ To reproduce the numbers below, the experiment configuration is provided in json
 
 To reproduce the numbers below, the experiment configuration is provided in json format for each model [here](https://github.com/facebookresearch/vissl/tree/master/configs/config/model_zoo/benchmark_in1k_linear_deepclusterv2_swav.json).
 
-In the original SwAV work, authors evaluate several model checkpoints from a pre-training and evaluate the result of the best checkpoint. In the evaluations in VISSL, we used the last checkpoint.
-Further, there is also some standard deviation in linear results if we run the same eval several times. The evals reported below are for 1 run.
-
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
 | [DeepClusterV2](https://arxiv.org/abs/2006.09882)  |  [RN50 - 400 epochs - 2x224](https://github.com/facebookresearch/swav#model-zoo)       |  ImageNet-1K  | 70.01 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/deepclusterv2_400ep_2x224_pretrain.pth.tar)
@@ -187,8 +184,7 @@ Further, there is also some standard deviation in linear results if we run the s
 
 To reproduce the numbers below, the experiment configuration is provided in json format for each model [here](https://github.com/facebookresearch/vissl/tree/master/configs/config/model_zoo/benchmark_in1k_linear_deepclusterv2_swav.json).
 
-In the original SwAV work, authors evaluate several model checkpoints from a pre-training and evaluate the result of the best checkpoint. In the evaluations in VISSL, we used the last checkpoint.
-Further, there is also some standard deviation in linear results if we run the same eval several times. The evals reported below are for 1 run.
+There is some standard deviation in linear results if we run the same eval several times and pre-train a SwAV model several times. The evals reported below are for 1 run.
 
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
