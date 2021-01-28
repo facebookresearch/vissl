@@ -4,7 +4,7 @@ What is VISSL?
 .. image:: _static/img/vissl-logo.png
 
 
-VISSL is a computer VIsion library for state-of-the-art Self-Supervised Learning research with `PyTorch <https://pytorch.org>`_. VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations. Within Facebook AI, VISSL has been used to power research projects such as `SwAV <https://arxiv.org/abs/1906.02739>`_. Key features include:
+VISSL is a computer VIsion library for state-of-the-art Self-Supervised Learning research with `PyTorch <https://pytorch.org>`_. VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations. Key features include:
 
 - :code:`Reproducible implementation of SOTA in Self-Supervision`: All existing SOTA in Self-Supervision are implemented - `SwAV <https://arxiv.org/abs/2006.09882>`_, `SimCLR <https://arxiv.org/abs/2002.05709>`_, `MoCo(v2) <https://arxiv.org/abs/1911.05722>`_, `PIRL <https://arxiv.org/abs/1912.01991>`_, `NPID <https://arxiv.org/abs/1912.01991>`_, `NPID++ <https://arxiv.org/abs/1912.01991>`_, `DeepClusterV2 <https://arxiv.org/abs/2006.09882>`_, `ClusterFit <https://openaccess.thecvf.com/content_CVPR_2020/papers/Yan_ClusterFit_Improving_Generalization_of_Visual_Representations_CVPR_2020_paper.pdf>`_, `RotNet <https://arxiv.org/abs/1803.07728>`_, `Jigsaw <https://arxiv.org/abs/1603.09246>`_. Also supports supervised trainings.
 
