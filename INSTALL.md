@@ -33,7 +33,7 @@ This assumes you have conda 10.2.
 conda create -n vissl python=3.8
 conda activate vissl
 conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
-conda install -c vissl apex vissl
+conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex vissl
 ```
 
 The package also contains code for the fairscale and ClassyVision libraries. Ensure you do not have them installed separately.
