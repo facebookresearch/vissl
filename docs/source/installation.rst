@@ -28,7 +28,7 @@ This assumes you have conda 10.2.
     conda create -n vissl python=3.8
     conda activate vissl
     conda install -c pytorch pytorch=1.7.1 torchvision cudatoolkit=10.2
-    conda install -c vissl apex vissl
+    conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex vissl
 
 For other versions of PyTorch, Python, CUDA, please modify the above instructions with the
 desired version. VISSL provides Apex packages for all combinations of pytorch, python and compatible cuda.
