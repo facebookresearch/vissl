@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/facebookresearch/vissl.svg?style=svg&circle-token=f15ded7b718589ad3f150355e1c37f8e74516019)](https://circleci.com/gh/facebookresearch/vissl)[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/facebookresearch/vissl/blob/master/.github/CONTRIBUTING.md)
 
 ## Introduction
-VISSL is a computer **VI**sion library for state-of-the-art **S**elf-**S**upervised **L**earning research with [PyTorch](https://pytorch.org). VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations. Within Facebook AI, VISSL has been used to power research projects such as [SwAV](https://arxiv.org/abs/1906.02739). Key features include:
+VISSL is a computer **VI**sion library for state-of-the-art **S**elf-**S**upervised **L**earning research with [PyTorch](https://pytorch.org). VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations. Key features include:
 
 - **Reproducible implementation of SOTA in Self-Supervision**: All existing SOTA in Self-Supervision are implemented - [SwAV](https://arxiv.org/abs/2006.09882), [SimCLR](https://arxiv.org/abs/2002.05709), [MoCo(v2)](https://arxiv.org/abs/1911.05722), [PIRL](https://arxiv.org/abs/1912.01991), [NPID](https://arxiv.org/abs/1912.01991), [NPID++](https://arxiv.org/abs/1912.01991), [DeepClusterV2](https://arxiv.org/abs/2006.09882), [ClusterFit](https://openaccess.thecvf.com/content_CVPR_2020/papers/Yan_ClusterFit_Improving_Generalization_of_Visual_Representations_CVPR_2020_paper.pdf), [RotNet](https://arxiv.org/abs/1803.07728.), [Jigsaw](https://arxiv.org/abs/1603.09246). Also supports supervised trainings.
 
@@ -60,7 +60,9 @@ If you find VISSL useful in your research or wish to refer to the baseline resul
 
 ```BibTeX
 @misc{goyal2021vissl,
-  author =       {Priya Goyal and Benjamin Lefaudeux and Mannat Singh and Jeremy Reizenstein and Vinicius Reis and Min Xu and and Mathilde Caron and Piotr Bojanowski and Armand Joulin and Ishan Misra},
+  author =       {Priya Goyal and Benjamin Lefaudeux and Mannat Singh and Jeremy Reizenstein and Vinicius Reis and 
+                  Min Xu and and Matthew Leavitt and Mathilde Caron and Piotr Bojanowski and Armand Joulin and 
+                  Ishan Misra},
   title =        {VISSL},
   howpublished = {\url{https://github.com/facebookresearch/vissl}},
   year =         {2021}
@@ -71,4 +73,4 @@ If you find VISSL useful in your research or wish to refer to the baseline resul
 
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
 
-**[January 2021]**: VISSL v0.1 released with [blog post announcement]().
+**[January 2021]**: VISSL v0.1 released.
