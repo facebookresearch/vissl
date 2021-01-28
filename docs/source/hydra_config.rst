@@ -95,7 +95,7 @@ For example:
 How to add new keys to the dictionary in config files
 ------------------------------------------------------
 
-If you want to add single key to a dictionary in the config, you can achieve that with :code:`+my_new_key_name=my_value`. Note the use if :code:`+`.
+If you want to add single key to a dictionary in the config, you can achieve that with :code:`+my_new_key_name=my_value`. Note the use of :code:`+`.
 
 For example:
 

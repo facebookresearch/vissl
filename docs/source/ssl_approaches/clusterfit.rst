@@ -121,11 +121,11 @@ Citation
 
 .. code-block:: none
 
-    @misc{gidaris2018unsupervised,
-        title={Unsupervised Representation Learning by Predicting Image Rotations},
-        author={Spyros Gidaris and Praveer Singh and Nikos Komodakis},
-        year={2018},
-        eprint={1803.07728},
-        archivePrefix={arXiv},
-        primaryClass={cs.CV}
+    @misc{yan2019clusterfit,
+      title={ClusterFit: Improving Generalization of Visual Representations}, 
+      author={Xueting Yan and Ishan Misra and Abhinav Gupta and Deepti Ghadiyaram and Dhruv Mahajan},
+      year={2019},
+      eprint={1912.03330},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
     }
