@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from vissl.data.collators import get_collator
 from vissl.data.data_helper import StatefulDistributedSampler
 from vissl.data.dataloader_sync_gpu_wrapper import DataloaderSyncGPUWrapper
-from vissl.data.dataset_catalog import VisslDatasetCatalog, register_datasets
+from vissl.data.dataset_catalog import VisslDatasetCatalog, register_datasets, get_data_files
 from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
 from vissl.data.synthetic_dataset import SyntheticImageDataset
