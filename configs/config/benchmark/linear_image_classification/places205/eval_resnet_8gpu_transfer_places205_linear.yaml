@@ -11,9 +11,9 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 8
     TRAIN:
-      DATA_SOURCES: [everstore]
-      LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [places205_everstore]
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [places205_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop
@@ -25,11 +25,11 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/places205_everstore/
+      COPY_DESTINATION_DIR: /tmp/places205/
     TEST:
-      DATA_SOURCES: [everstore]
-      LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [places205_everstore]
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [places205_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -42,7 +42,7 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/places205_everstore/
+      COPY_DESTINATION_DIR: /tmp/places205/
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
