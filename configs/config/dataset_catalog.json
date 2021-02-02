@@ -3,6 +3,10 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "imagenette_160_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
     "places205_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
