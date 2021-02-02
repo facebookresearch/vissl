@@ -11,6 +11,14 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "CIFAR10": {
+        "train": ["<path_to_pytorch_folder>", "<lbl_path>"],
+        "val": ["<path_to_pytorch_folder>", "<lbl_path>"]
+    },
+    "CIFAR100": {
+        "train": ["<path_to_pytorch_folder>", "<lbl_path>"],
+        "val": ["<path_to_pytorch_folder>", "<lbl_path>"]
+    },
     "inaturalist2018_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]

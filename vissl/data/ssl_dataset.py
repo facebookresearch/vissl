@@ -200,6 +200,12 @@ class GenericSSLDataset(Dataset):
                 # We do not create it again since it can be an expensive operation.
                 labels = [x[1] for x in self.data_objs[idx].image_dataset.samples]
                 labels = np.array(labels).astype(np.int64)
+            elif label_source == "pytorch_dataset":
+                labels = [
+                    self.data_objs[idx].get_image_and_label(i)[1]
+                    for i in range(len(self.data_objs[idx]))
+                ]
+                labels = np.array(labels).astype(np.int64)
             else:
                 raise ValueError(f"unknown label source: {label_source}")
             self.label_objs.append(labels)
