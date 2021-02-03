@@ -3,7 +3,6 @@
 import logging
 import os
 
-from fvcore.common.file_io import PathManager, HTTPURLHandler
 from vissl.utils.hydra_config import AttrDict
 
 
@@ -27,8 +26,6 @@ def set_env_vars(local_rank: int, node_id: int, cfg: AttrDict):
             f"using NCCL_SOCKET_NTHREADS: {cfg.DISTRIBUTED.NCCL_SOCKET_NTHREADS}"
         )
         os.environ["NCCL_SOCKET_NTHREADS"] = str(cfg.DISTRIBUTED.NCCL_SOCKET_NTHREADS)
-    # register http handler to support reading the urls
-    PathManager.register_handler(HTTPURLHandler(), allow_override=True)
 
 
 def print_system_env_info(current_env):
