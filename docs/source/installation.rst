@@ -155,7 +155,7 @@ If you don't have anaconda, `run this bash scrip to install conda <https://githu
 
 .. code-block:: bash
 
-    conda install -c vissl apex vissl
+    conda install -c vissl apex
 
 
 - **Step 4: Install VISSL**
