@@ -140,7 +140,7 @@ If you don't have anaconda, `run this bash scrip to install conda <https://githu
 
 .. code-block:: bash
 
-    conda create -n vissl python=3.7
+    conda create -n vissl_env python=3.7
     source activate vissl_env
 
 
@@ -155,7 +155,7 @@ If you don't have anaconda, `run this bash scrip to install conda <https://githu
 
 .. code-block:: bash
 
-    conda install -c vissl apex vissl
+    conda install -c vissl apex
 
 
 - **Step 4: Install VISSL**
