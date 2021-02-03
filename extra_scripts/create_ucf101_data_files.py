@@ -111,6 +111,12 @@ if __name__ == '__main__':
         -a /datasets01/ucf101/112018/ucfTrainTestlist/testlist01.txt \
         -o /checkpoint/qduval/vissl/ucf101/test
     ```
+    
+    Each of the artifacts pointed by the script correspond to elements which can be downloaded
+    directly from the webside of UCF101: https://www.crcv.ucf.edu/data/UCF101.php.
+    - the data corresponds to the videos (https://www.crcv.ucf.edu/data/UCF101/UCF101.rar)
+    - the annotations corresponds to one of the action recognition train/test split file
+      (https://www.crcv.ucf.edu/data/UCF101/UCF101TrainTestSplits-RecognitionTask.zip)
     """
     args = get_argument_parser().parse_args()
     create_disk_folder(

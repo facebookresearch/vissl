@@ -93,17 +93,9 @@ config:
             auto_scale: true
             base_value: 0.01
             base_lr_batch_size: 256
-
-          # Multi-step LR
           name: multistep
           values: [0.01, 0.001, 0.0001]
           milestones: [70, 140]
-
-          # Cosine schedule (seems to work better)
-          # name: cosine
-          # start_value: 0.01
-          # end_value: 0.0001
-
           update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
