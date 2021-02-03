@@ -134,7 +134,7 @@ python -c 'import vissl, apex, cv2'
 If you don't have anaconda, [run this bash scrip to install conda](https://github.com/facebookresearch/vissl/blob/master/docker/common/install_conda.sh).
 
 ```bash
-conda create -n vissl python=3.7
+conda create -n vissl_env python=3.7
 source activate vissl_env
 ```
 
