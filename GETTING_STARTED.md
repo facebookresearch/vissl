@@ -57,9 +57,9 @@ python3 tools/run_distributed_engines.py \
 
 ### If using pre-built conda/pip VISSL packages
 
-Users need to set the dataset and obtain the builting 
+Users need to set the dataset and obtain the builtin tool for training. Follow the steps:
 
-#### Setup ImageNet1K dataset
+#### Step1: Setup ImageNet1K dataset
 If you installed pre-built VISSL packages, we will set the ImageNet1K dataset following our [data documentation](https://vissl.readthedocs.io/en/latest/vissl_modules/data.html) and [tutorial](https://colab.research.google.com/drive/1CCuZ50BN99JcOB6VEPytVi_i2tSMd7A3#scrollTo=KPGCiTsXZeW3). NOTE that we need to register
 the dataset with VISSL.
 
@@ -80,7 +80,7 @@ In your python interpretor:
 {'train': ['<img_path>', '<lbl_path>'], 'val': ['<img_path>', '<lbl_path>']}
 ```
 
-#### Get the builtin tool and yaml config file
+#### Step2: Get the builtin tool and yaml config file
 We will use the pre-built VISSL tool for training [run_distributed_engines.py](https://github.com/facebookresearch/vissl/blob/stable/tools/run_distributed_engines.py) and the config file. Run
 
 ```bash
@@ -90,7 +90,7 @@ wget -q -O configs/config/quick_1gpu_resnet50_simclr.yaml https://dl.fbaipublicf
 wget -q  https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
 ```
 
-#### Train
+#### Step3: Train
 ```bash
 cd /tmp/
 python3 run_distributed_engines.py \
