@@ -72,7 +72,7 @@ def build_retrieval_model(cfg):
     else:
         # We only throw the warning if not weights file is provided. We want to
         # benchmark the random initialization model too and hence support that.
-        logging.warn("Model is randomly initialized....")
+        logging.warning("Model is randomly initialized....")
     logging.info(f"Model is:\n {model}")
     return model
 
