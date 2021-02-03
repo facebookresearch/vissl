@@ -19,6 +19,10 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "ucf101_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
     "voc2007_folder": {
         "train": ["<root_folder>", "<root_folder>"],
         "val": ["<root_folder>", "<root_folder>"]
