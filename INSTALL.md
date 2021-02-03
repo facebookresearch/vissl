@@ -147,7 +147,7 @@ conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
 #### Step 3: Install APEX (conda)
 
 ```bash
-conda install -c vissl apex vissl
+conda install -c vissl apex
 ```
 
 #### Step 4: Install VISSL
