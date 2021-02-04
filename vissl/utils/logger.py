@@ -73,7 +73,12 @@ def log_gpu_stats():
     """
     Log nvidia-smi snapshot. Useful to capture the configuration of gpus.
     """
-    logging.info(subprocess.check_output(["nvidia-smi"]).decode("utf-8"))
+    try:
+        logging.info(subprocess.check_output(["nvidia-smi"]).decode("utf-8"))
+    except FileNotFoundError:
+        logging.error(
+            "Failed to find the 'nvidia-smi' executable for printing GPU stats"
+        )
 
 
 def print_gpu_memory_usage():
