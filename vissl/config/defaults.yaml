@@ -79,6 +79,9 @@ config:
   # training iterations over which we want to print average. The average is printed for
   # master gpu.
   ROLLING_BTIME_FREQ: -1
+  # whether to log nvidia-smi or not. we make it optional in case nvidia-smi is not
+  # valid for some systems.
+  LOG_GPU_STATS: True
 
   # ----------------------------------------------------------------------------------- #
   # DATA
