@@ -13,7 +13,6 @@ from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode, AmpType
-from fairscale.optim.grad_scaler import ShardedGradScaler
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.data import build_dataset, get_loader, print_sampler_config
@@ -22,7 +21,7 @@ from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
-from vissl.utils.misc import is_apex_available
+from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
 
 if is_apex_available():
     import apex
@@ -180,11 +179,16 @@ class SelfSupervisionTask(ClassificationTask):
 
             elif self.amp_type == AmpType.PYTORCH:
                 # If the optimizer is sharded, then the GradScaler needs to be shard-aware
-                self.amp_grad_scaler = (
-                    ShardedGradScaler()
-                    if self.config["OPTIMIZER"]["name"] == "zero"
-                    else TorchGradScaler()
-                )
+                if self.config["OPTIMIZER"]["name"] == "zero":
+                    assert is_fairscale_sharded_available(), (
+                        "To use ZeRO with PyTorch AMP, ShardedGradScaler() "
+                        "from fairscale is needed. Please upgrade fairscale"
+                    )
+                    from fairscale.optim.grad_scaler import ShardedGradScaler
+
+                    self.amp_grad_scaler = ShardedGradScaler()
+                else:
+                    self.amp_grad_scaler = TorchGradScaler()
             logging.info(f"Setting AMP: {self.amp_type} - args: {self.amp_args}")
 
         else:

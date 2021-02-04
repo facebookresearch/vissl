@@ -12,6 +12,20 @@ from scipy.sparse import csr_matrix
 from vissl.utils.io import load_file
 
 
+def is_fairscale_sharded_available():
+    """
+    Check if the fairscale version has the ShardedGradScaler()
+    to use with ZeRO + PyTorchAMP
+    """
+    try:
+        from fairscale.optim.grad_scaler import ShardedGradScaler  # NOQA
+
+        fairscale_sharded_available = True
+    except ImportError:
+        fairscale_sharded_available = False
+    return fairscale_sharded_available
+
+
 def is_apex_available():
     """
     Check if apex is available with simple python imports.
