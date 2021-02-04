@@ -3,7 +3,7 @@ from typing import Tuple
 from PIL import Image
 from fvcore.common.file_io import PathManager
 from torch.utils.data import Dataset
-from torchvision.datasets import CIFAR10, CIFAR100
+from torchvision.datasets import CIFAR10, CIFAR100, STL10
 
 from vissl.utils.hydra_config import AttrDict
 
@@ -40,6 +40,9 @@ class PytorchImageDataset(Dataset):
             return CIFAR10(self.path, train=self.split == "train")
         elif self.dataset_name == "CIFAR100":
             return CIFAR100(self.path, train=self.split == "train")
+        elif self.dataset_name == "STL10":
+            stl_split = "train" if self.split == "train" else "test"
+            return STL10(self.path, split=stl_split)
         else:
             raise ValueError(f"Unsupported dataset {self.dataset_name: str}")
 
