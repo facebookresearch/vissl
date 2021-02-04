@@ -2,18 +2,22 @@
 config:
   DATA:
     TRAIN:
-      BATCHSIZE_PER_REPLICA: 16
+      BATCHSIZE_PER_REPLICA: 8
     TEST:
-      BATCHSIZE_PER_REPLICA: 16
+      BATCHSIZE_PER_REPLICA: 8
   MODEL:
     TRUNK:
       NAME: regnet
       TRUNK_PARAMS:
         REGNET:
-          name: regnet_y_128gf
+          depth: 27
+          w_0: 640
+          w_a: 230.83
+          w_m: 2.53
+          group_width: 373
     HEAD:
       PARAMS: [
-        ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [7392, 8192], "num_clusters": []}],
+        ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [10444, 8192], "num_clusters": []}],
         ['mlp', {'dims': [8192, 1000]}]
       ]
       # PARAMS: [['mlp', {'dims': [7392, 1000]}]]

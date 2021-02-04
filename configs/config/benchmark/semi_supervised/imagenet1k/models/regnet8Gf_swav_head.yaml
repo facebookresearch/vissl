@@ -5,10 +5,10 @@ config:
       NAME: regnet
       TRUNK_PARAMS:
         REGNET:
-          name: regnet_y_16gf
+          name: regnet_y_8gf
     HEAD:
       PARAMS: [
-        ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [3024, 4096], "num_clusters": []}],
+        ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [2016, 4096], "num_clusters": []}],
         ['mlp', {'dims': [4096, 1000]}]
       ]
   DATA:
