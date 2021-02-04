@@ -98,6 +98,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         )
     if cfg.MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
+    if cfg.LOG_GPU_STATS:
+        hooks.extend([LogGpuStatsHook()])
     if cfg.TENSORBOARD_SETUP.USE_TENSORBOARD:
         assert is_tensorboard_available(), "Tensorboard must be installed to use it."
         tb_hook = get_tensorboard_hook(cfg)
@@ -116,7 +118,6 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             UpdateTrainIterationNumHook(),
             LogLossMetricsCheckpointHook(),
             LogLossLrEtaHook(rolling_btime_freq),
-            LogGpuStatsHook(),
         ]
     )
     return hooks
