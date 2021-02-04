@@ -14,7 +14,7 @@ config:
     HEAD:
       PARAMS: [
         ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [7392, 8192], "num_clusters": []}],
-        ['mlp', {'dims': [8192, 1000]}]
+        ['mlp', {'dims': [8192, 205]}]
       ]
       # PARAMS: [['mlp', {'dims': [7392, 1000]}]]
     SYNC_BN_CONFIG:

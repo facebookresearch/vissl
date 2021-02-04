@@ -9,7 +9,7 @@ config:
     HEAD:
       PARAMS: [
         ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [3024, 4096], "num_clusters": []}],
-        ['mlp', {'dims': [4096, 1000]}]
+        ['mlp', {'dims': [4096, 205]}]
       ]
   DATA:
     # to reduce the training time, we use 64img/gpu (16GB machine)
