@@ -14,6 +14,8 @@ The usage looks like:
 .. code-block:: bash
 
     python <binary-name>.py config=<yaml_config path>/<yaml_config_file_name>
+    
+**All the parameters and settings VISSL supports**: you can see all the settings in `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml>`_.
 
 
 Detecting new configuration directories in Hydra
