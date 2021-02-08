@@ -15,6 +15,22 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "CIFAR10": {
+        "train": ["<path_to_pytorch_dataset>", "<unused>"],
+        "val": ["<path_to_pytorch_dataset>", "<unused>"]
+    },
+    "CIFAR100": {
+        "train": ["<path_to_pytorch_dataset>", "<unused>"],
+        "val": ["<path_to_pytorch_dataset>", "<unused>"]
+    },
+    "STL10": {
+        "train": ["<path_to_pytorch_dataset>", "<unused>"],
+        "val": ["<path_to_pytorch_dataset>", "<unused>"]
+    },
+    "MNIST": {
+        "train": ["<path_to_pytorch_dataset>", "<unused>"],
+        "val": ["<path_to_pytorch_dataset>", "<unused>"]
+    },
     "inaturalist2018_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
