@@ -260,6 +260,18 @@ class FreezeParametersHook(ClassyHook):
         map_params_to_iters = {}
         for to_map in task.config.MODEL.TEMP_FROZEN_PARAMS_ITER_MAP:
             map_params_to_iters[to_map[0]] = to_map[1]
+
+        # get the maximum iterations until which the params are frozen.
+        # if the iterations are past the maximum iterations freezing any
+        # param, we simply return.
+        max_iterations = max(list(map_params_to_iters.values()))
+        if task.iteration >= max_iterations:
+            if task.iteration == max_iterations:
+                logging.info(
+                    f"No parameters grad removed from now on: {task.iteration}"
+                )
+            return
+
         for name, p in task.model.named_parameters():
             if (
                 name in map_params_to_iters
