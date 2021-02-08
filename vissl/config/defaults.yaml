@@ -84,6 +84,21 @@ config:
   LOG_GPU_STATS: True
 
   # ----------------------------------------------------------------------------------- #
+  # HOOKS
+  # ----------------------------------------------------------------------------------- #
+  HOOKS:
+    # ----------------------------------------------------------------------------------- #
+    # torch.cuda.memory_summary()
+    # ----------------------------------------------------------------------------------- #
+    MEMORY_SUMMARY:
+      # set this to true if you want to print memory summary. useful for profiling
+      # memory consumption of model
+      PRINT_MEMORY_SUMMARY: False
+      # at what iteration number should the memory summary be printed. usually
+      # set to 1 for very large models
+      LOG_ITERATION_NUM: 0
+
+  # ----------------------------------------------------------------------------------- #
   # DATA
   # ----------------------------------------------------------------------------------- #
   DATA:
