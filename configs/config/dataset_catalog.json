@@ -19,6 +19,14 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "ucf101_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "clevr_count_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
     "yfcc100m": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
