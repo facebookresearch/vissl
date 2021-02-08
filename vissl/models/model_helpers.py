@@ -46,7 +46,7 @@ def is_feature_extractor_model(model_config):
     If the model is a feature extractor model:
         - evaluation model is on
         - trunk is frozen
-        - number of features specified for features extratction > 0
+        - number of features specified for features extraction > 0
     """
     if (
         model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
