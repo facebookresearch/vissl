@@ -51,4 +51,4 @@ CMD ["bash"]
 ######## run gpu test
 # python tools/run_distributed_engines.py \
 #     config=test/circleci/quick_simclr_synthetic \
-#     hydra.verbose=true config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
+#     hydra.verbose=true config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true

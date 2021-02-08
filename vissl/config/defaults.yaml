@@ -61,42 +61,80 @@ config:
   LOG_FREQUENCY: 10
   # if the workflow is only test and not training
   TEST_ONLY: False
+  # if the model should be test as well. If set to False, only training will be done.
+  TEST_MODEL: True
   # how frequently should the validation be done.
   # 1 = after every epoch and N = after every N epochs
   TEST_EVERY_NUM_EPOCH: 1
   SEED_VALUE: 0
-  # if the model should be test as well. If set to False, only training will be done.
-  TEST_MODEL: True
   # Use the forkserver or spawn
   # https://github.com/pytorch/pytorch/blob/master/torch/nn/parallel/distributed.py#L142
   MULTI_PROCESSING_METHOD: "forkserver"
-  # monitoring training statistics like: forward time, backward time, loss time, etc
-  MONITOR_PERF_STATS: False
-  # we print perf stats (if enabled) after every phase. If we want to print every few
-  # batches, set the frequency here.
-  PERF_STAT_FREQUENCY: -1
-  # if we want to print the rolling average batch time, set the value below to number of
-  # training iterations over which we want to print average. The average is printed for
-  # master gpu.
-  ROLLING_BTIME_FREQ: -1
-  # whether to log nvidia-smi or not. we make it optional in case nvidia-smi is not
-  # valid for some systems.
-  LOG_GPU_STATS: True
 
   # ----------------------------------------------------------------------------------- #
   # HOOKS
   # ----------------------------------------------------------------------------------- #
   HOOKS:
     # ----------------------------------------------------------------------------------- #
+    # Perf hooks for several steps of model training
+    # ----------------------------------------------------------------------------------- #
+    PERF_STATS:
+      # monitoring training statistics like: forward time, backward time, loss time, etc
+      MONITOR_PERF_STATS: False
+      # we print perf stats (if enabled) after every phase. If we want to print every few
+      # batches, set the frequency here.
+      PERF_STAT_FREQUENCY: -1
+      # if we want to print the rolling average batch time, set the value below to number of
+      # training iterations over which we want to print average. The average is printed for
+      # master gpu.
+      ROLLING_BTIME_FREQ: -1
+
+    # ----------------------------------------------------------------------------------- #
     # torch.cuda.memory_summary()
     # ----------------------------------------------------------------------------------- #
     MEMORY_SUMMARY:
       # set this to true if you want to print memory summary. useful for profiling
       # memory consumption of model
-      PRINT_MEMORY_SUMMARY: False
+      PRINT_MEMORY_SUMMARY: True
       # at what iteration number should the memory summary be printed. usually
       # set to 1 for very large models
       LOG_ITERATION_NUM: 0
+
+    # ----------------------------------------------------------------------------------- #
+    # nvidia-smi print
+    # ----------------------------------------------------------------------------------- #
+    # whether to log nvidia-smi or not. we make it optional in case nvidia-smi is not
+    # valid for some systems.
+    LOG_GPU_STATS: True
+
+    # ----------------------------------------------------------------------------------- #
+    # MODEL_COMPLEXITY (#flops, #params, #activations in your model)
+    # ----------------------------------------------------------------------------------- #
+    MODEL_COMPLEXITY:
+      # set this to True if you want to compute #flops, #params, #activations in your model.
+      COMPUTE_COMPLEXITY: False
+      # the dummy input shape passed to the model to compute the complexity. Only forward pass
+      # is done for complexity calculation.
+      INPUT_SHAPE: [3, 224, 224]
+
+    # ----------------------------------------------------------------------------------- #
+    # TENSORBOARD (visualization)
+    # ----------------------------------------------------------------------------------- #
+    TENSORBOARD_SETUP:
+      # whether to use tensorboard for the visualization
+      USE_TENSORBOARD: False
+      # log directory for tensorboard events
+      LOG_DIR: "."
+      EXPERIMENT_LOG_DIR: "tensorboard"
+      # flush logs every n minutes
+      FLUSH_EVERY_N_MIN: 5
+      # whether to log the model parameters to tensorboard
+      LOG_PARAMS: True
+      # whether to log the model parameters gradients to tensorboard
+      LOG_PARAMS_GRADIENTS: True
+      # if we want to log the model parameters every few iterations, set the iteration
+      # frequency. -1 means the params will be logged only at the end of epochs.
+      LOG_PARAMS_EVERY_N_ITERS: 310
 
   # ----------------------------------------------------------------------------------- #
   # DATA
@@ -266,6 +304,9 @@ config:
     # we can optimize memory a bit by running forward pass through each crop
     # separately.
     SINGLE_PASS_EVERY_CROP: False
+    # ----------------------------------------------------------------------------------- #
+    # Activation checkpointing from PyTorch
+    # ----------------------------------------------------------------------------------- #
     # Use activation checkpointing in the training phase. This is very for training
     # large models that require a lot of memory.
     ACTIVATION_CHECKPOINTING:
@@ -273,7 +314,9 @@ config:
       # how many times the model should be checkpointed. User should tune this parameter
       # and find the number that offers best memory saving and compute tradeoff.
       NUM_ACTIVATION_CHECKPOINTING_SPLITS: 2
-    # setup for Fairscale sharded DDP
+    # ----------------------------------------------------------------------------------- #
+    # ZeRO2 sharded DDP from Fairscale https://github.com/facebookresearch/fairscale
+    # ----------------------------------------------------------------------------------- #
     SHARDED_DDP_SETUP:
       reduce_buffer_size: -1
     # ----------------------------------------------------------------------------------- #
@@ -415,12 +458,9 @@ config:
       AMP_ARGS: {"opt_level": "O1"}
       # we support pytorch amp as well which is availale in pytorch>=1.6.
       AMP_TYPE: "apex"  # apex | pytorch
-    MODEL_COMPLEXITY:
-      # set this to True if you want to compute #flops, #params, #activations in your model.
-      COMPUTE_COMPLEXITY: False
-      # the dummy input shape passed to the model to compute the complexity. Only forward pass
-      # is done for complexity calculation.
-      INPUT_SHAPE: [3, 224, 224]
+    # ----------------------------------------------------------------------------------- #
+    # MODEL WEIGHTS INIT from a weights file
+    # ----------------------------------------------------------------------------------- #
     # parameters for initializing a model from a pre-trained model file
     WEIGHTS_INIT:
       # path to the .torch weights files
@@ -877,22 +917,3 @@ config:
     TOPK: 200
     # if the features should be l2 normalized, set this to True
     L2_NORM_FEATS: False
-
-  # ----------------------------------------------------------------------------------- #
-  # TENSORBOARD (visualization)
-  # ----------------------------------------------------------------------------------- #
-  TENSORBOARD_SETUP:
-    # whether to use tensorboard for the visualization
-    USE_TENSORBOARD: False
-    # log directory for tensorboard events
-    LOG_DIR: "."
-    EXPERIMENT_LOG_DIR: "tensorboard"
-    # flush logs every n minutes
-    FLUSH_EVERY_N_MIN: 5
-    # whether to log the model parameters to tensorboard
-    LOG_PARAMS: True
-    # whether to log the model parameters gradients to tensorboard
-    LOG_PARAMS_GRADIENTS: True
-    # if we want to log the model parameters every few iterations, set the iteration
-    # frequency. -1 means the params will be logged only at the end of epochs.
-    LOG_PARAMS_EVERY_N_ITERS: 310

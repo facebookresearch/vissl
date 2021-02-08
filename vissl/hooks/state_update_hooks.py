@@ -31,11 +31,11 @@ class SSLModelComplexityHook(ClassyHook):
     def on_start(self, task) -> None:
         """
         Before the training starts, run one forward only pass of the model on the
-        dummy input of shape specified by user in MODEL.MODEL_COMPLEXITY.INPUT_SHAPE
+        dummy input of shape specified by user in HOOKS.MODEL_COMPLEXITY.INPUT_SHAPE
         We calculate the flops, activations and number of params in the model.
         """
         self.num_flops, self.num_activations, self.num_parameters = 0, 0, 0
-        input_shape = task.config["MODEL"]["MODEL_COMPLEXITY"]["INPUT_SHAPE"]
+        input_shape = task.config["HOOKS"]["MODEL_COMPLEXITY"]["INPUT_SHAPE"]
         try:
             self.num_parameters = count_params(task.base_model)
             self.num_parameters = round(float(self.num_parameters) / 1000000, 4)

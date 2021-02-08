@@ -30,7 +30,7 @@ for cfg in "${CFG_LIST[@]}"; do
     CUDA_LAUNCH_BLOCKING=1 $BINARY config=$cfg \
         config.DATA.TRAIN.DATA_SOURCES=[synthetic] \
         hydra.verbose=true \
-        config.TENSORBOARD_SETUP.USE_TENSORBOARD=true \
+        config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true \
         config.CHECKPOINT.DIR="$CHECKPOINT_DIR" && echo "TEST OK" || exit
 
     rm -rf $CHECKPOINT_DIR

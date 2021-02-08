@@ -52,7 +52,7 @@ For example, to use Tensorboard during SwAV training, the command would look lik
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/swav/swav_8node_resnet \
-        config.TENSORBOARD_SETUP.USE_TENSORBOARD=true \
-        config.TENSORBOARD_SETUP.LOG_PARAMS=true \
-        config.TENSORBOARD_SETUP.LOG_PARAMS_GRADIENTS=true \
-        config.TENSORBOARD_SETUP.LOG_DIR=/tmp/swav_tensorboard_events/
+        config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true \
+        config.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS=true \
+        config.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS_GRADIENTS=true \
+        config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=/tmp/swav_tensorboard_events/
