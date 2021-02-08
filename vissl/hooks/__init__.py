@@ -7,6 +7,7 @@ from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
 from vissl.hooks.log_hooks import (  # noqa
     LogGpuStatsHook,
+    LogGpuMemoryHook,
     LogLossLrEtaHook,
     LogLossMetricsCheckpointHook,
     LogPerfTimeMetricsHook,
@@ -100,6 +101,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         hooks.extend([SSLModelComplexityHook()])
     if cfg.LOG_GPU_STATS:
         hooks.extend([LogGpuStatsHook()])
+    if cfg.HOOKS.MEMORY_SUMMARY.PRINT_MEMORY_SUMMARY:
+        hooks.extend([LogGpuMemoryHook(cfg.HOOKS.MEMORY_SUMMARY.LOG_ITERATION_NUM)])
     if cfg.TENSORBOARD_SETUP.USE_TENSORBOARD:
         assert is_tensorboard_available(), "Tensorboard must be installed to use it."
         tb_hook = get_tensorboard_hook(cfg)
