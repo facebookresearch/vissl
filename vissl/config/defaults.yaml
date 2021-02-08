@@ -537,7 +537,7 @@ config:
       num_prototypes: [3000]        # automatically inferred from model HEAD settings
       temp_hard_assignment_iters: 0
       # for dumping the debugging info in case loss becomes NaN
-      output_dir: ""                # automatically inferred and set to checkpoint dir
+      output_dir: "."               # automatically inferred and set to checkpoint dir
       queue:
         queue_length: 0             # automatically adjusted to ensure queue_length % global batch size = 0
         start_iter: 0
@@ -593,6 +593,8 @@ config:
   # ----------------------------------------------------------------------------------- #
   OPTIMIZER:
     name: "sgd"
+    # whether to shard optimizer state as per ZeRO https://arxiv.org/abs/1910.02054
+    use_zero: False
     use_larc: False  # supported for SGD only for now
     larc_config:
       clip: False
