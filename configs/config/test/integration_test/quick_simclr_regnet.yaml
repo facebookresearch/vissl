@@ -6,7 +6,12 @@ config:
   TEST_MODEL: False
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
-  MONITOR_PERF_STATS: True
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: False
+      INPUT_SHAPE: [3, 224, 224]
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
@@ -42,9 +47,6 @@ config:
   METERS:
     name: ""
   MODEL:
-    MODEL_COMPLEXITY:
-      COMPUTE_COMPLEXITY: False
-      INPUT_SHAPE: [3, 224, 224]
     TRUNK:
       NAME: regnet
       TRUNK_PARAMS:

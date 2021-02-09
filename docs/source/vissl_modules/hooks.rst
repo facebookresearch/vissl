@@ -30,7 +30,7 @@ VISSL supports many hooks. Users can configure which hooks to use from simple co
 
 - :code:`Tensorboard hook`: to enable this hook, set :code:`TENSORBOARD_SETUP.USE_TENSORBOARD=true` and configure the tensorboard settings
 
-- :code:`Model Complexity hook`: this hook performs one single forward pass of the model on the synthetic input and computes the #FLOPs, #params and #activations in the model. To enable this hook, set :code:`MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY=true` and configure it.
+- :code:`Model Complexity hook`: this hook performs one single forward pass of the model on the synthetic input and computes the #FLOPs, #params and #activations in the model. To enable this hook, set :code:`HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY=true` and configure it.
 
 - :code:`Self-supervised Loss hooks`: VISSL has hooks specific to self-supervised approaches like MoCo, SwAV etc. These hooks are handy in performing some intermediate operations required in self-supervision. For example: :code:`MoCoHook` is called after every forward pass of the model and updates the momentum encoder network. Users don't need to do anything special for using these hooks. If the user configuration file has the loss function for an approach, VISSL will automatically enable the hooks for the approach.
 

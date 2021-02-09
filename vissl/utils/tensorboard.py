@@ -64,10 +64,10 @@ def get_tensorboard_hook(cfg):
 
     # get the tensorboard directory and check tensorboard is installed
     tensorboard_dir = get_tensorboard_dir(cfg)
-    flush_secs = cfg.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
+    flush_secs = cfg.HOOKS.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
     return SSLTensorboardHook(
         tb_writer=SummaryWriter(log_dir=tensorboard_dir, flush_secs=flush_secs),
-        log_params=cfg.TENSORBOARD_SETUP.LOG_PARAMS,
-        log_params_every_n_iterations=cfg.TENSORBOARD_SETUP.LOG_PARAMS_EVERY_N_ITERS,
-        log_params_gradients=cfg.TENSORBOARD_SETUP.LOG_PARAMS_GRADIENTS,
+        log_params=cfg.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS,
+        log_params_every_n_iterations=cfg.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS_EVERY_N_ITERS,
+        log_params_gradients=cfg.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS_GRADIENTS,
     )
