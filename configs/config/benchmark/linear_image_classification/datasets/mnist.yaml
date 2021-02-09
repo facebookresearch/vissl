@@ -8,6 +8,9 @@ config:
       DATASET_NAMES: [MNIST]
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS:
+        - name: ImgPil2RGB
+          size: 32
+          box: [2, 2]
         - name: RandomResizedCrop
           size: 32
         - name: RandomHorizontalFlip
@@ -24,6 +27,9 @@ config:
       DATASET_NAMES: [MNIST]
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS:
+        - name: ImgPil2RGB
+          size: 32
+          box: [2, 2]
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]

@@ -45,7 +45,7 @@ class TorchvisionDataset(Dataset):
             stl_split = "train" if is_train_split else "test"
             return STL10(self.path, split=stl_split)
         elif self.dataset_name == "MNIST":
-            return MNISTAdapter(root=self.path, train=is_train_split)
+            return MNIST(root=self.path, train=is_train_split)
         else:
             raise ValueError(f"Unsupported dataset {self.dataset_name: str}")
 
@@ -76,35 +76,3 @@ class TorchvisionDataset(Dataset):
         Return the labels for each sample
         """
         return [self.dataset[i][1] for i in range(self.num_samples())]
-
-
-class MNISTAdapter(MNIST):
-    """
-    Wrapper around MNIST to convert images to RGB and change the size of the images
-    to 32x32, to match the receptive field of a standard ResNet50.
-    """
-
-    def __init__(
-            self,
-            root: str,
-            train: bool = True,
-            transform: Optional[Callable] = None,
-            target_transform: Optional[Callable] = None,
-            download: bool = False):
-        super().__init__(
-            root=root,
-            train=train,
-            transform=transform,
-            target_transform=target_transform,
-            download=download)
-
-    def __getitem__(self, index: int) -> Tuple[Any, Any]:
-        original_img, target = self.data[index], int(self.targets[index])
-        original_img = Image.fromarray(original_img.numpy(), mode='L')
-        img = Image.new(mode="RGB", size=(32, 32))
-        img.paste(original_img, box=(2, 2, 30, 30))
-        if self.transform is not None:
-            img = self.transform(img)
-        if self.target_transform is not None:
-            target = self.target_transform(target)
-        return img, target
