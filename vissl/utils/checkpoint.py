@@ -45,7 +45,7 @@ def get_checkpoint_folder(config: AttrDict):
     makedir(odir)
     assert PathManager.exists(
         config.CHECKPOINT.DIR
-    ), "Please specify config.CHECKPOINT.DIR parameter. It should not be None."
+    ), f"Please specify config.CHECKPOINT.DIR parameter. Invalid: {config.CHECKPOINT.DIR}"
     return odir
 
 
