@@ -1,4 +1,4 @@
-from typing import Tuple, List, Optional, Callable, Any
+from typing import Tuple, List
 
 from PIL import Image
 from fvcore.common.file_io import PathManager
@@ -6,6 +6,16 @@ from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, CIFAR100, STL10, MNIST
 
 from vissl.utils.hydra_config import AttrDict
+
+
+class TorchvisionDatasetName:
+    """
+    Names of the Torchvision datasets currently supported in VISSL.
+    """
+    CIFAR10 = "CIFAR10"
+    CIFAR100 = "CIFAR100"
+    STL10 = "STL10"
+    MNIST = "MNIST"
 
 
 class TorchvisionDataset(Dataset):
@@ -19,7 +29,7 @@ class TorchvisionDataset(Dataset):
         data_source (string): data source ("torchvision_dataset") [not used]
         path (string): path to the dataset
         split (string): specify split for the dataset (either "train" or "val").
-        dataset_name (string): name of dataset.
+        dataset_name (string): name of dataset (should be one of TorchvisionDatasetName).
     """
 
     def __init__(self,
@@ -37,14 +47,14 @@ class TorchvisionDataset(Dataset):
 
     def _load_dataset(self):
         is_train_split = self.split == "train"
-        if self.dataset_name == "CIFAR10":
+        if self.dataset_name == TorchvisionDatasetName.CIFAR10:
             return CIFAR10(self.path, train=is_train_split)
-        elif self.dataset_name == "CIFAR100":
+        elif self.dataset_name == TorchvisionDatasetName.CIFAR100:
             return CIFAR100(self.path, train=is_train_split)
-        elif self.dataset_name == "STL10":
+        elif self.dataset_name == TorchvisionDatasetName.STL10:
             stl_split = "train" if is_train_split else "test"
             return STL10(self.path, split=stl_split)
-        elif self.dataset_name == "MNIST":
+        elif self.dataset_name == TorchvisionDatasetName.MNIST:
             return MNIST(root=self.path, train=is_train_split)
         else:
             raise ValueError(f"Unsupported dataset {self.dataset_name: str}")
