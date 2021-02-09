@@ -140,8 +140,11 @@ Expected dataset structure for COCO2014
 Expected dataset structure for CIFAR10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The expected format is the exact same format used by torchvision, and the exact format obtained after expanding the
-"CIFAR-10 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html.
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+
+- expanding the "CIFAR-10 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html
+
+- instantiating the :code:`torchvision.datasets.CIFAR10` class with :code:`download=True`
 
 .. code-block::
 
@@ -159,8 +162,11 @@ The expected format is the exact same format used by torchvision, and the exact 
 Expected dataset structure for CIFAR100
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The expected format is the exact same format used by torchvision, and the exact format obtained after expanding the
-"CIFAR-100 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html.*
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+
+- expanding the "CIFAR-100 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html
+
+- instantiating the :code:`torchvision.datasets.CIFAR100` class with :code:`download=True`
 
 .. code-block::
 
@@ -196,8 +202,11 @@ instantiating the :code:`torchvision.datasets.MNIST` class with the flag :code:`
 Expected dataset structure for STL10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The expected format is the exact same format used by torchvision, and the exact format obtained after expanding the
-:code:`stl10_binary.tar.gz` archive available at https://academictorrents.com/details/a799a2845ac29a66c07cf74e2a2838b6c5698a6a.
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+
+- expanding the :code:`stl10_binary.tar.gz` archive available at https://cs.stanford.edu/~acoates/stl10/
+
+- instantiating the :code:`torchvision.datasets.STL10` class with :code:`download=True`
 
 .. code-block::
 

@@ -57,13 +57,83 @@ coco/
     # image files that are mentioned in the corresponding json
 ```
 
+## Expected dataset structure for CIFAR-10
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+- expanding the "CIFAR-10 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html
+- instantiating the `torchvision.datasets.CIFAR10` class with `download=True`
+
+```
+cifar-10-batches-py/
+    batches.meta
+    data_batch_1
+    data_batch_2
+    data_batch_3
+    data_batch_4
+    data_batch_5
+    readme.html
+    test_batch
+```
+
+## Expected dataset structure for CIFAR-100
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+- expanding the "CIFAR-100 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html
+- instantiating the `torchvision.datasets.CIFAR100` class with `download=True`
+
+```
+cifar-100-python/
+    meta
+    test
+    train
+```
+
+## Expected dataset structure for MNIST
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after
+instantiating the `torchvision.datasets.MNIST` class with the flag `download=True`.
+
+```
+MNIST/
+    processed/
+        test.pt
+        training.pt
+    raw/
+        t10k-images-idx3-ubyte
+        t10k-images-idx3-ubyte.gz
+        t10k-labels-idx1-ubyte
+        t10k-labels-idx1-ubyte.gz
+        train-images-idx3-ubyte
+        train-images-idx3-ubyte.gz
+        train-labels-idx1-ubyte
+        train-labels-idx1-ubyte.gz
+```
+
+## Expected dataset structure for STL10
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+- expanding the `stl10_binary.tar.gz` archive available at https://cs.stanford.edu/~acoates/stl10/
+- instantiating the `torchvision.datasets.STL10` class with `download=True`
+
+```
+stl10_binary/
+    class_names.txt
+    fold_indices.txt
+    test_X.bin
+    test_y.bin
+    train_X.bin
+    train_y.bin
+    unlabeled_X.bin
+```
+
 ## Dataset Catalog
 It contains a mapping from strings (which are names that identify a dataset,
 e.g. "imagenet1k_folder") to a `dict` which contains:
 1. mapping of various data splits (train, test, val) to the data source (path on the disk whether a folder path or a filelist)
-2. source of the data (`disk_filelist` | `disk_folder`)
+2. source of the data (`disk_filelist` | `disk_folder` | `torchvision_dataset`)
     - `disk_folder`: this is simply the root folder path to the downloaded data.
     - `disk_filelist`: These are numpy files: (1) file containing images information (2) file containing corresponding labels for images. We provide [scripts](https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md) that can be used to prepare these two files for a dataset of choice.
+    - `torchvision_dataset`: the root folder path to the torchvision dowloaded dataset. As of now, the supported datasets are: CIFAR-10, CIFAR-100, MNIST and STL-10.
 
 The purpose of having this catalog is to make it easy to choose different datasets,
 by just using the strings in the config.
