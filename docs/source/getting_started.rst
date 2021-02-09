@@ -64,7 +64,7 @@ Change the :code:`DATA.TRAIN.DATA_PATHS` path to the ImageNet train dataset fold
     	config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
     	config=test/integration_test/quick_simclr \
     	config.CHECKPOINT.DIR="./checkpoints" \
-    	config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
+    	config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true
 
 
 If using pre-built conda/pip VISSL packages
@@ -118,7 +118,4 @@ We will use the pre-built VISSL tool for training `run_distributed_engines.py <h
 	    config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
 	    config=quick_1gpu_resnet50_simclr \
 	    config.CHECKPOINT.DIR="./checkpoints" \
-	    config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
-
-Explore **all the parameters and settings VISSL supports** in `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml>`_.
-
+	    config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true

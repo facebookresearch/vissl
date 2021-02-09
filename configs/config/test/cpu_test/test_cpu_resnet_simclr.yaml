@@ -6,7 +6,11 @@ config:
   TEST_MODEL: False
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
-  MONITOR_PERF_STATS: True
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: False
   DATA:
     NUM_DATALOADER_WORKERS: 0
     TRAIN:
@@ -40,8 +44,6 @@ config:
   METERS:
     name: ""
   MODEL:
-    MODEL_COMPLEXITY:
-      COMPUTE_COMPLEXITY: False
     TRUNK:
       NAME: resnet
       TRUNK_PARAMS:

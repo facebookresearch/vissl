@@ -41,7 +41,7 @@ imagenet_full_size
 
 ### If VISSL is built from source
 We provide a config to train model using the pretext SimCLR task on the ResNet50 model.
-Change the `DATA.TRAIN.DATA_PATHS` path to the ImageNet train dataset folder path. 
+Change the `DATA.TRAIN.DATA_PATHS` path to the ImageNet train dataset folder path.
 
 ```bash
 cd $HOME/vissl
@@ -52,7 +52,7 @@ python3 tools/run_distributed_engines.py \
     config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
     config=test/integration_test/quick_simclr_imagefolder \
     config.CHECKPOINT.DIR="./checkpoints" \
-    config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
+    config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true
 ```
 
 ### If using pre-built conda/pip VISSL packages
@@ -100,7 +100,7 @@ python3 run_distributed_engines.py \
     config.DATA.TRAIN.DATA_PATHS=["/path/to/my/imagenet/folder/train"] \
     config=quick_1gpu_resnet50_simclr \
     config.CHECKPOINT.DIR="./checkpoints" \
-    config.TENSORBOARD_SETUP.USE_TENSORBOARD=true
+    config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true
 ```
 
 Explore **all the parameters and settings VISSL supports** in [VISSL defaults.yaml file](https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml)

@@ -1,5 +1,9 @@
 # @package _global_
 config:
+  HOOKS:
+    MODEL_COMPLEXITY:
+      COMPUTE_COMPLEXITY: True
+      INPUT_SHAPE: [3, 224, 224]
   DATA:
     TRAIN:
       TRANSFORMS:
@@ -20,9 +24,6 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
   MODEL:
-    MODEL_COMPLEXITY:
-      COMPUTE_COMPLEXITY: True
-      INPUT_SHAPE: [3, 224, 224]
     TRUNK:
       NAME: efficientnet
       TRUNK_PARAMS:

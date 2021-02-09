@@ -60,7 +60,7 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         - loss specific hooks (swav loss, deepcluster loss, moco loss) used only when the
           loss is being used
         - model complexity hook (if user wants to compute model flops, activations, params)
-          enable the hook via MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY = True
+          enable the hook via HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY = True
 
     Returns:
         hooks (List(functions)): list containing the hook functions that will be used
@@ -68,9 +68,11 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
     hooks = []
 
     # conditionally add hooks based on use-case
-    if cfg.MONITOR_PERF_STATS:
+    if cfg.HOOKS.PERF_STATS.MONITOR_PERF_STATS:
         perf_stat_freq = (
-            cfg.PERF_STAT_FREQUENCY if cfg.PERF_STAT_FREQUENCY > 0 else None
+            cfg.HOOKS.PERF_STATS.PERF_STAT_FREQUENCY
+            if cfg.HOOKS.PERF_STATS.PERF_STAT_FREQUENCY > 0
+            else None
         )
         hooks.append(LogPerfTimeMetricsHook(perf_stat_freq))
     if cfg.LOSS.name == "swav_loss":
@@ -97,19 +99,23 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
                 )
             ]
         )
-    if cfg.MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
+    if cfg.HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
-    if cfg.LOG_GPU_STATS:
+    if cfg.HOOKS.LOG_GPU_STATS:
         hooks.extend([LogGpuStatsHook()])
     if cfg.HOOKS.MEMORY_SUMMARY.PRINT_MEMORY_SUMMARY:
         hooks.extend([LogGpuMemoryHook(cfg.HOOKS.MEMORY_SUMMARY.LOG_ITERATION_NUM)])
-    if cfg.TENSORBOARD_SETUP.USE_TENSORBOARD:
+    if cfg.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD:
         assert is_tensorboard_available(), "Tensorboard must be installed to use it."
         tb_hook = get_tensorboard_hook(cfg)
         hooks.extend([tb_hook])
 
     # hooks that are used irrespective of workflow type
-    rolling_btime_freq = cfg.ROLLING_BTIME_FREQ if cfg.ROLLING_BTIME_FREQ > 0 else None
+    rolling_btime_freq = (
+        cfg.HOOKS.PERF_STATS.ROLLING_BTIME_FREQ
+        if cfg.HOOKS.PERF_STATS.ROLLING_BTIME_FREQ > 0
+        else None
+    )
     hooks.extend(
         [
             CheckNanLossHook(),
