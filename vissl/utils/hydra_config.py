@@ -189,7 +189,7 @@ def resolve_linear_schedule(cfg, param_schedulers):
 
 def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
     """
-    Scale learning rate value for different Learning rate types. See assert_learning_rate()
+    Scale learning rate value for different Learning rate types. See infer_learning_rate()
     for how the scaled LR is calculated.
 
     Values changed for learning rate schedules:
@@ -258,7 +258,7 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
     return param_schedulers
 
 
-def assert_learning_rate(cfg):
+def infer_learning_rate(cfg):
     """
     1) Assert the Learning rate here. LR is scaled as per https://arxiv.org/abs/1706.02677.
     to turn this automatic scaling off,
@@ -325,7 +325,7 @@ def assert_learning_rate(cfg):
     return cfg
 
 
-def assert_losses(cfg):
+def infer_losses_config(cfg):
     """
     Infer settings for various self-supervised losses. Takes care of setting various loss
     parameters correctly like world size, batch size per gpu, effective global batch size,
@@ -441,8 +441,8 @@ def assert_hydra_conf(cfg):
        LABEL_TYPE to "standard" (also vissl default), otherwise if no label is specified, we
        set the LABEL_TYPE to "sample_index".
     """
-    cfg = assert_losses(cfg)
-    cfg = assert_learning_rate(cfg)
+    cfg = infer_losses_config(cfg)
+    cfg = infer_learning_rate(cfg)
 
     # in case of linear evaluation, we often evaluate several layers at a time. For each
     # layer, there's a separate accuracy meter. In such case, we want to output the layer
@@ -499,3 +499,15 @@ def assert_hydra_conf(cfg):
             url=cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE, cache_dir=cache_dir
         )
         cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE = cached_url_path
+
+    # if we use a zero optimizer, we nest the optimizer related settings under the
+    # base_optimizer.
+    if cfg.OPTIMIZER.use_zero:
+        cfg.OPTIMIZER["base_optimizer"] = cfg.OPTIMIZER.copy()
+        cfg.OPTIMIZER.name = "zero"
+        del cfg.OPTIMIZER.base_optimizer["param_schedulers"]
+        del cfg.OPTIMIZER.base_optimizer["regularize_bn"]
+        del cfg.OPTIMIZER.base_optimizer["regularize_bias"]
+        del cfg.OPTIMIZER.base_optimizer["num_epochs"]
+        del cfg.OPTIMIZER.base_optimizer["use_zero"]
+        del cfg.OPTIMIZER.base_optimizer["head_optimizer_params"]
