@@ -258,6 +258,9 @@ config:
       # how many times the model should be checkpointed. User should tune this parameter
       # and find the number that offers best memory saving and compute tradeoff.
       NUM_ACTIVATION_CHECKPOINTING_SPLITS: 2
+    # setup for Fairscale sharded DDP
+    SHARDED_DDP_SETUP:
+      reduce_buffer_size: -1
     # ----------------------------------------------------------------------------------- #
     # Feature evaluation settings
     # ----------------------------------------------------------------------------------- #
