@@ -54,7 +54,10 @@ def setup_logging(name, output_dir=None, rank=0):
 # with the same file name can safely write to the same file.
 @functools.lru_cache(maxsize=None)
 def _cached_log_stream(filename):
-    io = PathManager.open(filename, "a")
+    # we tune the buffering value so that the logs are updated
+    # frequently.
+    log_buffer_kb = 10 * 1024  # 10KB
+    io = PathManager.open(filename, mode="a", buffering=log_buffer_kb)
     atexit.register(io.close)
     return io
 
