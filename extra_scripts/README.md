@@ -2,6 +2,117 @@
 
 We provide several helpful scripts to prepare data, to convert VISSL models to detectron2 compatible models or to convert [caffe2 models](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md) to VISSL compatible models.
 
+<br>
+
+## Data preparation
+
+VISSL supports benchmarks inspired by the [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://cdn.openai.com/papers/Learning_Transferable_Visual_Models_From_Natural_Language_Supervision.pdf) papers, for which the datasets do not directly exist but are transformations of existing dataset.
+
+To run these benchmarks, the following data preparation scripts are mandatory:
+
+- `create_clevr_count_data_files.py`: to create a dataset from [CLEVR](https://arxiv.org/abs/1612.06890) where the goal is to count the number of object in the scene
+- `create_ucf101_data_files.py`: to create an image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
+
+### Preparing CLEVR/Counts data files
+
+Download the full dataset by visiting [Stanford CLEVR website](https://cs.stanford.edu/people/jcjohns/clevr/) and clicking on [Download CLEVR v1.0 (18 GB)](https://dl.fbaipublicfiles.com/clevr/CLEVR_v1.0.zip) dataset.
+Expand the archive.
+
+The resulting folder should have the following structure:
+
+```bash
+CLEVR_v1.0/
+    COPYRIGHT.txt 
+    LICENSE.txt
+    README.txt 
+    images/
+        train/
+            ... 75000 images ...
+        val/
+            ... 15000 images ...
+        test/
+            ... 15000 images ...
+    questions/
+        CLEVR_test_questions.json
+        CLEVR_train_questions.json
+        CLEVR_val_questions.json
+    scenes/
+        CLEVR_train_scenes.json
+        CLEVR_val_scenes.json
+```
+
+Run the script (where `/path/to/CLEVR_v1.0/` is the path to the expanded archive):
+
+```bash
+python extra_scripts/create_clevr_count_data_files.py \
+    -i /path/to/CLEVR_v1.0/ \
+    -o /output_path/clevr_count
+```
+
+The folder `/output_path/clevr_count` now contains the CLEVR/Counts dataset. The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"clevr_count_folder": {
+    "train": ["/checkpoint/qduval/datasets/clevr_count/train", "<lbl_path>"],
+    "val": ["/checkpoint/qduval/datasets/clevr_count/val", "<lbl_path>"]
+}
+```
+
+
+### Preparing UCF101/image data files
+
+Download the full dataset by visiting the [UCF101 website](https://www.crcv.ucf.edu/data/UCF101.php):
+
+- Click on [The UCF101 data set can be downloaded by "clicking here"](https://www.crcv.ucf.edu/data/UCF101/UCF101.rar) to retrieve the data (all the videos).
+- Click on [The Train/Test Splits for Action Recognition on UCF101 data set can be downloaded by clicking here](https://www.crcv.ucf.edu/data/UCF101/UCF101TrainTestSplits-RecognitionTask.zip) to retrieve the splits.
+
+Expand both archives in the same folder, say `/path/to/ucf101`.
+
+The resulting folder should have the following structure:
+
+```bash
+ucf101/
+    data/
+        ... 13320 videos ...
+    ucfTrainTestlist/
+        classInd.txt
+        testlist01.txt
+        testlist02.txt
+        testlist03.txt
+        trainlist01.txt
+        trainlist02.txt
+        trainlist03.txt
+```
+
+Run the following commands (where `/path/to/ucf101` is the path of the folder above):
+
+```bash
+# To create the training split
+
+python extra_scripts/create_ucf101_data_files.py \
+    -d /path/to/ucf101/data \
+    -a /path/to/ucf101/ucfTrainTestlist/trainlist01.txt \
+    -o /output_path/ucf101/train
+
+# To create the test split
+
+python extra_scripts/create_ucf101_data_files.py \
+    -d /path/to/ucf101/data \
+    -a /path/to/ucf101/ucfTrainTestlist/testlist01.txt \
+    -o /output_path/ucf101/test
+```
+
+The folder `/output_path/ucf101` now contains the UCF101 image action recognition dataset. The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"ucf101_folder": {
+    "train": ["/checkpoint/qduval/vissl/ucf101/train", "<lbl_path>"],
+    "val": ["/checkpoint/qduval/vissl/ucf101/test", "<lbl_path>"]
+}
+```
+
+<br>
+
 ## Data preparation (optional)
 The following scripts are optional as VISSL's `dataset_catalog.py` supports reading the downloaded data directly for most of these. For all the datasets below, we assume that the datasets are in the format as described [here](../vissl/data/README.md).
 
@@ -77,6 +188,8 @@ python extra_scripts/create_voc_low_shot_samples.py \
     --num_samples 5
 ```
 
+<br>
+
 ## Generating Jigsaw Permutations for varying problem complexity
 We provide scripts to change problem complexity of Jigsaw approach (as an axis of scaling in [paper](https://arxiv.org/abs/1905.01235)).
 
@@ -89,6 +202,8 @@ python extra_scripts/generate_jigsaw_permutations.py \
     --output_dir /tmp/vissl//jigsaw_perms/ \
     -- N 2000
 ```
+
+<br>
 
 ## Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
 We provide scripts to convert VISSL models to [Detectron2](https://github.com/facebookresearch/detectron2) and [ClassyVision](https://github.com/facebookresearch/ClassyVision) compatible models.
@@ -123,6 +238,8 @@ python extra_scripts/convert_vissl_to_torchvision.py \
     --output_dir /path/to/output/dir/ \
     --output_name <my_converted_model>.torch
 ```
+
+<br>
 
 ## Converting Caffe2 models -> VISSL
 We provide conversion of all the [caffe2 models](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md) in the [paper](https://arxiv.org/abs/1905.01235)
@@ -189,6 +306,8 @@ python extra_scripts/convert_caffe2_to_vissl_alexnet.py \
     --output_model <pth_model>.torch
 ```
 
+<br>
+
 ## Converting Models ClassyVision -> VISSL
 We provide scripts to convert [ClassyVision](https://github.com/facebookresearch/ClassyVision) models to [VISSL](https://github.com/facebookresearch/vissl) compatible models.
 
@@ -200,6 +319,7 @@ python extra_scripts/convert_classy_vision_to_vissl_resnet.py \
     --depth 50
 ```
 
+<br>
 
 ## Converting Official RotNet and DeepCluster models -> VISSL
 
