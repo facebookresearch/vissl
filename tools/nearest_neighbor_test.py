@@ -7,11 +7,11 @@ from typing import Any, List
 
 import torch
 from hydra.experimental import compose, initialize_config_module
-from run_distributed_engines import launch_distributed
 from torch import nn
 from vissl.hooks import default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.distributed_launcher import launch_distributed
 from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import (
     AttrDict,
