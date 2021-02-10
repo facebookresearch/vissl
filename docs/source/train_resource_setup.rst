@@ -49,6 +49,8 @@ While the more SLURM specific options are located in the "SLURM" configuration b
 .. code-block:: yaml
 
   SLURM:
+    # set to True to use SLURM
+    USE_SLURM: true
     # Name of the job on SLURM
     NAME: "vissl"
     # Comment of the job on SLURM
