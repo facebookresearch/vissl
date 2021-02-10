@@ -851,7 +851,7 @@ config:
   # ----------------------------------------------------------------------------------- #
   SLURM:
     # Whether or not to run the job on SLURM
-    ENABLED: false
+    USE_SLURM: false
     # Name of the job on SLURM
     NAME: "vissl"
     # Comment of the job on SLURM

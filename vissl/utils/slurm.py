@@ -33,3 +33,16 @@ def get_slurm_dir(input_dir: str):
     if "SLURM_JOBID" in os.environ:
         output_dir = f"{input_dir}/{os.environ['SLURM_JOBID']}"
     return output_dir
+
+
+def is_submitit_available() -> bool:
+    """
+    Indicates if submitit, the library around SLURM used to run distributed training, is
+    available.
+    """
+    try:
+        import submitit  # NOQA
+
+        return True
+    except ImportError:
+        return False
