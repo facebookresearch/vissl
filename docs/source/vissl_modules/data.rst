@@ -136,6 +136,49 @@ Expected dataset structure for COCO2014
 
 
 
+Expected dataset structure for UCF101, CLEVR/Counts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+VISSL supports benchmarks inspired by the `VTAB <https://arxiv.org/pdf/1910.04867.pdf>`_ and `CLIP <https://cdn.openai.com/papers/Learning_Transferable_Visual_Models_From_Natural_Language_Supervision.pdf>`_ papers, for which the datasets do not directly exist but are transformations of existing dataset.
+
+To run these benchmarks, the following data preparation scripts are mandatory:
+
+- `create_clevr_count_data_files.py`: to create a dataset from `CLEVR <https://arxiv.org/abs/1612.068901>`_ where the goal is to count the number of object in the scene
+- `create_ucf101_data_files.py`: to create an image action recognition dataset from the video action recognition dataset `UCF101 <https://www.crcv.ucf.edu/data/UCF101.php>`_ by extracting the middle frame
+
+You can read more about how to download and run these scripts from `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_.
+
+After data preparation, the output folders are compatible with the :code:`disk_folder` layout:
+
+.. code-block:: bash
+
+    {ucf101, clevr_count}
+    train/
+        <n0......>/
+            <im-1-name>.JPEG
+            ...
+            <im-N-name>.JPEG
+            ...
+        <n1......>/
+            <im-1-name>.JPEG
+            ...
+            <im-M-name>.JPEG
+            ...
+        ...
+    val/
+        <n0......>/
+            <im-1-name>.JPEG
+            ...
+            <im-N-name>.JPEG
+            ...
+        <n1......>/
+            <im-1-name>.JPEG
+            ...
+            <im-M-name>.JPEG
+            ...
+        ...
+
+
 Dataloader
 ------------------------------------------
 
