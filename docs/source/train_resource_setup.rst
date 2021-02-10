@@ -8,7 +8,7 @@ VISSL supports training any model on CPUs. Typically, this involves correctly se
     MACHINE:
       DEVICE: cpu
     DISTRIBUTED:
-      BACKEND: gloo           # set to "gloo" for cpu only trianing
+      BACKEND: gloo           # set to "gloo" for cpu only training
       NUM_NODES: 1            # no change needed
       NUM_PROC_PER_NODE: 2    # user sets this to number of gpus to use
       INIT_METHOD: tcp        # set to "file" if desired
@@ -33,61 +33,58 @@ Train on SLURM cluster
 
 VISSL supports SLURM by default for training models. VISSL code automatically detects if the training environment is SLURM based on SLURM environment variables like :code:`SLURM_NODEID`, :code:`SLURMD_NODENAME`, :code:`SLURM_STEP_NODELIST`.
 
-VISSL also provides a helper bash script `dev/launch_slurm.sh <https://github.com/facebookresearch/vissl/blob/master/dev/launch_slurm.sh>`_ that allows launching a given training on SLURM. Users can modify this script to meet their needs.
+VISSL also provides a helper bash script `dev/launch_slurm.sh <https://github.com/facebookresearch/vissl/blob/master/dev/launch_slurm.sh>`_ that allows launching a given training on SLURM.
+This script uses the content of the configuration to allocate the right number of nodes and GPUs on SLURM.
 
-The bash script takes the following inputs:
+More precisely, the number of nodes and GPU by node to allocate is driven by the usual DISTRIBUTED training configuration:
 
+.. code-block:: yaml
 
-.. code-block:: bash
+    DISTRIBUTED:
+      NUM_NODES: 1            # no change needed
+      NUM_PROC_PER_NODE: 2    # user sets this to number of gpus to use
 
-    # number of machines to distribute training on
-    NODES=${NODES-1}
-    # number of gpus per machine to use for training
-    NUM_GPU=${NUM_GPU-8}
-    # gpus type: P100 | V100 | V100_32G etc. User should set this based on their machine
-    GPU_TYPE=${GPU_TYPE-V100}
-    # name of the training. for example: simclr_2node_resnet50_in1k. This is helpful to clearly recognize the training
-    EXPT_NAME=${EXPT_NAME}
-    # how much CPU memory to use
-    MEM=${MEM-250g}
-    # number of CPUs used for each trainer (i.e. each gpu)
-    CPU=${CPU-8}
-    # directory where all the training artifacts like checkpoints etc will be written
-    OUTPUT_DIR=${OUTPUT_DIR}
-    # partition of the cluster on which training should run. User should determine this parameter for their cluster
-    PARTITION=${PARTITION-learnfair}
-    # any helpful comment that slurm dashboard can display
-    COMMENT=${COMMENT-vissl_training}
-    GITHUB_REPO=${GITHUB_REPO-vissl}
-    # what branch of VISSL should be used. specify your custom branch
-    BRANCH=${BRANCH-master}
-    # automatically determined and used for distributed training.
-    # each training run must have a unique id and vissl defaults to date
-    RUN_ID=$(date +'%Y%m%d')
-    # number of dataloader workers to use per gpu
-    NUM_DATA_WORKERS=${NUM_DATA_WORKERS-8}
-    # multi-processing method to use in PyTorch. Options: forkserver | fork | spawn
-    MULTI_PROCESSING_METHOD=${MULTI_PROCESSING_METHOD-forkserver}
-    # specify the training configuration to run. For example: to train swav for 100epochs
-    # config=pretrain/swav/swav_8node_resnet config.OPTIMIZER.num_epochs=100
-    CFG=( "$@" )
+While the more SLURM specific options are located in the "SLURM" configuration block:
 
+.. code-block:: yaml
 
-To run the script for training SwAV on 8 machines where each machine has 8-gpus and for 100epochs, the script can be run as:
+  SLURM:
+    # Name of the job on SLURM
+    NAME: "vissl"
+    # Comment of the job on SLURM
+    COMMENT: "vissl job"
+    # Partition of SLURM on which to run the job
+    PARTITION: "learnfair"
+    # Where the logs produced by the SLURM jobs will be output
+    LOG_FOLDER: "."
+    # Maximum number of hours needed by the job to complete. Above this limit, the job might be pre-empted.
+    TIME_HOURS: 72
+    # Additional constraints on the hardware of the nodes to allocate (example 'volta' to select a volta GPU)
+    CONSTRAINT: ""
+    # GB of RAM memory to allocate for each node
+    MEM_GB: 250
+    # TCP port on which the workers will synchronize themselves with torch distributed
+    PORT_ID: 40050
 
+Users can customize these values by using the standard hydra override syntax (same as for any other item in the configuration), or can modify the script to fit their needs.
+
+**Examples:**
+
+To run a linear evaluation benchmark on a chosen checkpoint, on the SLURM partition named "dev", with the name "lin_eval":
 
 .. code-block:: bash
 
-    cd $HOME/vissl && NODES=8 \
-      NUM_GPU=8 \
-      GPU_TYPE=V100 \
-      MEM=200g \
-      CPU=8 \
-      EXPT_NAME=swav_100ep_rn50_in1k \
-      OUTPUT_DIR=/tmp/swav/ \
-      PARTITION=learnfair \
-      BRANCH=master \
-      NUM_DATA_WORKERS=4 \
-      MULTI_PROCESSING_METHOD=forkserver \
-      ./dev/launch_slurm.sh \
-      config=pretrain/swav/swav_8node_resnet config.OPTIMIZER.num_epochs=100
+    ./dev/launch_slurm.sh \
+        config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear \
+        config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/path/to/my/checkpoint.torch \
+        config.SLURM.NAME=lin_eval \
+        config.SLURM.PARTITION=dev
+
+To run a distributed training of SwAV on 8 nodes where each machine has 8 GPUs and for 100 epochs, on the default partition, with the name "swav_100ep_rn50_in1k":
+
+.. code-block:: bash
+
+    ./dev/launch_slurm.sh \
+        config=pretrain/swav/swav_8node_resnet \
+        config.OPTIMIZER.num_epochs=100 \
+        config.SLURM.NAME=swav_100ep_rn50_in1k
