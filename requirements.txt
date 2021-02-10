@@ -5,6 +5,7 @@ cython
 scikit-learn
 parameterized==0.7.4
 numpy>=1.15
+submitit>=1.1.5
 tabulate
 pycocotools>=2.0.1
 fvcore
