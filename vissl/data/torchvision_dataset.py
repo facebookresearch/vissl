@@ -74,8 +74,6 @@ class TorchvisionDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[Image.Image, bool]:
         """
         Return the image at index 'idx' and whether the load was successful
-        Note: we do delayed loading of data to reduce the memory size
-              due to pickling of dataset across dataloader workers.
         """
         image = self.dataset[idx][0]
         is_success = True

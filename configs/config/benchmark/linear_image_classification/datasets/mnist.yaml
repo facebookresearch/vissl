@@ -8,7 +8,7 @@ config:
       DATASET_NAMES: [MNIST]
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS:
-        - name: ImgPil2RGB
+        - name: MNISTImgPil2RGB
           size: 32
           box: [2, 2]
         - name: RandomResizedCrop
@@ -27,7 +27,7 @@ config:
       DATASET_NAMES: [MNIST]
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS:
-        - name: ImgPil2RGB
+        - name: MNISTImgPil2RGB
           size: 32
           box: [2, 2]
         - name: ToTensor

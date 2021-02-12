@@ -7,8 +7,8 @@ from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 
 
-@register_transform("ImgPil2RGB")
-class ImgPil2RGB(ClassyTransform):
+@register_transform("MNISTImgPil2RGB")
+class MNISTImgPil2RGB(ClassyTransform):
     """
     Convert a PIL image to RGB mode.
 
@@ -44,7 +44,7 @@ class ImgPil2RGB(ClassyTransform):
         return img
 
     @classmethod
-    def from_config(cls, config: Dict[str, Any]) -> "ImgPil2RGB":
+    def from_config(cls, config: Dict[str, Any]) -> "MNISTImgPil2RGB":
         """
         Instantiates ImgPil2LabTensor from configuration.
 
