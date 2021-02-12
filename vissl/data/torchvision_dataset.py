@@ -1,9 +1,9 @@
-from typing import Tuple, List
+from typing import List, Tuple
 
-from PIL import Image
 from fvcore.common.file_io import PathManager
+from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.datasets import CIFAR10, CIFAR100, STL10, MNIST
+from torchvision.datasets import CIFAR10, CIFAR100, MNIST, STL10
 
 from vissl.utils.hydra_config import AttrDict
 
@@ -12,6 +12,7 @@ class TorchvisionDatasetName:
     """
     Names of the Torchvision datasets currently supported in VISSL.
     """
+
     CIFAR10 = "CIFAR10"
     CIFAR100 = "CIFAR100"
     STL10 = "STL10"
@@ -32,12 +33,9 @@ class TorchvisionDataset(Dataset):
         dataset_name (string): name of dataset (should be one of TorchvisionDatasetName).
     """
 
-    def __init__(self,
-                 cfg: AttrDict,
-                 data_source: str,
-                 path: str,
-                 split: str,
-                 dataset_name: str):
+    def __init__(
+        self, cfg: AttrDict, data_source: str, path: str, split: str, dataset_name: str
+    ):
         super().__init__()
         assert PathManager.isdir(path), f"Directory {path} does not exist"
         self.dataset_name = dataset_name

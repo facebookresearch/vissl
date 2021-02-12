@@ -2,9 +2,9 @@
 
 from typing import Any, Dict, List, Union
 
-from PIL import Image
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
+from PIL import Image
 
 
 @register_transform("MNISTImgPil2RGB")
@@ -29,8 +29,12 @@ class MNISTImgPil2RGB(ClassyTransform):
         if isinstance(size, int):
             size = [size, size]
         if size:
-            assert len(size) == 2, f"ImgPil2RGB: Expected \"size\" parameter of length 2, got: {size}"
-        assert len(box) == 2, f"ImgPil2RGB: Expected \"box\" parameter of length 2, got: {box}"
+            assert (
+                len(size) == 2
+            ), f'ImgPil2RGB: Expected "size" parameter of length 2, got: {size}'
+        assert (
+            len(box) == 2
+        ), f'ImgPil2RGB: Expected "box" parameter of length 2, got: {box}'
         self.size = size
         self.box = box
 
