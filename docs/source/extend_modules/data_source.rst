@@ -68,6 +68,7 @@ VISSL supports data loading from :code:`disk` as the default data source. If use
     DATASET_SOURCE_MAP = {
         "disk_filelist": DiskImageDataset,
         "disk_folder": DiskImageDataset,
+        "torchvision_dataset": TorchvisionDataset,
         "synthetic": SyntheticImageDataset,
         "my_data_source": MyNewSourceDataset,
     }
