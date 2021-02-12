@@ -146,7 +146,7 @@ To run these benchmarks, the following data preparation scripts are mandatory:
 - `create_clevr_count_data_files.py`: to create a dataset from `CLEVR <https://arxiv.org/abs/1612.068901>`_ where the goal is to count the number of object in the scene
 - `create_ucf101_data_files.py`: to create an image action recognition dataset from the video action recognition dataset `UCF101 <https://www.crcv.ucf.edu/data/UCF101.php>`_ by extracting the middle frame
 
-You can read more about how to download and run these scripts from `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_.
+You can read more about how to download these datasets and run these scripts from `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_.
 
 After data preparation, the output folders are compatible with the :code:`disk_folder` layout:
 
