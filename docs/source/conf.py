@@ -22,6 +22,10 @@ import sphinx_rtd_theme
 from recommonmark.parser import CommonMarkParser
 
 
+# -- Project information -----------------------------------------------------
+import vissl  # isort: skip
+
+
 # -- Path setup --------------------------------------------------------------
 sys.path.insert(0, os.path.abspath("../"))
 sys.path.insert(0, os.path.abspath("../vissl"))
