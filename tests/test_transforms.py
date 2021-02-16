@@ -9,6 +9,7 @@ from torchvision.transforms import Compose, ToTensor
 from vissl.data.ssl_transforms.img_pil_to_tensor import ImgToTensor
 from vissl.data.ssl_transforms.mnist_img_pil_to_rgb_mode import MNISTImgPil2RGB
 
+
 RAND_TENSOR = (torch.rand((224, 224, 3)) * 255).to(dtype=torch.uint8)
 RAND_PIL = Image.fromarray(RAND_TENSOR.numpy())
 RAND_NUMPY = np.asarray(RAND_PIL)
@@ -37,14 +38,19 @@ class TestTransform(unittest.TestCase):
         transform = Compose([MNISTImgPil2RGB.from_config({}), ToTensor()])
         output = transform(one_channel_input)
         assert output.shape == torch.Size([3, 28, 28])
-        assert output.sum().item() == 28 * 28 * 3, "Background should be black, center is gray scale"
+        assert (
+            output.sum().item() == 28 * 28 * 3
+        ), "Background should be black, center is gray scale"
 
         # Test with modifying the image size (try the two valid formats)
         for size in [32, [32, 32]]:
-            transform = Compose([
-                MNISTImgPil2RGB.from_config(dict(size=size, box=[2, 2])),
-                ToTensor()
-            ])
+            transform = Compose(
+                [MNISTImgPil2RGB.from_config({"size": size, "box": [2, 2]}), ToTensor()]
+            )
             output = transform(one_channel_input)
-            assert output.sum().item() == 28 * 28 * 3, "Background should be black, center is gray scale"
-            assert output[:, 2:-2, 2:-2].sum().item() == 28 * 28 * 3, "Paste should be in the middle"
+            assert (
+                output.sum().item() == 28 * 28 * 3
+            ), "Background should be black, center is gray scale"
+            assert (
+                output[:, 2:-2, 2:-2].sum().item() == 28 * 28 * 3
+            ), "Paste should be in the middle"
