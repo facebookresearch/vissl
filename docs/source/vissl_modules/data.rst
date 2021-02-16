@@ -11,15 +11,17 @@ To use a dataset in VISSL, the only requirements are:
 Reading data from several sources
 ------------------------------------------
 
-VISSL allows reading data from multiple sources (disk, etc) and in multiple formats (a folder path, a :code:`.npy` file).
+VISSL allows reading data from multiple sources (disk, etc) and in multiple formats (a folder path, a :code:`.npy` file, or torchvision datasets).
 The `GenericSSLDataset <https://github.com/facebookresearch/vissl/blob/master/vissl/data/ssl_dataset.py>`_ class is defined to support reading data from multiple data sources. For example: :code:`data = [dataset1, dataset2]` and the minibatches generated will have the corresponding data from each dataset.
 For this reason, we also support labels from multiple sources. For example :code:`targets = [dataset1 targets, dataset2 targets]`.
 
-Source of the data (:code:`disk_filelist` | :code:`disk_folder`):
+Source of the data (:code:`disk_filelist` | :code:`disk_folder` | :code:`torchvision_dataset`):
 
 - :code:`disk_folder`: this is simply the root folder path to the downloaded data.
 
 - :code:`disk_filelist`: These are numpy (or .pkl) files: (1) file containing images information (2) file containing corresponding labels for images. We provide `scripts <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_ that can be used to prepare these two files for a dataset of choice.
+
+- :code:`torchvision_dataset`: the root folder path to the torchvision dowloaded dataset. As of now, the supported datasets are: CIFAR-10, CIFAR-100, MNIST and STL-10.
 
 To use a dataset, VISSL takes following inputs in the configuration file for each dataset split (train, test):
 
@@ -134,6 +136,88 @@ Expected dataset structure for COCO2014
         val2014/
             # image files that are mentioned in the corresponding json
 
+
+Expected dataset structure for CIFAR10
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+
+- expanding the "CIFAR-10 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html
+
+- instantiating the :code:`torchvision.datasets.CIFAR10` class with :code:`download=True`
+
+.. code-block::
+
+    cifar-10-batches-py/
+        batches.meta
+        data_batch_1
+        data_batch_2
+        data_batch_3
+        data_batch_4
+        data_batch_5
+        readme.html
+        test_batch
+
+
+Expected dataset structure for CIFAR100
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+
+- expanding the "CIFAR-100 python version" archive available at https://www.cs.toronto.edu/~kriz/cifar.html
+
+- instantiating the :code:`torchvision.datasets.CIFAR100` class with :code:`download=True`
+
+.. code-block::
+
+    cifar-100-python/
+        meta
+        test
+        train
+
+
+Expected dataset structure for MNIST
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after
+instantiating the :code:`torchvision.datasets.MNIST` class with the flag :code:`download=True`.
+
+.. code-block::
+
+    MNIST/
+        processed/
+            test.pt
+            training.pt
+        raw/
+            t10k-images-idx3-ubyte
+            t10k-images-idx3-ubyte.gz
+            t10k-labels-idx1-ubyte
+            t10k-labels-idx1-ubyte.gz
+            train-images-idx3-ubyte
+            train-images-idx3-ubyte.gz
+            train-labels-idx1-ubyte
+            train-labels-idx1-ubyte.gz
+
+
+Expected dataset structure for STL10
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+
+- expanding the :code:`stl10_binary.tar.gz` archive available at https://cs.stanford.edu/~acoates/stl10/
+
+- instantiating the :code:`torchvision.datasets.STL10` class with :code:`download=True`
+
+.. code-block::
+
+    stl10_binary/
+        class_names.txt
+        fold_indices.txt
+        test_X.bin
+        test_y.bin
+        train_X.bin
+        train_y.bin
+        unlabeled_X.bin
 
 
 Dataloader
