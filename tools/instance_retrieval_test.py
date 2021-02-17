@@ -17,11 +17,7 @@ from vissl.config import AttrDict
 from vissl.models import build_model
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.env import set_env_vars
-from vissl.utils.hydra_config import (
-    convert_to_attrdict,
-    is_hydra_available,
-    print_cfg,
-)
+from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.instance_retrieval_utils.data_util import (
     InstanceRetrievalDataset,
     InstanceRetrievalImageLoader,
