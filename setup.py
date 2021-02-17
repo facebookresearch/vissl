@@ -48,7 +48,7 @@ setup(
         "dev": [
             "black==19.3b0",
             "sphinx",
-            "isort==4.3.21",
+            "isort==5.7.0",
             "flake8==3.8.1",
             "flake8-bugbear",
             "flake8-comprehensions",
