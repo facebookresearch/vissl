@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 import numpy as np
 from fvcore.common.download import download
 from fvcore.common.file_io import PathManager, file_lock
+
 from vissl.utils.slurm import get_slurm_dir
 
 

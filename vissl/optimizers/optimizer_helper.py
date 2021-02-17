@@ -4,6 +4,7 @@ import logging
 from typing import Any, List
 
 import torch.nn as nn
+
 from vissl.utils.misc import is_apex_available
 
 

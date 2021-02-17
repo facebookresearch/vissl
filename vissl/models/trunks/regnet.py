@@ -6,6 +6,7 @@ from typing import List, Tuple
 import torch
 import torch.nn as nn
 from classy_vision.models import RegNet as ClassyRegNet, build_model
+
 from vissl.models.model_helpers import (
     Flatten,
     get_trunk_forward_outputs,

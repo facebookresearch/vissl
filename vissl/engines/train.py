@@ -6,6 +6,7 @@ from typing import Any, Callable, List
 
 import torch
 from classy_vision.hooks.classy_hook import ClassyHook
+
 from vissl.hooks import default_hook_generator
 from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.collect_env import collect_env_info

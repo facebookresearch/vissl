@@ -5,6 +5,7 @@ import unittest
 
 from parameterized import parameterized
 from utils import ROOT_LOSS_CONFIGS, SSLHydraConfig
+
 from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
 

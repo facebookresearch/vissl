@@ -8,6 +8,7 @@ import torch
 from classy_vision.generic.distributed_util import get_cuda_device_index, get_rank
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+
 from vissl.utils.distributed_gradients import gather_from_all
 from vissl.utils.hydra_config import AttrDict
 

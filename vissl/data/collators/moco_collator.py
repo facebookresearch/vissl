@@ -3,6 +3,7 @@
 from typing import Any, Dict, List
 
 import torch
+
 from vissl.data.collators import register_collator
 
 

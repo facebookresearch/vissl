@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 import torch
+
 from vissl.utils.io import load_file, save_file
 
 

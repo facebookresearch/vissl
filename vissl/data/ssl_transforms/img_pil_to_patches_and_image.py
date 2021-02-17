@@ -7,6 +7,7 @@ import PIL
 import torchvision.transforms as pth_transforms
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
+
 from vissl.data.ssl_transforms.img_patches_tensor import ImgPatchesFromTensor
 
 

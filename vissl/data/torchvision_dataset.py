@@ -4,6 +4,7 @@ from fvcore.common.file_io import PathManager
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, CIFAR100, MNIST, STL10
+
 from vissl.utils.hydra_config import AttrDict
 
 

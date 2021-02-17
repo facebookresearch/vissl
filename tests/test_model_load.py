@@ -10,6 +10,7 @@ from utils import (
     PRETRAIN_CONFIGS,
     SSLHydraConfig,
 )
+
 from vissl.models import build_model
 from vissl.utils.hydra_config import convert_to_attrdict
 

@@ -8,6 +8,7 @@ from typing import Any, List
 import torch
 from hydra.experimental import compose, initialize_config_module
 from torch import nn
+
 from vissl.hooks import default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.utils.checkpoint import get_checkpoint_folder

@@ -5,6 +5,7 @@ from typing import List, Union
 import torch
 from classy_vision.generic.util import is_pos_int
 from classy_vision.meters import ClassyMeter, register_meter
+
 from vissl.meters.mean_ap_meter import MeanAPMeter
 from vissl.utils.hydra_config import AttrDict
 
