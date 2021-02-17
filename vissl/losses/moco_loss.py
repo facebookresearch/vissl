@@ -8,6 +8,7 @@ from collections import namedtuple
 import torch
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+
 from vissl.utils.misc import concat_all_gather
 
 

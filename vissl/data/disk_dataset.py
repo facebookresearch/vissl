@@ -5,6 +5,7 @@ import logging
 from fvcore.common.file_io import PathManager
 from PIL import Image
 from torchvision.datasets import ImageFolder
+
 from vissl.data.data_helper import QueueDataset, get_mean_image
 from vissl.utils.io import load_file
 

@@ -14,6 +14,7 @@ from fvcore.common.file_io import PathManager
 from PIL import Image, ImageFile
 from torch.nn import functional as F
 from torchvision import transforms
+
 from vissl.utils.instance_retrieval_utils.evaluate import (
     compute_map,
     score_ap_from_ranks_1,

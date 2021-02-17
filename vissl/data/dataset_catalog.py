@@ -11,6 +11,7 @@ from typing import List
 
 import numpy as np
 from fvcore.common.file_io import PathManager
+
 from vissl.data.datasets import get_coco_imgs_labels_info, get_voc_images_labels_info
 from vissl.utils.misc import get_json_data_catalog_file
 from vissl.utils.slurm import get_slurm_dir

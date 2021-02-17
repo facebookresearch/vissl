@@ -6,6 +6,7 @@ import torch
 from classy_vision.generic.util import is_on_gpu
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+
 from vissl.utils.hydra_config import AttrDict
 
 

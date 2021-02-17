@@ -11,6 +11,7 @@ from typing import Any, Callable, List
 
 import torch
 from fvcore.common.file_io import PathManager
+
 from vissl.data.dataset_catalog import get_data_files
 from vissl.engines.extract_features import extract_main
 from vissl.engines.train import train_main

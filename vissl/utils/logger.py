@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 from fvcore.common.file_io import PathManager
+
 from vissl.utils.io import makedir
 
 

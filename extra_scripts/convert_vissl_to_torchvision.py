@@ -10,6 +10,7 @@ import sys
 
 import torch
 from fvcore.common.file_io import PathManager
+
 from vissl.utils.checkpoint import replace_module_prefix
 from vissl.utils.io import is_url
 

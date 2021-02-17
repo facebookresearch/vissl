@@ -13,6 +13,7 @@ from typing import Any, List
 import faiss
 import numpy as np
 from hydra.experimental import compose, initialize_config_module
+
 from vissl.data import build_dataset
 from vissl.hooks import default_hook_generator
 from vissl.utils.checkpoint import get_checkpoint_folder

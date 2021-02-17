@@ -15,6 +15,7 @@ from classy_vision.generic.distributed_util import get_rank, is_primary
 from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
 from fvcore.common.file_io import PathManager
+
 from vissl.utils.checkpoint import is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import create_file_symlink, save_file
@@ -34,10 +35,7 @@ class LogGpuMemoryHook(ClassyHook):
     on_phase_end = ClassyHook._noop
     on_end = ClassyHook._noop
 
-    def __init__(
-        self,
-        log_iteration_num: int = 1,
-    ) -> None:
+    def __init__(self, log_iteration_num: int = 1) -> None:
         super().__init__()
         self.log_iteration_num = log_iteration_num
 

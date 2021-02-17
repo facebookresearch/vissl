@@ -5,6 +5,7 @@ import logging
 import torch
 from classy_vision.dataset import DataloaderAsyncGPUWrapper
 from torch.utils.data import DataLoader
+
 from vissl.data.collators import get_collator
 from vissl.data.data_helper import StatefulDistributedSampler
 from vissl.data.dataloader_sync_gpu_wrapper import DataloaderSyncGPUWrapper

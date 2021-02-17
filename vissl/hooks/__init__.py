@@ -4,10 +4,11 @@ from enum import Enum, auto
 from typing import List
 
 from classy_vision.hooks.classy_hook import ClassyHook
+
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
 from vissl.hooks.log_hooks import (  # noqa
-    LogGpuStatsHook,
     LogGpuMemoryHook,
+    LogGpuStatsHook,
     LogLossLrEtaHook,
     LogLossMetricsCheckpointHook,
     LogPerfTimeMetricsHook,

@@ -13,6 +13,7 @@ import torchvision
 from classy_vision.generic.util import copy_model_to_gpu
 from fvcore.common.file_io import PathManager
 from hydra.experimental import compose, initialize_config_module
+
 from vissl.models import build_model
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.env import set_env_vars
