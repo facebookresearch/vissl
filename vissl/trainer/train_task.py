@@ -9,7 +9,7 @@ from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
-from classy_vision.tasks.classification_task import BroadcastBuffersMode, AmpType
+from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.data import build_dataset, get_loader, print_sampler_config
@@ -19,6 +19,7 @@ from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
+
 
 if is_apex_available():
     import apex

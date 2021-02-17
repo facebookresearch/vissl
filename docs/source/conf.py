@@ -50,7 +50,7 @@ except ImportError:
 
 
 # -- Project information -----------------------------------------------------
-import vissl  # isort: skip
+import vissl  # isort:skip
 
 project = "VISSL"
 copyright = "2021, VISSL contributors"
