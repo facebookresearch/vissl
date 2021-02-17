@@ -160,7 +160,7 @@ jobs:
       - run:
           name: isort
           command: |
-            isort -y -sp .
+            isort --sp . .
       - run:
           name: black
           command: |
