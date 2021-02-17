@@ -92,8 +92,8 @@ class MLP(nn.Module):
             ), "MLP input should be either a tensor (2D, 4D) or list containing 1 tensor."
             batch = batch[0]
         if batch.ndim > 2:
-            assert (
-                    all(d == 1 for d in batch.shape[2:])
+            assert all(
+                d == 1 for d in batch.shape[2:]
             ), f"MLP expected 2D input tensor or 4D tensor of shape NxCx1x1. got: {batch.shape}"
             batch = batch.reshape((batch.size(0), batch.size(1)))
         out = self.clf(batch)

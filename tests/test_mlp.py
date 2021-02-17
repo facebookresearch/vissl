@@ -11,13 +11,15 @@ class TestMLP(unittest.TestCase):
     and linear evaluation MLP layers
     """
 
-    MODEL_CONFIG = AttrDict({
-        "HEAD": {
-            "BATCHNORM_EPS": 1e-6,
-            "BATCHNORM_MOMENTUM": 0.99,
-            "PARAMS_MULTIPLIER": 1.0,
+    MODEL_CONFIG = AttrDict(
+        {
+            "HEAD": {
+                "BATCHNORM_EPS": 1e-6,
+                "BATCHNORM_MOMENTUM": 0.99,
+                "PARAMS_MULTIPLIER": 1.0,
+            }
         }
-    })
+    )
 
     def test_mlp(self):
         mlp = MLP(self.MODEL_CONFIG, dims=[2048, 100])
