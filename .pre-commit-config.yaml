@@ -26,11 +26,11 @@ repos:
     -   id: flake8
         args: ['--max-line-length=88', '--ignore=E501,E203,E266,W503,E741']
 
--   repo: https://github.com/asottile/seed-isort-config
-    rev: v2.1.0
-    hooks:
-    -   id: seed-isort-config
-        language_version: python3.6
+# -   repo: https://github.com/asottile/seed-isort-config
+#     rev: v2.1.0
+#     hooks:
+#     -   id: seed-isort-config
+#         language_version: python3.6
 
 -   repo: https://github.com/timothycrosley/isort
     rev: 4.3.20

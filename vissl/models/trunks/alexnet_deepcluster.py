@@ -101,9 +101,6 @@ class AlexNetDeepCluster(nn.Module):
         # we first apply sobel filter
         feat = self.sobel(feat)
         out_feats = get_trunk_forward_outputs_module_list(
-            feat,
-            out_feat_keys,
-            self._feature_blocks,
-            self.all_feat_names,
+            feat, out_feat_keys, self._feature_blocks, self.all_feat_names
         )
         return out_feats

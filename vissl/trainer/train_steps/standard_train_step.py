@@ -20,6 +20,7 @@ from vissl.utils.activation_checkpointing import (
 from vissl.utils.misc import is_apex_available
 from vissl.utils.perf_stats import PerfTimer
 
+
 if is_apex_available():
     import apex
 
