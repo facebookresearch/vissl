@@ -276,6 +276,8 @@ MODEL:
     ]
 ```
 
+**NOTE**: The config files have option :code:`MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS` which can be set to True to flatten the extracted features to :code:`NxD` dimensions. By default, VISSL doesn't flatten extracted features and return the features as is.
+
 ### Full finetuning
 
 Since this only requires to initialize the model from the pre-trained model weights, there's

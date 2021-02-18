@@ -89,6 +89,10 @@ self-supervised model training.
           ["mlp", {"dims": [2048, 2048], "use_relu": True}],
           ["mlp", {"dims": [2048, 128]}],
         ]
+        
+.. note::
+    
+    The config files have option :code:`MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS` which can be set to True to flatten the extracted features to :code:`NxD` dimensions. By default, VISSL doesn't flatten extracted features and return the features as is.
 
 How to extract features
 --------------------------
