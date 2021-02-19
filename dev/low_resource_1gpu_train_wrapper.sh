@@ -10,6 +10,8 @@ SRC_DIR=$(dirname "${SRC_DIR}")
 CHECKPOINT_DIR=$(mktemp -d)
 TYPE=${TYPE-engine}   # engine | svm | cluster | knn
 CFG=( "$@" )
+DEVICE=${DEVICE-gpu}
+DIST_BACKEND=${DIST_BACKEND-nccl}
 
 ########################## Select the binary ##################################
 if [ "$TYPE" = "engine" ]; then
@@ -35,12 +37,13 @@ echo "Starting...."
 # shellcheck disable=SC2086
 $BINARY ${CFG[*]} \
     config.DATA.NUM_DATALOADER_WORKERS=0 \
-    config.MACHINE.DEVICE=gpu \
+    config.MACHINE.DEVICE=$DEVICE \
     config.MULTI_PROCESSING_METHOD=forkserver \
     config.DISTRIBUTED.INIT_METHOD=tcp \
     config.DISTRIBUTED.RUN_ID=auto \
     config.DISTRIBUTED.NUM_NODES=1 \
     config.DISTRIBUTED.NUM_PROC_PER_NODE=1 \
+    config.DISTRIBUTED.BACKEND=$DIST_BACKEND \
     config.CHECKPOINT.DIR="$CHECKPOINT_DIR" \
     config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch \
     config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=16 \
