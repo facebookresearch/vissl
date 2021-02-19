@@ -1,0 +1,7 @@
+# @package _global_
+config:
+  MODEL:
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [10444, 8192, 8192, 256], "use_bn": False, "num_clusters": [16000]}],
+      ]
