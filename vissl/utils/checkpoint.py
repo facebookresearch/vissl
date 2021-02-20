@@ -445,6 +445,13 @@ def init_model_from_weights(
                     and config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
                 )
             ):
+                # Accomodate changing position embeddings. Fine-tuning at a
+                # different resolution than that which a model was pretrained
+                # at requires interpolating the learned position embeddings.
+                if "pos_embedding" in layername:
+                    param = interpolate_position_embeddings(
+                        model, all_layers[layername], param
+                    )
                 assert all_layers[layername].shape == param.shape, (
                     f"{layername} have different shapes: "
                     f"checkpoint: {param.shape}, model: {all_layers[layername].shape}"
@@ -472,3 +479,21 @@ def init_model_from_weights(
     ####################### DEBUG ############################
     # print_state_dict_shapes(model.state_dict())
     return model
+
+
+def interpolate_position_embeddings(model, layer, param):
+    """
+    Fine-tuning at a different resolution than that which a model was
+    pretrained at requires interpolating the learned position embeddings.
+    """
+    if (
+        hasattr(model.trunk, "interpolate_position_embedding")
+        and layer.shape != param.shape
+    ):
+        interp = model.trunk.interpolate_position_embedding
+        if callable(interp):
+            try:
+                param = interp(param)
+            except BaseException:
+                raise RuntimeError("Unable to interpolate position embeddings")
+    return param
