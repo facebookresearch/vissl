@@ -480,6 +480,8 @@ config:
           # using aggressive augmentation is essentially the difference
           # between a DeiT and a ViT.
           DROP_PATH_RATE: 0
+          QKV_BIAS: False # Bias for QKV in attention layers.
+          QK_SCALE: False # Scale
 
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
