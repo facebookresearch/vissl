@@ -481,6 +481,34 @@ config:
           # between a DeiT and a ViT.
           DROP_PATH_RATE: 0
 
+        # ------------------------------------------------------------- #
+        # Parameters unique to the ConViT and not used for standard vision
+        # transformers
+        # -------------------------------------------------------------
+        CONVIT:
+          # Notes on ConViT (D'Ascoli et al., TODO insert arxiv link):
+          # Ideally, the number of heads should be a square.
+          # In the paper, we used: 4, 9, or 16 heads; HIDDEN_DIM = 64 *
+          # NUM_HEADS, so 256, 576, or 1024, respectively; MLP_DIM = 4 *
+          # HIDDEN_DIM, so 1024, 2304, or 4096, respectively.
+          #
+          # ConViT Params:
+          QKV_BIAS: False # Bias for QKV in attention layers.
+          QK_SCALE: False # Scale
+          N_GPSA_LAYERS: 10 # Number of gated positional self-attention
+          # layers. These are what make ConViTs ConViTs. The first
+          # n_gpsa_layers will be gated positional self attention layers.
+          CLASS_TOKEN_IN_LOCAL_LAYERS: False # Whether to add class token
+          # to gpsa layers
+          LOCALITY_STRENGTH: 1. # Determines how much the positional
+          # attention is focused on the patch of maximal attention. "Alpha"
+          # in the paper. Equivalent to the temperature of positional
+          # attention softmax.
+          LOCALITY_DIM: 10 # Dimensionality of the relative positional
+          # embeddings
+          USE_LOCAL_INIT: True # Whether to initialize the positional
+          # component of the GPSAs locally
+
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
     # ----------------------------------------------------------------------------------- #
