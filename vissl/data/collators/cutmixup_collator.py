@@ -16,7 +16,7 @@ COMMENT FROM ORIGINAL:
 Mixup and Cutmix
 Papers:
 mixup: Beyond Empirical Risk Minimization (https://arxiv.org/abs/1710.09412)
-CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features (https://arxiv.org/abs/1905.04899)
+CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features (https://arxiv.org/abs/1905.04899) # NOQA
 Code Reference:
 CutMix: https://github.com/clovaai/CutMix-PyTorch
 Hacked together by / Copyright 2020 Ross Wightman
@@ -48,15 +48,19 @@ def cutmixup_collator(batch, **kwargs):
     implementation (link when publicly available).
 
     kwargs:
-    mixup_alpha (float): mixup alpha value, mixup is active if > 0.
-    cutmix_alpha (float): cutmix alpha value, cutmix is active if > 0.
-    cutmix_minmax (List[float]): cutmix min/max image ratio, cutmix is active and uses this vs alpha if not None.
-    prob (float): probability of applying mixup or cutmix per batch or element
-    switch_prob (float): probability of switching to cutmix instead of mixup when both are active
-    mode (str): how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
-    correct_lam (bool): apply lambda correction when cutmix bbox clipped by image borders
-    label_smoothing (float): apply label smoothing to the mixed target tensor
-    num_classes (int): number of classes for target
+    :mixup_alpha (float): mixup alpha value, mixup is active if > 0.
+    :cutmix_alpha (float): cutmix alpha value, cutmix is active if > 0.
+    :cutmix_minmax (List[float]): cutmix min/max image ratio, cutmix is active
+    and uses this vs alpha if not None.
+    :prob (float): probability of applying mixup or cutmix per batch or element
+    :switch_prob (float): probability of switching to cutmix instead of mixup
+    when both are active
+    :mode (str): how to apply mixup/cutmix params (per 'batch', 'pair' (pair of
+    elements), 'elem' (element)
+    :correct_lam (bool): apply lambda correction when cutmix bbox clipped by
+    image borders
+    :label_smoothing (float): apply label smoothing to the mixed target tensor
+    :num_classes (int): number of classes for target
 
 
     The collators collates the batch for the following input (assuming k-copies of image):
@@ -71,7 +75,8 @@ def cutmixup_collator(batch, **kwargs):
 
     Returns: Example output:
                 output = {
-                            "data": torch.tensor([img1_0, ..., imgN_0], [img1_k, ..., imgN_k]) ..
+                            "data": torch.tensor([img1_0, ..., imgN_0],
+                                [img1_k, ..., imgN_k]) ..
                          }
     """
     assert "data" in batch[0], "data not found in sample"
@@ -250,7 +255,8 @@ def rand_bbox(img_shape, lam, margin=0.0, count=None):
     Args:
         img_shape (tuple): Image shape as tuple
         lam (float): Cutmix lambda value
-        margin (float): Percentage of bbox dimension to enforce as margin (reduce amount of box outside image)
+        margin (float): Percentage of bbox dimension to enforce as margin
+            (reduce amount of box outside image)
         count (int): Number of bbox to generate
     """
     ratio = np.sqrt(1 - lam)
@@ -270,10 +276,12 @@ def rand_bbox_minmax(img_shape, minmax, count=None):
     """Min-Max CutMix bounding-box
     Inspired by Darknet cutmix impl, generates a random rectangular bbox
     based on min/max percent values applied to each dimension of the input image.
-    Typical defaults for minmax are usually in the  .2-.3 for min and .8-.9 range for max.
+    Typical defaults for minmax are usually in the  .2-.3 for min and .8-.9
+    range for max.
     Args:
         img_shape (tuple): Image shape as tuple
-        minmax (tuple or list): Min and max bbox ratios (as percent of image size)
+        minmax (tuple or list): Min and max bbox ratios (as percent of image
+        size)
         count (int): Number of bbox to generate
     """
     assert len(minmax) == 2
@@ -310,12 +318,18 @@ class Mixup:
     Args:
         mixup_alpha (float): mixup alpha value, mixup is active if > 0.
         cutmix_alpha (float): cutmix alpha value, cutmix is active if > 0.
-        cutmix_minmax (List[float]): cutmix min/max image ratio, cutmix is active and uses this vs alpha if not None.
-        prob (float): probability of applying mixup or cutmix per batch or element
-        switch_prob (float): probability of switching to cutmix instead of mixup when both are active
-        mode (str): how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
-        correct_lam (bool): apply lambda correction when cutmix bbox clipped by image borders
-        label_smoothing (float): apply label smoothing to the mixed target tensor
+        cutmix_minmax (List[float]): cutmix min/max image ratio, cutmix is
+        active and uses this vs alpha if not None.
+        prob (float): probability of applying mixup or cutmix per batch or
+        element
+        switch_prob (float): probability of switching to cutmix instead of
+        mixup when both are active
+        mode (str): how to apply mixup/cutmix params (per 'batch', 'pair' (pair
+        of elements), 'elem' (element)
+        correct_lam (bool): apply lambda correction when cutmix bbox clipped by
+        image borders
+        label_smoothing (float): apply label smoothing to the mixed target
+        tensor
         num_classes (int): number of classes for target
     """
 
@@ -375,7 +389,8 @@ class Mixup:
             else:
                 assert (
                     AssertionError
-                ), "One of mixup_alpha > 0., cutmix_alpha > 0., cutmix_minmax not None should be true."
+                ), "One of mixup_alpha > 0., cutmix_alpha > 0.," \
+                   "cutmix_minmax not None should be true."
             lam = np.where(
                 np.random.rand(batch_size) < self.mix_prob,
                 lam_mix.astype(np.float32),
@@ -402,7 +417,8 @@ class Mixup:
             else:
                 assert (
                     AssertionError
-                ), "One of mixup_alpha > 0., cutmix_alpha > 0., cutmix_minmax not None should be true."
+                ), "One of mixup_alpha > 0., cutmix_alpha > 0.," \
+                   "cutmix_minmax not None should be true."
             lam = float(lam_mix)
         return lam, use_cutmix
 

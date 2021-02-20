@@ -421,7 +421,7 @@ def lecun_normal_init(tensor, fan_in):
 # Matthew # Leavitt (ito@fb.com, matthew.l.leavitt@gmail.com) and Vedanuj
 # Goswami (vedanuj@fb.com).
 # trunc_normal_ and _no_grad_trunc_normal_ from:
-# https://github.com/rwightman/pytorch-image-models/blob/678ba4e0a2c0b52c5e7b2ec0ba689399840282ee/timm/models/layers/weight_init.py # #NOQA
+# https://github.com/rwightman/pytorch-image-models/blob/678ba4e0a2c0b52c5e7b2ec0ba689399840282ee/timm/models/layers/weight_init.py # NOQA
 def trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
     r"""Supposedly should be available in PyTorch soon. Replace when available.
     Fills the input Tensor with values drawn

@@ -445,7 +445,7 @@ def init_model_from_weights(
                     and config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
                 )
             ):
-                # Accomodate changing position embeddings. Fine-tuning at a
+                # Accommodate changing position embeddings. Fine-tuning at a
                 # different resolution than that which a model was pretrained
                 # at requires interpolating the learned position embeddings.
                 if "pos_embedding" in layername:

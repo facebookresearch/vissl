@@ -75,7 +75,7 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
         logging.info(
             "Instantiating "
             "CrossEntropyMultipleOutputSingleTargetLoss, which"
-            "internally uses SmoothCrossEntropy loss to accomodate"
+            "internally uses SmoothCrossEntropy loss to accommodate"
             "label smoothing, but defaults to vanilla cross-entropy "
             "if provided single-target labels."
         )

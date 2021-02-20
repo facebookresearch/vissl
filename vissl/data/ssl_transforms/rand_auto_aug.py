@@ -615,8 +615,10 @@ def auto_augment_policy(name="v0", hparams=None):
 def auto_augment_transform(config_str, hparams):
     """
     Create a AutoAugment transform
-    :param config_str: String defining configuration of auto augmentation. Consists of multiple sections separated by
-    dashes ('-'). The first section defines the AutoAugment policy (one of 'v0', 'v0r', 'original', 'originalr').
+    :param config_str: String defining configuration of auto augmentation.
+    Consists of multiple sections separated by dashes ('-'). The first
+    section defines the AutoAugment policy (one of 'v0', 'v0r', 'original',
+    'originalr').
     The remaining sections, not order sepecific determine
         'mstd' -  float std deviation of magnitude noise applied
     Ex 'original-mstd0.5' results in AutoAugment with original policy, magnitude_std 0.5
