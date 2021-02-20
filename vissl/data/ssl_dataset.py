@@ -235,6 +235,15 @@ class GenericSSLDataset(Dataset):
             item["data_idx"].append(idx)
             item["data_valid"].append(1 if valid else -1)
 
+        # There are three types of label_type (data labels): "standard",
+        # "sample_index", and "zero". "standard" uses the labels associated
+        # with a data set (e.g. directory names). "sample_index" assigns each
+        # sample a label that corresponds to that sample's index in the
+        # dataset (first sample will have label == 0, etc.), and is used for
+        # SSL tasks in which the label is arbitrary. "zero" assigns
+        # each sample the label == 0, which is necessary when using the
+        # CutMixUp collator because of the label smoothing that is built in
+        # to its functionality.
         if (len(self.label_objs) > 0) or self.label_type == "standard":
             item["label"] = []
             for source in self.label_objs:
@@ -247,6 +256,10 @@ class GenericSSLDataset(Dataset):
             item["label"] = []
             for _ in range(len(self.data_objs)):
                 item["label"].append(idx)
+        elif self.label_type == "zero":
+            item["label"] = []
+            for _ in range(len(self.data_objs)):
+                item["label"].append(0)
         else:
             raise ValueError(f"Unknown label type: {self.label_type}")
 

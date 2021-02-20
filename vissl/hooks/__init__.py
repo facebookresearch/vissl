@@ -5,9 +5,10 @@ from typing import List
 
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
+from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
 from vissl.hooks.log_hooks import (  # noqa
-    LogGpuStatsHook,
     LogGpuMemoryHook,
+    LogGpuStatsHook,
     LogLossLrEtaHook,
     LogLossMetricsCheckpointHook,
     LogPerfTimeMetricsHook,
@@ -109,6 +110,15 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         assert is_tensorboard_available(), "Tensorboard must be installed to use it."
         tb_hook = get_tensorboard_hook(cfg)
         hooks.extend([tb_hook])
+    if cfg.MODEL.GRAD_CLIP.USE_GRAD_CLIP:
+        hooks.extend(
+            [
+                GradClipHook(
+                    norm_type=cfg.MODEL.GRAD_CLIP.NORM_TYPE,
+                    max_norm=cfg.MODEL.GRAD_CLIP.MAX_NORM,
+                )
+            ]
+        )
 
     # hooks that are used irrespective of workflow type
     rolling_btime_freq = (
