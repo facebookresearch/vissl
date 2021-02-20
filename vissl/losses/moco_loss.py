@@ -88,9 +88,11 @@ class MoCoLoss(ClassyLoss):
 
         # for simplicity, removes the case where the batch overlaps with the end
         # of the queue
-        assert (
-            self.loss_config.queue_size % batch_size == 0
-        ), "The queue size needs to be a multiple of the batch size"
+        assert self.loss_config.queue_size % batch_size == 0, (
+            f"The queue size needs to be a multiple of the batch size. "
+            f"Effective batch size: {batch_size}. Queue size:"
+            f" {self.loss_config.queue_size}."
+        )
 
         # replace the keys at ptr (dequeue and enqueue)
         ptr = int(self.queue_ptr)
