@@ -69,10 +69,10 @@ _RANDOM_INTERPOLATION = (Image.BILINEAR, Image.BICUBIC)
 
 
 # Modification/Addition
-@register_transform("RandAugment")
+@register_transform("VisslRandAugment")
 class RandAugment(ClassyTransform):
     """
-    Create a RandAugment transform
+    Create a RandAugment transform.
     :param magnitude: integer magnitude of rand augment
     :param magnitude_std: standard deviation of magnitude. If > 0, introduces
     random variability in the augmentation magnitude.
@@ -124,10 +124,12 @@ class RandAugment(ClassyTransform):
 
 
 # Modification/Addition
-@register_transform("AutoAugment")
+@register_transform("VisslAutoAugment")
 class AutoAugment(ClassyTransform):
     """
-    Create a AutoAugment transform
+    Create a AutoAugment transform. This autoaugment differs from the
+    torchvision implementation by allowing variability in the augmentation
+    intensity.
     ":param policy_name: String. One of 'v0', 'v0r', 'original', 'originalr'.
     One of a set of learned augmentation sequences.
     :param magnitude_std: standard deviation of magnitude. If > 0, introduces

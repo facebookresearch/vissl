@@ -195,20 +195,22 @@ config:
       # no valid values other than 0 or None), unclear if beneficial. Default =
       # None.
       # TRANSFORMS:
-      #   - name: RandAugment
+      #   - name: VisslRandAugment
       #     magnitude: 9
       #     magnitude_std: 0.5
       #     num_layers: 2
       #     increasing_severity: True
       #
       #
-      # Example: using AutoAugment (https://arxiv.org/abs/1805.09501)
+      # Example: using AutoAugment (https://arxiv.org/abs/1805.09501). This
+      # autoaugment differs from the torchvision implementation by allowing
+      # variability in the augmentation intensity.
       # ":param policy_name: String. One of 'v0', 'v0r', 'original', 'originalr'.
       # One of a set of learned augmentation sequences.
       # :param magnitude_std: standard deviation of magnitude. If > 0, introduces
       # random variability in the augmentation magnitude.
       # TRANSFORMS:
-      #   - name: AutoAugment
+      #   - name: VisslAutoAugment
       #     policy_name: v0
       #     magnitude_std: 0
       TRANSFORMS: []

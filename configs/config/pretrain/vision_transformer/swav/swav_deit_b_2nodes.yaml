@@ -25,7 +25,7 @@ config:
           num_crops: [2]
           crop_scales: [[0.14, 1]]
         - name: RandomHorizontalFlip
-        - name: RandAugment
+        - name: VisslRandAugment
           magnitude: 9
           magnitude_std: 0.5
           increasing_severity: True
