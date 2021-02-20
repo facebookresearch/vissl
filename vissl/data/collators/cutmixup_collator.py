@@ -387,10 +387,10 @@ class Mixup:
                     self.cutmix_alpha, self.cutmix_alpha, size=batch_size
                 )
             else:
-                assert (
-                    AssertionError
-                ), "One of mixup_alpha > 0., cutmix_alpha > 0.," \
-                   "cutmix_minmax not None should be true."
+                assert AssertionError, (
+                    "One of mixup_alpha > 0., cutmix_alpha > 0.,"
+                    "cutmix_minmax not None should be true."
+                )
             lam = np.where(
                 np.random.rand(batch_size) < self.mix_prob,
                 lam_mix.astype(np.float32),
@@ -415,10 +415,10 @@ class Mixup:
                 use_cutmix = True
                 lam_mix = np.random.beta(self.cutmix_alpha, self.cutmix_alpha)
             else:
-                assert (
-                    AssertionError
-                ), "One of mixup_alpha > 0., cutmix_alpha > 0.," \
-                   "cutmix_minmax not None should be true."
+                assert AssertionError, (
+                    "One of mixup_alpha > 0., cutmix_alpha > 0.,"
+                    "cutmix_minmax not None should be true."
+                )
             lam = float(lam_mix)
         return lam, use_cutmix
 

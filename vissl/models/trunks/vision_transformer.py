@@ -164,8 +164,9 @@ class VisionTransformer(nn.Module):
         super().__init__()
 
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
-        trunk_config = copy.deepcopy(model_config.TRUNK.TRUNK_PARAMS.CONVIT)
-        trunk_config.update(model_config.TRUNK.TRUNK_PARAMS.VISION_TRANSFORMERS)
+        trunk_config = copy.deepcopy(
+            model_config.TRUNK.TRUNK_PARAMS.VISION_TRANSFORMERS
+        )
 
         logging.info("Building model: Vision Transformer from yaml config")
         # Hacky workaround

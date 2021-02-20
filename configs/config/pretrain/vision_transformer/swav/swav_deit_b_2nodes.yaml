@@ -53,7 +53,7 @@ config:
       }
   MODEL:
     TRUNK:
-      NAME: convit
+      NAME: vision_transformer
       TRUNK_PARAMS:
         VISION_TRANSFORMERS:
           IMAGE_SIZE: 224
