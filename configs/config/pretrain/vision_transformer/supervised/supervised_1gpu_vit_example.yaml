@@ -1,0 +1,125 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: True
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      ROLLING_BTIME_FREQ: 313
+      PERF_STAT_FREQUENCY: 10
+    TENSORBOARD_SETUP:
+      USE_TENSORBOARD: True
+      EXPERIMENT_LOG_DIR:
+      FLUSH_EVERY_N_MIN: 20
+  CHECKPOINT:
+    DIR:
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 10
+  DATA:
+    NUM_DATALOADER_WORKERS: 6
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      LABEL_SOURCES: [disk_folder]
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      BATCHSIZE_PER_REPLICA: 128
+      TRANSFORMS:
+        - name: ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.4
+        - name: RandomResizedCrop
+          size: 224
+        - name: imagenet_autoaugment
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+        - name: RandomErasing
+          p: 0.25
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 256
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer
+      TRUNK_PARAMS:
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 12
+          HIDDEN_DIM: 768
+          MLP_DIM: 3072
+          DROPOUT_RATE: 0
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
+          DROP_PATH_RATE: 0.1
+    HEAD:
+      PARAMS: [
+      ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,
+                                   "num_classes": 1000}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: True
+      # USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
+      ignore_index: -1
+  OPTIMIZER:
+    name: adamw
+    weight_decay: 0.05
+    num_epochs: 300
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: True
+          base_value: 0.0005
+          base_lr_batch_size: 1024
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.0
+            end_value: 0.0005
+          - name: cosine
+            start_value: 0.0005
+            end_value: 0
+        interval_scaling: [rescaled, rescaled]
+        update_interval: step
+        lengths: [0.017, 0.983]
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1, 5]
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 4
+    NUM_PROC_PER_NODE: 8 # 1 GPU
+    RUN_ID: "60215"
+  MACHINE:
+    DEVICE: gpu

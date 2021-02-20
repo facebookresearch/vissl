@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    name: sgd
+    weight_decay: 0.00
+    momentum: 0.9
+    num_epochs: 100
+    nesterov: True
+    regularize_bn: True
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 30.0
+          base_lr_batch_size: 256
+        name: multistep
+        values: [30.0, 3.0, 0.3]
+        milestones: [60, 80]
+        update_interval: epoch
