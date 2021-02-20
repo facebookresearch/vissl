@@ -140,8 +140,7 @@ class PatchEmbed(nn.Module):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
-        num_patches = (img_size[1] // patch_size[1]) * \
-                      (img_size[0] // patch_size[0])
+        num_patches = (img_size[1] // patch_size[1]) * (img_size[0] // patch_size[0])
         self.img_size = img_size
         self.patch_size = patch_size
         self.num_patches = num_patches
@@ -216,8 +215,7 @@ class VisionTransformer(nn.Module):
         num_patches = self.patch_embed.num_patches
 
         self.class_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_embedding = nn.Parameter(torch.zeros(
-            1, num_patches + 1, embed_dim))
+        self.pos_embedding = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
         self.pos_drop = nn.Dropout(p=drop_rate)
 
         dpr = [

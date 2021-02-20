@@ -34,10 +34,7 @@ class LogGpuMemoryHook(ClassyHook):
     on_phase_end = ClassyHook._noop
     on_end = ClassyHook._noop
 
-    def __init__(
-        self,
-        log_iteration_num: int = 1,
-    ) -> None:
+    def __init__(self, log_iteration_num: int = 1) -> None:
         super().__init__()
         self.log_iteration_num = log_iteration_num
 

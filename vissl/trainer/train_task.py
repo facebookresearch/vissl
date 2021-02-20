@@ -4,10 +4,7 @@ import gc
 import logging
 
 import torch
-from classy_vision.generic.util import (
-    copy_model_to_gpu,
-    load_and_broadcast_checkpoint,
-)
+from classy_vision.generic.util import copy_model_to_gpu, load_and_broadcast_checkpoint
 from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers

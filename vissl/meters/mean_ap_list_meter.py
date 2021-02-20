@@ -60,10 +60,7 @@ class MeanAPListMeter(ClassyMeter):
         for ind, meter in enumerate(self._meters):
             meter_val = meter.value
             sample_count = meter._scores.shape[0]
-            val_dict[ind] = {
-                "val": meter_val,
-                "sample_count": sample_count,
-            }
+            val_dict[ind] = {"val": meter_val, "sample_count": sample_count}
         output_dict = {}
         output_dict["mAP"] = {}
         output_dict["AP"] = {}
@@ -98,9 +95,7 @@ class MeanAPListMeter(ClassyMeter):
         meter_states = {}
         for ind, meter in enumerate(self._meters):
             state = meter.get_classy_state()
-            meter_states[ind] = {
-                "state": state,
-            }
+            meter_states[ind] = {"state": state}
         return meter_states
 
     def set_classy_state(self, state):

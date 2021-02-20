@@ -131,12 +131,7 @@ def checkpoint_trunk(
 
         feature_blocks_bucketed = (
             feature_blocks_bucketed[:i_max]
-            + [
-                [
-                    f"activation_split_{split_times}",
-                    biggest_block[1][:n_split_layers],
-                ]
-            ]
+            + [[f"activation_split_{split_times}", biggest_block[1][:n_split_layers]]]
             + [[biggest_block[0], biggest_block[1][n_split_layers:]]]
             + feature_blocks_bucketed[(i_max + 1) :]
         )
