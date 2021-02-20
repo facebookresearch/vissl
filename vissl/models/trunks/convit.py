@@ -32,7 +32,12 @@ class Mlp(nn.Module):
     """
 
     def __init__(
-        self, in_dim, mlp_dim=None, out_dim=None, act_layer=nn.GELU, dropout_rate=0.0
+            self,
+            in_dim,
+            mlp_dim=None,
+            out_dim=None,
+            act_layer=nn.GELU,
+            dropout_rate=0.0
     ):
         super().__init__()
         out_dim = out_dim or in_dim
@@ -168,11 +173,15 @@ class GPSA(nn.Module):
         locality_distance = 1  # max(1,1/locality_strength**.5)
 
         kernel_size = int(self.num_heads ** 0.5)
-        center = (kernel_size - 1) / 2 if kernel_size % 2 == 0 else kernel_size // 2
+        if kernel_size % 2 == 0:
+            center = (kernel_size - 1) / 2
+        else:
+            center = kernel_size // 2
         for h1 in range(kernel_size):
             for h2 in range(kernel_size):
                 position = h1 + kernel_size * h2
-                self.pos_proj.weight.data[position, : 3 * self.locality_dim] = -1
+                self.pos_proj.weight.data[
+                    position, : 3 * self.locality_dim] = -1
                 self.pos_proj.weight.data[position, : 2 * self.locality_dim] = (
                     2 * (h1 - center) * locality_distance
                 )
@@ -184,10 +193,14 @@ class GPSA(nn.Module):
     def set_rel_indices(self, num_patches):
         # Get relative position embeddings
         img_size = int(num_patches ** 0.5)
-        rel_indices = torch.zeros(1, num_patches, num_patches, 3 * self.locality_dim)
-        ind = torch.arange(img_size).view(1, -1) - torch.arange(img_size).view(-1, 1)
+        rel_indices = torch.zeros(
+            1, num_patches, num_patches, 3 * self.locality_dim
+        )
+        ind = torch.arange(img_size).view(1, -1) - \
+            torch.arange(img_size).view(-1, 1)
         indx = ind.repeat(img_size, img_size)
-        indy = ind.repeat_interleave(img_size, dim=0).repeat_interleave(img_size, dim=1)
+        indy = ind.repeat_interleave(img_size, dim=0).repeat_interleave(
+            img_size, dim=1)
         indd = indx ** 2 + indy ** 2
         rel_indices[:, :, :, : 3 * self.locality_dim] = indd.unsqueeze(-1)
         rel_indices[:, :, :, : 2 * self.locality_dim] = indy.unsqueeze(-1)
@@ -244,9 +257,11 @@ class SelfAttention(nn.Module):
         attn_map = attn_map.softmax(dim=-1).mean(0)
 
         img_size = int(N ** 0.5)
-        ind = torch.arange(img_size).view(1, -1) - torch.arange(img_size).view(-1, 1)
+        ind = torch.arange(img_size).view(1, -1) - \
+              torch.arange(img_size).view(-1, 1)
         indx = ind.repeat(img_size, img_size)
-        indy = ind.repeat_interleave(img_size, dim=0).repeat_interleave(img_size, dim=1)
+        indy = ind.repeat_interleave(img_size, dim=0).repeat_interleave(
+            img_size, dim=1)
         indd = indx ** 2 + indy ** 2
         distances = indd ** 0.5
         distances = distances.to("cuda")
@@ -430,7 +445,8 @@ class PatchEmbed(nn.Module):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
-        num_patches = (img_size[1] // patch_size[1]) * (img_size[0] // patch_size[0])
+        num_patches = (img_size[1] // patch_size[1]) * \
+                      (img_size[0] // patch_size[0])
         self.img_size = img_size
         self.patch_size = patch_size
         self.num_patches = num_patches
@@ -451,7 +467,12 @@ class HybridEmbed(nn.Module):
     """
 
     def __init__(
-        self, backbone, img_size=224, feature_size=None, in_chans=3, embed_dim=768
+            self,
+            backbone,
+            img_size=224,
+            feature_size=None,
+            in_chans=3,
+            embed_dim=768
     ):
         super().__init__()
         assert isinstance(backbone, nn.Module)
@@ -460,9 +481,11 @@ class HybridEmbed(nn.Module):
         self.backbone = backbone
         if feature_size is None:
             with torch.no_grad():
-                # FIXME this is hacky, but most reliable way of determining the exact dim of the output feature
-                # map for all networks, the feature metadata has reliable channel and stride info, but using
-                # stride to calc feature dim requires info about padding of each stage that isn't captured.
+                # FIXME this is hacky, but most reliable way of determining the
+                # exact dim of the output feature map for all networks,
+                # the feature metadata has reliable channel and stride info,
+                # but using stride to calc feature dim requires info about
+                # padding of each stage that isn't captured.
                 training = backbone.training
                 if training:
                     backbone.eval()
@@ -629,7 +652,8 @@ class ConViT(nn.Module):
         # stole class_tokens impl from Phil Wang, thanks
         class_tokens = self.class_token.expand(B, -1, -1)
 
-        pos_embedding = self.interpolate_pos_embedding_to_data(x, self.pos_embedding)
+        pos_embedding = self.interpolate_pos_embedding_to_data(
+            x, self.pos_embedding)
         x = x + pos_embedding
         x = self.pos_drop(x)
 
@@ -676,8 +700,9 @@ class ConViT(nn.Module):
 
         if new_seq_length != seq_length:
             # need to interpolate the weights for the position embedding
-            # we do this by reshaping the positions embeddings to a 2d grid, performing
-            # an interpolation in the (h, w) space and then reshaping back to a 1d grid
+            # we do this by reshaping the positions embeddings to a 2d grid,
+            # performing an interpolation in the (h, w) space and then
+            # reshaping back to a 1d grid
 
             # (seq_length, 1, hidden_dim) -> (1, hidden_dim, seq_length)
             pos_embedding = pos_embedding.permute(0, 2, 1)
@@ -698,8 +723,8 @@ class ConViT(nn.Module):
             )
             new_seq_length_1d = self.image_size // self.patch_size
 
-            # use bicubic interpolation - it gives significantly better results in
-            # the test `test_resolution_change`
+            # use bicubic interpolation - it gives significantly better
+            # results in the test `test_resolution_change`
             new_pos_embedding = torch.nn.functional.interpolate(
                 pos_embedding,
                 size=new_seq_length_1d,
@@ -707,8 +732,10 @@ class ConViT(nn.Module):
                 align_corners=True,
             )
 
-            # (1, hidden_dim, new_seq_l_1d, new_seq_l_1d) -> (1, hidden_dim, new_seq_l)
-            new_pos_embedding = new_pos_embedding.reshape(1, hidden_dim, new_seq_length)
+            # (1, hidden_dim, new_seq_l_1d, new_seq_l_1d) ->
+            # (1, hidden_dim, new_seq_l)
+            new_pos_embedding = new_pos_embedding.reshape(
+                1, hidden_dim, new_seq_length)
             # (1, hidden_dim, new_seq_length) -> (new_seq_length, 1, hidden_dim)
             new_pos_embedding = new_pos_embedding.permute(0, 2, 1)
             return new_pos_embedding
