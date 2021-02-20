@@ -11,7 +11,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.utils import _ntuple
 from torch.utils.checkpoint import checkpoint
-
 from vissl.utils.activation_checkpointing import checkpoint_trunk
 from vissl.utils.misc import is_apex_available
 

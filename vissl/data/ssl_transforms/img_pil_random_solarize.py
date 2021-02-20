@@ -6,7 +6,6 @@ from typing import Any, Dict
 import torchvision.transforms as pth_transforms
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
-
 from vissl.data.ssl_transforms.pil_photometric_transforms_lib import (
     RandomSolarizeTransform,
 )

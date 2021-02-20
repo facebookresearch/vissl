@@ -11,7 +11,6 @@ import torch
 from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.tasks import ClassyTask
 from classy_vision.tasks.classification_task import AmpType
-
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.trainer.train_steps import register_train_step
 from vissl.utils.activation_checkpointing import (

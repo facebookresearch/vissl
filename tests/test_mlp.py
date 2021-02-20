@@ -1,7 +1,6 @@
 import unittest
 
 import torch
-
 from vissl.models.heads import MLP, LinearEvalMLP
 from vissl.utils.hydra_config import AttrDict
 

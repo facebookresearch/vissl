@@ -18,7 +18,6 @@ from classy_vision.generic.distributed_util import (
 from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import TASK_REGISTRY, ClassyTask
-
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step

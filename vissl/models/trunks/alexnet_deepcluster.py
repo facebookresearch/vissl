@@ -2,7 +2,6 @@
 
 import torch
 import torch.nn as nn
-
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs_module_list
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict

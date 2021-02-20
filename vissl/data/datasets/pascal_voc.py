@@ -12,7 +12,6 @@ from glob import glob
 
 import numpy as np
 from fvcore.common.file_io import PathManager
-
 from vissl.utils.io import makedir, save_file
 
 

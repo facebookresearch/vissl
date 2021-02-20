@@ -6,7 +6,6 @@ import sys
 from typing import Any, List
 
 from omegaconf import DictConfig, OmegaConf
-
 from vissl.config import check_cfg_version
 
 

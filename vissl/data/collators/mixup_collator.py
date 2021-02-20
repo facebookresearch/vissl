@@ -2,7 +2,6 @@
 
 import numpy as np
 import torch
-
 from vissl.data.collators import register_collator
 
 

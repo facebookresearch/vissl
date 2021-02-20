@@ -5,7 +5,6 @@ import numpy as np
 import torch
 from classy_vision.generic.distributed_util import all_reduce_sum, gather_from_all
 from classy_vision.meters import ClassyMeter, register_meter
-
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.svm_utils.evaluate import get_precision_recall

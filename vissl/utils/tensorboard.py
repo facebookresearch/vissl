@@ -60,7 +60,6 @@ def get_tensorboard_hook(cfg):
         SSLTensorboardHook (function): the tensorboard hook constructed
     """
     from torch.utils.tensorboard import SummaryWriter
-
     from vissl.hooks import SSLTensorboardHook
 
     # get the tensorboard directory and check tensorboard is installed

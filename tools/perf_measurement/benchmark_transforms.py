@@ -6,7 +6,6 @@ from typing import Callable, List
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
-
 from vissl.data.ssl_transforms.img_cv_color_distortion import (
     ColorDistortionSettings,
     ImgOpenCVColorDistortion,

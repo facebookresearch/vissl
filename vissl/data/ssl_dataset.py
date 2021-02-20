@@ -6,7 +6,6 @@ import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
 from fvcore.common.file_io import PathManager
 from torch.utils.data import Dataset
-
 from vissl.data import dataset_catalog
 from vissl.data.ssl_transforms import get_transform
 from vissl.utils.env import get_machine_local_and_dist_rank

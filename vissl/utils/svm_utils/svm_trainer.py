@@ -8,7 +8,6 @@ import numpy as np
 from fvcore.common.file_io import PathManager
 from sklearn.model_selection import cross_val_score
 from sklearn.svm import LinearSVC
-
 from vissl.utils.io import load_file, save_file
 from vissl.utils.svm_utils.evaluate import get_precision_recall
 

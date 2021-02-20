@@ -9,7 +9,6 @@ from classy_vision.models.efficientnet import (
     MODEL_PARAMS,
     EfficientNet as ClassyEfficientNet,
 )
-
 from vissl.models.model_helpers import Flatten, Wrap, parse_out_keys_arg
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict

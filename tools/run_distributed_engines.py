@@ -10,7 +10,6 @@ import sys
 from typing import Any, List
 
 from hydra.experimental import compose, initialize_config_module
-
 from vissl.utils.distributed_launcher import (
     launch_distributed,
     launch_distributed_on_slurm,

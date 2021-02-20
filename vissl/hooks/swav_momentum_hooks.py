@@ -7,7 +7,6 @@ from classy_vision import tasks
 from classy_vision.generic.distributed_util import init_distributed_data_parallel_model
 from classy_vision.hooks.classy_hook import ClassyHook
 from torch import nn
-
 from vissl.models import build_model
 from vissl.utils.env import get_machine_local_and_dist_rank
 

@@ -6,7 +6,6 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision.transforms import Compose, ToTensor
-
 from vissl.data.ssl_transforms.img_pil_to_tensor import ImgToTensor
 from vissl.data.ssl_transforms.mnist_img_pil_to_rgb_mode import MNISTImgPil2RGB
 

@@ -8,7 +8,6 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 from torchvision.models.resnet import Bottleneck
-
 from vissl.models.model_helpers import (
     Flatten,
     _get_norm,

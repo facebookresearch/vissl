@@ -3,7 +3,6 @@ from typing import List
 
 import torch
 import torch.nn as nn
-
 from vissl.models.heads import register_model_head
 from vissl.utils.hydra_config import AttrDict
 

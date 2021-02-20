@@ -8,7 +8,6 @@ import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 from fvcore.common.file_io import PathManager
-
 from vissl.utils.io import load_file
 
 

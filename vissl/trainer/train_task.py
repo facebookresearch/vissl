@@ -12,7 +12,6 @@ from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
-
 from vissl.data import build_dataset, get_loader, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_param_groups
