@@ -166,10 +166,12 @@ config:
       DATA_PATHS: []
       LABEL_SOURCES: []
       LABEL_PATHS: []
-      # either standard | sample_index
+      # either standard | sample_index | zero
       # sample_index is a common practice in self-supervised learning and sample_index = id of the
       # sample in the data.
       # standard label type is used for supervised learning and user specifis the labels to use.
+      # zero sets all labels to 0, which is necessary when using necessary
+      # when cutmixup_collator is being used for self-supervised training.
       LABEL_TYPE: "standard"
       # whether to memory map the input data.
       MMAP_MODE: True
@@ -180,11 +182,69 @@ config:
       # number of unique samples in minibatch per gpu (or per device)
       BATCHSIZE_PER_REPLICA: 256
       # list of data transforms to apply on the data
+      # Example: using RandAugment (https://arxiv.org/abs/1909.13719)
+      # :param magnitude: integer magnitude of rand augment
+      # :param magnitude_std: standard deviation of magnitude. If > 0,
+      # introduces random variability in the augmentation magnitude.
+      # :param num_layers: integer number of transforms
+      # :param increasing_severity: boolean that indicates whether to use
+      # augmentations that increase severity w/ increasing magnitude. Some
+      # augmentations do this by default.
+      # :param choice_weights: Index of pre-determined probability distribution
+      # over augmentations. Currently only one such distribution available (i.e.
+      # no valid values other than 0 or None), unclear if beneficial. Default =
+      # None.
+      # TRANSFORMS:
+      #   - name: VisslRandAugment
+      #     magnitude: 9
+      #     magnitude_std: 0.5
+      #     num_layers: 2
+      #     increasing_severity: True
+      #
+      #
+      # Example: using AutoAugment (https://arxiv.org/abs/1805.09501). This
+      # autoaugment differs from the torchvision implementation by allowing
+      # variability in the augmentation intensity.
+      # ":param policy_name: String. One of 'v0', 'v0r', 'original', 'originalr'.
+      # One of a set of learned augmentation sequences.
+      # :param magnitude_std: standard deviation of magnitude. If > 0, introduces
+      # random variability in the augmentation magnitude.
+      # TRANSFORMS:
+      #   - name: VisslAutoAugment
+      #     policy_name: v0
+      #     magnitude_std: 0
       TRANSFORMS: []
       # collator to use: either pytorch default or user defined custom collator.
+      # Using the cutmixup_collator in a supervised setting requires the use
+      # of the cross_entropy_multiple_output_single_target loss (see LOSS
+      # section below in order to accomodate label-smoothing. Using the
+      # cutmixup_collator in a self-supervised setting requires setting
+      # DATA.{TRAIN/TEST}.LABEL_TYPE: zero
       COLLATE_FUNCTION: "default_collate"
       # parameters taken by the collator function (if any).
       COLLATE_FUNCTION_PARAMS: {}
+      # Example: params for cutmixup_collator to implement CutMix and MixUp
+      # COLLATE_FUNCTION: "cutmixup_collator"
+      # COLLATE_FUNCTION_PARAMS: {
+      #   #  Adjust collator output to accomodate SSL method.
+      #   #  Currently supports "moco" or "simclr".
+      #   #  No argument needed if using vissl or supervised.
+      #  "ssl_method": "moco"
+      #  "mixup_alpha": 1.0, # mixup alpha value, mixup is active if > 0.
+      #  "cutmix_alpha": 0.0, # cutmix alpha value, cutmix is active if > 0.
+      #  "cutmix_minmax": None, # cutmix min/max image ratio, cutmix is active and uses this vs alpha if not None.
+      #  "prob": 1.0, # probability of applying mixup or cutmix per batch or element
+      #  "switch_prob": 0.5, # probability of switching to cutmix instead of mixup when both are active
+      #  "mode": "batch", # how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
+      #  "correct_lam": True, # apply lambda correction when cutmix bbox clipped by image borders
+      #  "label_smoothing": 0.1, # apply label smoothing to the mixed target tensor
+      #  "num_classes": 1000 # number of classes for target
+      # }
+      # Also note that using the CutMixUp collator in a supervised context
+      # requires using the cross_entropy_multiple_output_single_target to
+      # accomodate the smoothed labels. See
+      # LOSS.cross_entropy_multiple_output_single_target for more information.
+      #
       # limit the amount of data used in training. If set to -1, full dataset is used.
       DATA_LIMIT: -1
       # whether the data specified (whether file list or directory) should be copied locally
@@ -352,6 +412,14 @@ config:
       #       ]
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
     # ----------------------------------------------------------------------------------- #
+    # GRADIENT CLIPPING. Used by Dosovitskiy et al. in their  Vision
+    # Transformer paper.
+    # ----------------------------------------------------------------------------------- #
+    GRAD_CLIP: # See TORCH.NN.UTILS.CLIP_GRAD_NORM_
+      USE_GRAD_CLIP: False
+      NORM_TYPE: 2 # Float, int, or 'inf'
+      MAX_NORM: 1
+    # ----------------------------------------------------------------------------------- #
     # MODEL TRUNK
     # ----------------------------------------------------------------------------------- #
     TRUNK:
@@ -364,7 +432,12 @@ config:
         RESNETS:
           DEPTH: 50
           WIDTH_MULTIPLIER: 1
-          NORM: BatchNorm    # BatchNorm | LayerNorm
+          NORM: BatchNorm    # BatchNorm | LayerNorm | GroupNorm
+          # If using GroupNorm, this sets number of groups. Recommend 32 as a
+          # naive suggestion. GroupNorm only available for ResNe(X)t.
+          GROUPNORM_GROUPS: 32
+          # Use weight-standardized convolutions
+          STANDARDIZE_CONVOLUTIONS: False
           GROUPS: 1
           ZERO_INIT_RESIDUAL: False
           WIDTH_PER_GROUP: 64
@@ -383,6 +456,35 @@ config:
         # RegNet params
         # ------------------------------------------------------------- #
         REGNET: {}
+
+        # ------------------------------------------------------------- #
+        # Vision Transformer/DeiT params. Using a name will
+        # override/ignore all other VISION_TRANSFORMERS parameters. Named
+        # options include vit_b_32, vit_b_16, vit_l_32, vit_l_16, vit_h_14.
+        # Using
+        # ------------------------------------------------------------- #
+        VISION_TRANSFORMERS:
+          name:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 12
+          HIDDEN_DIM: 768
+          MLP_DIM: 3072
+          # MLP and projection layer dropout rate
+          DROPOUT_RATE: 0
+          # Attention dropout rate
+          ATTENTION_DROPOUT_RATE: 0
+          # Use the token for classification. Currently no alternatives
+          # supported
+          CLASSIFIER: token
+          # Stochastic depth dropout rate. Turning on stochastic depth and
+          # using aggressive augmentation is essentially the difference
+          # between a DeiT and a ViT.
+          DROP_PATH_RATE: 0
+          QKV_BIAS: False # Bias for QKV in attention layers.
+          QK_SCALE: False # Scale
+
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
     # ----------------------------------------------------------------------------------- #
@@ -511,7 +613,16 @@ config:
       ignore_index: -1
 
     # ----------------------------------------------------------------------------------- #
-    # Cross-Entropy Loss for multiple input and same target
+    # Cross-Entropy Loss for multiple outputs and same target. For a single
+    # output, this is equivalent to the cross-entropy loss. For multiple
+    # outputs, this computes the sum of the cross-entropy losses for each
+    # tensor in the list against the target. Can also accomodate target
+    # vectors in addition to single integer targets, for example when using
+    # label smoothing. Note that the internally, cross_entropy_multiple_output_single_target
+    # determines whether each sample is associated with a single target or
+    # whether each sample is associated with a target vector, and uses vanilla
+    # CrossEntropyLoss for the single-target case and a custom cross entropy
+    # function for the multi-target case.
     # ----------------------------------------------------------------------------------- #
     cross_entropy_multiple_output_single_target:
       weight: null
@@ -663,10 +774,17 @@ config:
     nesterov: False
     # for how many epochs to do training. only counts training epochs.
     num_epochs: 90
+    betas: [.9, .999] # for Adam/AdamW
     # whether to regularize batch norm. if set to False, weight decay of batch norm params is 0.
     regularize_bn: False
     # whether to regularize bias parameter. if set to False, weight decay of bias params is 0.
     regularize_bias: True
+    # Parameters to omit from regularization. Any named parameter whose name
+    # contains any of these strings will be omitted from regularization.
+    # For example, we don't want to regularize the class token or position
+    # embeddings in the vision transformer, so we pass:
+    # non_regularized_parameters: ['class_token', 'pos_embedding']
+    non_regularized_parameters: []
     # we support using a different LR and weight decay for head and trunk.
     # one needs to set the flag "use_different_values: True" in order to enable
     # this functionality. We use the same type of param scheduler for the trunk and head
@@ -735,6 +853,7 @@ config:
         end_value: 0.0
         # =====constant learning rate specific =======
         value: 0.1
+
   # ----------------------------------------------------------------------------------- #
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #

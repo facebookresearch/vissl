@@ -1,0 +1,101 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: True
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      ROLLING_BTIME_FREQ: 313
+      PERF_STAT_FREQUENCY: 10
+    TENSORBOARD_SETUP:
+      USE_TENSORBOARD: True
+      EXPERIMENT_LOG_DIR:
+      FLUSH_EVERY_N_MIN: 20
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 10
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 384
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      TRANSFORMS:
+        - name: Resize
+          size: 384
+        - name: CenterCrop
+          size: 384
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1, 5]
+  MODEL:
+    GRAD_CLIP:
+      USE_GRAD_CLIP: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
+      ignore_index: -1
+  OPTIMIZER:
+    name: sgd
+    weight_decay: 0.000
+    momentum: 0.9
+    num_epochs: 30
+    nesterov: True
+    regularize_bn: False
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.0
+            end_value: 0.1
+          - name: cosine
+            start_value: 0.1
+            end_value: 0
+        interval_scaling: [rescaled, rescaled]
+        update_interval: step
+        lengths: [0.1, 0.9]
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu

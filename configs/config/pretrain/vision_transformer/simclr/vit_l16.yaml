@@ -1,0 +1,120 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      ROLLING_BTIME_FREQ: 313
+      PERF_STAT_FREQUENCY: 10
+    TENSORBOARD_SETUP:
+      USE_TENSORBOARD: True
+      EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/simclr/l32"
+      FLUSH_EVERY_N_MIN: 20
+  CHECKPOINT:
+    DIR: "/checkpoint/ito/vision_transformer/simclr/l32"
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 10
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 16
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: simclr_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
+  MODEL:
+    GRAD_CLIP:
+      USE_GRAD_CLIP: True
+    TRUNK:
+      NAME: vision_transformer
+      TRUNK_PARAMS:
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 24
+          NUM_HEADS: 16
+          HIDDEN_DIM: 1024
+          MLP_DIM: 4096
+          DROPOUT_RATE: 0.1
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
+    HEAD:
+      PARAMS: [
+      ["mlp", {"dims": [1024, 4096], "use_relu": True}],
+      ["mlp", {"dims": [4096, 128]}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: False
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
+  LOSS:
+    name: simclr_info_nce_loss
+    simclr_info_nce_loss:
+      temperature: 0.1
+      buffer_params:
+        embedding_dim: 128
+  OPTIMIZER:
+    name: adamw
+    weight_decay: 0.3
+    #    momentum: 0.9
+    num_epochs: 300
+    #    nesterov: True
+    #    regularize_bn: False
+    #    regularize_bias: True
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: True
+          base_value: 0.003
+          base_lr_batch_size: 4096
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.0
+            end_value: 0.003
+          - name: cosine
+            start_value: 0.003
+            end_value: 0
+        interval_scaling: [rescaled, rescaled]
+        update_interval: step
+        lengths: [0.1, 0.9]
+  METERS:
+    name: ""
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 4
+    NUM_PROC_PER_NODE: 8 # 1 GPU
+    RUN_ID: "60215"
+  MACHINE:
+    DEVICE: gpu

@@ -2,10 +2,7 @@
 
 import torch
 import torch.nn as nn
-from vissl.models.model_helpers import (
-    Flatten,
-    get_trunk_forward_outputs_module_list,
-)
+from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs_module_list
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict
 
@@ -87,9 +84,6 @@ class AlexNetColorization(nn.Module):
         # along the channel dimension into [L, AB] and keep only L channel.
         feat = torch.split(feat, [1, 2], dim=1)[0]
         out_feats = get_trunk_forward_outputs_module_list(
-            feat,
-            out_feat_keys,
-            self._feature_blocks,
-            self.all_feat_names,
+            feat, out_feat_keys, self._feature_blocks, self.all_feat_names
         )
         return out_feats

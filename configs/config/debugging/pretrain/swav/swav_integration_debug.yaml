@@ -1,0 +1,128 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      PERF_STAT_FREQUENCY: 10
+      ROLLING_BTIME_FREQ: 313
+    TENSORBOARD_SETUP:
+      USE_TENSORBOARD: True
+      EXPERIMENT_LOG_DIR:
+      FLUSH_EVERY_N_MIN: 20
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 10
+  DATA:
+    NUM_DATALOADER_WORKERS: 0
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_debug_folder]
+      LABEL_TYPE: zero
+      BATCHSIZE_PER_REPLICA: 2
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 4
+          size_crops: [224, 224]
+          num_crops: [2, 2]
+          crop_scales: [[0.14, 1], [0.05, 0.14]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: cutmixup_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
+  MODEL:
+    GRAD_CLIP:
+      USE_GRAD_CLIP: True
+    TRUNK:
+      NAME: vision_transformer
+      TRUNK_PARAMS:
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 12
+          HIDDEN_DIM: 384
+          MLP_DIM: 1536
+          DROPOUT_RATE: 0
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
+          DROP_PATH_RATE: 0.1
+          HYBRID:
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [384, 2048, 256], "use_bn": True, "num_clusters":
+          [3000]}],
+      ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+      ['module.heads.0.prototypes0.weight', 313],
+    ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
+  LOSS:
+    name: swav_loss
+    swav_loss:
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.04
+      crops_for_assign: [0, 1]
+      queue:
+        queue_length: 3072
+        start_iter: 0
+  OPTIMIZER:
+    name: adamw
+    weight_decay: 0.05
+    num_epochs: 300
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: True
+          base_value: 0.001
+          base_lr_batch_size: 4096
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.0
+            end_value: 0.001
+          - name: cosine
+            start_value: 0.001
+            end_value: 0
+        interval_scaling: [rescaled, rescaled]
+        update_interval: step
+        lengths: [0.03, 0.97]
+  METERS:
+    name: ""
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1 # 1 GPU
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu

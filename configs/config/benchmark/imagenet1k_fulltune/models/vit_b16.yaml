@@ -1,0 +1,40 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32 # Fits on 16gb GPU
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer
+      TRUNK_PARAMS:
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 384
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 12
+          HIDDEN_DIM: 768
+          MLP_DIM: 3072
+          DROPOUT_RATE: 0.1
+          ATTENTION_DROPOUT_RATE: 0
+          CLASSIFIER: token
+    HEAD:
+      PARAMS: [
+      ["mlp", {"dims": [768, 1000]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify the model weights"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      SKIP_LAYERS: [
+        'heads.0.clf.0.weight',
+        'heads.0.clf.0.bias',
+        'num_batches_tracked'
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: False
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}

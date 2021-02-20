@@ -52,6 +52,53 @@ def _filter_trainable(param_list: List[Any]) -> List[Any]:
     return list(filter(lambda x: x.requires_grad, param_list))
 
 
+def _assign_regularized_params(
+    regularized_param_list=None,
+    unregularized_param_list=None,
+    parameters_to_unregularize=None,
+):
+    """
+    Takes a list parameters_to_unregularize (a list of parameters to ensure are
+    not regularized) and compares it to regularized_param_list, a list of
+    regularized parameters. Any parameters in parameters_to_unregularize that
+    are present in regularized_param_list are removed from
+    regularized_param_list. Will also check against an optional
+    unregularized_param_list (pre-existing list of parameters not to regularize)
+    and remove any items from parameters_to_unregularize that are in
+    unregularized_param_list. Used for when we have parameters that we don't
+    want to regularize (e.g. the class token and position embeddings for the
+    vision transformer). See config.OPTIMIZER.non_regularized_params. Needs
+    to be called separately for head, trunk, and remaining params.
+    """
+    indices_to_remove_from_regularized = []
+    indices_to_remove_from_new_unregularized = []
+    # Iterate through new parameters to unregularize
+    for unreg_param_ind, new_unreg_param in enumerate(parameters_to_unregularize):
+        # Iterate through list of regularized parameters
+        for reg_param_ind, reg_param in enumerate(regularized_param_list):
+            # Note any matchess
+            if reg_param is new_unreg_param:
+                indices_to_remove_from_regularized.append(reg_param_ind)
+        if unregularized_param_list:
+            # Iterate through pre-existing list of unregularized parameters
+            for unreg_param in unregularized_param_list:
+                # Note any matches
+                if unreg_param is new_unreg_param:
+                    indices_to_remove_from_new_unregularized.append(unreg_param_ind)
+    indices_to_remove_from_regularized.sort(reverse=True)
+    # Iterate through indices to remove from list regularized params and
+    # remove them
+    for i in indices_to_remove_from_regularized:
+        del regularized_param_list[i]
+    if unregularized_param_list:
+        indices_to_remove_from_new_unregularized.sort(reverse=True)
+        # Iterate through indices to remove from new list of unregularized
+        # parameters
+        for i in indices_to_remove_from_new_unregularized:
+            del parameters_to_unregularize[i]
+    return parameters_to_unregularize, regularized_param_list, unregularized_param_list
+
+
 def get_optimizer_param_groups(
     model, model_config, optimizer_config, optimizer_schedulers
 ):
@@ -91,6 +138,7 @@ def get_optimizer_param_groups(
     head_regularized_params, head_unregularized_params = [], []
     # for anything else
     regularized_params = []
+    unregularized_params = []
     for name, module in model.named_modules():
         # head, Linear/Conv layer
         if "head" in name and (
@@ -140,6 +188,41 @@ def get_optimizer_param_groups(
             for params in module.parameters(recurse=False):
                 regularized_params.append(params)
 
+    # Collect user-specified non-regularized params and remove them for the
+    # lists of regularized params, and check they're not already on the lists
+    # of unregularized params
+    if optimizer_config.non_regularized_parameters:
+        non_reg_param_names = optimizer_config.non_regularized_parameters
+        for name, param in model.named_parameters():
+            hits = [p for p in non_reg_param_names if p in name]
+            if any(hits):
+                unregularized_params.append(param)
+        # Call for trunk params
+        (
+            non_reg_params,
+            trunk_regularized_params,
+            trunk_unregularized_params,
+        ) = _assign_regularized_params(
+            parameters_to_unregularize=unregularized_params,
+            regularized_param_list=trunk_regularized_params,
+            unregularized_param_list=trunk_unregularized_params,
+        )
+        # Call for head params
+        (
+            non_reg_params,
+            head_regularized_params,
+            head_unregularized_params,
+        ) = _assign_regularized_params(
+            parameters_to_unregularize=unregularized_params,
+            regularized_param_list=head_regularized_params,
+            unregularized_param_list=head_unregularized_params,
+        )
+        # Call for remaining params
+        non_reg_params, regularized_params, _ = _assign_regularized_params(
+            parameters_to_unregularize=unregularized_params,
+            regularized_param_list=regularized_params,
+        )
+
     # for non-trainable params, set the requires_grad to False
     non_trainable_params = []
     for name, param in model.named_parameters():
@@ -160,7 +243,8 @@ def get_optimizer_param_groups(
         f"Trunk Unregularized Parameters {len(trunk_unregularized_params)}, \n"
         f"Head Regularized Parameters: {len(head_regularized_params)}, \n"
         f"Head Unregularized Parameters: {len(head_unregularized_params)} \n"
-        f"Remaining Regularized Parameters: {len(regularized_params)} "
+        f"Remaining Regularized Parameters: {len(regularized_params)} \n"
+        f"Remaining Unregularized Parameters: {len(unregularized_params)}"
     )
 
     param_groups = [
@@ -188,6 +272,14 @@ def get_optimizer_param_groups(
     if len(regularized_params) > 0:
         param_groups.append(
             {"params": regularized_params, "lr": optimizer_schedulers["lr"]}
+        )
+    if len(unregularized_params) > 0:
+        param_groups.append(
+            {
+                "params": unregularized_params,
+                "lr": optimizer_schedulers["lr"],
+                "weight_decay": 0.0,
+            }
         )
 
     return param_groups

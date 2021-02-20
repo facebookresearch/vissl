@@ -67,7 +67,7 @@ class ResNeXt(nn.Module):
         self.trunk_config = self.model_config.TRUNK.TRUNK_PARAMS.RESNETS
         self.depth = SUPPORTED_DEPTHS(self.trunk_config.DEPTH)
         self.width_multiplier = self.trunk_config.WIDTH_MULTIPLIER
-        self._norm_layer = _get_norm(self.trunk_config.NORM)
+        self._norm_layer = _get_norm(self.trunk_config)
         self.groups = self.trunk_config.GROUPS
         self.zero_init_residual = self.trunk_config.ZERO_INIT_RESIDUAL
         self.width_per_group = self.trunk_config.WIDTH_PER_GROUP

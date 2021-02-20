@@ -381,6 +381,7 @@ def infer_losses_config(cfg):
         assert cfg.DATA.TRAIN.COLLATE_FUNCTION in [
             "multicrop_collator",
             "multicrop_mixup_collator",
+            "cutmixup_collator",
         ], (
             "for swav loss, use either a collator from "
             "[multicrop_collator, multicrop_mixup_collator]"
@@ -480,10 +481,13 @@ def assert_hydra_conf(cfg):
 
     # in SSL, during pre-training we don't want to use annotated labels or during feature
     # extraction, we don't have annotated labels for some datasets. In such cases, we set
-    # the label type to be just the image index in the dataset.
-    if len(cfg.DATA.TRAIN.LABEL_SOURCES) == 0:
+    # the label type to be just the image index in the dataset, unless the
+    # user has specifically provided "zero" as the label type, which is
+    # necessary when the CutMixUp collator is being used for self-supervised
+    # training.
+    if len(cfg.DATA.TRAIN.LABEL_SOURCES) == 0 and cfg.DATA.TRAIN.LABEL_TYPE != "zero":
         cfg.DATA.TRAIN.LABEL_TYPE = "sample_index"
-    if len(cfg.DATA.TEST.LABEL_SOURCES) == 0:
+    if len(cfg.DATA.TEST.LABEL_SOURCES) == 0 and cfg.DATA.TEST.LABEL_TYPE != "zero":
         cfg.DATA.TEST.LABEL_TYPE = "sample_index"
 
     # if the user has specified the model initialization from a params_file, we check if

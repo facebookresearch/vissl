@@ -49,9 +49,7 @@ class TestMLP(unittest.TestCase):
 
     def test_eval_mlp_shape(self):
         eval_mlp = LinearEvalMLP(
-            self.MODEL_CONFIG,
-            in_channels=2048,
-            dims=[2048 * 2 * 2, 1000],
+            self.MODEL_CONFIG, in_channels=2048, dims=[2048 * 2 * 2, 1000]
         )
 
         resnet_feature_map = torch.randn(size=(4, 2048, 2, 2))
