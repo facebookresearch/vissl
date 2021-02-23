@@ -188,6 +188,16 @@ class LogLossLrEtaHook(ClassyHook):
                     f"eta: {eta_string}; "
                     f"peak_mem: {peak_mem_used}M"
                 )
+                log_data = {
+                    "Rank": rank,
+                    "ep": train_phase_idx,
+                    "iter": iteration,
+                    "lr": lr_val,
+                    "loss": loss_val,
+                    "btime": batch_time,
+                    "eta": eta_string,
+                    "peak_mem": peak_mem_used,
+                }
                 if self.btime_freq and len(batch_times) >= self.btime_freq:
                     rolling_avg_time = (
                         sum(batch_times[-self.btime_freq :]) / self.btime_freq
@@ -204,7 +214,11 @@ class LogLossLrEtaHook(ClassyHook):
                         f"btime({self.btime_freq}iters): {rolling_btime} ms; "
                         f"rolling_eta: {rolling_eta_str}"
                     )
+                    log_data["btime_iters"] = rolling_btime
+                    log_data["rolling_eta"] = rolling_eta_str
                 logging.info(log_str)
+                logging.warning("Running vissl/hooks/log_hooks.py:223")
+                save_file(log_data, f"{task.checkpoint_folder}/stdout.json")
 
 
 class LogLossMetricsCheckpointHook(ClassyHook):
