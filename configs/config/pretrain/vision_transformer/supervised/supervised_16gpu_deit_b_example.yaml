@@ -16,11 +16,12 @@ config:
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 32
+      DROP_LAST: True
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
         - name: RandomHorizontalFlip
-        - name: VisslRandAugment
+        - name: RandAugment
           magnitude: 9
           magnitude_std: 0.5
           increasing_severity: True
