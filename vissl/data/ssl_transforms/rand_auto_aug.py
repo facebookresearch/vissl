@@ -69,7 +69,7 @@ _RANDOM_INTERPOLATION = (Image.BILINEAR, Image.BICUBIC)
 
 
 # Modification/Addition
-@register_transform("VisslRandAugment")
+@register_transform("RandAugment")
 class RandAugment(ClassyTransform):
     """
     Create a RandAugment transform.
