@@ -56,8 +56,7 @@ config:
           group_width: 8
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [368, 368], "use_relu": True}],
-        ["mlp", {"dims": [368, 128]}]
+        ["mlp", {"dims": [368, 368, 128], "use_relu": True}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True

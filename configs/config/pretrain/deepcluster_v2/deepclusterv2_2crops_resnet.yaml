@@ -52,8 +52,7 @@ config:
           DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
-        ["mlp", {"dims": [2048, 128]}],
+        ["mlp", {"dims": [2048, 2048, 128], "use_relu": True}],
       ]
     TEMP_FROZEN_PARAMS_ITER_MAP: []
     SYNC_BN_CONFIG:

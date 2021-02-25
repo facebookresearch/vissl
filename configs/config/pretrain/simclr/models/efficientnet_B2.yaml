@@ -38,6 +38,5 @@ config:
     HEAD:
       PARAMS: [
         ######### B2 ################
-        ["mlp", {"dims": [1408, 1408], "use_relu": True}],
-        ["mlp", {"dims": [1408, 128]}],
+        ["mlp", {"dims": [1408, 1408, 128], "use_relu": True}],
       ]

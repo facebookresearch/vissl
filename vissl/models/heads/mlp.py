@@ -50,8 +50,7 @@ class MLP(nn.Module):
         """
         super().__init__()
         layers = []
-        last_dim = dims[0]
-        for dim in dims[1:]:
+        for last_dim, dim in zip(dims, dims[1:]):
             layers.append(nn.Linear(last_dim, dim, bias=use_bias))
             if use_bn:
                 layers.append(
@@ -63,7 +62,6 @@ class MLP(nn.Module):
                 )
             if use_relu:
                 layers.append(nn.ReLU(inplace=True))
-                last_dim = dim
             if use_dropout:
                 layers.append(nn.Dropout())
         self.clf = nn.Sequential(*layers)

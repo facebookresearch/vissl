@@ -24,8 +24,7 @@ config:
     HEAD:
       # setting 1
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True, "use_bn": True, "use_bias": False}],
-        ["mlp", {"dims": [2048, 128], "use_relu": False, "use_bn": False, "use_bias": False}],
+        ["mlp", {"dims": [2048, 2048, 128], "use_relu": True, "use_bn": True, "use_bias": False}],
       ]
     # HEAD:
     #   # setting 2

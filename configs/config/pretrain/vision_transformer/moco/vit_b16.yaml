@@ -66,8 +66,7 @@ config:
           CLASSIFIER: token
     HEAD:
       PARAMS: [
-      ["mlp", {"dims": [768, 2048], "use_relu": True}],
-      ["mlp", {"dims": [2048, 128]}],
+      ["mlp", {"dims": [768, 2048, 128], "use_relu": True}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: False
