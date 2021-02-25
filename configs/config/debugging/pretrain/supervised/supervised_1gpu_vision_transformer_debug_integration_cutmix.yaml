@@ -34,6 +34,7 @@ config:
       'label_smoothing': 0.2
       }
     TEST:
+      DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_debug_folder]
       BATCHSIZE_PER_REPLICA: 32
