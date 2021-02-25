@@ -195,7 +195,7 @@ config:
       # no valid values other than 0 or None), unclear if beneficial. Default =
       # None.
       # TRANSFORMS:
-      #   - name: VisslRandAugment
+      #   - name: RandAugment
       #     magnitude: 9
       #     magnitude_std: 0.5
       #     num_layers: 2
