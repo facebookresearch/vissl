@@ -3,7 +3,6 @@ config:
   HOOKS:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR:
       FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
     DIR: "."
@@ -13,14 +12,18 @@ config:
     NUM_DATALOADER_WORKERS: 8
     TRAIN:
       DATA_SOURCES: [disk_folder]
-      LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 32
+      DATASET_NAMES: [imagenet1k_debug_folder]
+      LABEL_TYPE: "zero"
+      BATCHSIZE_PER_REPLICA: 16
+      DROP_LAST: True
       TRANSFORMS:
-        - name: RandomResizedCrop
-          size: 224
+        - name: ImgPilToMultiCrop
+          total_num_crops: 2
+          size_crops: [224]
+          num_crops: [2]
+          crop_scales: [[0.14, 1]]
         - name: RandomHorizontalFlip
-        - name: VisslRandAugment
+        - name: RandAugment
           magnitude: 9
           magnitude_std: 0.5
           increasing_severity: True
@@ -31,36 +34,22 @@ config:
           hue: 0.4
         - name: ToTensor
         - name: RandomErasing
-          p: 0.25
+          p: 1
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       COLLATE_FUNCTION: cutmixup_collator
       COLLATE_FUNCTION_PARAMS: {
-        "mixup_alpha": 0.8, # mixup alpha value, mixup is active if > 0.
+        "ssl_method": "swav",
+        "mixup_alpha": 1.0, # mixup alpha value, mixup is active if > 0.
         "cutmix_alpha": 1.0, # cutmix alpha value, cutmix is active if > 0.
         "prob": 1.0, # probability of applying mixup or cutmix per batch or element
         "switch_prob": 0.5, # probability of switching to cutmix instead of mixup when both are active
         "mode": "batch", # how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
         "correct_lam": True, # apply lambda correction when cutmix bbox clipped by image borders
         "label_smoothing": 0.1, # apply label smoothing to the mixed target tensor
-        "num_classes": 1000 # number of classes for target
+        "num_classes": 1 # number of classes for target
       }
-
-    TEST:
-      DATA_SOURCES: [disk_folder]
-      LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 64
-      TRANSFORMS:
-        - name: Resize
-          size: 256
-        - name: CenterCrop
-          size: 224
-        - name: ToTensor
-        - name: Normalize
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
   MODEL:
     TRUNK:
       NAME: vision_transformer
@@ -69,7 +58,7 @@ config:
           IMAGE_SIZE: 224
           PATCH_SIZE: 16
           NUM_LAYERS: 12
-          NUM_HEADS: 12
+          NUM_HEADS: 16
           HIDDEN_DIM: 768
           MLP_DIM: 3072
           CLASSIFIER: token
@@ -78,16 +67,28 @@ config:
           DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [768, 1000]}],
+      ["swav_head", {"dims": [768, 2048, 128], "use_bn": True, "num_clusters":
+        [3000]}],
       ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+    ['module.heads.0.prototypes0.weight', 313],
+    ]
   LOSS:
-    name: cross_entropy_multiple_output_single_target
-    cross_entropy_multiple_output_single_target:
-      ignore_index: -1
+    name: swav_loss
+    swav_loss:
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      crops_for_assign: [0, 1]
+      queue:
+        queue_length: 0
+        start_iter: 0
   OPTIMIZER:
     name: adamw
     weight_decay: 0.05
-    num_epochs: 100
+    num_epochs: 300
     # We don't want to regularize the position embedding or classification token
     non_regularized_parameters: [pos_embedding, class_token]
     param_schedulers:
@@ -99,7 +100,7 @@ config:
         name: composite
         schedulers:
           - name: linear
-            start_value: 0.00001
+            start_value: 0.0005
             end_value: 0.0005
           - name: cosine
             start_value: 0.0005
@@ -108,10 +109,7 @@ config:
         update_interval: step
         lengths: [0.05, 0.95]
   METERS:
-    name: accuracy_list_meter
-    accuracy_list_meter:
-      num_meters: 1
-      topk_values: [1, 5]
+    name: ""
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
@@ -125,6 +123,6 @@ config:
   LOG_FREQUENCY: 100
   TEST_ONLY: False
   TEST_EVERY_NUM_EPOCH: 1
-  TEST_MODEL: True
+  TEST_MODEL: False
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: fork
