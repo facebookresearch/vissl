@@ -148,18 +148,10 @@ def data_back_to_input_form(data, labels, data_valid, data_idx):
         sample_input_form = {"data": [], "data_valid": [], "data_idx": [], "label": []}
         for duplicate_i in range(num_duplicates):
             valid_and_idx_i = sample_i + (num_duplicates * duplicate_i)
-            sample_input_form["data"].append(
-                data[duplicate_i][sample_i]
-            )
-            sample_input_form["label"].append(
-                labels[duplicate_i][sample_i].tolist()
-            )
-            sample_input_form["data_idx"].append(
-                data_idx[valid_and_idx_i].item()
-            )
-            sample_input_form["data_valid"].append(
-                data_valid[valid_and_idx_i].item()
-            )
+            sample_input_form["data"].append(data[duplicate_i][sample_i])
+            sample_input_form["label"].append(labels[duplicate_i][sample_i].tolist())
+            sample_input_form["data_idx"].append(data_idx[valid_and_idx_i].item())
+            sample_input_form["data_valid"].append(data_valid[valid_and_idx_i].item())
         data_input_form.append(sample_input_form)
     return data_input_form
 
