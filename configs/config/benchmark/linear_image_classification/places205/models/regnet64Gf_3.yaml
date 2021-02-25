@@ -15,12 +15,12 @@ config:
     TRUNK:
       NAME: regnet
       TRUNK_PARAMS:
-        REGNET:
-          depth: 20
-          w_0: 352
-          w_a: 147.48
-          w_m: 2.4
-          group_width: 328
+      REGNET:
+        depth: 20
+        w_0: 352
+        w_a: 147.48
+        w_m: 2.4
+        group_width: 328
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 1968, "dims": [9840, 205]}],
