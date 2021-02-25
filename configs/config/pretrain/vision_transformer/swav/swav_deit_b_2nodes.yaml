@@ -12,7 +12,7 @@ config:
     NUM_DATALOADER_WORKERS: 8
     TRAIN:
       DATA_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_debug_folder]
+      DATASET_NAMES: [imagenet1k_folder]
       LABEL_TYPE: "zero"
       BATCHSIZE_PER_REPLICA: 16
       DROP_LAST: True
