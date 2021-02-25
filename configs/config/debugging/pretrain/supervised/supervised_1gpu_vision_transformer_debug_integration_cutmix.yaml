@@ -19,7 +19,7 @@ config:
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
-        - name: VisslRandAugment
+        - name: RandAugment
           magnitude: 5
           weight_choice: 0
         - name: ToTensor
