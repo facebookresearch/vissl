@@ -23,6 +23,5 @@ config:
           # WIDTH_PER_GROUP: 48
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
-        ["mlp", {"dims": [2048, 128]}],
+        ["mlp", {"dims": [2048, 2048, 128], "use_relu": True}],
       ]

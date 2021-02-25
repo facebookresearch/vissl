@@ -9,6 +9,5 @@ config:
           WIDTH_MULTIPLIER: 2
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [4096, 4096], "use_relu": True}],
-        ["mlp", {"dims": [4096, 128]}],
+        ["mlp", {"dims": [4096, 4096, 128], "use_relu": True}],
       ]

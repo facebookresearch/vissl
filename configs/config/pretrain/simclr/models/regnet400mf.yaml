@@ -12,6 +12,5 @@ config:
           name: regnet_y_400mf
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [440, 440], "use_relu": True}],
-        ["mlp", {"dims": [440, 128]}]
+        ["mlp", {"dims": [440, 440, 128], "use_relu": True}],
       ]
