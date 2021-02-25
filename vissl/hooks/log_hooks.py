@@ -217,7 +217,6 @@ class LogLossLrEtaHook(ClassyHook):
                     log_data["btime_iters"] = rolling_btime
                     log_data["rolling_eta"] = rolling_eta_str
                 logging.info(log_str)
-                logging.warning("Running vissl/hooks/log_hooks.py:223")
                 save_file(log_data, f"{task.checkpoint_folder}/stdout.json")
 
 
