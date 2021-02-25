@@ -3,7 +3,6 @@ config:
   HOOKS:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "/checkpoint/ito/vision_transformer/1gpu_test"
       FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
     DIR: "."
@@ -13,11 +12,10 @@ config:
     NUM_DATALOADER_WORKERS: 8
     TRAIN:
       DATA_SOURCES: [disk_folder]
-      #      DATA_PATHS: ["<path to train folder>"]
-      LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_debug_folder]
       LABEL_TYPE: "zero"
       BATCHSIZE_PER_REPLICA: 16
+      DROP_LAST: True
       TRANSFORMS:
         - name: ImgPilToMultiCrop
           total_num_crops: 2
@@ -25,7 +23,7 @@ config:
           num_crops: [2]
           crop_scales: [[0.14, 1]]
         - name: RandomHorizontalFlip
-        - name: VisslRandAugment
+        - name: RandAugment
           magnitude: 9
           magnitude_std: 0.5
           increasing_severity: True
@@ -42,6 +40,7 @@ config:
           std: [0.229, 0.224, 0.225]
       COLLATE_FUNCTION: cutmixup_collator
       COLLATE_FUNCTION_PARAMS: {
+        "ssl_method": "swav",
         "mixup_alpha": 1.0, # mixup alpha value, mixup is active if > 0.
         "cutmix_alpha": 1.0, # cutmix alpha value, cutmix is active if > 0.
         "prob": 1.0, # probability of applying mixup or cutmix per batch or element
@@ -49,7 +48,7 @@ config:
         "mode": "batch", # how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
         "correct_lam": True, # apply lambda correction when cutmix bbox clipped by image borders
         "label_smoothing": 0.1, # apply label smoothing to the mixed target tensor
-        "num_classes": 1000 # number of classes for target
+        "num_classes": 1 # number of classes for target
       }
   MODEL:
     TRUNK:
