@@ -12,15 +12,14 @@ config:
       ]
     TRUNK:
       NAME: efficientnet
-      TRUNK_PARAMS:
-        EFFICIENT_NETS:
-          model_version: B0
-          bn_momentum: 0.01
-          bn_epsilon: 0.001
-          drop_connect_rate: 0.2
-          width_divisor: 8
-          min_width: null
-          use_se: True
+      EFFICIENT_NETS:
+        model_version: B0
+        bn_momentum: 0.01
+        bn_epsilon: 0.001
+        drop_connect_rate: 0.2
+        width_divisor: 8
+        min_width: null
+        use_se: True
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 1280, "dims": [11520, 1000]}],

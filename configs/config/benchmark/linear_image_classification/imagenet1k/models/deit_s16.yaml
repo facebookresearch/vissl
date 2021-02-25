@@ -56,18 +56,17 @@ config:
       FREEZE_TRUNK_ONLY: True
     TRUNK:
       NAME: vision_transformer
-      TRUNK_PARAMS:
-        VISION_TRANSFORMERS:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 16
-          NUM_LAYERS: 12
-          NUM_HEADS: 6
-          HIDDEN_DIM: 384
-          MLP_DIM: 1536
-          DROPOUT_RATE: 0
-          ATTENTION_DROPOUT_RATE: 0
-          CLASSIFIER: token
-          DROP_PATH_RATE: 0.1
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        HIDDEN_DIM: 384
+        MLP_DIM: 1536
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
+        DROP_PATH_RATE: 0.1
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [384, 1000]}],
