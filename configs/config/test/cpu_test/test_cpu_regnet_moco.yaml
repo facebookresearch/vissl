@@ -46,9 +46,8 @@ config:
   MODEL:
     TRUNK:
       NAME: regnet
-      TRUNK_PARAMS:
-        REGNET:
-          name: regnet_y_400mf
+      REGNET:
+        name: regnet_y_400mf
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [440, 128]}]

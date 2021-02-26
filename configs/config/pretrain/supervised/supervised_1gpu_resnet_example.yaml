@@ -43,9 +43,8 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+      RESNETS:
+        DEPTH: 50
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 1000]}],

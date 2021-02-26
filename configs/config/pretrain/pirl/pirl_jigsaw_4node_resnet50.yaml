@@ -44,9 +44,8 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+      RESNETS:
+        DEPTH: 50
     MULTI_INPUT_HEAD_MAPPING: [
         # "flatten" is the res5->avg->flatten feature from ResNet50
         ["patches", ["flatten"]], # feature layer to extract from second input "patches"

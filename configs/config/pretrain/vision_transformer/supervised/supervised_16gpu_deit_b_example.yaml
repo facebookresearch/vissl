@@ -65,18 +65,17 @@ config:
   MODEL:
     TRUNK:
       NAME: vision_transformer
-      TRUNK_PARAMS:
-        VISION_TRANSFORMERS:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 16
-          NUM_LAYERS: 12
-          NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
-          CLASSIFIER: token
-          DROPOUT_RATE: 0
-          ATTENTION_DROPOUT_RATE: 0
-          DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_DIM: 3072
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [768, 1000]}],
