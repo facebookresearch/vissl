@@ -8,13 +8,12 @@ config:
   MODEL:
     TRUNK:
       NAME: regnet
-      TRUNK_PARAMS:
-        REGNET:
-          depth: 27
-          w_0: 640
-          w_a: 230.83
-          w_m: 2.53
-          group_width: 373
+      REGNET:
+        depth: 27
+        w_0: 640
+        w_a: 230.83
+        w_m: 2.53
+        group_width: 373
     HEAD:
       PARAMS: [
         ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [10444, 8192], "num_clusters": []}],
