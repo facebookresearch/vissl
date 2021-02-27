@@ -5,10 +5,14 @@ All the hooks involved in human-readable logging
 """
 
 import datetime
+import json
 import logging
+import os
+import pickle
 import time
 from typing import Optional
 
+import numpy as np
 import torch
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
@@ -178,25 +182,15 @@ class LogLossLrEtaHook(ClassyHook):
                     lr_val = round(task.optimizer.options_view.lr, 5)
                 batch_time = int(1000.0 * avg_time)
                 rank = get_rank()
-                log_str = (
-                    f"Rank: {rank}; "
-                    f"[ep: {train_phase_idx}] "
-                    f"iter: {iteration}; "
-                    f"lr: {lr_val}; "
-                    f"loss: {loss_val}; "
-                    f"btime(ms): {batch_time}; "
-                    f"eta: {eta_string}; "
-                    f"peak_mem: {peak_mem_used}M"
-                )
                 log_data = {
                     "Rank": rank,
                     "ep": train_phase_idx,
                     "iter": iteration,
                     "lr": lr_val,
                     "loss": loss_val,
-                    "btime": batch_time,
+                    "btime(ms)": batch_time,
                     "eta": eta_string,
-                    "peak_mem": peak_mem_used,
+                    "peak_mem(M)": peak_mem_used,
                 }
                 if self.btime_freq and len(batch_times) >= self.btime_freq:
                     rolling_avg_time = (
@@ -209,15 +203,14 @@ class LogLossLrEtaHook(ClassyHook):
                         datetime.timedelta(seconds=int(rolling_eta_secs))
                     )
                     rolling_btime = int(1000.0 * rolling_avg_time)
-                    log_str = (
-                        f"{log_str}; "
-                        f"btime({self.btime_freq}iters): {rolling_btime} ms; "
-                        f"rolling_eta: {rolling_eta_str}"
-                    )
-                    log_data["btime_iters"] = rolling_btime
+                    log_data[f"btime({self.btime_freq}iters) (ms)"] = rolling_btime
                     log_data["rolling_eta"] = rolling_eta_str
-                logging.info(log_str)
-                save_file(log_data, f"{task.checkpoint_folder}/stdout.json")
+                logging.info(json.dumps(log_data))
+                with PathManager.open(
+                    f"{task.checkpoint_folder}/stdout.json", "a"
+                ) as fopen:
+                    fopen.write(json.dumps(log_data) + "\n")
+                    fopen.flush()
 
 
 class LogLossMetricsCheckpointHook(ClassyHook):
