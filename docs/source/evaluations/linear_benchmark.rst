@@ -33,7 +33,6 @@ Attaching MLP head to many layers of trunk
         ]
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
         RESNETS:
             DEPTH: 50
       HEAD:
@@ -64,7 +63,6 @@ To attach a linear classifier at multiple layers of model following Zhang et. al
         ]
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
         RESNETS:
             DEPTH: 50
       HEAD:
@@ -103,9 +101,8 @@ For example, for a ResNet-50 model, to train features from many layers of the mo
         ]
     TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
 
 
 Features from the trunk output
@@ -122,9 +119,8 @@ For example, for a ResNet-50 model, to train features from model trunk output, t
         EXTRACT_TRUNK_FEATURES_ONLY: True
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
 
 
 Below, we provide instruction on how to run each benchmark.

@@ -42,9 +42,8 @@ Extract features from several layers of the trunk
         ]
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
 
 
 Extract features of the trunk output
@@ -60,9 +59,8 @@ Extract features of the trunk output
         SHOULD_FLATTEN_FEATS: False
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
 
 
 Extract features of the model head output (self-supervised head)
@@ -81,9 +79,8 @@ self-supervised model training.
         EVAL_TRUNK_AND_HEAD: True
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
       HEAD:
         PARAMS: [
           ["mlp", {"dims": [2048, 2048], "use_relu": True}],

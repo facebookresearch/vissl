@@ -36,18 +36,17 @@ Examples of trunks:
     MODEL:
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
-            WIDTH_MULTIPLIER: 1
-            NORM: BatchNorm    # BatchNorm | LayerNorm
-            GROUPS: 1
-            ZERO_INIT_RESIDUAL: False
-            WIDTH_PER_GROUP: 64
-            # Colorization model uses stride=1 for last layer to retain higher spatial resolution
-            # for the pixel-wise task. Torchvision default is stride=2 and all other models
-            # use this so we set the default as 2.
-            LAYER4_STRIDE: 2
+        RESNETS:
+        DEPTH: 50
+        WIDTH_MULTIPLIER: 1
+        NORM: BatchNorm    # BatchNorm | LayerNorm
+        GROUPS: 1
+        ZERO_INIT_RESIDUAL: False
+        WIDTH_PER_GROUP: 64
+        # Colorization model uses stride=1 for last layer to retain higher spatial resolution
+        # for the pixel-wise task. Torchvision default is stride=2 and all other models
+        # use this so we set the default as 2.
+        LAYER4_STRIDE: 2
 
 - **Using RegNets trunk**: We follow `RegNets defined in ClassyVision directly <https://github.com/facebookresearch/ClassyVision/blob/master/classy_vision/models/regnet.py>`_ and users can either use a pre-defined ClassyVision RegNet config or define their own.
 
@@ -58,13 +57,12 @@ Examples of trunks:
         MODEL:
           TRUNK:
             NAME: regnet
-            TRUNK_PARAMS:
-              REGNET:
-                depth: 27
-                w_0: 640
-                w_a: 230.83
-                w_m: 2.53
-                group_width: 373
+            REGNET:
+            depth: 27
+            w_0: 640
+            w_a: 230.83
+            w_m: 2.53
+            group_width: 373
 
   - To use a pre-defined RegNet config in classy vision example: RegNetY-16gf
 
