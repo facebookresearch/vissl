@@ -36,6 +36,7 @@ class MLP(nn.Module):
         use_relu: bool = False,
         use_dropout: bool = False,
         use_bias: bool = True,
+        skip_last_layer_relu_bn: bool = True,
     ):
         """
         Args:
@@ -47,11 +48,18 @@ class MLP(nn.Module):
             use_bias (bool): whether the Linear layer should have bias or not
             dims (int): dimensions of the linear layer. Example [8192, 1000] which
                         attaches `nn.Linear(8192, 1000, bias=True)`
+            skip_last_layer_relu_bn (bool): If the MLP has many layers, we check
+                if after the last MLP layer, we should add BN / ReLU or not. By
+                default, skip it. If user specifies to not skip, then BN will be
+                added if use_bn=True, ReLU will be added if use_relu=True
         """
         super().__init__()
         layers = []
-        for last_dim, dim in zip(dims, dims[1:]):
+        last_dim = dims[0]
+        for i, dim in enumerate(dims[1:]):
             layers.append(nn.Linear(last_dim, dim, bias=use_bias))
+            if i == len(dims) - 2 and skip_last_layer_relu_bn:
+                break
             if use_bn:
                 layers.append(
                     nn.BatchNorm1d(
@@ -62,6 +70,7 @@ class MLP(nn.Module):
                 )
             if use_relu:
                 layers.append(nn.ReLU(inplace=True))
+                last_dim = dim
             if use_dropout:
                 layers.append(nn.Dropout())
         self.clf = nn.Sequential(*layers)

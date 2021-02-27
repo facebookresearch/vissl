@@ -11,7 +11,7 @@ config:
       PARAMS: [
         # head 0 that operates on patches
         [
-            ["mlp", {"dims": [8192, 8192, 128], "use_bn": False, "use_relu": True}],
+            ["mlp", {"dims": [8192, 8192, 128], "use_bn": False, "use_relu": True, "skip_last_layer_relu_bn": False}],
             ["siamese_concat_view", {"num_towers": 9}],
             ["mlp", {"dims": [1152, 128]}],
         ],
