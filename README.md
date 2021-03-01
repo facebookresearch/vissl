@@ -62,9 +62,9 @@ If you find VISSL useful in your research or wish to refer to the baseline resul
 
 ```BibTeX
 @misc{goyal2021vissl,
-  author =       {Priya Goyal and Benjamin Lefaudeux and Mannat Singh and Jeremy Reizenstein and Vinicius Reis and 
-                  Min Xu and and Matthew Leavitt and Mathilde Caron and Piotr Bojanowski and Armand Joulin and 
-                  Ishan Misra},
+  author =       {Priya Goyal and Quentin Duval and Jeremy Reizenstein and Matthew Leavitt and Min Xu and 
+                  Benjamin Lefaudeux and Mannat Singh and Vinicius Reis and Mathilde Caron and Piotr Bojanowski and 
+                  Armand Joulin and Ishan Misra},
   title =        {VISSL},
   howpublished = {\url{https://github.com/facebookresearch/vissl}},
   year =         {2021}
