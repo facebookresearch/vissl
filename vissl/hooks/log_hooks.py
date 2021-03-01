@@ -7,12 +7,9 @@ All the hooks involved in human-readable logging
 import datetime
 import json
 import logging
-import os
-import pickle
 import time
 from typing import Optional
 
-import numpy as np
 import torch
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
