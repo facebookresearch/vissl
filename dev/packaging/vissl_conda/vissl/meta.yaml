@@ -43,6 +43,8 @@ test:
   requires:
     - ca-certificates
     - cudatoolkit=10.1
+    - opencv
+    - tensorboard
   commands:
     - python -m unittest discover -v -s tests
     - ./dev/run_quick_tests.sh

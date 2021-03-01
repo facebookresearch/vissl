@@ -13,4 +13,6 @@ export BUILD_VERSION=$build_version
 
 # We allow the vissl channel to get the apex package.
 # We specify it with a full url to avoid a name clash with a local directory called vissl.
-conda build -c https://conda.anaconda.org/vissl -c iopath -c conda-forge -c pytorch -c defaults --no-anaconda-upload --python "$PYTHON_VERSION" --output-folder "$packaging/out" "$packaging/vissl"
+# Having defaults before conda-forge is so that the tensorboard used in the
+# tests will work.
+conda build -c https://conda.anaconda.org/vissl -c iopath -c pytorch -c defaults -c conda-forge --no-anaconda-upload --python "$PYTHON_VERSION" --output-folder "$packaging/out" "$packaging/vissl"
