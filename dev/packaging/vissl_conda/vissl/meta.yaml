@@ -27,7 +27,6 @@ requirements:
     - importlib_resources
     - hydra-core
     - tabulate
-    - pycocotools>=2.0.1
 
 test:
   imports:
