@@ -16,7 +16,6 @@ requirements:
     - pytorch
     - apex
     - torchvision>=0.5
-    - tensorboard>=1.15
     - scipy
     - scikit-learn
     - parameterized

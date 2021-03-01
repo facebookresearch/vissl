@@ -107,7 +107,12 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
     if cfg.HOOKS.MEMORY_SUMMARY.PRINT_MEMORY_SUMMARY:
         hooks.extend([LogGpuMemoryHook(cfg.HOOKS.MEMORY_SUMMARY.LOG_ITERATION_NUM)])
     if cfg.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD:
-        assert is_tensorboard_available(), "Tensorboard must be installed to use it."
+        assert is_tensorboard_available(), (
+            "Tensorboard must be installed to use it. Please install tensorboard using:"
+            "If pip environment: `pip install tensorboard` "
+            "If using conda and you prefer conda install of tensorboard: "
+            "`conda install -c conda-forge tensorboard`"
+        )
         tb_hook = get_tensorboard_hook(cfg)
         hooks.extend([tb_hook])
     if cfg.MODEL.GRAD_CLIP.USE_GRAD_CLIP:

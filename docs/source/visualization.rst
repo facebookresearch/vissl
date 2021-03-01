@@ -28,21 +28,26 @@ parameters exposed by VISSL for Tensorboard:
 
 .. code-block:: yaml
 
-    TENSORBOARD_SETUP:
-      # whether to use tensorboard for the visualization
-      USE_TENSORBOARD: False
-      # log directory for tensorboard events
-      LOG_DIR: "."
-      EXPERIMENT_LOG_DIR: "tensorboard"
-      # flush logs every n minutes
-      FLUSH_EVERY_N_MIN: 5
-      # whether to log the model parameters to tensorboard
-      LOG_PARAMS: True
-      # whether ttp log the model parameters gradients to tensorboard
-      LOG_PARAMS_GRADIENTS: True
-      # if we want to log the model parameters every few iterations, set the iteration
-      # frequency. -1 means the params will be logged only at the end of epochs.
-      LOG_PARAMS_EVERY_N_ITERS: 310
+    HOOKS:
+        TENSORBOARD_SETUP:
+        # whether to use tensorboard for the visualization
+        USE_TENSORBOARD: False
+        # log directory for tensorboard events
+        LOG_DIR: "."
+        EXPERIMENT_LOG_DIR: "tensorboard"
+        # flush logs every n minutes
+        FLUSH_EVERY_N_MIN: 5
+        # whether to log the model parameters to tensorboard
+        LOG_PARAMS: True
+        # whether ttp log the model parameters gradients to tensorboard
+        LOG_PARAMS_GRADIENTS: True
+        # if we want to log the model parameters every few iterations, set the iteration
+        # frequency. -1 means the params will be logged only at the end of epochs.
+        LOG_PARAMS_EVERY_N_ITERS: 310
+
+.. note::
+
+    Please install tensorboard manually: if pip environment: :code:`pip install tensorboard` or if using conda and you prefer conda install of tensorboard:  :code:`conda install -c conda-forge tensorboard`.
 
 Example usage
 ---------------

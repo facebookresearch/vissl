@@ -9,7 +9,7 @@ sphinx_rtd_theme
 sphinx_markdown_tables
 mock
 opencv-python
-tensorboard==1.15.0
+tensorboard
 hydra-core>=1.0
 faiss-gpu
 cython
