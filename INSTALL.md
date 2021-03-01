@@ -21,7 +21,7 @@ At a high level, project requires following system dependencies.
 - PyTorch>=1.4
 - torchvision (matching PyTorch install)
 - CUDA (must be a version supported by the pytorch version)
-- OpenCV
+- OpenCV (optional)
 
 ## Installing VISSL from pre-built binaries
 
@@ -124,7 +124,7 @@ pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarba
 # install vissl dev mode (e stands for editable)
 pip install -e .[dev]
 # verify installation
-python -c 'import vissl, apex, cv2'
+python -c 'import vissl, apex'
 ```
 
 ### Install from source in Conda environment

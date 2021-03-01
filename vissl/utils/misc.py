@@ -26,6 +26,22 @@ def is_fairscale_sharded_available():
     return fairscale_sharded_available
 
 
+def is_opencv_available():
+    """
+    Check if opencv is available with simple python imports.
+
+    To install opencv, simply do: `pip install opencv-python`
+    regardless of whether using conda or pip environment.
+    """
+    try:
+        import cv2  # NOQA
+
+        opencv_available = True
+    except ImportError:
+        opencv_available = False
+    return opencv_available
+
+
 def is_apex_available():
     """
     Check if apex is available with simple python imports.
