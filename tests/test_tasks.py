@@ -5,7 +5,7 @@ import unittest
 
 import pkg_resources
 from parameterized import parameterized
-from .utils import UNIT_TEST_CONFIGS, SSLHydraConfig
+from utils import UNIT_TEST_CONFIGS, SSLHydraConfig
 from vissl.engines.train import train_main
 from vissl.hooks import default_hook_generator
 from vissl.utils.checkpoint import get_checkpoint_folder
