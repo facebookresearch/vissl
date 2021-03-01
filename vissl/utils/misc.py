@@ -26,6 +26,23 @@ def is_fairscale_sharded_available():
     return fairscale_sharded_available
 
 
+def is_faiss_available():
+    """
+    Check if faiss is available with simple python imports.
+
+    To install faiss, simply do:
+        If using PIP env: `pip install faiss-gpu`
+        If using conda env: `conda install faiss-gpu -c pytorch`
+    """
+    try:
+        import faiss  # NOQA
+
+        faiss_available = True
+    except ImportError:
+        faiss_available = False
+    return faiss_available
+
+
 def is_opencv_available():
     """
     Check if opencv is available with simple python imports.

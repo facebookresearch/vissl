@@ -55,6 +55,7 @@ setup(
             "pre-commit",
             "nbconvert",
             "bs4",
+            "faiss-gpu",
         ]
     },
 )
