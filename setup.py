@@ -57,6 +57,7 @@ setup(
             "bs4",
             "faiss-gpu",
             "pycocotools>=2.0.1",
+            "tensorboard>=1.15",
         ]
     },
 )
