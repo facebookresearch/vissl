@@ -84,16 +84,19 @@ def launch_distributed(
     node_id = get_node_id(node_id)
     dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
     world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+
+    # set the environment variables including local rank, node id etc.
     set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
-    _copy_to_local(cfg)
 
     # given the checkpoint folder, we check that there's not already a final checkpoint
+    # and that if there already exists a final checkpoint and user is not overriding
+    # to ignore the final checkpoint
     checkpoint_folder = get_checkpoint_folder(cfg)
     if is_training_finished(cfg, checkpoint_folder=checkpoint_folder):
         logging.info(f"Training already succeeded on node: {node_id}, exiting.")
         return
 
-    # Get the checkpoint where to load from. The load_checkpoints function will
+    # Get the checkpoint where to resume from. The get_resume_checkpoint function will
     # automatically take care of detecting whether it's a resume or not.
     symlink_checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
     if cfg.CHECKPOINT.USE_SYMLINK_CHECKPOINT_FOR_RESUME and PathManager.exists(
@@ -104,6 +107,18 @@ def launch_distributed(
         checkpoint_path = get_resume_checkpoint(
             cfg, checkpoint_folder=checkpoint_folder
         )
+
+    # assert that if the user set the PARAMS_FILE, it must exist and be valid.
+    # we only use the PARAMS_FILE init if the checkpoint doesn't exist for the
+    # given training. This ensures that if the same training resumes, then it
+    # resumes from the checkpoint and not the weight init
+    if checkpoint_path is None and cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]:
+        assert PathManager.exists(
+            cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+        ), "Specified PARAMS_FILE does NOT exist"
+
+    # copy the data to local if user wants. This can speed up dataloading.
+    _copy_to_local(cfg)
 
     try:
         if world_size > 1:
