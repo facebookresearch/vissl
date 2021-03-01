@@ -11,7 +11,7 @@ from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.hydra_config import convert_to_attrdict
 from vissl.utils.misc import get_dist_run_id
 
-from .utils import UNIT_TEST_CONFIGS, SSLHydraConfig
+from utils import UNIT_TEST_CONFIGS, SSLHydraConfig
 
 
 logger = logging.getLogger("__name__")
