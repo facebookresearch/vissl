@@ -21,7 +21,7 @@ requirements:
     - scikit-learn
     - parameterized
     - numpy >=1.11
-    - faiss
+    - faiss-gpu
     - fvcore
     - iopath
     - importlib_resources

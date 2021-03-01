@@ -11,7 +11,7 @@ mock
 opencv-python
 tensorboard==1.15.0
 hydra-core>=1.0
-faiss>=1.5.3
+faiss-gpu
 cython
 scikit-learn
 parameterized==0.7.4
