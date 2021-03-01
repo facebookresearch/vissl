@@ -10,7 +10,6 @@ import sys
 from argparse import Namespace
 from typing import Any, List
 
-import faiss
 import numpy as np
 from hydra.experimental import compose, initialize_config_module
 from vissl.data import build_dataset
@@ -21,7 +20,7 @@ from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
-from vissl.utils.misc import merge_features, set_seeds
+from vissl.utils.misc import merge_features, set_seeds, is_faiss_available
 
 
 def get_data_features_and_images(cfg: AttrDict):
@@ -45,6 +44,13 @@ def get_data_features_and_images(cfg: AttrDict):
 
 
 def cluster_features_and_label(args: Namespace, cfg: AttrDict):
+    # faiss is an optional dependency for VISSL.
+    assert is_faiss_available(), (
+        "Please install faiss using conda install faiss-gpu -c pytorch "
+        "if using conda or pip install faiss-gpu"
+    )
+    import faiss
+
     cluster_backend = cfg.CLUSTERFIT.CLUSTER_BACKEND
     num_clusters = cfg.CLUSTERFIT.NUM_CLUSTERS
     data_split = cfg.CLUSTERFIT.FEATURES.DATA_PARTITION
