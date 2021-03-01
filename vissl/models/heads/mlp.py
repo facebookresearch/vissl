@@ -70,9 +70,9 @@ class MLP(nn.Module):
                 )
             if use_relu:
                 layers.append(nn.ReLU(inplace=True))
-                last_dim = dim
             if use_dropout:
                 layers.append(nn.Dropout())
+            last_dim = dim
         self.clf = nn.Sequential(*layers)
         # we use the default normal or uniform initialization for the layers
         # and allow users to scale the initialization.
