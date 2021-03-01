@@ -56,6 +56,7 @@ setup(
             "nbconvert",
             "bs4",
             "faiss-gpu",
+            "pycocotools>=2.0.1",
         ]
     },
 )
