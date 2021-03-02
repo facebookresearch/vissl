@@ -47,7 +47,7 @@ class TestConfigsComposition(unittest.TestCase):
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertEqual(
-            config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH,
+            config.MODEL.TRUNK.RESNETS.DEPTH,
             101,
             "config composition failed",
         )
@@ -78,18 +78,18 @@ class TestConfigsCliComposition(unittest.TestCase):
             [
                 "config=test/integration_test/quick_simclr",
                 "+config/pretrain/simclr/models=resnext101",
-                "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.GROUPS=32",
-                "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_PER_GROUP=16",
+                "config.MODEL.TRUNK.RESNETS.GROUPS=32",
+                "config.MODEL.TRUNK.RESNETS.WIDTH_PER_GROUP=16",
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertEqual(
-            config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.GROUPS,
+            config.MODEL.TRUNK.RESNETS.GROUPS,
             32,
             "config composition failed",
         )
         self.assertEqual(
-            config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_PER_GROUP,
+            config.MODEL.TRUNK.RESNETS.WIDTH_PER_GROUP,
             16,
             "config composition failed",
         )
