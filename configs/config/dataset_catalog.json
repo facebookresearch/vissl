@@ -31,11 +31,63 @@
         "train": ["<path_to_pytorch_dataset>", "<unused>"],
         "val": ["<path_to_pytorch_dataset>", "<unused>"]
     },
+    "SVHN": {
+        "train": ["<path_to_pytorch_dataset>", "<unused>"],
+        "val": ["<path_to_pytorch_dataset>", "<unused>"]
+    },
     "inaturalist2018_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
     "yfcc100m": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "clevr_count_filelist": {
+        "train": ["<path_to_train_images.npy>", "<path_to_train_labels.npy>"],
+        "val": ["<path_to_val_images.npy>", "<path_to_val_labels.npy>"]
+    },
+    "clevr_dist_filelist": {
+        "train": ["<path_to_train_images.npy>", "<path_to_train_labels.npy>"],
+        "val": ["<path_to_val_images.npy>", "<path_to_val_labels.npy>"]
+    },
+    "dsprites_loc_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "dsprites_orient_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "euro_sat_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "food101_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "kitti_dist_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "pcam_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "small_norb_azimuth_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "small_norb_elevation_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "stanford_cars_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "ucf101_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },

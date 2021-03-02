@@ -133,7 +133,7 @@ class GenericSSLDataset(Dataset):
             f"Rank: {local_rank} split: {split} Label files:\n{self.label_paths}"
         )
 
-    def load_single_label_file(self, path):
+    def load_single_label_file(self, path: str):
         """
         Load the single data file. We only support user specifying the numpy label
         files if user is specifying a data_filelist source of labels.
@@ -159,6 +159,20 @@ class GenericSSLDataset(Dataset):
             with PathManager.open(path, "rb") as fopen:
                 labels = np.load(fopen, allow_pickle=True)
         return labels
+
+    def _convert_to_numeric_ids(self, labels: np.ndarray) -> np.ndarray:
+        """
+        VISSL disk_filelist support targets as strings or integers
+
+        In case of strings, VISSL has to translate them into integers so that
+        each integer corresponds to an index
+        """
+        if isinstance(labels[0], str):
+            unique_labels = sorted(set(labels))
+            label_to_id = {label: idx for idx, label in enumerate(unique_labels)}
+            return np.array([label_to_id[label] for label in labels])
+        else:
+            return labels
 
     def _load_labels(self):
         """
@@ -188,6 +202,7 @@ class GenericSSLDataset(Dataset):
                         labels.append(path_labels)
                 else:
                     labels = self.load_single_label_file(paths)
+                    labels = self._convert_to_numeric_ids(labels)
             elif label_source == "disk_folder":
                 # In this case we use the labels inferred from the directory structure
                 # We enforce that the data source also be a disk folder in this case
