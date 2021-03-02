@@ -13,7 +13,7 @@ At a high level, project requires following system dependencies.
 - PyTorch>=1.4
 - torchvision (matching PyTorch install)
 - CUDA (must be a version supported by the pytorch version)
-- OpenCV
+- OpenCV (Optional)
 
 Installing VISSL from pre-built binaries
 -------------------------------------------

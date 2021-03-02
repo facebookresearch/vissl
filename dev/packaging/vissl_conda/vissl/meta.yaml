@@ -16,19 +16,16 @@ requirements:
     - pytorch
     - apex
     - torchvision>=0.5
-    - tensorboard>=1.15
-    - opencv
     - scipy
     - scikit-learn
     - parameterized
     - numpy >=1.11
-    - faiss
+    - faiss-gpu
     - fvcore
     - iopath
     - importlib_resources
     - hydra-core
     - tabulate
-    - pycocotools>=2.0.1
 
 test:
   imports:

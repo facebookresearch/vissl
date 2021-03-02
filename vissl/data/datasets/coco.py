@@ -53,6 +53,7 @@ def get_valid_objs(entry, objs):
 
 
 def get_coco_imgs_labels_info(split, data_source_dir, args):
+    # pycocotools is an optional dependency for VISSL
     from pycocotools.coco import COCO
 
     json_file = f"{data_source_dir}/annotations/instances_{split}2014.json"

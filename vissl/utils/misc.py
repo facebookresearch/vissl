@@ -25,6 +25,37 @@ def is_apex_available():
     return apex_available
 
 
+def is_faiss_available():
+    """
+    Check if faiss is available with simple python imports.
+    To install faiss, simply do:
+        If using PIP env: `pip install faiss-gpu`
+        If using conda env: `conda install faiss-gpu -c pytorch`
+    """
+    try:
+        import faiss  # NOQA
+
+        faiss_available = True
+    except ImportError:
+        faiss_available = False
+    return faiss_available
+
+
+def is_opencv_available():
+    """
+    Check if opencv is available with simple python imports.
+    To install opencv, simply do: `pip install opencv-python`
+    regardless of whether using conda or pip environment.
+    """
+    try:
+        import cv2  # NOQA
+
+        opencv_available = True
+    except ImportError:
+        opencv_available = False
+    return opencv_available
+
+
 def find_free_tcp_port():
     """
     Find the free port that can be used for Rendezvous on the local machine.

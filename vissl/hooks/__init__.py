@@ -99,7 +99,12 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
     if cfg.MODEL.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
     if cfg.TENSORBOARD_SETUP.USE_TENSORBOARD:
-        assert is_tensorboard_available(), "Tensorboard must be installed to use it."
+        assert is_tensorboard_available(), (
+            "Tensorboard must be installed to use it. Please install tensorboard using:"
+            "If pip environment: `pip install tensorboard` "
+            "If using conda and you prefer conda install of tensorboard: "
+            "`conda install -c conda-forge tensorboard`"
+        )
         tb_hook = get_tensorboard_hook(cfg)
         hooks.extend([tb_hook])
 

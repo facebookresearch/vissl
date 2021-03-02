@@ -2,11 +2,11 @@
 
 from typing import Any, Dict
 
-import cv2
 import numpy as np
 import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
+from vissl.utils.misc import is_opencv_available
 
 
 @register_transform("ImgPil2LabTensor")
@@ -39,6 +39,12 @@ class ImgPil2LabTensor(ClassyTransform):
         return img_lab_tensor
 
     def _convertbgr2lab(self, img):
+        # opencv is not a hard dependency for VISSL so we do the import locally
+        assert (
+            is_opencv_available()
+        ), "Please install OpenCV using: pip install opencv-python"
+        import cv2
+        
         # img is [0, 255] , HWC, BGR format, uint8 type
         assert len(img.shape) == 3, "Image should have dim H x W x 3"
         assert img.shape[2] == 3, "Image should have dim H x W x 3"
