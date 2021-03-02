@@ -85,6 +85,14 @@ def launch_distributed(
     dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
     world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
 
+    # If using gpus, we check that the user has specified <= gpus available on user system.
+    if cfg.MACHINE.DEVICE == "gpu":
+        assert cfg.DISTRIBUTED.NUM_PROC_PER_NODE <= torch.cuda.device_count(), (
+            f"User system doesn't have requested {cfg.DISTRIBUTED.NUM_PROC_PER_NODE} gpus "
+            f"available. Number of gpus found on user system={torch.cuda.device_count()}. "
+            "Please set the DISTRIBUTED.NUM_PROC_PER_NODE properly."
+        )
+
     # set the environment variables including local rank, node id etc.
     set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
 
