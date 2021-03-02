@@ -8,7 +8,6 @@ config:
   MODEL:
     TRUNK:
       NAME: regnet
-      TRUNK_PARAMS:
       REGNET:
         depth: 20
         w_0: 352
