@@ -9,8 +9,6 @@ config:
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
-          size: 256
-        - name: Resize
           size: [224, 224]
         - name: ToTensor
         - name: Normalize
@@ -24,8 +22,6 @@ config:
       DATASET_NAMES: [places205_everstore]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
-        - name: Resize
-          size: 256
         - name: Resize
           size: [224, 224]
         - name: ToTensor
