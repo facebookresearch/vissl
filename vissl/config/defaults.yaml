@@ -154,6 +154,11 @@ config:
       USE_STATEFUL_DISTRIBUTED_SAMPLER: False
       # whether to drop the last incomplete batch per process
       DROP_LAST: False
+      # if users want to replace certain prefixes from the image paths and replace them with
+      # some other prefix, they can do so here.
+      REMOVE_IMG_PATH_PREFIX: ""
+      # what prefix to replace the old prefix with. Could stay empty too
+      NEW_IMG_PATH_PREFIX: ""
       # name of the dataset. Meaningful and used to do lookup in the dataset_catalog.json
       # it has the advantage that user needs to full the dataset_catalog.json once
       # and then simply use the dataset name without having to specify data paths every time.
@@ -264,6 +269,11 @@ config:
     TEST:
       # if we want to resume the data sampler as well from a previous iteration
       USE_STATEFUL_DISTRIBUTED_SAMPLER: False
+      # if users want to replace certain prefixes from the image paths and replace them with
+      # some other prefix, they can do so here.
+      REMOVE_IMG_PATH_PREFIX: ""
+      # what prefix to replace the old prefix with. Could stay empty too
+      NEW_IMG_PATH_PREFIX: ""
       DROP_LAST: False
       DATA_SOURCES: []
       DATA_PATHS: []

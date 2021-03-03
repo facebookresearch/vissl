@@ -63,6 +63,8 @@ class DiskImageDataset(QueueDataset):
         self.is_initialized = False
         self._load_data(path)
         self._num_samples = len(self.image_dataset)
+        self._remove_prefix = cfg["DATA"][self.split]["REMOVE_IMG_PATH_PREFIX"]
+        self._new_prefix = cfg["DATA"][self.split]["NEW_IMG_PATH_PREFIX"]
         if self.data_source == "disk_filelist":
             # Set dataset to null so that workers dont need to pickle this file.
             # This saves memory when disk_filelist is large, especially when memory mapping.
@@ -105,6 +107,11 @@ class DiskImageDataset(QueueDataset):
         self._load_data(self._path)
         return self.image_dataset
 
+    def _replace_img_path_prefix(self, img_path, replace_prefix, new_prefix):
+        if img_path.startswith(replace_prefix):
+            return img_path.replace(replace_prefix, new_prefix)
+        return img_path
+
     def __len__(self):
         """
         Size of the dataset
@@ -131,6 +138,11 @@ class DiskImageDataset(QueueDataset):
         image_path = self.image_dataset[idx]
         try:
             if self.data_source == "disk_filelist":
+                image_path = self._replace_img_path_prefix(
+                    image_path,
+                    replace_prefix=self._remove_prefix,
+                    new_prefix=self._new_prefix,
+                )
                 with PathManager.open(image_path, "rb") as fopen:
                     img = Image.open(fopen).convert("RGB")
             elif self.data_source == "disk_folder":
