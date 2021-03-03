@@ -324,52 +324,59 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         is_final_train_phase = (
             (train_phase_idx == (num_epochs - 1)) and task.train and mode == "phase"
         )
-        # save checkpoint:
-        if (
-            is_primary()
-            and task.train
-            and (is_final_train_phase or is_checkpointing_phase)
-        ):
-            checkpoint_folder = task.checkpoint_folder
-            logging.info(
-                f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
-            )
-            classy_state_dict = task.get_classy_state()
-            # phase_idx is already incremented at the beginning of phase but if we
-            # are checkpointing at an iteration in the middle of phase, we should not
-            # save the incremented phase_idx as it will incorrectly assume that model
-            # trained for that phase already.
-            if mode == "iteration":
-                phase_idx = phase_idx - 1
-                classy_state_dict["phase_idx"] = classy_state_dict["phase_idx"] - 1
-                if task.train:
-                    train_phase_idx = train_phase_idx - 1
-                    classy_state_dict["train_phase_idx"] = train_phase_idx
-            checkpoint_task = {
-                "phase_idx": phase_idx,
-                "iteration": task.iteration,
-                "loss": task.loss.state_dict(),
-                "iteration_num": task.local_iteration_num,
-                "train_phase_idx": train_phase_idx,
-                "classy_state_dict": classy_state_dict,
-            }
-            ckpt_name = f"model_{mode}{mode_num}.torch"
-            if is_final_train_phase:
-                ckpt_name = f"model_final_checkpoint_{mode}{mode_num}.torch"
-            backend = task.config["CHECKPOINT"]["BACKEND"]
-            assert backend == "disk", "Only disk BACKEND supported"
-            save_checkpoint(
-                checkpoint_folder, checkpoint_task, checkpoint_file=ckpt_name
-            )
-            logging.info(f"Saved checkpoint: {checkpoint_folder}/{ckpt_name}")
-            # we create the checkpoint symlink and use this symlink to load
-            # checkpoints. This helps ensure that the checkpoint we load from
-            # are valid. It's a particularly useful feature for resuming trainings.
-            logging.info("Creating symlink...")
-            symlink_dest_file = f"{checkpoint_folder}/checkpoint.torch"
-            source_file = f"{checkpoint_folder}/{ckpt_name}"
-            create_file_symlink(source_file, symlink_dest_file)
-            logging.info(f"Created symlink: {symlink_dest_file}")
+
+        # handle checkpoint:
+        if task.train and (is_final_train_phase or is_checkpointing_phase):
+            #  - if sharded state consolidate the state
+            # /!\ All the ranks have to participate
+            if hasattr(task.optimizer, "consolidate_state_dict") and mode != "phase":
+                logging.info(
+                    f"[{mode}: {mode_num}] Consolidating sharded state on all replicas"
+                )
+                task.optimizer.consolidate_state_dict()
+
+            # - save the checkpoint on the primary rank
+            if is_primary():
+                checkpoint_folder = task.checkpoint_folder
+                logging.info(
+                    f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
+                )
+                classy_state_dict = task.get_classy_state()
+                # phase_idx is already incremented at the beginning of phase but if we
+                # are checkpointing at an iteration in the middle of phase, we should not
+                # save the incremented phase_idx as it will incorrectly assume that model
+                # trained for that phase already.
+                if mode == "iteration":
+                    phase_idx = phase_idx - 1
+                    classy_state_dict["phase_idx"] = classy_state_dict["phase_idx"] - 1
+                    if task.train:
+                        train_phase_idx = train_phase_idx - 1
+                        classy_state_dict["train_phase_idx"] = train_phase_idx
+                checkpoint_task = {
+                    "phase_idx": phase_idx,
+                    "iteration": task.iteration,
+                    "loss": task.loss.state_dict(),
+                    "iteration_num": task.local_iteration_num,
+                    "train_phase_idx": train_phase_idx,
+                    "classy_state_dict": classy_state_dict,
+                }
+                ckpt_name = f"model_{mode}{mode_num}.torch"
+                if is_final_train_phase:
+                    ckpt_name = f"model_final_checkpoint_{mode}{mode_num}.torch"
+                backend = task.config["CHECKPOINT"]["BACKEND"]
+                assert backend == "disk", "Only disk BACKEND supported"
+                save_checkpoint(
+                    checkpoint_folder, checkpoint_task, checkpoint_file=ckpt_name
+                )
+                logging.info(f"Saved checkpoint: {checkpoint_folder}/{ckpt_name}")
+                # we create the checkpoint symlink and use this symlink to load
+                # checkpoints. This helps ensure that the checkpoint we load from
+                # are valid. It's a particularly useful feature for resuming trainings.
+                logging.info("Creating symlink...")
+                symlink_dest_file = f"{checkpoint_folder}/checkpoint.torch"
+                source_file = f"{checkpoint_folder}/{ckpt_name}"
+                create_file_symlink(source_file, symlink_dest_file)
+                logging.info(f"Created symlink: {symlink_dest_file}")
 
     def _print_and_save_meters(self, task, train_phase_idx):
         """
