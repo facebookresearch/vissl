@@ -122,9 +122,9 @@ The resulting folder should have the following structure:
 ```bash
 /path/to/clevr/
     CLEVR_v1.0/
-        COPYRIGHT.txt 
+        COPYRIGHT.txt
         LICENSE.txt
-        README.txt 
+        README.txt
         images/
             train/
                 ... 75000 images ...
