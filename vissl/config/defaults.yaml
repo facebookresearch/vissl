@@ -869,6 +869,8 @@ config:
           # is used to determine how to scale the base learning rate value.
           # scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size
           base_lr_batch_size: 256
+          # scaling_type can be set to "sqrt" to reduce the impact of scaling on the base value
+          scaling_type: "linear"
         name: "multistep"
         update_interval: "epoch"
         # values indicate the step LR learning rate values. Instead of taking gamma, we
