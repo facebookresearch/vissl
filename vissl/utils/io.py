@@ -9,6 +9,7 @@ import time
 from urllib.parse import urlparse
 
 import numpy as np
+import yaml
 from fvcore.common.download import download
 from fvcore.common.file_io import PathManager, file_lock
 from vissl.utils.slurm import get_slurm_dir
@@ -64,6 +65,10 @@ def save_file(data, filename):
     elif file_ext == ".json":
         with PathManager.open(filename, "a") as fopen:
             fopen.write(json.dumps(data, sort_keys=True) + "\n")
+            fopen.flush()
+    elif file_ext == ".yaml":
+        with PathManager.open(filename, "wb") as fopen:
+            fopen.write(yaml.dump(data, sort_keys=True) + "\n")
             fopen.flush()
     else:
         raise Exception(f"Saving {file_ext} is not supported yet")
