@@ -1,7 +1,78 @@
 Add new Data Source
 =======================
 
-VISSL supports data loading from :code:`disk` as the default data source. If users dataset lives in their custom data storage solution :code:`my_data_source` instead of :code:`disk`, then users can extend VISSL to work with their data storage. Follow the steps below:
+VISSL supports data loading from :code:`disk_folder` as the default data source. If your dataset lives in a custom data storage solution instead of :code:`disk_folder`, you can extend VISSL to work with your data storage in several different ways:
+
+- Exporting the content of the non supported datasource as :code:`disk_folder`
+- Implementing a new type of data source inside VISSL
+
+The two options are developed below.
+
+Transforming to a disk_folder format
+---------------------------------------
+
+Out of the box, VISSL supports any dataset following the :code:`disk_folder` format:
+
+.. code-block:: bash
+
+    /path/to/dataset/
+      train/
+        class1/
+            a.jpg
+            b.jpg
+            ...
+        class2/
+            c.jpg
+            ...
+      val/
+        class1/
+            d.jpg
+            e.jpg
+            ...
+        class2/
+            f.jpg
+            ...
+
+The transformation of most existing dataset to the :code:`disk_folder` should be relatively easy. Some example scripts are provided in the folder `extra_script <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_ demonstrating how to perform this transformation. For instance:
+
+- :code:`create_clevr_count_data_files.py`: to create a dataset from `CLEVR <https://arxiv.org/abs/1612.068901>`_ where the goal is to count the number of object in the scene
+- :code:`create_ucf101_data_files.py`: to create an image action recognition dataset from the video action recognition dataset `UCF101 <https://www.crcv.ucf.edu/data/UCF101.php>`_ by extracting the middle frame
+
+You can refer to the documentation available `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_ to get more information all the available data preparation scripts.
+
+Once a dataset is made available at path :code:`/path/to/dataset`, plugging the dataset in the library is a simple two step process:
+
+1. add the paths to the "dataset_catalog.json" registry of dataset
+
+.. code-block:: json
+
+    "my_dataset_folder": {
+        "train": ["/path/to/dataset/train", "<lbl_path>"],
+        "val": ["/path/to/dataset/val", "<lbl_path>"]
+    },
+
+2. reference the new dataset in a configuration file:
+
+.. code-block:: yaml
+
+    config:
+      DATA:
+        TRAIN:
+          DATA_SOURCES: [disk_folder]
+          LABEL_SOURCES: [disk_folder]
+          DATASET_NAMES: [my_dataset_folder]
+          ...
+        TEST:
+          DATA_SOURCES: [disk_folder]
+          LABEL_SOURCES: [disk_folder]
+          DATASET_NAMES: [my_dataset_folder]
+          ...
+
+
+Adding a new type of data source
+------------------------------------
+
+If instead, you want to use a custom data storage solution :code:`my_data_source` instead of :code:`disk_folder`, you can extend VISSL to work with the :code:`my_data_source` data storage by following the steps below:
 
 - **Step1**: Implement your custom data source under :code:`vissl/data/my_data_source.py` following the template:
 

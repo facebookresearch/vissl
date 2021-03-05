@@ -1,0 +1,52 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 4
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [stanford_cars_folder]
+      TRANSFORMS:
+        - name: Resize
+          size: [224, 224]
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/stanford_cars/
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [stanford_cars_folder]
+      TRANSFORMS:
+        - name: Resize
+          size: [224, 224]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/stanford_cars/
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 2
+      topk_values: [1]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res5", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["res5avg", ["Identity", []]],
+      ]
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 196]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 196]}],
+      ]

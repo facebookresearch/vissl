@@ -3,7 +3,7 @@ from typing import List, Tuple
 from fvcore.common.file_io import PathManager
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.datasets import CIFAR10, CIFAR100, MNIST, STL10
+from torchvision.datasets import CIFAR10, CIFAR100, MNIST, STL10, SVHN
 from vissl.utils.hydra_config import AttrDict
 
 
@@ -16,6 +16,7 @@ class TorchvisionDatasetName:
     CIFAR100 = "CIFAR100"
     STL10 = "STL10"
     MNIST = "MNIST"
+    SVHN = "SVHN"
 
 
 class TorchvisionDataset(Dataset):
@@ -53,6 +54,9 @@ class TorchvisionDataset(Dataset):
             return STL10(self.path, split=stl_split)
         elif self.dataset_name == TorchvisionDatasetName.MNIST:
             return MNIST(root=self.path, train=is_train_split)
+        elif self.dataset_name == TorchvisionDatasetName.SVHN:
+            stl_split = "train" if is_train_split else "test"
+            return SVHN(root=self.path, split=stl_split)
         else:
             raise ValueError(f"Unsupported dataset {self.dataset_name: str}")
 

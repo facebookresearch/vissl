@@ -2,7 +2,421 @@
 
 We provide several helpful scripts to prepare data, to convert VISSL models to detectron2 compatible models or to convert [caffe2 models](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md) to VISSL compatible models.
 
+<br>
+
+## Data preparation
+
+VISSL supports benchmarks inspired by the [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://cdn.openai.com/papers/Learning_Transferable_Visual_Models_From_Natural_Language_Supervision.pdf) papers, for which the datasets do not directly exist but are transformations of existing dataset.
+
+To run these benchmarks, the following data preparation scripts are mandatory:
+
+- `create_clevr_count_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to count the number of object in the scene
+- `create_clevr_dist_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to estimate the distance to the closest object in the scene
+- `create_dsprites_location_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the x coordinate of the sprite on the scene
+- `create_dsprites_orientation_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the orientation of the sprite on the scene
+- `create_euro_sat_data_files.py`: to transform the [EUROSAT](https://github.com/phelber/eurosat) dataset to the `disk_folder` format
+- `create_food101_data_files.py`: to transform the [FOOD101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101) dataset to the `disk_folder` format
+- `create_kitti_dist_data_files.py`: to create a `disk_folder` dataset from [KITTI](http://www.cvlibs.net/datasets/kitti/) where the goal is to estimate the distance of the closest car, van or truck
+- `create_patch_camelyon_data_files.py`: to transform the [PatchCamelyon](https://github.com/basveeling/pcam) dataset to the `disk_folder` format
+- `create_small_norb_azimuth_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to find the azimuth or the photographed object
+- `create_small_norb_elevation_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to predict the elevation in the image
+- `create_ucf101_data_files.py`: to create a `disk_folder` image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
+
+### Unified data preparation interface
+
+All of these scripts follow the same easy to use interface:
+
+```
+python create_[***]_data_files.py -i /path/to/input_datset -o /path/to/tranformed/dataset -d
+```
+
+- `-i` gives the path to the official dataset format
+- `-o` gives the path to the output transformed dataset (the one to feed to VISSL)
+- `-d` (optional) automatically downloads the dataset in the input path
+
+Scripts producing a `disk_filelist` format will create the following structure:
+
+```
+output_folder/
+    train_images.npy  # Paths to the train images
+    train_labels.npy  # Labels for each of the train images
+    val_images.npy    # Paths to the val images
+    val_labels.npy    # Labels for each of the val images
+```
+
+These files should be referenced in the `dataset_catalog.json` like so:
+
+```json
+"dataset_filelist": {
+    "train": ["/path/to/train_images.npy", "/path/to/train_labels.npy"],
+    "val": ["/path/to/val_images.npy", "/path/to/val_labels.npy"]
+},
+```
+
+Scripts producing a `disk_folder` format will create the following structure:
+
+```
+train/
+    label1/
+        image_1.jpeg
+        image_2.jpeg
+        ...
+    label2/
+        image_x.jpeg
+        image_y.jpeg
+        ...
+    ...
+val/
+    label1/
+        image_1.jpeg
+        image_2.jpeg
+        ...
+    label2/
+        image_x.jpeg
+        image_y.jpeg
+        ...
+    ...
+```
+
+These files should be referenced in the `dataset_catalog.json` like so:
+
+```json
+"dataset_folder": {
+    "train": ["/path/to/dataset/train", "<ignored>"],
+    "val": ["/path/to/dataset/val", "<ignored>"]
+},
+```
+
+The following sections will describe each of these data preparation scripts in detail.
+
+### Preparing CLEVR/Counts data files
+
+#### Automatic download
+
+Run the `create_clevr_count_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_clevr_count_data_files.py \
+    -i /path/to/clevr/ \
+    -o /output_path/to/clevr_count
+    -d
+```
+
+The folder `/output_path/clevr_count` now contains the CLEVR/Counts `disk_filelist` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"clevr_count_filelist": {
+    "train": ["/output_path/to/clevr_count/train_images.npy", "/output_path/to/clevr_count/train_labels.npy"],
+    "val": ["/output_path/to/clevr_count/val_images.npy", "/output_path/to/clevr_count/val_labels.npy"]
+},
+```
+
+#### Manual download
+
+Download the full dataset by visiting [CLEVR website](https://cs.stanford.edu/people/jcjohns/clevr/) and clicking on [Download CLEVR v1.0 (18 GB)](https://dl.fbaipublicfiles.com/clevr/CLEVR_v1.0.zip) dataset.
+Expand the archive.
+
+The resulting folder should have the following structure:
+
+```bash
+/path/to/clevr/
+    CLEVR_v1.0/
+        COPYRIGHT.txt 
+        LICENSE.txt
+        README.txt 
+        images/
+            train/
+                ... 75000 images ...
+            val/
+                ... 15000 images ...
+            test/
+                ... 15000 images ...
+        questions/
+            CLEVR_test_questions.json
+            CLEVR_train_questions.json
+            CLEVR_val_questions.json
+        scenes/
+            CLEVR_train_scenes.json
+            CLEVR_val_scenes.json
+```
+
+Run the script where `/path/to/clevr/` is the path of the folder containing the `CLEVR_v1.0` folder:
+
+```bash
+python extra_scripts/create_clevr_count_data_files.py \
+    -i /path/to/clevr/ \
+    -o /output_path/to/clevr_count
+```
+
+The folder `/output_path/clevr_count` now contains the CLEVR/Counts dataset.
+
+### Preparing CLEVR/Dist data files
+
+Follow the exact same steps as for the preparation of the CLEVR/Count dataset described above, but use `create_clevr_dist_data_files.py` instead of `create_clevr_count_data_files.py`.
+
+Once the dataset is prepared and available at `/path/to/clevr_dist`, the last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"clevr_dist_filelist": {
+    "train": ["/path/to/clevr_dist/train_images.npy", "/path/to/clevr_dist/train_labels.npy"],
+    "val": ["/path/to/clevr_dist/val_images.npy", "/path/to/clevr_dist/val_labels.npy"]
+},
+```
+
+### Preparing the dSprites/location data files
+
+Run the `create_dsprites_location_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_dsprites_location_data_files.py \
+    -i /path/to/dsprites/ \
+    -o /output_path/to/dsprites_loc
+    -d
+```
+
+The folder `/output_path/to/dsprites_loc` now contains the dSprites/location `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"dsprites_loc_folder": {
+    "train": ["/output_path/to/dsprites_loc/train", "<ignored>"],
+    "val": ["/output_path/to/dsprites_loc/val", "<ignored>"]
+},
+```
+
+### Preparing the dSprites/orientation data files
+
+Run the `create_dsprites_orientation_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_dsprites_orientation_data_files.py \
+    -i /path/to/dsprites/ \
+    -o /output_path/to/dsprites_orient
+    -d
+```
+
+The folder `/output_path/to/dsprites_orient` now contains the dSprites/orientation `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"dsprites_orient_folder": {
+    "train": ["/output_path/to/dsprites_orient/train", "<ignored>"],
+    "val": ["/output_path/to/dsprites_orient/val", "<ignored>"]
+},
+```
+
+### Preparing the EuroSAT data files
+
+Run the `create_euro_sat_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_euro_sat_data_files.py \
+    -i /path/to/euro_sat/ \
+    -o /output_path/to/euro_sat
+    -d
+```
+
+The folder `/output_path/to/euro_sat` now contains the EuroSAT `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"euro_sat_folder": {
+    "train": ["/output_path/to/euro_sat/train", "<ignored>"],
+    "val": ["/output_path/to/euro_sat/val", "<ignored>"]
+},
+```
+
+### Preparing the Food-101 data files
+
+Run the `create_food101_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_food101_data_files.py \
+    -i /path/to/food101/ \
+    -o /output_path/to/food101
+    -d
+```
+
+The folder `/output_path/to/food101` now contains the Food101 `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"food101_folder": {
+    "train": ["/output_path/to/food101/train", "<ignored>"],
+    "val": ["/output_path/to/food101/val", "<ignored>"]
+},
+```
+
+### Preparing the KITTI/distance data files
+
+Run the `create_kitti_dist_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_kitti_dist_data_files.py \
+    -i /path/to/kitti/ \
+    -o /output_path/to/kitti_distance
+    -d
+```
+
+The folder `/output_path/to/kitti_distance` now contains the KITTI/distance `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"kitti_dist_folder": {
+    "train": ["/output_path/to/kitti_distance/train", "<ignored>"],
+    "val": ["/output_path/to/kitti_distance/val", "<ignored>"]
+},
+```
+
+### Preparing the Patch Camelyon data files
+
+Run the `create_patch_camelyon_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_patch_camelyon_data_files.py \
+    -i /path/to/pcam/ \
+    -o /output_path/to/pcam
+    -d
+```
+
+The folder `/output_path/to/pcam` now contains the Patch Camelyon `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"pcam_folder": {
+    "train": ["/output_path/to/pcam/train", "<ignored>"],
+    "val": ["/output_path/to/pcam/val", "<ignored>"]
+},
+```
+
+### Preparing the SmallNORB/azimuth data files
+
+Run the `create_small_norb_azimuth_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_small_norb_azimuth_data_files.py \
+    -i /path/to/snorb/ \
+    -o /output_path/to/snorb_azimuth
+    -d
+```
+
+The folder `/output_path/to/snorb_azimuth` now contains the SmallNORB/azimuth `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"small_norb_azimuth_folder": {
+    "train": ["/output_path/to/snorb_azimuth/train", "<ignored>"],
+    "val": ["/output_path/to/snorb_azimuth/val", "<ignored>"]
+},
+```
+
+### Preparing the SmallNORB/elevation data files
+
+Run the `create_small_norb_elevation_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_small_norb_elevation_data_files.py \
+    -i /path/to/snorb/ \
+    -o /output_path/to/snorb_elevation
+    -d
+```
+
+The folder `/output_path/to/snorb_elevation` now contains the SmallNORB/elevation `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"small_norb_elevation_folder": {
+    "train": ["/output_path/to/snorb_elevation/train", "<ignored>"],
+    "val": ["/output_path/to/snorb_elevation/val", "<ignored>"]
+},
+```
+
+### Preparing the Stanford Cars data files
+
+Run the `create_stanford_cars_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_stanford_cars_data_files.py \
+    -i /path/to/cars/ \
+    -o /output_path/to/cars
+    -d
+```
+
+The folder `/output_path/to/cars` now contains the Stanford Cars `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"stanford_cars_folder": {
+    "train": ["/output_path/to/cars/train", "<ignored>"],
+    "val": ["/output_path/to/cars/val", "<ignored>"]
+},
+```
+
+### Preparing UCF101/image data files
+
+#### Automatic download
+
+Run the `create_ucf101_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_ucf101_data_files.py \
+    -i /path/to/ucf101/ \
+    -o /output_path/to/ucf101
+    -d
+```
+
+The folder `/output_path/ucf101` now contains the UCF101 image action recognition `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"ucf101_folder": {
+    "train": ["/output_path/to/ucf101/train", "<ignored>"],
+    "val": ["/output_path/to/ucf101/val", "<ignored>"]
+},
+```
+
+#### Manual download
+
+Download the full dataset by visiting the [UCF101 website](https://www.crcv.ucf.edu/data/UCF101.php):
+
+- Click on [The UCF101 data set can be downloaded by "clicking here"](https://www.crcv.ucf.edu/data/UCF101/UCF101.rar) to retrieve the data (all the videos).
+- Click on [The Train/Test Splits for Action Recognition on UCF101 data set can be downloaded by clicking here](https://www.crcv.ucf.edu/data/UCF101/UCF101TrainTestSplits-RecognitionTask.zip) to retrieve the splits.
+
+Expand both archives in the same folder, say `/path/to/ucf101`.
+The resulting folder should have the following structure:
+
+```bash
+ucf101/
+    UCF-101/
+        ApplyEyeMakeup/
+            ... videos ...
+        ApplyLipstick/
+            ... videos ...
+    ucfTrainTestlist/
+        classInd.txt
+        testlist01.txt
+        testlist02.txt
+        testlist03.txt
+        trainlist01.txt
+        trainlist02.txt
+        trainlist03.txt
+```
+
+Run the following commands (where `/path/to/ucf101` is the path of the folder above):
+
+```bash
+python extra_scripts/create_ucf101_data_files.py \
+    -i /path/to/ucf101/ \
+    -o /output_path/to/ucf101
+```
+
+The folder `/output_path/ucf101` now contains the UCF101 image action recognition dataset.
+
+<br>
+
 ## Data preparation (optional)
+
 The following scripts are optional as VISSL's `dataset_catalog.py` supports reading the downloaded data directly for most of these. For all the datasets below, we assume that the datasets are in the format as described [here](../vissl/data/README.md).
 
 ### Preparing COCO data files
@@ -77,6 +491,8 @@ python extra_scripts/create_voc_low_shot_samples.py \
     --num_samples 5
 ```
 
+<br>
+
 ## Generating Jigsaw Permutations for varying problem complexity
 We provide scripts to change problem complexity of Jigsaw approach (as an axis of scaling in [paper](https://arxiv.org/abs/1905.01235)).
 
@@ -89,6 +505,8 @@ python extra_scripts/generate_jigsaw_permutations.py \
     --output_dir /tmp/vissl//jigsaw_perms/ \
     -- N 2000
 ```
+
+<br>
 
 ## Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
 We provide scripts to convert VISSL models to [Detectron2](https://github.com/facebookresearch/detectron2) and [ClassyVision](https://github.com/facebookresearch/ClassyVision) compatible models.
@@ -123,6 +541,8 @@ python extra_scripts/convert_vissl_to_torchvision.py \
     --output_dir /path/to/output/dir/ \
     --output_name <my_converted_model>.torch
 ```
+
+<br>
 
 ## Converting Caffe2 models -> VISSL
 We provide conversion of all the [caffe2 models](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md) in the [paper](https://arxiv.org/abs/1905.01235)
@@ -189,6 +609,8 @@ python extra_scripts/convert_caffe2_to_vissl_alexnet.py \
     --output_model <pth_model>.torch
 ```
 
+<br>
+
 ## Converting Models ClassyVision -> VISSL
 We provide scripts to convert [ClassyVision](https://github.com/facebookresearch/ClassyVision) models to [VISSL](https://github.com/facebookresearch/vissl) compatible models.
 
@@ -200,6 +622,7 @@ python extra_scripts/convert_classy_vision_to_vissl_resnet.py \
     --depth 50
 ```
 
+<br>
 
 ## Converting Official RotNet and DeepCluster models -> VISSL
 

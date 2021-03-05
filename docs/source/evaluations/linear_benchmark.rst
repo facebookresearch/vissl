@@ -168,6 +168,189 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 
+Benchmark: CIFAR-10
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/cifar10>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/cifar10/eval_resnet_8gpu_transfer_cifar10_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+
+Benchmark: CIFAR-100
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/cifar100>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/cifar100/eval_resnet_8gpu_transfer_cifar100_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+
+Benchmark: MNIST
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/mnist>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/mnist/eval_resnet_8gpu_transfer_mnist_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+
+Benchmark: STL-10
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/stl10>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/stl10/eval_resnet_8gpu_transfer_stl10_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+
+Benchmark: SVHN
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/svhn>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/svhn/eval_resnet_8gpu_transfer_svhn_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+
+Benchmark: FOOD-101
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/food101>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/food101/eval_resnet_8gpu_transfer_food101_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for FOOD-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: UCF-101
+-----------------------
+
+The UCF-101 benchmark evaluates the classification performance on human actions from a single image (the middle frame of the UCF101 dataset).
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/ucf101>`_.
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/ucf101/eval_resnet_8gpu_transfer_ucf101_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for UCF-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_. This script will handle the transformation from videos to images by extracting the middle frame of each of the videos.
+
+
+Benchmark: EuroSAT
+----------------------------
+
+The Patch Camelyon (PCAM) benchmark evaluates the classification performance on a specialized task (satellite imaging).
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/euro_sat>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/euro_sat/eval_resnet_8gpu_transfer_euro_sat_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for EuroSAT is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: Patch Camelyon
+----------------------------
+
+The Patch Camelyon (PCAM) benchmark evaluates the classification performance on a specialized task (medical task).
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/pcam>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/pcam/eval_resnet_8gpu_transfer_pcam_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for Patch Camelyon is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: CLEVR
+-------------------
+
+The CLEVR benchmarks evaluate the understanding of the structure of a 3D scene by:
+
+- CLEVR/Count: counting then number of objects in the scene
+- CLEVR/Dist: estimating the distance to the closest object in the scene
+
+The configuration setting for these benchmarks
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/clever_count>`_ and `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/clevr_dist>`_.
+
+.. code-block:: bash
+
+    # For CLEVR Count
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/clevr_count/eval_resnet_8gpu_transfer_clevr_count_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+    # For CLEVR Dist
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/clevr_dist/eval_resnet_8gpu_transfer_clevr_dist_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+Scripts to automatically prepare the data for the CLEVR benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: dSprites
+----------------------
+
+The dSprites benchmarks evaluate the understanding of the positional information in a synthetic 2D scene by:
+
+- dSprites/location: estimating the X position of a sprite
+- dSprites/orientation: estimating the orientation of a sprite
+
+The configuration setting for these benchmarks
+is provided under the `dsprites <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/dsprites>`_ folder.
+
+.. code-block:: bash
+
+    # For dSprites location
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/dsprites//eval_resnet_8gpu_transfer_dsprites_loc_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+    # For dSprites orientation
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/dsprites/eval_resnet_8gpu_transfer_dsprites_orient_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+Scripts to automatically prepare the data for the dSprites benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
 Benchmark: Linear SVM on VOC07
 ---------------------------------
 

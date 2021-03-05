@@ -3,16 +3,12 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 4
     TRAIN:
-      DATA_SOURCES: [torchvision_dataset]
-      LABEL_SOURCES: [torchvision_dataset]
-      DATASET_NAMES: [MNIST]
-      BATCHSIZE_PER_REPLICA: 256
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [small_norb_elevation_folder]
       TRANSFORMS:
-        - name: MNISTImgPil2RGB
-          size: 32
-          box: [2, 2]
-        - name: RandomResizedCrop
-          size: 32
+        - name: Resize
+          size: 224
         - name: RandomHorizontalFlip
         - name: ToTensor
         - name: Normalize
@@ -20,23 +16,21 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/mnist/
+      COPY_DESTINATION_DIR: /tmp/small_norb_elevation/
     TEST:
-      DATA_SOURCES: [torchvision_dataset]
-      LABEL_SOURCES: [torchvision_dataset]
-      DATASET_NAMES: [MNIST]
-      BATCHSIZE_PER_REPLICA: 256
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [small_norb_elevation_folder]
       TRANSFORMS:
-        - name: MNISTImgPil2RGB
-          size: 32
-          box: [2, 2]
+        - name: Resize
+          size: 224
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/mnist/
+      COPY_DESTINATION_DIR: /tmp/small_norb_elevation/
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
@@ -49,5 +43,5 @@ config:
       ]
     HEAD:
       PARAMS: [
-        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 10]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 9]}],
       ]
