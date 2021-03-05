@@ -69,7 +69,7 @@ from designing a new self-supervised task to evaluating the learned representati
    :caption: Evaluation tasks
 
    evaluations/linear_benchmark
-   evaluations/full_finetune_in1k
+   evaluations/fine_tuning
    evaluations/nearest_neighbor
    evaluations/semi_supervised
    evaluations/object_detection
