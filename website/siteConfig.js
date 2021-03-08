@@ -16,7 +16,7 @@ const users = [];
 
 const siteConfig = {
   title: 'VISSL', // Title for your website.
-  tagline: 'A library for state-of-the-art self-supervised learning',
+  tagline: 'A library for state-of-the-art self-supervised learning from images',
   url: 'https://vissl.ai', // Your website URL
   baseUrl: baseUrl, // Base URL for your project */
   // For github.io type URLs, you would set the url and baseUrl like:
