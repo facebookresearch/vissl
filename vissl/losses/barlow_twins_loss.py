@@ -17,7 +17,7 @@ class BarlowTwinsLoss(ClassyLoss):
     See the paper for the details on the loss.
 
     Config params:
-        lambda_ (float): weight on the off-diagonal terms. It controls the tradeoffs between
+        lambda_ (float): weight on the off-diagonal terms. It controls the trade-off between
             the importance given to the invariance term versus the redundancy reduction term.
         embedding_dim (int): dimensionality of the representation
     """
@@ -62,7 +62,7 @@ class BarlowTwinsCriterion(nn.Module):
     https://arxiv.org/abs/2103.03230v1.
 
     Args:
-        lambda_ (float): weight on the off-diagonal terms. It controls the tradeoffs between
+        lambda_ (float): weight on the off-diagonal terms. It controls the trade-off between
             the importance given to the invariance term versus the redundancy reduction term.
         embedding_dim (int): dimensionality of the representation
     """
