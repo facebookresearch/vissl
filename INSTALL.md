@@ -122,7 +122,7 @@ pip install opencv-python
 pip uninstall -y classy_vision
 pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
 # install vissl dev mode (e stands for editable)
-pip install -e .[dev]
+pip install -e ".[dev]"
 # verify installation
 python -c 'import vissl, apex'
 ```
