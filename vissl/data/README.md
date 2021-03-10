@@ -126,56 +126,45 @@ stl10_binary/
     unlabeled_X.bin
 ```
 
+## Expected dataset structure for SVHN
+
+The expected format is the exact same format used by torchvision, and the exact format obtained after either:
+
+- downloading the `train_32x32.mat`, `test_32x32.mat` and `extra_32x32.mat` files available at http://ufldl.stanford.edu/housenumbers/ in the same folder
+
+- instantiating the `torchvision.datasets.SVHN` class with `download=True`
+
+```bash
+svhn_folder/
+    test_32x32.mat
+    train_32x32.mat
+```
+
 ## Expected dataset structure for the other benchmark datasets
 
 VISSL supports benchmarks inspired by the [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://cdn.openai.com/papers/Learning_Transferable_Visual_Models_From_Natural_Language_Supervision.pdf) papers, for which the datasets either:
 
-- Do not directly exist but are transformations of existing dataset
-- Are not in a format directly compatible with the `disk_folder` format of VISSL
+- Do not directly exist but are transformations of existing dataset (like images extracted from videos)
+- Are not in a format directly compatible with the `disk_folder` or the `disk_filelist` format of VISSL
+- And are not yet part of [torchvision](https://pytorch.org/vision/stable/datasets.html) datasets
 
 To run these benchmarks, the following data preparation scripts are mandatory:
 
-- `create_clevr_count_data_files.py`: to create a dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to count the number of object in the scene
-- `create_clevr_dist_data_files.py`: to create a dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to estimate the distance of the closest object in the scene
+- `create_clevr_count_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to count the number of object in the scene
+- `create_clevr_dist_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to estimate the distance of the closest object in the scene
+- `create_dsprites_location_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the x coordinate of the sprite on the scene
+- `create_dsprites_orientation_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the orientation of the sprite on the scene
 - `create_euro_sat_data_files.py`: to transform the [EUROSAT](https://github.com/phelber/eurosat) dataset to the `disk_folder` format
 - `create_food101_data_files.py`: to transform the [FOOD101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101) dataset to the `disk_folder` format
+- `create_kitti_dist_data_files.py`: to create a `disk_folder` dataset from [KITTI](http://www.cvlibs.net/datasets/kitti/) where the goal is to estimate the distance of the closest car, van or truck
 - `create_patch_camelyon_data_files.py`: to transform the [PatchCamelyon](https://github.com/basveeling/pcam) dataset to the `disk_folder` format
-- `create_small_norb_azimuth_data_files.py` to create a dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to find the azimuth or the photographed object
-- `create_small_norb_elevation_data_files.py` to create a dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to predict the elevation in the image
-- `create_svhn_data_files.py`: to transform the [SVHN](http://ufldl.stanford.edu/housenumbers) dataset to the `disk_folder` format
-- `create_ucf101_data_files.py`: to create an image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
+- `create_small_norb_azimuth_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to find the azimuth or the photographed object
+- `create_small_norb_elevation_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to predict the elevation in the image
+- `create_ucf101_data_files.py`: to create a `disk_folder` image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
 
 You can read more about how to download these datasets and run these scripts from [here](https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md).
 
-
-After data preparation, the output folders are compatible with the `disk_folder` layout:
-
-```bash
-train/
-    <n0......>/
-        <im-1-name>.JPEG
-        ...
-        <im-N-name>.JPEG
-        ...
-    <n1......>/
-        <im-1-name>.JPEG
-        ...
-        <im-M-name>.JPEG
-        ...
-    ...
-val/
-    <n0......>/
-        <im-1-name>.JPEG
-        ...
-        <im-N-name>.JPEG
-        ...
-    <n1......>/
-        <im-1-name>.JPEG
-        ...
-        <im-M-name>.JPEG
-        ...
-    ...
-```
+After data preparation, the output folders are compatible with the `disk_folder` layout or `disk_filelist` layout.
 
 ## Dataset Catalog
 It contains a mapping from strings (which are names that identify a dataset,
