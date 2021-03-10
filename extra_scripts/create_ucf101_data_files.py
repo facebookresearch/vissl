@@ -14,7 +14,9 @@ from tqdm import tqdm
 try:
     from pyunpack import Archive
 except ImportError:
-    raise ValueError("You must have pyunpack and patool installed to run this script: pip install pyunpack patool.")
+    raise ValueError(
+        "You must have pyunpack and patool installed to run this script: pip install pyunpack patool."
+    )
 
 try:
     import av

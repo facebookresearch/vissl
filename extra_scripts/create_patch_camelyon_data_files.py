@@ -13,7 +13,9 @@ from tqdm import tqdm
 try:
     import h5py
 except ImportError:
-    raise ValueError("You must have h5py installed to run this script: pip install h5py.")
+    raise ValueError(
+        "You must have h5py installed to run this script: pip install h5py."
+    )
 
 
 def get_argument_parser():
