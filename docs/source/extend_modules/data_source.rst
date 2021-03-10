@@ -1,7 +1,7 @@
 Add new Data Source
 =======================
 
-VISSL supports data loading from :code:`disk_folder` or :code:`disk_filelist` as the default data source.
+VISSL supports data loading from :code:`disk_folder`, :code:`disk_filelist` or :code:`torchvision_dataset` as default data sources.
 If your dataset lives in a custom data storage solution instead, you can extend VISSL to work with your data storage in several different ways:
 
 - Exporting the content of the non supported datasource as :code:`disk_filelist`
