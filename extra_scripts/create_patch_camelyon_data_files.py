@@ -5,11 +5,17 @@ import os
 from collections import OrderedDict
 from typing import NamedTuple
 
-import h5py
 from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
+
+try:
+    import h5py
+except ImportError:
+    raise ValueError(
+        "You must have h5py installed to run this script: pip install h5py."
+    )
 
 
 def get_argument_parser():

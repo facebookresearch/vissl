@@ -7,11 +7,16 @@ from contextlib import contextmanager
 from typing import List, Optional, Tuple
 
 from PIL import Image
-from pyunpack import Archive
 from torch.utils.data import DataLoader
 from torchvision.datasets.utils import download_url, extract_archive
 from tqdm import tqdm
 
+try:
+    from pyunpack import Archive
+except ImportError:
+    raise ValueError(
+        "You must have pyunpack and patool installed to run this script: pip install pyunpack patool."
+    )
 
 try:
     import av

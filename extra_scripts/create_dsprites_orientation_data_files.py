@@ -1,6 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-import importlib
+import importlib.util
 import math
 import os
 
