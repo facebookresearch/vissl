@@ -19,9 +19,11 @@ CONDA_CUDA_VERSIONS = {
     "1.6.0": ["cu92", "cu101", "cu102"],
     "1.7.0": ["cu101", "cu102", "cu110"],
     "1.7.1": ["cu101", "cu102", "cu110"],
+    "1.8.0": ["cu101", "cu102", "cu111"]
 }
 
 CUDA_HOMES = {
+    "cu111": "/usr/local/cuda-11.1/",
     "cu110": "/usr/local/cuda-11.0/",
     "cu102": "/usr/local/cuda-10.2/",
     "cu101": "/usr/local/cuda-10.1/",
@@ -29,6 +31,7 @@ CUDA_HOMES = {
     "cu92": "/usr/local/cuda-9.2/",
 }
 CUDATOOLKIT_CONSTRAINTS = {
+    "cu111": "- cudatoolkit >=11.1,<11.2 # [not osx]",
     "cu110": "- cudatoolkit >=11.0,<11.1 # [not osx]",
     "cu102": "- cudatoolkit >=10.2,<10.3 # [not osx]",
     "cu101": "- cudatoolkit >=10.1,<10.2 # [not osx]",
@@ -77,7 +80,7 @@ for python_version in python_versions:
                 python_version,
                 "inside/packaging/apex",
             ]
-            if python_version == "3.9":
+            if python_version == "3.9" or cuv == "cu111":
                 args.insert(4, "conda-forge")
                 args.insert(4, "-c")
             subprocess.check_call(args)
