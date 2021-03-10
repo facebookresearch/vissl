@@ -30,6 +30,7 @@ declare -A CONDA_CUDA_VERSIONS=(
     ["1.6.0"]="cu101 cu102"
     ["1.7.0"]="cu101 cu102 cu110"
     ["1.7.1"]="cu101 cu102 cu110"
+    ["1.8.0"]="cu101 cu102 cu111"
 )
 
 #VERSION=$(python -c "exec(open('${script_dir}/apex/__init__.py').read()); print(__version__)")
@@ -44,16 +45,15 @@ do
             continue
         fi
 
-        if [[ "3.9" == "$python_version" ]]
-        then
-            extra_channel="-c conda-forge"
-        else
-            extra_channel=""
-        fi
-
         for cu_version in ${CONDA_CUDA_VERSIONS[$pytorch_version]}
         do
+            extra_channel=""
             case "$cu_version" in
+                cu111)
+                    export CUDA_HOME=/usr/local/cuda-11.1/
+                    export CUDA_TAG=11.1
+                    extra_channel="-c conda-forge"
+                ;;
                 cu110)
                     export CUDA_HOME=/usr/local/cuda-11.0/
                     export CUDA_TAG=11.0
@@ -71,6 +71,12 @@ do
                     exit 1
                 ;;
             esac
+
+            if [[ "3.9" == "$python_version" ]]
+            then
+                extra_channel="-c conda-forge"
+            fi
+
             tag=py"${python_version//./}"_"${cu_version}"_pyt"${pytorch_version//./}"
 
             outdir="../output/$tag"
