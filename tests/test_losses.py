@@ -10,6 +10,7 @@ import torch.multiprocessing as mp
 from classy_vision.generic.distributed_util import set_cpu_device
 from parameterized import parameterized
 from utils import ROOT_LOSS_CONFIGS, SSLHydraConfig
+from vissl.losses.barlow_twins_loss import BarlowTwinsCriterion
 from vissl.losses.multicrop_simclr_info_nce_loss import MultiCropSimclrInfoNCECriterion
 from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.losses.swav_loss import SwAVCriterion
@@ -68,6 +69,12 @@ class TestLossesForward(unittest.TestCase):
             output_dir="",
         )
         _ = loss_layer(scores=self._get_embedding(), head_id=0)
+
+    def test_barlow_twins_loss(self):
+        loss_layer = BarlowTwinsCriterion(
+            lambda_=5e-3, embedding_dim=EMBEDDING_DIM
+        )
+        _ = loss_layer(self._get_embedding())
 
 
 class TestSimClrCriterion(unittest.TestCase):
