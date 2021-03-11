@@ -74,7 +74,7 @@ config:
       name: barlow_twins_loss
       barlow_twins_loss:
         lambda_: 5e-3
-        embedding_dim: 8192
+        embedding_dim: 128
   OPTIMIZER:
       name: sgd
       use_larc: True
