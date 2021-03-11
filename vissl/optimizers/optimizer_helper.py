@@ -110,30 +110,44 @@ def get_optimizer_param_groups(
     Returns:
         param_groups (List[Dict]): [
             {
-                "params": trunk_regularized_params, "lr": lr_value, "weight_decay": wd_value,
+                "params": trunk_regularized_params, "lr": lr_value,
+                "weight_decay": wd_value,
             },
             {
-                "params": trunk_unregularized_params, "lr": lr_value, "weight_decay": 0.0,
+                "params": trunk_unregularized_params, "lr": lr_value,
+                "weight_decay": 0.0,
             },
             {
                 "params": head_regularized_params, "lr": head_lr_value,
                 "weight_decay": head_weight_decay,
             },
             {
-                "params": head_unregularized_params, "lr": head_lr_value, "weight_decay": 0.0,
+                "params": head_unregularized_params, "lr": head_lr_value,
+                "weight_decay": 0.0,
             },
             {
                 "params": remaining_regularized_params, "lr": lr_value
             }
         ]
     """
+    if optimizer_config.construct_single_param_group_only:
+        # If single param_group is asked, we just use the parameters
+        # returned from model.parameters(). This is useful in FSDP
+        # param flattening mode.
+        return [
+            {
+                "params": list(model.parameters()),
+                "lr": optimizer_schedulers["lr"],
+                "weight_decay": optimizer_config.weight_decay,
+            }
+        ]
     # if the different LR, weight decay value for head is not specified, we use the
     # same LR/wd as trunk.
     if not optimizer_config.head_optimizer_params.use_different_lr:
         assert "lr_head" in optimizer_schedulers
 
-    # we create 4 params groups: trunk regularized, trunk unregularized, head regularized
-    # and head unregularized. Unregularized can contain BN layers.
+    # we create 4 params groups: trunk regularized, trunk unregularized, head
+    # regularized and head unregularized. Unregularized can contain BN layers.
     trunk_regularized_params, trunk_unregularized_params = [], []
     head_regularized_params, head_unregularized_params = [], []
     # for anything else

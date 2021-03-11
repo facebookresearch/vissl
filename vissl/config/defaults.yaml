@@ -863,6 +863,11 @@ config:
         end_value: 0.0
         # =====constant learning rate specific =======
         value: 0.1
+    # Under certain cases, we want to use a single param_group that consists of
+    # the parameters returned from model.parameters() list. For example, when a model
+    # is wrapped by FSDP with flattening, individual parameters inside the model are
+    # replaced with a flattened parameter. Therefore, this option is needed in that case.
+    construct_single_param_group_only: False
 
   # ----------------------------------------------------------------------------------- #
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
