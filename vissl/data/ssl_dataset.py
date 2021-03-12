@@ -118,6 +118,16 @@ class GenericSSLDataset(Dataset):
         )
         return cfg["DATA"][split].get("DATA_LIMIT_SAMPLING", default_sampling)
 
+    def set_epoch(self, epoch):
+        for data_obj in self.data_objs:
+            if hasattr(data_obj, "set_epoch"):
+                data_obj.set_epoch(epoch)
+
+    def set_start_iter(self, start_iter):
+        for data_obj in self.data_objs:
+            if hasattr(data_obj, "set_start_iter"):
+                data_obj.set_start_iter(start_iter)
+
     def _verify_data_sources(self, split, dataset_source_map):
         """
         For each data source, verify that the specified data source

@@ -506,6 +506,27 @@ class SelfSupervisionTask(ClassificationTask):
                     start_iter = 0
                 sampler.set_start_iter(start_iter)
             print_sampler_config(sampler)
+
+        if hasattr(self.dataloaders[phase_type], "dataset"):
+            dataset = self.dataloaders[phase_type].dataset
+            # (Re-)Shuffle data: airstore dataset handle shuffle internally.
+            if hasattr(dataset, "set_epoch"):
+                dataset.set_epoch(epoch)
+            # Resume from the iteration if valid
+            if hasattr(dataset, "set_start_iter"):
+                if (
+                    compute_start_iter
+                    and self.checkpoint is not None
+                    and self.checkpoint["iteration"] > 0
+                ):
+                    num_iters_in_epochs = len(self.dataloaders[phase_type])
+                    num_epochs = self.checkpoint["train_phase_idx"] + 1
+                    num_train_iters_done = num_epochs * num_iters_in_epochs
+                    start_iter = self.checkpoint["iteration"] - num_train_iters_done
+                else:
+                    start_iter = 0
+                dataset.set_start_iter(start_iter)
+
         # delete the old data iterator
         del self.data_iterator
         gc.collect()

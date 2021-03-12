@@ -95,6 +95,11 @@ class SetDataSamplerEpochHook(ClassyHook):
             if hasattr(task.dataloaders[phase_type].sampler, "set_epoch"):
                 # task.phase_idx is current running phase id
                 task.dataloaders[phase_type].sampler.set_epoch(task.phase_idx)
+        if hasattr(task.dataloaders[phase_type], "dataset"):
+            if hasattr(task.dataloaders[phase_type].dataset, "set_epoch"):
+                # task.phase_idx is current running phase id
+                task.dataloaders[phase_type].dataset.set_epoch(task.phase_idx)
+
         logging.info(f"Starting phase {task.phase_idx} [{phase_type}]")
 
 

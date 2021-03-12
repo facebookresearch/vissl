@@ -18,6 +18,7 @@ from vissl.data.dataset_catalog import (
     get_data_files,
     register_datasets,
 )
+from vissl.data.airstore_dataset import AirstoreDataset
 from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
 from vissl.data.synthetic_dataset import SyntheticImageDataset
@@ -33,6 +34,7 @@ __all__ = [
 ]
 
 DATASET_SOURCE_MAP = {
+    "airstore": AirstoreDataset,
     "disk_filelist": DiskImageDataset,
     "disk_folder": DiskImageDataset,
     "torchvision_dataset": TorchvisionDataset,
