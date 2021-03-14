@@ -13,6 +13,8 @@ config:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
       EXPERIMENT_LOG_DIR:
+      LOG_PARAMS: False
+      LOG_PARAMS_GRADIENTS: False
       FLUSH_EVERY_N_MIN: 20
   DATA:
     NUM_DATALOADER_WORKERS: 5
@@ -114,10 +116,8 @@ config:
     NUM_PROC_PER_NODE: 8
     RUN_ID: auto
     INIT_METHOD: tcp
-    NCCL_DEBUG: True
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5
-    CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations
