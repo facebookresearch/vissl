@@ -79,6 +79,16 @@ vissl.losses.deepclusterv2_loss
     :show-inheritance:
 
 
+vissl.losses.barlow_twins_loss
+-----------------------------------------------------
+
+.. automodule:: vissl.losses.barlow_twins_loss
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+
 vissl.losses.cross_entropy_multiple_output_single_target
 -------------------------------------------------------------------
 

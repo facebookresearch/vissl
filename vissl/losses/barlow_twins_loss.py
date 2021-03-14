@@ -86,14 +86,18 @@ class BarlowTwinsCriterion(nn.Module):
         Calculate the loss. Operates on embeddings tensor.
         """
         assert embedding.ndim == 2
+        assert embedding.shape[1] == int(self.embedding_dim)
 
         batch_size = embedding.shape[0]
         L = self.lambda_
         num_copies = self.num_copies
-        assert batch_size % num_copies == 0, "Batch size should be divisible by num_pos"
+        assert batch_size % num_copies == 0, "Batch size should be divisible by num_copies"
 
         # normalize embeddings along the batch dimension
         embedding_normed = (embedding - embedding.mean(dim=0)) / (embedding.std(dim=0) + 1e-16)
+
+        # `embedding` must contain the concatenated embeddings of the two image copies
+        # [emb_img1_0, emb_img2_0, ....., emb_img1_1, emb_img2_1,...]
         embedding_normed_a, embedding_normed_b = torch.split(embedding_normed,
                                                              split_size_or_sections=batch_size // num_copies,
                                                              dim=0)

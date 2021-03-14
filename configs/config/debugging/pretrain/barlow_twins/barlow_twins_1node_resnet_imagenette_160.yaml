@@ -1,6 +1,6 @@
 # @package _global_
 config:
-  VERBOSE: False
+  VERBOSE: True
   LOG_FREQUENCY: 1
   TEST_ONLY: False
   TEST_MODEL: False
@@ -9,20 +9,23 @@ config:
   HOOKS:
     PERF_STATS:
       MONITOR_PERF_STATS: True
-      PERF_STAT_FREQUENCY: 10
-      ROLLING_BTIME_FREQ: 5
+      ROLLING_BTIME_FREQ: 313
+    TENSORBOARD_SETUP:
+      USE_TENSORBOARD: True
+      EXPERIMENT_LOG_DIR:
+      FLUSH_EVERY_N_MIN: 20
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k_filelist]
-      BATCHSIZE_PER_REPLICA: 32
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenette_160_folder]
+      BATCHSIZE_PER_REPLICA: 128
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgReplicatePil
           num_times: 2
         - name: RandomResizedCrop
-          size: 224
+          size: 128
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
@@ -46,9 +49,8 @@ config:
       COLLATE_FUNCTION: simclr_collator
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      DATA_LIMIT: 500
+      COPY_DESTINATION_DIR: /tmp/imagenette_160/
       DROP_LAST: True
-      COPY_DESTINATION_DIR: "/tmp/imagenet1k"
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   METERS:
@@ -60,21 +62,22 @@ config:
         RESNETS:
           DEPTH: 50
     HEAD:
-      # Reduced MLP size to limit memory footprint
       PARAMS: [
-        ["mlp", {"dims": [2048, 128], "use_relu": True, "use_bn": True}],
-        ["mlp", {"dims": [128, 128]}],
+        ["mlp", {"dims": [2048, 8192], "use_relu": True, "use_bn": True}],
+        ["mlp", {"dims": [8192, 8192], "use_relu": True, "use_bn": True}],
+        ["mlp", {"dims": [8192, 8192]}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: pytorch
+      SYNC_BN_TYPE: apex
     AMP_PARAMS:
-      USE_AMP: False
+      USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
   LOSS:
       name: barlow_twins_loss
       barlow_twins_loss:
         lambda_: 5e-3
-        embedding_dim: 128
+        embedding_dim: 8192
   OPTIMIZER:
       name: sgd
       use_larc: True
@@ -85,7 +88,7 @@ config:
       weight_decay: 0.0000015
       momentum: 0.9
       nesterov: False
-      num_epochs: 2
+      num_epochs: 1000
       regularize_bn: False
       regularize_bias: False
       param_schedulers:
@@ -104,17 +107,17 @@ config:
               end_value: 0.002 # Automatically rescaled if needed
           update_interval: step
           interval_scaling: [rescaled, fixed]
-          lengths: [0.1, 0.9]                 # 100ep
+          lengths: [0.01, 0.99]             # 1000ep
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 1
-    INIT_METHOD: tcp
+    NUM_PROC_PER_NODE: 8
     RUN_ID: auto
+    INIT_METHOD: tcp
+    NCCL_DEBUG: True
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "."
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 1
-    OVERWRITE_EXISTING: true
+    CHECKPOINT_FREQUENCY: 5
+    CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations
