@@ -5,7 +5,7 @@
 ## What's New
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
 
-- **[March 2021]**: Added most [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://arxiv.org/abs/2103.00020) benchmark tasks.
+- **[March 2021]**: Added most datasets used in [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://arxiv.org/abs/2103.00020) benchmark tasks.
 - **[February 2021]**: Added [Vision Transformers](https://arxiv.org/pdf/2010.11929v1.pdf) (ViT) backbone and [training self-supervision with ViT](https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/vision_transformer).
 - **[January 2021]**: VISSL v0.1.5 released.
 
