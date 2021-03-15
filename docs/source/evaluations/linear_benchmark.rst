@@ -268,7 +268,7 @@ A script to automatically prepare the data for UCF-101 is available `here <https
 Benchmark: EuroSAT
 ----------------------------
 
-The Patch Camelyon (PCAM) benchmark evaluates the classification performance on a specialized task (satellite imaging).
+The EuroSAT benchmark evaluates the classification performance on a specialized task (satellite imaging).
 
 The configuration setting for this benchmark
 is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/euro_sat>`_ .
