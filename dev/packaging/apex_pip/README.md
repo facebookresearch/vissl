@@ -32,5 +32,5 @@ version_str="".join([
     torch.version.cuda.replace(".",""),
     f"_pyt{torch.__version__[0:5:2]}"
 ])
-!pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
+!pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html apex
 ```
