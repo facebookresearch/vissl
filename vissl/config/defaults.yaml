@@ -897,6 +897,7 @@ config:
           auto_scale: False
           base_value: 0.1
           base_lr_batch_size: 256
+          scaling_type: "linear"
         name: "multistep"
         update_interval: "epoch"
         values: [0.1, 0.01, 0.001]
