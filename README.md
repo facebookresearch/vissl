@@ -2,6 +2,13 @@
 
 [![CircleCI](https://circleci.com/gh/facebookresearch/vissl.svg?style=svg&circle-token=f15ded7b718589ad3f150355e1c37f8e74516019)](https://circleci.com/gh/facebookresearch/vissl)[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/facebookresearch/vissl/blob/master/.github/CONTRIBUTING.md)
 
+## What's New
+Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
+
+- **[March 2021]**: Added most [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://arxiv.org/abs/2103.00020) benchmark tasks.
+- **[February 2021]**: Added [Vision Transformers](https://arxiv.org/pdf/2010.11929v1.pdf) (ViT) backbone and [training self-supervision with ViT](https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/vision_transformer).
+- **[January 2021]**: VISSL v0.1.5 released.
+
 ## Introduction
 VISSL is a computer **VI**sion library for state-of-the-art **S**elf-**S**upervised **L**earning research with [PyTorch](https://pytorch.org). VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations. Key features include:
 
@@ -16,13 +23,6 @@ VISSL is a computer **VI**sion library for state-of-the-art **S**elf-**S**upervi
 - **Scalability**: Easy to train model on 1-gpu, multi-gpu and multi-node. Several components for large scale trainings provided as simple config file plugs: [Activation checkpointing](https://pytorch.org/docs/stable/checkpoint.html), [ZeRO](https://arxiv.org/abs/1910.02054), [FP16](https://nvidia.github.io/apex/amp.html#o1-mixed-precision-recommended-for-typical-use), [LARC](https://arxiv.org/abs/1708.03888), Stateful data sampler, data class to handle invalid images, large model backbones like [RegNets](https://arxiv.org/abs/2003.13678), etc.
 
 - **Model Zoo**: Over *60 pre-trained self-supervised model* weights.
-
-
-## What's New
-
-- **[March 2021]**: Added most [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://arxiv.org/abs/2103.00020) benchmark tasks.
-- **[February 2021]**: Added [Vision Transformers](https://arxiv.org/pdf/2010.11929v1.pdf) (ViT) backbone and [training self-supervision with ViT](https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/vision_transformer).
-- **[January 2021]**: VISSL v0.1.5 released.
 
 ## Installation
 
@@ -77,9 +77,3 @@ If you find VISSL useful in your research or wish to refer to the baseline resul
   year =         {2021}
 }
 ```
-
-## News
-
-Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
-
-**[January 2021]**: VISSL v0.1 released.
