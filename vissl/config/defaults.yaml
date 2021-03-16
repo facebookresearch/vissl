@@ -481,66 +481,64 @@ config:
     # ----------------------------------------------------------------------------------- #
     TRUNK:
       NAME: "resnet"
-      # for any extra params that the model requires, pass them in the trunk_params
-      TRUNK_PARAMS:
-        # ------------------------------------------------------------- #
-        # ResNe(X)t params
-        # ------------------------------------------------------------- #
-        RESNETS:
-          DEPTH: 50
-          WIDTH_MULTIPLIER: 1
-          NORM: BatchNorm    # BatchNorm | LayerNorm | GroupNorm
-          # If using GroupNorm, this sets number of groups. Recommend 32 as a
-          # naive suggestion. GroupNorm only available for ResNe(X)t.
-          GROUPNORM_GROUPS: 32
-          # Use weight-standardized convolutions
-          STANDARDIZE_CONVOLUTIONS: False
-          GROUPS: 1
-          ZERO_INIT_RESIDUAL: False
-          WIDTH_PER_GROUP: 64
-          # Colorization model uses stride=1 for last layer to retain higher spatial resolution
-          # for the pixel-wise task. Torchvision default is stride=2 and all other models
-          # use this so we set the default as 2.
-          LAYER4_STRIDE: 2
+      # ------------------------------------------------------------- #
+      # ResNe(X)t params
+      # ------------------------------------------------------------- #
+      RESNETS:
+        DEPTH: 50
+        WIDTH_MULTIPLIER: 1
+        NORM: BatchNorm    # BatchNorm | LayerNorm | GroupNorm
+        # If using GroupNorm, this sets number of groups. Recommend 32 as a
+        # naive suggestion. GroupNorm only available for ResNe(X)t.
+        GROUPNORM_GROUPS: 32
+        # Use weight-standardized convolutions
+        STANDARDIZE_CONVOLUTIONS: False
+        GROUPS: 1
+        ZERO_INIT_RESIDUAL: False
+        WIDTH_PER_GROUP: 64
+        # Colorization model uses stride=1 for last layer to retain higher spatial resolution
+        # for the pixel-wise task. Torchvision default is stride=2 and all other models
+        # use this so we set the default as 2.
+        LAYER4_STRIDE: 2
 
-        # ------------------------------------------------------------- #
-        # EfficientNet params
-        # ------------------------------------------------------------- #
-        # follow classy vision for efficientNet settings
-        EFFICIENT_NETS: {}
+      # ------------------------------------------------------------- #
+      # EfficientNet params
+      # ------------------------------------------------------------- #
+      # follow classy vision for efficientNet settings
+      EFFICIENT_NETS: {}
 
-        # ------------------------------------------------------------- #
-        # RegNet params
-        # ------------------------------------------------------------- #
-        REGNET: {}
+      # ------------------------------------------------------------- #
+      # RegNet params
+      # ------------------------------------------------------------- #
+      REGNET: {}
 
-        # ------------------------------------------------------------- #
-        # Vision Transformer/DeiT params. Using a name will
-        # override/ignore all other VISION_TRANSFORMERS parameters. Named
-        # options include vit_b_32, vit_b_16, vit_l_32, vit_l_16, vit_h_14.
-        # Using
-        # ------------------------------------------------------------- #
-        VISION_TRANSFORMERS:
-          name:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 16
-          NUM_LAYERS: 12
-          NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
-          # MLP and projection layer dropout rate
-          DROPOUT_RATE: 0
-          # Attention dropout rate
-          ATTENTION_DROPOUT_RATE: 0
-          # Use the token for classification. Currently no alternatives
-          # supported
-          CLASSIFIER: token
-          # Stochastic depth dropout rate. Turning on stochastic depth and
-          # using aggressive augmentation is essentially the difference
-          # between a DeiT and a ViT.
-          DROP_PATH_RATE: 0
-          QKV_BIAS: False # Bias for QKV in attention layers.
-          QK_SCALE: False # Scale
+      # ------------------------------------------------------------- #
+      # Vision Transformer/DeiT params. Using a name will
+      # override/ignore all other VISION_TRANSFORMERS parameters. Named
+      # options include vit_b_32, vit_b_16, vit_l_32, vit_l_16, vit_h_14.
+      # Using
+      # ------------------------------------------------------------- #
+      VISION_TRANSFORMERS:
+        name:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_DIM: 3072
+        # MLP and projection layer dropout rate
+        DROPOUT_RATE: 0
+        # Attention dropout rate
+        ATTENTION_DROPOUT_RATE: 0
+        # Use the token for classification. Currently no alternatives
+        # supported
+        CLASSIFIER: token
+        # Stochastic depth dropout rate. Turning on stochastic depth and
+        # using aggressive augmentation is essentially the difference
+        # between a DeiT and a ViT.
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
 
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
