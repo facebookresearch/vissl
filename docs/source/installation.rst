@@ -56,7 +56,7 @@ This example is with pytorch 1.5.1 and cuda 10.1. Please modify the PyTorch vers
 
     pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
     pip install opencv-python
-    pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py38_cu101_pyt151/download.html
+    pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py38_cu101_pyt151/download.html apex
 
 
 Note that, for the APEX install, you need to get the versions of CUDA, PyTorch, and Python correct in the URL. We provide APEX versions with all possible combinations of Python, PyTorch, CUDA. Select the right APEX Wheels if you desire a different combination.
@@ -72,7 +72,7 @@ On Google Colab, everything until this point is already set up. You install APEX
         torch.version.cuda.replace(".",""),
         f"_pyt{torch.__version__[0:5:2]}"
     ])
-    !pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
+    !pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html apex
 
 
 - **Step 3: Install VISSL**
@@ -110,7 +110,7 @@ Install from source in PIP environment
 
 .. code-block:: bash
 
-    pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt171/download.html
+    pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt171/download.html apex
 
 
 - **Step 4: Install VISSL**
