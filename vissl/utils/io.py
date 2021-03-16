@@ -67,8 +67,9 @@ def save_file(data, filename):
             fopen.write(json.dumps(data, sort_keys=True) + "\n")
             fopen.flush()
     elif file_ext == ".yaml":
-        with PathManager.open(filename, "wb") as fopen:
-            fopen.write(yaml.dump(data, sort_keys=True) + "\n")
+        with PathManager.open(filename, "w") as fopen:
+            dump = yaml.dump(data)
+            fopen.write(dump)
             fopen.flush()
     else:
         raise Exception(f"Saving {file_ext} is not supported yet")

@@ -1,6 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-import io
 import logging
 import pprint
 import sys
@@ -8,13 +7,11 @@ from typing import Any, List
 
 from omegaconf import DictConfig, OmegaConf
 from vissl.config import AttrDict, check_cfg_version
+from vissl.utils.io import save_file
 
 
 def save_attrdict_to_disk(cfg, filename="train_config.yaml"):
-    from vissl.utils.checkpoint import get_checkpoint_folder
-
-    get_checkpoint_folder(cfg)
-    io.save_file(cfg, filename)
+    save_file(cfg, filename)
 
 
 def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
