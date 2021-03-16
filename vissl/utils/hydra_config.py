@@ -212,9 +212,12 @@ def infer_learning_rate(cfg):
         base_lr = param_schedulers.auto_lr_scaling.base_value
         base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
         scaling_type = param_schedulers.auto_lr_scaling.scaling_type
+        assert scaling_type in [
+            "sqrt",
+            "linear",
+        ], "Only linear | sqrt scaling_types are supported"
 
         scale_factor = float(batch_size) / base_lr_batch_size
-        print(scale_factor)
         if scaling_type == "sqrt":
             scale_factor = scale_factor ** 0.5
         scaled_lr = base_lr * scale_factor
@@ -240,6 +243,10 @@ def infer_learning_rate(cfg):
         base_lr = param_schedulers.auto_lr_scaling.base_value
         base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
         scaling_type = param_schedulers.auto_lr_scaling.scaling_type
+        assert scaling_type in [
+            "sqrt",
+            "linear",
+        ], "Only linear | sqrt scaling_types are supported"
 
         scale_factor = float(batch_size) / base_lr_batch_size
         if scaling_type == "sqrt":
