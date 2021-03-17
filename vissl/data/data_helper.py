@@ -36,17 +36,23 @@ def with_temporary_numpy_seed(seed: int):
     np.random.set_state(random_state)
 
 
-def unbalanced_sub_sampling(total_size: int, nb_samples: int, skip_samples: int = 0, seed: int = 0) -> np.ndarray:
+def unbalanced_sub_sampling(
+    total_size: int, nb_samples: int, skip_samples: int = 0, seed: int = 0
+) -> np.ndarray:
     """
     Given an original dataset of size 'total_size', sub_sample part of the dataset such that
     the sub sampling is deterministic (identical across distributed workers)
     Return the selected indices
     """
     with with_temporary_numpy_seed(seed):
-        return np.random.choice(total_size, size=skip_samples+nb_samples, replace=False)[skip_samples:]
+        return np.random.choice(
+            total_size, size=skip_samples + nb_samples, replace=False
+        )[skip_samples:]
 
 
-def balanced_sub_sampling(labels: np.ndarray, nb_samples: int, skip_samples: int = 0, seed: int = 0) -> np.ndarray:
+def balanced_sub_sampling(
+    labels: np.ndarray, nb_samples: int, skip_samples: int = 0, seed: int = 0
+) -> np.ndarray:
     """
     Given some labels, sub_sample a part of the labels such that:
     - the number of samples of each label differs by at most one
@@ -60,14 +66,18 @@ def balanced_sub_sampling(labels: np.ndarray, nb_samples: int, skip_samples: int
     unique_labels = sorted(groups.keys())
     sq, sr = divmod(skip_samples, len(unique_labels))
     q, r = divmod(nb_samples, len(unique_labels))
-    assert q > 0, "the number of samples should be at least equal to the number of classes"
+    assert (
+        q > 0
+    ), "the number of samples should be at least equal to the number of classes"
 
     with with_temporary_numpy_seed(seed):
         for i, label in enumerate(unique_labels):
             label_indices = groups[label]
             nb_label_samples = q + (1 if i < r else 0)
             skip_label_samples = sq + (1 if i < sr else 0)
-            permuted_indices = np.random.choice(label_indices, size=skip_label_samples+nb_label_samples, replace=False)
+            permuted_indices = np.random.choice(
+                label_indices, size=skip_label_samples + nb_label_samples, replace=False
+            )
             groups[label] = permuted_indices[skip_label_samples:]
 
     return np.concatenate([groups[label] for label in unique_labels])
