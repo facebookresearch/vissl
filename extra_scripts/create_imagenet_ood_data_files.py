@@ -19,7 +19,7 @@ def get_argument_parser():
         "-i",
         "--input",
         type=str,
-        help="Path to the folder containing the original imagenet-a and imagenet-r folders",
+        help="Folder containing the imagenet-a and imagenet-r folders",
     )
     parser.add_argument(
         "-o",
@@ -55,16 +55,20 @@ class ImagenetTargetMapper:
     such as Imagenet-A or Imagenet-R to the Imagenet classes index
     """
 
-    IMAGENET_TARGETS_URL = "https://dl.fbaipublicfiles.com/vissl/data/imagenet_classes.txt"
+    IMAGENET_TARGETS_URL = (
+        "https://dl.fbaipublicfiles.com/vissl/data/imagenet_classes.txt"
+    )
 
     def __init__(self):
         with PathManager.open(self.IMAGENET_TARGETS_URL) as f:
-            imagenet_classes = [l.strip() for l in f.readlines()]
+            imagenet_classes = [line.strip() for line in f.readlines()]
             imagenet_classes.sort()
         self.label_to_id = {label: i for i, label in enumerate(imagenet_classes)}
 
     def get_target_mapping(self, path: str):
-        path_classes = [p for p in os.listdir(path) if os.path.isdir(os.path.join(path, p))]
+        path_classes = [
+            p for p in os.listdir(path) if os.path.isdir(os.path.join(path, p))
+        ]
         path_classes.sort()
         return {i: self.label_to_id[c] for i, c in enumerate(path_classes)}
 
