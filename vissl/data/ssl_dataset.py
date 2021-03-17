@@ -7,8 +7,10 @@ from classy_vision.generic.distributed_util import get_world_size
 from fvcore.common.file_io import PathManager
 from torch.utils.data import Dataset
 from vissl.data import dataset_catalog
+from vissl.data.data_helper import balanced_sub_sampling, unbalanced_sub_sampling
 from vissl.data.ssl_transforms import get_transform
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.hydra_config import AttrDict
 
 
 def _convert_lbl_to_long(lbl):
@@ -60,20 +62,25 @@ class GenericSSLDataset(Dataset):
                     }
     """
 
-    def __init__(self, cfg, split, dataset_source_map):
+    def __init__(self, cfg: AttrDict, split: str, dataset_source_map):
         self.split = split
         self.cfg = cfg
         self.data_objs = []
         self.label_objs = []
         self.data_paths = []
         self.label_paths = []
+        self.sub_set = None
         self.batchsize_per_replica = self.cfg["DATA"][split]["BATCHSIZE_PER_REPLICA"]
         self.data_sources = self.cfg["DATA"][split].DATA_SOURCES
         self.label_sources = self.cfg["DATA"][split].LABEL_SOURCES
         self.dataset_names = self.cfg["DATA"][split].DATASET_NAMES
         self.label_type = self.cfg["DATA"][split].LABEL_TYPE
+        self.data_limit = self.cfg["DATA"][split].DATA_LIMIT
+        self.data_limit_skip = self.cfg["DATA"][split].DATA_LIMIT_SKIP
+        self.data_limit_sampling = self.cfg["DATA"][split].DATA_LIMIT_SAMPLING
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
         self._labels_init = False
+        self._subset_initialized = False
         self._verify_data_sources(split, dataset_source_map)
         self._get_data_files(split)
 
@@ -221,7 +228,25 @@ class GenericSSLDataset(Dataset):
                 raise ValueError(f"unknown label source: {label_source}")
             self.label_objs.append(labels)
 
-    def __getitem__(self, idx):
+    def _init_subset(self):
+        if not self._subset_initialized:
+            if not self.data_limit_sampling.BALANCED:
+                self.sub_set = unbalanced_sub_sampling(
+                    total_size=len(self.data_objs[0]),
+                    nb_samples=self.data_limit,
+                    skip_samples=self.data_limit_skip,
+                    seed=self.data_limit_sampling.SEED,
+                )
+            else:
+                self.sub_set = balanced_sub_sampling(
+                    labels=self.label_objs[0],
+                    nb_samples=self.data_limit,
+                    skip_samples=self.data_limit_skip,
+                    seed=self.data_limit_sampling.SEED,
+                )
+            self._subset_initialized = True
+
+    def __getitem__(self, idx: int):
         """
         Get the input sample for the minibatch for a specified data index.
         For each data object (if we are loading several datasets in a minibatch),
@@ -241,11 +266,17 @@ class GenericSSLDataset(Dataset):
             self._load_labels()
             self._labels_init = True
 
+        if self.data_limit >= 0:
+            self._init_subset()
+            subset_idx = self.sub_set[idx]
+        else:
+            subset_idx = idx
+
         # TODO: this doesn't yet handle the case where the length of datasets
         # could be different.
         item = {"data": [], "data_valid": [], "data_idx": []}
-        for source in self.data_objs:
-            data, valid = source[idx]
+        for data_source in self.data_objs:
+            data, valid = data_source[subset_idx]
             item["data"].append(data)
             item["data_idx"].append(idx)
             item["data_valid"].append(1 if valid else -1)
@@ -261,11 +292,11 @@ class GenericSSLDataset(Dataset):
         # to its functionality.
         if (len(self.label_objs) > 0) or self.label_type == "standard":
             item["label"] = []
-            for source in self.label_objs:
-                if isinstance(source, list):
-                    lbl = [entry[idx] for entry in source]
+            for label_source in self.label_objs:
+                if isinstance(label_source, list):
+                    lbl = [entry[subset_idx] for entry in label_source]
                 else:
-                    lbl = _convert_lbl_to_long(source[idx])
+                    lbl = _convert_lbl_to_long(label_source[subset_idx])
                 item["label"].append(lbl)
         elif self.label_type == "sample_index":
             item["label"] = []
@@ -285,10 +316,17 @@ class GenericSSLDataset(Dataset):
 
     def __len__(self):
         """
-        Size of the dataset. Assumption made there is only one
-        data source
+        Size of the dataset. Assumption made there is only one data source
         """
-        return len(self.data_objs[0])
+        return self.num_samples(0)
+
+    def num_samples(self, source_idx=0):
+        """
+        Size of the dataset. Assumption made there is only one data source
+        """
+        if self.data_limit >= 0:
+            return self.data_limit
+        return len(self.data_objs[source_idx])
 
     def get_image_paths(self):
         """
@@ -311,13 +349,6 @@ class GenericSSLDataset(Dataset):
         NOTE: this is deprecated method.
         """
         return [key for key in dataset_config if key.lower() in ["train", "test"]]
-
-    def num_samples(self, source_idx=0):
-        """
-        Size of the dataset. Assumption made there is only one
-        data source
-        """
-        return len(self.data_objs[source_idx])
 
     def get_batchsize_per_replica(self):
         """

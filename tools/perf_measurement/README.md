@@ -11,7 +11,7 @@ buck run @mode/opt deeplearning/projects/ssl_framework/tools/perf_measurement:be
     config=test/integration_test/quick_simclr \
     config.DATA.TRAIN.DATA_SOURCES=[disk_folder] \
     config.DATA.TRAIN.DATASET_NAMES=[imagenet1k_folder] \
-    config.DATA.TRAIN.DATA_LIMIT=-1 \
+    config.DATA.TRAIN.DATA_LIMIT.NUM_SAMPLES=-1 \
     config.DATA.NUM_DATALOADER_WORKERS=10 \
     config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=64
 ```

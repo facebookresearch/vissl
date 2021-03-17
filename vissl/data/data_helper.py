@@ -1,5 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-
+import contextlib
 import logging
 import queue
 
@@ -22,6 +22,55 @@ def get_mean_image(crop_size):
     """
     img = Image.fromarray(128 * np.ones((crop_size, crop_size, 3), dtype=np.uint8))
     return img
+
+
+@contextlib.contextmanager
+def with_temporary_numpy_seed(seed: int):
+    """
+    Context manager to run a specific portion of code with a given seed:
+    resumes the numpy state after the execution of the block
+    """
+    random_state = np.random.get_state()
+    np.random.seed(seed)
+    yield
+    np.random.set_state(random_state)
+
+
+def unbalanced_sub_sampling(total_size: int, nb_samples: int, skip_samples: int = 0, seed: int = 0) -> np.ndarray:
+    """
+    Given an original dataset of size 'total_size', sub_sample part of the dataset such that
+    the sub sampling is deterministic (identical across distributed workers)
+    Return the selected indices
+    """
+    with with_temporary_numpy_seed(seed):
+        return np.random.choice(total_size, size=skip_samples+nb_samples, replace=False)[skip_samples:]
+
+
+def balanced_sub_sampling(labels: np.ndarray, nb_samples: int, skip_samples: int = 0, seed: int = 0) -> np.ndarray:
+    """
+    Given some labels, sub_sample a part of the labels such that:
+    - the number of samples of each label differs by at most one
+    - the sub sampling is deterministic (identical across distributed workers)
+    Return the selected indices
+    """
+    groups = {}
+    for i, label in enumerate(labels):
+        groups.setdefault(label, []).append(i)
+
+    unique_labels = sorted(groups.keys())
+    sq, sr = divmod(skip_samples, len(unique_labels))
+    q, r = divmod(nb_samples, len(unique_labels))
+    assert q > 0, "the number of samples should be at least equal to the number of classes"
+
+    with with_temporary_numpy_seed(seed):
+        for i, label in enumerate(unique_labels):
+            label_indices = groups[label]
+            nb_label_samples = q + (1 if i < r else 0)
+            skip_label_samples = sq + (1 if i < sr else 0)
+            permuted_indices = np.random.choice(label_indices, size=skip_label_samples+nb_label_samples, replace=False)
+            groups[label] = permuted_indices[skip_label_samples:]
+
+    return np.concatenate([groups[label] for label in unique_labels])
 
 
 class StatefulDistributedSampler(DistributedSampler):
@@ -70,7 +119,7 @@ class StatefulDistributedSampler(DistributedSampler):
         assert self.batch_size > 0, "batch_size not set for the sampler"
 
         # resume the sampler
-        indices = indices[(self.start_iter * self.batch_size) :]
+        indices = indices[(self.start_iter * self.batch_size):]
         return iter(indices)
 
     def set_start_iter(self, start_iter):
