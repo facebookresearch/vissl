@@ -72,6 +72,9 @@ target/
 # PyCharm IDE
 .idea/
 
+# VScode iDE
+.vscode/
+
 # Docusaurus site
 website/yarn.lock
 website/build/
