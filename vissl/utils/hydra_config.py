@@ -44,8 +44,8 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
 
     # assert the config and infer
     config = cfg.config
-    save_attrdict_to_disk(cfg)
     assert_hydra_conf(config)
+    save_attrdict_to_disk(cfg)
     return cfg, config
 
 
