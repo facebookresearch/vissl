@@ -2,12 +2,19 @@
 
 [![CircleCI](https://circleci.com/gh/facebookresearch/vissl.svg?style=svg&circle-token=f15ded7b718589ad3f150355e1c37f8e74516019)](https://circleci.com/gh/facebookresearch/vissl)[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/facebookresearch/vissl/blob/master/.github/CONTRIBUTING.md)
 
+## What's New
+Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
+
+- **[March 2021]**: Added most datasets used in [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://arxiv.org/abs/2103.00020) benchmark tasks.
+- **[February 2021]**: Added [Vision Transformers](https://arxiv.org/pdf/2010.11929v1.pdf) (ViT) backbone and [training self-supervision with ViT](https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/vision_transformer).
+- **[January 2021]**: VISSL v0.1.5 released.
+
 ## Introduction
 VISSL is a computer **VI**sion library for state-of-the-art **S**elf-**S**upervised **L**earning research with [PyTorch](https://pytorch.org). VISSL aims to accelerate research cycle in self-supervised learning: from designing a new self-supervised task to evaluating the learned representations. Key features include:
 
 - **Reproducible implementation of SOTA in Self-Supervision**: All existing SOTA in Self-Supervision are implemented - [SwAV](https://arxiv.org/abs/2006.09882), [SimCLR](https://arxiv.org/abs/2002.05709), [MoCo(v2)](https://arxiv.org/abs/1911.05722), [PIRL](https://arxiv.org/abs/1912.01991), [NPID](https://arxiv.org/abs/1912.01991), [NPID++](https://arxiv.org/abs/1912.01991), [DeepClusterV2](https://arxiv.org/abs/2006.09882), [ClusterFit](https://openaccess.thecvf.com/content_CVPR_2020/papers/Yan_ClusterFit_Improving_Generalization_of_Visual_Representations_CVPR_2020_paper.pdf), [RotNet](https://arxiv.org/abs/1803.07728.), [Jigsaw](https://arxiv.org/abs/1603.09246). Also supports supervised trainings.
 
-- **Benchmark suite**: Variety of benchmarks tasks including [linear image classification (places205, imagenet1k, voc07 and more than 10 others)](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification), [full finetuning](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/fulltune), [semi-supervised benchmark](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/semi_supervised), [nearest neighbor benchmark](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/nearest_neighbor), [object detection (Pascal VOC and COCO)](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/object_detection).
+- **Benchmark suite**: Variety of benchmarks tasks including [linear image classification (places205, imagenet1k, voc07, food, CLEVR, dsprites, UCF101, stanford cars and many more)](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification), [full finetuning](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/fulltune), [semi-supervised benchmark](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/semi_supervised), [nearest neighbor benchmark](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/nearest_neighbor), [object detection (Pascal VOC and COCO)](https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/object_detection).
 
 - **Ease of Usability**: easy to use using yaml configuration system based on [Hydra](https://github.com/facebookresearch/hydra).
 
@@ -70,9 +77,3 @@ If you find VISSL useful in your research or wish to refer to the baseline resul
   year =         {2021}
 }
 ```
-
-## News
-
-Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
-
-**[January 2021]**: VISSL v0.1 released.
