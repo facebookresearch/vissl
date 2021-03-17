@@ -76,7 +76,6 @@ class GenericSSLDataset(Dataset):
         self.dataset_names = self.cfg["DATA"][split].DATASET_NAMES
         self.label_type = self.cfg["DATA"][split].LABEL_TYPE
         self.data_limit = self.cfg["DATA"][split].DATA_LIMIT
-        self.data_limit_skip = self.cfg["DATA"][split].DATA_LIMIT_SKIP
         self.data_limit_sampling = self.cfg["DATA"][split].DATA_LIMIT_SAMPLING
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
         self._labels_init = False
@@ -234,14 +233,14 @@ class GenericSSLDataset(Dataset):
                 self.sub_set = unbalanced_sub_sampling(
                     total_size=len(self.data_objs[0]),
                     nb_samples=self.data_limit,
-                    skip_samples=self.data_limit_skip,
+                    skip_samples=self.data_limit_sampling.SKIP,
                     seed=self.data_limit_sampling.SEED,
                 )
             else:
                 self.sub_set = balanced_sub_sampling(
                     labels=self.label_objs[0],
                     nb_samples=self.data_limit,
-                    skip_samples=self.data_limit_skip,
+                    skip_samples=self.data_limit_sampling.SKIP,
                     seed=self.data_limit_sampling.SEED,
                 )
             self._subset_initialized = True
