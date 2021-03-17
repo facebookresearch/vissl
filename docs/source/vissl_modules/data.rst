@@ -253,6 +253,8 @@ To run these benchmarks, the following data preparation scripts are mandatory:
 - :code:`create_dsprites_orientation_data_files.py`: to create a :code:`disk_folder` dataset from `dSprites <https://github.com/deepmind/dsprites-dataset>`_ where the goal is to estimate the orientation of the sprite on the scene
 - :code:`create_euro_sat_data_files.py`: to transform the `EUROSAT <https://github.com/phelber/eurosat>`_ dataset to the :code:`disk_folder` format
 - :code:`create_food101_data_files.py`: to transform the `FOOD101 <https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101>`_ dataset to the :code:`disk_folder` format
+- :code:`create_imagenet_a_data_files.py`: to create a test set in :code:`disk_filelist` format for Imagenet based on `Imagenet-A <https://github.com/hendrycks/natural-adv-examples>`_ adversarial examples
+- :code:`create_imagenet_r_data_files.py`: to create a test set in :code:`disk_filelist` format for Imagenet based on `Imagenet-R <https://github.com/hendrycks/imagenet-r>`_ out-of-distribution examples
 - :code:`create_kitti_dist_data_files.py`: to create a :code:`disk_folder` dataset from `KITTI <http://www.cvlibs.net/datasets/kitti/>`_ where the goal is to estimate the distance of the closest car, van or truck
 - :code:`create_patch_camelyon_data_files.py`: to transform the `PatchCamelyon <https://github.com/basveeling/pcam>`_ dataset to the :code:`disk_folder` format
 - :code:`create_small_norb_azimuth_data_files.py` to create a :code:`disk_folder` dataset from `Small NORB <https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/>`_ where the goal is to find the azimuth or the photographed object

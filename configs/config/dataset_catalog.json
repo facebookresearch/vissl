@@ -3,6 +3,14 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "imagenet_a_filelist": {
+        "train": ["<not_used>", "<not_used>"],
+        "val": ["<path_to_test_images.npy>", "<path_to_test_labels.npy>"]
+    },
+    "imagenet_r_filelist": {
+        "train": ["<not_used>", "<not_used>"],
+        "val": ["<path_to_test_images.npy>", "<path_to_test_labels.npy>"]
+    },
     "imagenette_160_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
