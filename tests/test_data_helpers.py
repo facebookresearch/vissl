@@ -1,9 +1,9 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-import numpy as np
 import unittest
 
-from vissl.data.data_helper import unbalanced_sub_sampling, balanced_sub_sampling
+import numpy as np
+from vissl.data.data_helper import balanced_sub_sampling, unbalanced_sub_sampling
 
 
 class TestDataLimitSubSampling(unittest.TestCase):

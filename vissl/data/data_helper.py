@@ -129,7 +129,8 @@ class StatefulDistributedSampler(DistributedSampler):
         assert self.batch_size > 0, "batch_size not set for the sampler"
 
         # resume the sampler
-        indices = indices[(self.start_iter * self.batch_size):]
+        start_index = self.start_iter * self.batch_size
+        indices = indices[start_index:]
         return iter(indices)
 
     def set_start_iter(self, start_iter):
