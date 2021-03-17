@@ -77,8 +77,7 @@ def create_imagenet_test_files(input_path: str, output_path: str):
 
     # Map the images of the image folder to their corresponding targets
     # in ImageNet
-    image_paths = []
-    image_labels = []
+    image_paths, image_labels = [], []
     target_mapper = ImagenetTargetMapper()
     target_mappings = target_mapper.get_target_mapping(input_path)
     input_dataset = datasets.ImageFolder(root=input_path, loader=lambda x: x)
