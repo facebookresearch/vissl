@@ -25,19 +25,19 @@ def get_mean_image(crop_size):
 
 
 @contextlib.contextmanager
-def with_temporary_numpy_seed(seed: int):
+def with_temporary_numpy_seed(sampling_seed: int):
     """
     Context manager to run a specific portion of code with a given seed:
     resumes the numpy state after the execution of the block
     """
-    random_state = np.random.get_state()
-    np.random.seed(seed)
+    original_random_state = np.random.get_state()
+    np.random.seed(sampling_seed)
     yield
-    np.random.set_state(random_state)
+    np.random.set_state(original_random_state)
 
 
 def unbalanced_sub_sampling(
-    total_size: int, nb_samples: int, skip_samples: int = 0, seed: int = 0
+    total_num_samples: int, num_samples: int, skip_samples: int = 0, seed: int = 0
 ) -> np.ndarray:
     """
     Given an original dataset of size 'total_size', sub_sample part of the dataset such that
@@ -46,37 +46,39 @@ def unbalanced_sub_sampling(
     """
     with with_temporary_numpy_seed(seed):
         return np.random.choice(
-            total_size, size=skip_samples + nb_samples, replace=False
+            total_num_samples, size=skip_samples + num_samples, replace=False
         )[skip_samples:]
 
 
 def balanced_sub_sampling(
-    labels: np.ndarray, nb_samples: int, skip_samples: int = 0, seed: int = 0
+    labels: np.ndarray, num_samples: int, skip_samples: int = 0, seed: int = 0
 ) -> np.ndarray:
     """
-    Given some labels, sub_sample a part of the labels such that:
+    Given all the labels of a dataset, sub_sample a part of the labels such that:
     - the number of samples of each label differs by at most one
     - the sub sampling is deterministic (identical across distributed workers)
-    Return the selected indices
+    Return the indices of the selected labels
     """
     groups = {}
     for i, label in enumerate(labels):
         groups.setdefault(label, []).append(i)
 
     unique_labels = sorted(groups.keys())
-    sq, sr = divmod(skip_samples, len(unique_labels))
-    q, r = divmod(nb_samples, len(unique_labels))
+    skip_quotient, skip_rest = divmod(skip_samples, len(unique_labels))
+    sample_quotient, sample_rest = divmod(num_samples, len(unique_labels))
     assert (
-        q > 0
+        sample_quotient > 0
     ), "the number of samples should be at least equal to the number of classes"
 
     with with_temporary_numpy_seed(seed):
         for i, label in enumerate(unique_labels):
             label_indices = groups[label]
-            nb_label_samples = q + (1 if i < r else 0)
-            skip_label_samples = sq + (1 if i < sr else 0)
+            num_label_samples = sample_quotient + (1 if i < sample_rest else 0)
+            skip_label_samples = skip_quotient + (1 if i < skip_rest else 0)
             permuted_indices = np.random.choice(
-                label_indices, size=skip_label_samples + nb_label_samples, replace=False
+                label_indices,
+                size=skip_label_samples + num_label_samples,
+                replace=False,
             )
             groups[label] = permuted_indices[skip_label_samples:]
 

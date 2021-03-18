@@ -69,7 +69,6 @@ class GenericSSLDataset(Dataset):
         self.label_objs = []
         self.data_paths = []
         self.label_paths = []
-        self.sub_set = None
         self.batchsize_per_replica = self.cfg["DATA"][split]["BATCHSIZE_PER_REPLICA"]
         self.data_sources = self.cfg["DATA"][split].DATA_SOURCES
         self.label_sources = self.cfg["DATA"][split].LABEL_SOURCES
@@ -80,6 +79,7 @@ class GenericSSLDataset(Dataset):
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
         self._labels_init = False
         self._subset_initialized = False
+        self.subset_indices = None
         self._verify_data_sources(split, dataset_source_map)
         self._get_data_files(split)
 
@@ -228,22 +228,33 @@ class GenericSSLDataset(Dataset):
             self.label_objs.append(labels)
 
     def _init_subset(self):
-        if not self._subset_initialized:
-            if not self.data_limit_sampling.BALANCED:
-                self.sub_set = unbalanced_sub_sampling(
-                    total_size=len(self.data_objs[0]),
-                    nb_samples=self.data_limit,
-                    skip_samples=self.data_limit_sampling.SKIP,
-                    seed=self.data_limit_sampling.SEED,
-                )
-            else:
-                self.sub_set = balanced_sub_sampling(
-                    labels=self.label_objs[0],
-                    nb_samples=self.data_limit,
-                    skip_samples=self.data_limit_sampling.SKIP,
-                    seed=self.data_limit_sampling.SEED,
-                )
-            self._subset_initialized = True
+        """
+        If DATA_LIMIT = K >= 0, we reduce the size of the dataset from N to K.
+
+        This function will create a mapping from [0, K) to [0, N), using the
+        parameters specified in the DATA_LIMIT_SAMPLING configuration. This
+        mapping is then cached and used for all __getitem__ calls to map
+        the external indices from [0, K) to the internal [0, N) indices.
+
+        This function makes the assumption that there is one data source only
+        or that all data sources have the same length (same as __getitem__).
+        """
+        if not self.data_limit_sampling.BALANCED:
+            self.subset_indices = unbalanced_sub_sampling(
+                total_num_samples=len(self.data_objs[0]),
+                num_samples=self.data_limit,
+                skip_samples=self.data_limit_sampling.SKIP_NUM_SAMPLES,
+                seed=self.data_limit_sampling.SEED,
+            )
+        else:
+            assert len(self.label_objs), "Balanced sampling requires labels"
+            self.subset_indices = balanced_sub_sampling(
+                labels=self.label_objs[0],
+                num_samples=self.data_limit,
+                skip_samples=self.data_limit_sampling.SKIP_NUM_SAMPLES,
+                seed=self.data_limit_sampling.SEED,
+            )
+        self._subset_initialized = True
 
     def __getitem__(self, idx: int):
         """
@@ -265,11 +276,11 @@ class GenericSSLDataset(Dataset):
             self._load_labels()
             self._labels_init = True
 
+        subset_idx = idx
         if self.data_limit >= 0:
-            self._init_subset()
-            subset_idx = self.sub_set[idx]
-        else:
-            subset_idx = idx
+            if not self._subset_initialized:
+                self._init_subset()
+            subset_idx = self.subset_indices[idx]
 
         # TODO: this doesn't yet handle the case where the length of datasets
         # could be different.

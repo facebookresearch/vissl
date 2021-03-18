@@ -267,7 +267,7 @@ config:
       DATA_LIMIT_SAMPLING:
         SEED: 0
         BALANCED: False
-        SKIP: 0
+        SKIP_NUM_SAMPLES: 0
 
       # whether the data specified (whether file list or directory) should be copied locally
       # on the machine where training is happening.
