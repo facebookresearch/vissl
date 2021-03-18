@@ -73,6 +73,7 @@ from designing a new self-supervised task to evaluating the learned representati
    evaluations/nearest_neighbor
    evaluations/semi_supervised
    evaluations/object_detection
+   evaluations/robustness_out_of_distribution
    evaluations/feature_extraction
    evaluations/feature_eval_settings
    evaluations/load_models

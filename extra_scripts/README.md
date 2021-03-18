@@ -16,6 +16,7 @@ To run these benchmarks, the following data preparation scripts are mandatory:
 - `create_dsprites_orientation_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the orientation of the sprite on the scene
 - `create_euro_sat_data_files.py`: to transform the [EUROSAT](https://github.com/phelber/eurosat) dataset to the `disk_folder` format
 - `create_food101_data_files.py`: to transform the [FOOD101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101) dataset to the `disk_folder` format
+- `create_imagenet_ood_data_files.py`: to create test sets in `disk_filelist` format for Imagenet based on [Imagenet-A](https://github.com/hendrycks/natural-adv-examples) and [Imagenet-R](https://github.com/hendrycks/imagenet-r)
 - `create_kitti_dist_data_files.py`: to create a `disk_folder` dataset from [KITTI](http://www.cvlibs.net/datasets/kitti/) where the goal is to estimate the distance of the closest car, van or truck
 - `create_patch_camelyon_data_files.py`: to transform the [PatchCamelyon](https://github.com/basveeling/pcam) dataset to the `disk_folder` format
 - `create_small_norb_azimuth_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to find the azimuth or the photographed object
@@ -247,6 +248,38 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
     "val": ["/output_path/to/food101/val", "<ignored>"]
 },
 ```
+
+### Preparing the Imagenet-A and Imagenet-R data files
+
+Run the `create_imagenet_ood_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_imagenet_ood_data_files.py \
+    -i /path/to/input_folder/ \
+    -o /path/to/output/
+    -d
+```
+
+After running this script:
+- The folder `/path/to/input_folder/` will contain the expanded `imagenet-a` and `imagenet-r` dataset in their original format
+- The folder `/path/to/output/imagenet-a` will contain the Imagenet-A `disk_filelist` to provide to VISSL
+- The folder `/path/to/output/imagenet-r` will contain the Imagenet-R `disk_filelist` to provide to VISSL
+
+Note: all these folders are necessary as the `disk_filelist` format references images and does not copy them. Deleting `/path/to/input_folder/` will result in an error during training.
+
+The last step is to set these paths in `dataset_catalog.json` and you are good to go:
+
+```
+"imagenet_a_filelist": {
+    "train": ["<not_used>", "<not_used>"],
+    "val": ["/path/to/output/imagenet-a/test_images.npy", "/path/to/output/imagenet-a/test_labels.npy"]
+},
+"imagenet_r_filelist": {
+    "train": ["<not_used>", "<not_used>"],
+    "val": ["/path/to/output/imagenet-r/test_images.npy", "/path/to/output/imagenet-r/test_labels.npy"]
+},
+```
+
 
 ### Preparing the KITTI/distance data files
 
