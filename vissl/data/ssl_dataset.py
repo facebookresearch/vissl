@@ -79,7 +79,7 @@ class GenericSSLDataset(Dataset):
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
         self._labels_init = False
         self._subset_initialized = False
-        self.subset_indices = None
+        self.image_and_label_subset = None
         self._verify_data_sources(split, dataset_source_map)
         self._get_data_files(split)
 
@@ -227,7 +227,7 @@ class GenericSSLDataset(Dataset):
                 raise ValueError(f"unknown label source: {label_source}")
             self.label_objs.append(labels)
 
-    def _init_subset(self):
+    def _init_image_and_label_subset(self):
         """
         If DATA_LIMIT = K >= 0, we reduce the size of the dataset from N to K.
 
@@ -239,8 +239,25 @@ class GenericSSLDataset(Dataset):
         This function makes the assumption that there is one data source only
         or that all data sources have the same length (same as __getitem__).
         """
-        if not self.data_limit_sampling.BALANCED:
-            self.subset_indices = unbalanced_sub_sampling(
+
+        valid_datasets = {
+            "disk_filelist",
+            "disk_folder",
+            "torchvision_dataset",
+            "synthetic",
+        }
+
+        # Backward compatibility: some plug-in data sources do have an internal
+        # support for data_limit, and we keep the same behavior here (take the
+        # first DATA_LIMIT elements out of the full dataset)
+        if any(source not in valid_datasets for source in self.data_sources):
+            self.image_and_label_subset = np.array(range(self.data_limit))
+
+        # Otherwise use one of the two random sampling strategies:
+        # - unbalanced: random sampling is agnostic to labels
+        # - balanced: makes sure all labels are equally represented
+        elif not self.data_limit_sampling.BALANCED:
+            self.image_and_label_subset = unbalanced_sub_sampling(
                 total_num_samples=len(self.data_objs[0]),
                 num_samples=self.data_limit,
                 skip_samples=self.data_limit_sampling.SKIP_NUM_SAMPLES,
@@ -248,7 +265,7 @@ class GenericSSLDataset(Dataset):
             )
         else:
             assert len(self.label_objs), "Balanced sampling requires labels"
-            self.subset_indices = balanced_sub_sampling(
+            self.image_and_label_subset = balanced_sub_sampling(
                 labels=self.label_objs[0],
                 num_samples=self.data_limit,
                 skip_samples=self.data_limit_sampling.SKIP_NUM_SAMPLES,
@@ -279,8 +296,8 @@ class GenericSSLDataset(Dataset):
         subset_idx = idx
         if self.data_limit >= 0:
             if not self._subset_initialized:
-                self._init_subset()
-            subset_idx = self.subset_indices[idx]
+                self._init_image_and_label_subset()
+            subset_idx = self.image_and_label_subset[idx]
 
         # TODO: this doesn't yet handle the case where the length of datasets
         # could be different.
