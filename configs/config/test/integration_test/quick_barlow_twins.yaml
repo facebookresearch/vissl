@@ -73,7 +73,8 @@ config:
   LOSS:
       name: barlow_twins_loss
       barlow_twins_loss:
-        lambda_: 5e-3
+        lambda_: 0.0051
+        scale_loss: 0.024
         embedding_dim: 128
   OPTIMIZER:
       name: sgd

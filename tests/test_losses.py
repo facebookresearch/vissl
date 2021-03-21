@@ -17,7 +17,6 @@ from vissl.losses.swav_loss import SwAVCriterion
 from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
 
-
 logger = logging.getLogger("__name__")
 
 set_cpu_device()
@@ -72,9 +71,57 @@ class TestLossesForward(unittest.TestCase):
 
     def test_barlow_twins_loss(self):
         loss_layer = BarlowTwinsCriterion(
-            lambda_=5e-3, embedding_dim=EMBEDDING_DIM
+            lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
         )
         _ = loss_layer(self._get_embedding())
+
+
+class TestBarlowTwinsCriterion(unittest.TestCase):
+    """
+    Specific tests on Barlow Twins going further than just doing a forward pass
+    """
+
+    def test_barlow_twins_backward(self):
+        EMBEDDING_DIM = 3
+        criterion = BarlowTwinsCriterion(
+            lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
+        )
+        embeddings = torch.tensor(
+            [[1.0, 0.0, 1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
+            requires_grad=True,
+        )
+
+        self.assertTrue(embeddings.grad is None)
+        criterion(embeddings).backward()
+        self.assertTrue(embeddings.grad is not None)
+        print(embeddings.grad)
+        with torch.no_grad():
+            next_embeddings = embeddings - embeddings.grad  # gradient descent
+            self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
+
+    @staticmethod
+    def worker_fn(gpu_id: int, world_size: int, batch_size: int):
+        dist.init_process_group(
+            backend="gloo",
+            init_method="tcp://0.0.0.0:1234",
+            world_size=world_size,
+            rank=gpu_id,
+        )
+        criterion = BarlowTwinsCriterion(
+            lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
+        )
+        embeddings = torch.randn((batch_size, EMBEDDING_DIM))
+        _ = criterion(embeddings)
+
+    def test_backward_world_size_1(self):
+        WORLD_SIZE = 1
+        BATCH_SIZE = 2
+        mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+
+    def test_normalize_world_size_2(self):
+        WORLD_SIZE = 2
+        BATCH_SIZE = 2
+        mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
 
 
 class TestSimClrCriterion(unittest.TestCase):
