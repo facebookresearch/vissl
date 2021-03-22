@@ -21,6 +21,7 @@ VISSL provides reference implementation of a large number of self-supervision ap
    - [DeepClusterV2](#DeepClusterV2)
    - [SwAV](#SwAV)
    - [MoCoV2](#MoCoV2)
+   - [Barlow Twins](#BarlowTwins)
 
 ## Torchvision and VISSL
 
@@ -205,3 +206,9 @@ There is some standard deviation in linear results if we run the same eval sever
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
 | [MoCo-v2](https://arxiv.org/abs/2003.04297)   |    RN50 - 200 epochs - 256 batch-size         |    ImageNet-1K      | 66.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/moco_v2_1node_lr.03_step_b32_zero_init/model_final_checkpoint_phase199.torch)
+
+### BarlowTwins
+
+| Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
+| ------ | ----- | ---------------- | ------------------- | --- |
+| [Barlow Twins](https://arxiv.org/abs/2103.03230)   |    RN50 - 1000 epochs - 2048 batch-size         |    ImageNet-1K      | #TODO | #TODO 
