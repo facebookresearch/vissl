@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+import time
 import logging
 import unittest
 from collections import namedtuple
@@ -110,8 +111,9 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
         criterion = BarlowTwinsCriterion(
             lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
         )
-        embeddings = torch.randn((batch_size, EMBEDDING_DIM))
-        _ = criterion(embeddings)
+        embeddings = torch.randn((batch_size, EMBEDDING_DIM),
+                                 dtype=torch.float32, requires_grad=True)
+        criterion(embeddings).backward()
 
     def test_backward_world_size_1(self):
         WORLD_SIZE = 1

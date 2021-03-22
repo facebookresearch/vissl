@@ -3,9 +3,10 @@
 import pprint
 
 import torch
-from classy_vision.generic.distributed_util import all_reduce_mean
+from classy_vision.generic.distributed_util import all_reduce_mean, get_world_size
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from vissl.utils.distributed_gradients import gather_from_all
 from vissl.utils.hydra_config import AttrDict
 
 
@@ -147,12 +148,14 @@ class BarlowTwinsCriterion(nn.Module):
             dim=0,
         )
 
-        # cross-correlation matrix
-        c = torch.mm(embedding_normed_a.T, embedding_normed_b) / batch_size
+        # Do a gather over all embeddings, so we can compute the loss.
+        # Final shape is: (batch_size * num_gpus) x embedding_dim
+        embedding_normed_a = gather_from_all(embedding_normed_a)
+        embedding_normed_b = gather_from_all(embedding_normed_b)
 
-        # If running on a distributed setting, perform mean reduction of c over
-        # all processes.
-        c = all_reduce_mean(c)
+        # cross-correlation matrix
+        c = torch.mm(embedding_normed_a.T, embedding_normed_b) / (
+                    batch_size * get_world_size())
 
         # loss
         on_diag = torch.diagonal(c).add(-1).pow(2).sum().mul(self.scale_loss)
