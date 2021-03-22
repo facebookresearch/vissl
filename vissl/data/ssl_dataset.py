@@ -75,7 +75,7 @@ class GenericSSLDataset(Dataset):
         self.dataset_names = self.cfg["DATA"][split].DATASET_NAMES
         self.label_type = self.cfg["DATA"][split].LABEL_TYPE
         self.data_limit = self.cfg["DATA"][split].DATA_LIMIT
-        self.data_limit_sampling = self.cfg["DATA"][split].DATA_LIMIT_SAMPLING
+        self.data_limit_sampling = self._get_data_limit_sampling(cfg, split)
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
         self._labels_init = False
         self._subset_initialized = False
@@ -100,6 +100,13 @@ class GenericSSLDataset(Dataset):
                     data_source=self.data_sources[idx],
                 )
             )
+
+    @staticmethod
+    def _get_data_limit_sampling(cfg: AttrDict, split: str) -> AttrDict:
+        default_sampling = AttrDict(
+            {"SEED": 0, "IS_BALANCED": False, "SKIP_NUM_SAMPLES": 0}
+        )
+        return cfg["DATA"][split].get("DATA_LIMIT_SAMPLING", default_sampling)
 
     def _verify_data_sources(self, split, dataset_source_map):
         """
@@ -256,7 +263,7 @@ class GenericSSLDataset(Dataset):
         # Otherwise use one of the two random sampling strategies:
         # - unbalanced: random sampling is agnostic to labels
         # - balanced: makes sure all labels are equally represented
-        elif not self.data_limit_sampling.BALANCED:
+        elif not self.data_limit_sampling.IS_BALANCED:
             self.image_and_label_subset = unbalanced_sub_sampling(
                 total_num_samples=len(self.data_objs[0]),
                 num_samples=self.data_limit,

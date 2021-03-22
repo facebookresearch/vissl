@@ -261,12 +261,12 @@ config:
       # DATA_LIMIT: 500
       # DATA_LIMIT_SAMPLING:
       #   SEED: 0
-      #   BALANCED: True
-      #   SKIP: 1000
+      #   IS_BALANCED: True
+      #   SKIP_NUM_SAMPLES: 1000
       #
       DATA_LIMIT_SAMPLING:
         SEED: 0
-        BALANCED: False
+        IS_BALANCED: False
         SKIP_NUM_SAMPLES: 0
 
       # whether the data specified (whether file list or directory) should be copied locally
@@ -305,8 +305,8 @@ config:
       DATA_LIMIT: -1
       DATA_LIMIT_SAMPLING:
         SEED: 0
-        BALANCED: False
-        SKIP: 0
+        IS_BALANCED: False
+        SKIP_NUM_SAMPLES: 0
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""
