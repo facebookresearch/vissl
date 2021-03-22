@@ -3,10 +3,7 @@
 import pprint
 
 import torch
-from classy_vision.generic.distributed_util import (
-    all_reduce_mean,
-    get_cuda_device_index,
-)
+from classy_vision.generic.distributed_util import all_reduce_mean
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
 from vissl.utils.hydra_config import AttrDict
@@ -86,7 +83,6 @@ class BarlowTwinsCriterion(nn.Module):
     def __init__(self, lambda_: float, scale_loss: float, embedding_dim: int):
         super(BarlowTwinsCriterion, self).__init__()
 
-        self.use_gpu = get_cuda_device_index() > -1
         self.lambda_ = lambda_
         self.scale_loss = scale_loss
         self.embedding_dim = embedding_dim
