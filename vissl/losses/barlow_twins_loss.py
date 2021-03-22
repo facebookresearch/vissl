@@ -93,8 +93,6 @@ class BarlowTwinsCriterion(nn.Module):
         self.num_copies = 2
         self.eps = 1e-5
 
-        self.diag_mask = torch.eye(embedding_dim, dtype=torch.bool)
-
     def _sync_normalize(self, embedding: torch.Tensor) -> torch.Tensor:
         """
         Adapted from: https://github.com/NVIDIA/apex/blob/master/apex/parallel/sync_batchnorm.py
@@ -114,6 +112,15 @@ class BarlowTwinsCriterion(nn.Module):
             var = sqr_mean - mean.pow(2)
 
         return (embedding - mean) / torch.sqrt(var + self.eps)
+
+    @staticmethod
+    def _off_diagonal(x: torch.Tensor) -> torch.Tensor:
+        """
+        return a flattened view of the off-diagonal elements of a square matrix
+       """
+        n, m = x.shape
+        assert n == m
+        return x.flatten()[:-1].view(n - 1, n + 1)[:, 1:].flatten()
 
     def forward(self, embedding: torch.Tensor) -> torch.tensor:
         """
@@ -152,8 +159,8 @@ class BarlowTwinsCriterion(nn.Module):
         c = all_reduce_mean(c)
 
         # loss
-        on_diag = c[self.diag_mask].add_(-1).pow_(2).sum().mul(self.scale_loss)
-        off_diag = c[~self.diag_mask].pow_(2).sum().mul(self.scale_loss)
+        on_diag = torch.diagonal(c).add(-1).pow(2).sum().mul(self.scale_loss)
+        off_diag = self._off_diagonal(c).pow(2).sum().mul(self.scale_loss)
         loss = on_diag + self.lambda_ * off_diag
 
         return loss
