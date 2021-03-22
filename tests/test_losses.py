@@ -1,6 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-import time
 import logging
 import unittest
 from collections import namedtuple
