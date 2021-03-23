@@ -88,6 +88,7 @@ class SelfSupervisionTrainer(object):
         self.task.set_hooks(hooks)
 
         self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
+        self.task.initiate_vissl_event_storage()
         self.setup_distributed(self.task.device.type == "cuda")
 
     def setup_distributed(self, use_gpu: bool):

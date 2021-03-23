@@ -88,6 +88,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.phase_idx = -1
         # id of the current training phase training is at. Starts from 0
         self.train_phase_idx = -1  # set by trainer
+        self._event_storage = None
         # metrics stored during the training.
         self.metrics = {}  # set by the trainer
         self.start_time = -1  # set by trainer
@@ -116,6 +117,16 @@ class SelfSupervisionTask(ClassificationTask):
         # communication as much as possible
         self.set_ddp_bucket_cap_mb()
         self.use_gpu = self.device.type == "cuda"
+
+    def initiate_vissl_event_storage(self):
+        from vissl.utils.events import create_event_storage, get_event_storage
+
+        create_event_storage()
+        self._event_storage = get_event_storage()
+
+    @property
+    def event_storage(self):
+        return self._event_storage
 
     def set_device(self):
         """
