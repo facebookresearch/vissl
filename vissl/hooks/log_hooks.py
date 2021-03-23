@@ -14,6 +14,7 @@ from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
 from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from fvcore.common.file_io import PathManager
 from vissl.utils.checkpoint import is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
@@ -335,30 +336,39 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 )
                 task.optimizer.consolidate_state_dict()
 
+            # Model's state dict may need to be obtained on all ranks if we are running
+            # with FSDP since all_gather needs to happen here.
+            model_state_dict = None
+            if isinstance(task.base_model, FSDP):
+                model_state_dict = task.get_classy_state()
+
             # - save the checkpoint on the primary rank
             if is_primary():
                 checkpoint_folder = task.checkpoint_folder
                 logging.info(
                     f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
                 )
-                classy_state_dict = task.get_classy_state()
+                if model_state_dict is None:
+                    model_state_dict = task.get_classy_state()
                 # phase_idx is already incremented at the beginning of phase but if we
                 # are checkpointing at an iteration in the middle of phase, we should not
                 # save the incremented phase_idx as it will incorrectly assume that model
                 # trained for that phase already.
                 if mode == "iteration":
                     phase_idx = phase_idx - 1
-                    classy_state_dict["phase_idx"] = classy_state_dict["phase_idx"] - 1
+                    model_state_dict["phase_idx"] = model_state_dict["phase_idx"] - 1
                     if task.train:
                         train_phase_idx = train_phase_idx - 1
-                        classy_state_dict["train_phase_idx"] = train_phase_idx
+                        model_state_dict["train_phase_idx"] = train_phase_idx
                 checkpoint_task = {
                     "phase_idx": phase_idx,
                     "iteration": task.iteration,
                     "loss": task.loss.state_dict(),
                     "iteration_num": task.local_iteration_num,
                     "train_phase_idx": train_phase_idx,
-                    "classy_state_dict": classy_state_dict,
+                    # TODO (Min): change the key to model_state_dict but we need to be careful
+                    #             about backward compatibilities.
+                    "classy_state_dict": model_state_dict,
                 }
                 ckpt_name = f"model_{mode}{mode_num}.torch"
                 if is_final_train_phase:

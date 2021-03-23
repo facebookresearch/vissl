@@ -30,8 +30,7 @@ from classy_vision.models.regnet import (
     StemType,
     VanillaBlock,
 )
-from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
-from fairscale.nn.misc import checkpoint_wrapper
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP, auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
 from vissl.models.model_helpers import (
     Flatten,
@@ -42,20 +41,10 @@ from vissl.models.trunks import register_model_trunk
 from vissl.utils.hydra_config import AttrDict
 
 
-def fsdp_wrapper(module):
-    """Customer wrapper that does FSDP + checkpoint at the same time
-
-    Currently not used. Will be used in the next commit. Included here
-    to check the imports.
-    """
-    fsdp_config = {
-        "wrapper_cls": fsdp_wrapper,
-        "mixed_precision": True,
-        "flatten_parameters": True,
-    }
-    with enable_wrap(fsdp_config):
-        wrap()
-    return FSDP(checkpoint_wrapper(module))
+def fsdp_wrapper(module, **kwargs):
+    """Customer wrapper that does FSDP + checkpoint at the same time."""
+    # TODO (Min): enable checkpoint_wrapper
+    return FSDP(module, **kwargs)
 
 
 def get_rng_state():
@@ -116,6 +105,7 @@ class AnyStage(nn.Sequential):
 
     def __init__(
         self,
+        model_config,
         width_in: int,
         width_out: int,
         stride: int,
@@ -129,6 +119,10 @@ class AnyStage(nn.Sequential):
         super().__init__()
         self.stage_depth = 0
 
+        fsdp_config = {
+            "wrapper_cls": fsdp_wrapper,
+        }
+        fsdp_config.update(model_config.FSDP_CONFIG)
         for i in range(depth):
             # Make a block and move it to cuda since shard-as-we-build of FSDP needs
             # cuda to do dist.all_gather() call.
@@ -138,7 +132,7 @@ class AnyStage(nn.Sequential):
                 stride if i == 0 else 1,
                 params.bn_epsilon,
                 params.bn_momentum,
-                params.relu_in_place,
+                False,  # params.relu_in_place
                 bot_mul,
                 group_width,
                 params.se_ratio,
@@ -146,12 +140,28 @@ class AnyStage(nn.Sequential):
             # Init weight before wrapping and sharding.
             init_weights(block)
 
+            # Now, wrap it with fsdp+checkpoint, which will perform the sharding.
+            block = auto_wrap_bn(block)
+            with enable_wrap(**fsdp_config):
+                block = wrap(block)
+
             self.stage_depth += block.depth
             self.add_module(f"block{stage_index}-{i}", block)
 
 
 @register_model_trunk("regnet_fsdp")
-class RegNetFSDP(nn.Module):
+class RegNetFSDP(FSDP):
+    """
+    Wrap the entire trunk since we need to load checkpoint before
+    train_fsdp_task.py wrapping happens.
+    """
+
+    def __init__(self, model_config: AttrDict, model_name: str):
+        module = _RegNetFSDP(model_config, model_name)
+        super().__init__(module, **model_config.FSDP_CONFIG)
+
+
+class _RegNetFSDP(nn.Module):
     """
     Similar to RegNet trunk, but with FSDP enabled.
 
@@ -188,7 +198,7 @@ class RegNetFSDP(nn.Module):
         # Unlike DDP, FSDP does not sync weights using rank 0 on start.
         # Therefore, we init stem and trunk_output below within the seed context.
         #
-        # TODO (Min): we can make this seed coming from the config.
+        # TODO (Min): we can make this seed coming from the config or env.
         stem = None
         trunk_output = None
         with set_torch_seed(0):
@@ -210,9 +220,10 @@ class RegNetFSDP(nn.Module):
                 params.stem_width,
                 params.bn_epsilon,
                 params.bn_momentum,
-                params.relu_in_place,
+                False,  # params.relu_in_place
             )
             init_weights(stem)
+            stem = auto_wrap_bn(stem)
 
             # Instantiate all the AnyNet blocks in the trunk
             block_fun = {
@@ -234,6 +245,7 @@ class RegNetFSDP(nn.Module):
                     (
                         f"block{i+1}",
                         AnyStage(
+                            model_config,
                             current_width,
                             width_out,
                             stride,

@@ -390,6 +390,14 @@ config:
     SHARDED_DDP_SETUP:
       reduce_buffer_size: -1
     # ----------------------------------------------------------------------------------- #
+    # FSDP from Fairscale https://github.com/facebookresearch/fairscale
+    #   These options should match FSDP classes init options.
+    # ----------------------------------------------------------------------------------- #
+    FSDP_CONFIG:
+      mixed_precision: True
+      flatten_parameters: True
+      fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.
+    # ----------------------------------------------------------------------------------- #
     # Feature evaluation settings
     # ----------------------------------------------------------------------------------- #
     FEATURE_EVAL_SETTINGS:
@@ -544,6 +552,8 @@ config:
       # specify the multiplier. By default, set to 1.0
       # this setting is helpful for scaling the model output.
       PARAMS_MULTIPLIER: 1.0
+      # set this to False for FSDP regnet
+      INPLACE_RELU: True
     # ----------------------------------------------------------------------------------- #
     # Synchronized BatchNorm Setup
     # ----------------------------------------------------------------------------------- #

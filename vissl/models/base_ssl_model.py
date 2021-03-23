@@ -6,6 +6,7 @@ import logging
 import torch
 import torch.nn as nn
 from classy_vision.models import ClassyModel, register_model
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.models.heads import get_model_head
 from vissl.models.model_helpers import (
     get_trunk_output_feature_names,
@@ -390,7 +391,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         }
         if deep_copy:
             model_state_dict = copy.deepcopy(model_state_dict)
-        ###################### DEBUG ###################################
+        # ................... DEBUG ...............................
         # from vissl.utils.checkpoint import print_state_dict_shapes
 
         # print_state_dict_shapes(trunk_state_dict)
@@ -406,22 +407,25 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         """
         from vissl.utils.checkpoint import print_loaded_dict_info
 
-        logging.info("Loading Trunk state dict....")
+        logging.info(f"Rank {self.local_rank}: Loading Trunk state dict....")
         self.trunk.load_state_dict(state["model"]["trunk"])
-        logging.info("Loading Heads state dict....")
+        logging.info(f"Rank {self.local_rank}: Loading Heads state dict....")
 
         # sometimes, we want to load the partial head only, so strict=False
         self.heads.load_state_dict(state["model"]["heads"], strict=False)
-        logging.info("Model state dict loaded!")
+        logging.info(f"Rank {self.local_rank}: Model state dict loaded!")
 
-        # print debug information about layers loaded
-        if self.local_rank == 0:
-            # get the model state dict original
-            model_state_dict = {}
+        # Print debug information about layers loaded.
+        #
+        # Get the model state dict original (if FSDP, calling it on all ranks.)
+        if self.local_rank == 0 or isinstance(self.trunk, FSDP):
             trunk_state_dict, heads_state_dict = (
                 self.trunk.state_dict(),
                 self.heads.state_dict(),
             )
+        # Now print.
+        if self.local_rank == 0:
+            model_state_dict = {}
             model_state_dict.update(trunk_state_dict)
             model_state_dict.update(heads_state_dict)
 

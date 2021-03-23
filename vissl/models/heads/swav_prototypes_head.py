@@ -75,7 +75,7 @@ class SwAVPrototypesHead(nn.Module):
                         momentum=model_config.HEAD.BATCHNORM_MOMENTUM,
                     )
                 )
-            layers.append(nn.ReLU(inplace=True))
+            layers.append(nn.ReLU(inplace=model_config.HEAD.INPLACE_RELU))
             last_dim = dim
         self.projection_head = nn.Sequential(*layers)
 

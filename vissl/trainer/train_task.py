@@ -9,7 +9,7 @@ from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
-from classy_vision.tasks.classification_task import BroadcastBuffersMode, AmpType
+from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.data import build_dataset, get_loader, print_sampler_config
@@ -19,6 +19,7 @@ from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
 from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
+
 
 if is_apex_available():
     import apex
@@ -376,6 +377,7 @@ class SelfSupervisionTask(ClassificationTask):
         """
         params_from_file = self.config["MODEL"]["WEIGHTS_INIT"]
         init_weights_path = params_from_file["PARAMS_FILE"]
+        assert init_weights_path, "Shouldn't call this when init_weight_path is empty"
         logging.info(f"Initializing model from: {init_weights_path}")
 
         if PathManager.exists(init_weights_path):
@@ -457,8 +459,10 @@ class SelfSupervisionTask(ClassificationTask):
         # If we want to initialize the model in case of finetuning or evaluation,
         # we do it here. But we check that there is no checkpoint existing before
         # This is important in cases when the model training dies.
-        if self.checkpoint_path is None and PathManager.exists(
-            self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+        if (
+            self.checkpoint_path is None
+            and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+            and PathManager.exists(self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"])
         ):
             model = self._restore_model_weights(model)
 

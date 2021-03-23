@@ -62,7 +62,7 @@ class MLP(nn.Module):
                     )
                 )
             if use_relu:
-                layers.append(nn.ReLU(inplace=True))
+                layers.append(nn.ReLU(inplace=model_config.HEAD.INPLACE_RELU))
                 last_dim = dim
             if use_dropout:
                 layers.append(nn.Dropout())
