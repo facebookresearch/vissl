@@ -20,6 +20,7 @@ from typing import List, Tuple
 import torch
 import torch.nn as nn
 from classy_vision.models.regnet import (
+    ActivationType,
     BlockType,
     RegNetParams,
     ResBasicBlock,
@@ -111,6 +112,7 @@ class AnyStage(nn.Sequential):
         stride: int,
         depth: int,
         block_constructor: nn.Module,
+        activation: nn.Module,
         bot_mul: float,
         group_width: int,
         params: "RegNetParams",
@@ -132,7 +134,7 @@ class AnyStage(nn.Sequential):
                 stride if i == 0 else 1,
                 params.bn_epsilon,
                 params.bn_momentum,
-                False,  # params.relu_in_place
+                activation,
                 bot_mul,
                 group_width,
                 params.se_ratio,
@@ -188,6 +190,7 @@ class _RegNetFSDP(nn.Module):
             stem_type=trunk_config.get("stem_type", "simple_stem_in").upper(),
             stem_width=trunk_config.get("stem_width", 32),
             block_type=trunk_config.get("block_type", "res_bottleneck_block").upper(),
+            activation_type=trunk_config.get("activation_type", "relu").upper(),
             use_se=trunk_config.get("use_se", True),
             se_ratio=trunk_config.get("se_ratio", 0.25),
             bn_epsilon=trunk_config.get("bn_epsilon", 1e-05),
@@ -211,6 +214,10 @@ class _RegNetFSDP(nn.Module):
             #
             # When debugging this, it is not enough to just dump the total module
             # params. You need to diff the module string representations.
+            activation = {
+                ActivationType.RELU: nn.ReLU(False),  # params.relu_in_place
+            }[params.activation_type]
+
             stem = {
                 StemType.RES_STEM_CIFAR: ResStemCifar,
                 StemType.RES_STEM_IN: ResStemIN,
@@ -220,7 +227,7 @@ class _RegNetFSDP(nn.Module):
                 params.stem_width,
                 params.bn_epsilon,
                 params.bn_momentum,
-                False,  # params.relu_in_place
+                activation,
             )
             init_weights(stem)
             stem = auto_wrap_bn(stem)
@@ -251,6 +258,7 @@ class _RegNetFSDP(nn.Module):
                             stride,
                             depth,
                             block_fun,
+                            activation,
                             bot_mul,
                             group_width,
                             params,
