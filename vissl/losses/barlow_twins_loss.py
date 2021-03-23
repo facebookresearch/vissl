@@ -6,8 +6,70 @@ import torch
 from classy_vision.generic.distributed_util import all_reduce_mean, get_world_size
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
+from torch.autograd.function import Function
 from vissl.utils.distributed_gradients import gather_from_all
 from vissl.utils.hydra_config import AttrDict
+
+
+class SyncNormalizeFunction(Function):
+    """
+    Adapted from: https://github.com/NVIDIA/apex/blob/master/apex/parallel/sync_batchnorm.py
+
+    Normalizes a NxD input over the first dimension and across all processes.
+    """
+    @staticmethod
+    def forward(ctx, input, eps):
+        with torch.no_grad():
+            local_mean = torch.mean(input, 0)
+            local_sqr_mean = torch.pow(input, 2).mean(0)
+
+            # If running on a distributed setting, perform mean reduction of tensors over
+            # all processes.
+            mean = all_reduce_mean(local_mean)
+            sqr_mean = all_reduce_mean(local_sqr_mean)
+
+            # var(x) = E (( x - mean_x ) ** 2)
+            #        = 1 / N * sum ( x - mean_x ) ** 2
+            #        = 1 / N * sum (x**2) - mean_x**2
+            var = sqr_mean - mean.pow(2)
+
+        # transpose it to channel last to support broadcasting for input with different rank
+        c_last_input = input.transpose(1, -1).contiguous().clone()
+
+        ctx.save_for_backward(c_last_input, mean, var)
+        ctx.eps = eps
+
+        c_last_input = (c_last_input - mean) / torch.sqrt(var + eps)
+
+        return c_last_input.transpose(1, -1).contiguous().clone()
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # mini batch mean & var are calculated by forward path.
+        # mu = 1./N*np.sum(h, axis = 0)
+        # var = 1./N*np.sum((h-mu)**2, axis = 0)
+        c_last_input, mean, var = ctx.saved_tensors
+
+        eps = ctx.eps
+        grad_input = None
+        num_features = mean.size()[0]
+
+        # calculate grad_input
+        if ctx.needs_input_grad[0]:
+            # dh = gamma * (var + eps)**(-1. / 2.) * (dy - np.mean(dy, axis=0)
+            #     - (h - mu) * (var + eps)**(-1.0) * np.mean(dy * (h - mu), axis=0))
+            mean_dy = grad_output.mean(0)
+            mean_dy_xmu = (grad_output * (c_last_input -
+                                          mean)).view(-1, num_features).mean(0)
+            # If running on a distributed setting, perform mean reduction of tensors over
+            # all processes.
+            mean_dy = all_reduce_mean(mean_dy)
+            mean_dy_xmu = all_reduce_mean(mean_dy_xmu)
+
+            grad_input = (grad_output - mean_dy - (c_last_input - mean) / (
+                    var + eps) * mean_dy_xmu) / torch.sqrt(var + eps)
+
+        return grad_input, None
 
 
 @register_loss("barlow_twins_loss")
@@ -90,26 +152,6 @@ class BarlowTwinsCriterion(nn.Module):
         self.num_copies = 2
         self.eps = 1e-5
 
-    def _sync_normalize(self, embedding: torch.Tensor) -> torch.Tensor:
-        """
-        Adapted from: https://github.com/NVIDIA/apex/blob/master/apex/parallel/sync_batchnorm.py
-        """
-        with torch.no_grad():
-            local_mean = torch.mean(embedding, 0)
-            local_sqr_mean = torch.pow(embedding, 2).mean(0)
-
-            # If running on a distributed setting, perform mean reduction of tensors over
-            # all processes.
-            mean = all_reduce_mean(local_mean)
-            sqr_mean = all_reduce_mean(local_sqr_mean)
-
-            # var(x) = E (( x - mean_x ) ** 2)
-            #        = 1 / N * sum ( x - mean_x ) ** 2
-            #        = 1 / N * sum (x**2) - mean_x**2
-            var = sqr_mean - mean.pow(2)
-
-        return (embedding - mean) / torch.sqrt(var + self.eps)
-
     @staticmethod
     def _off_diagonal(x: torch.Tensor) -> torch.Tensor:
         """
@@ -135,11 +177,11 @@ class BarlowTwinsCriterion(nn.Module):
 
         batch_size = embedding.shape[0]
         assert (
-            batch_size % self.num_copies == 0
+                batch_size % self.num_copies == 0
         ), f"Batch size {batch_size} should be divisible by num_copies ({self.num_copies})."
 
         # normalize embeddings along the batch dimension
-        embedding_normed = self._sync_normalize(embedding)
+        embedding_normed = SyncNormalizeFunction.apply(embedding, self.eps)
 
         # split embedding between copies
         embedding_normed_a, embedding_normed_b = torch.split(
@@ -155,7 +197,7 @@ class BarlowTwinsCriterion(nn.Module):
 
         # cross-correlation matrix
         c = torch.mm(embedding_normed_a.T, embedding_normed_b) / (
-                    batch_size * get_world_size())
+                batch_size * get_world_size())
 
         # loss
         on_diag = torch.diagonal(c).add(-1).pow(2).sum().mul(self.scale_loss)
