@@ -86,15 +86,11 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
         criterion = BarlowTwinsCriterion(
             lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
         )
-        embeddings = torch.tensor(
-            [[1.0, 0.0, 1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
-            requires_grad=True,
-        )
+        embeddings = torch.randn((4, EMBEDDING_DIM), requires_grad=True)
 
         self.assertTrue(embeddings.grad is None)
         criterion(embeddings).backward()
         self.assertTrue(embeddings.grad is not None)
-        print(embeddings.grad)
         with torch.no_grad():
             next_embeddings = embeddings - embeddings.grad  # gradient descent
             self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
