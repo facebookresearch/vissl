@@ -98,7 +98,7 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
     @staticmethod
     def worker_fn(gpu_id: int, world_size: int, batch_size: int):
         dist.init_process_group(
-            backend="gloo",
+            backend="nccl",
             init_method="tcp://0.0.0.0:1234",
             world_size=world_size,
             rank=gpu_id,
@@ -107,18 +107,20 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
             lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
         )
         embeddings = torch.randn((batch_size, EMBEDDING_DIM),
-                                 dtype=torch.float32, requires_grad=True)
+                                 dtype=torch.float32, requires_grad=True).cuda()
         criterion(embeddings).backward()
 
     def test_backward_world_size_1(self):
-        WORLD_SIZE = 1
-        BATCH_SIZE = 2
-        mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+        if torch.cuda.device_count() >= 1:
+            WORLD_SIZE = 1
+            BATCH_SIZE = 2
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
 
-    def test_normalize_world_size_2(self):
-        WORLD_SIZE = 2
-        BATCH_SIZE = 2
-        mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+    def test_backward_world_size_2(self):
+        if torch.cuda.device_count() >= 2:
+            WORLD_SIZE = 2
+            BATCH_SIZE = 2
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
 
 
 class TestSimClrCriterion(unittest.TestCase):
