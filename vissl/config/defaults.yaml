@@ -250,8 +250,25 @@ config:
       # accomodate the smoothed labels. See
       # LOSS.cross_entropy_multiple_output_single_target for more information.
       #
-      # limit the amount of data used in training. If set to -1, full dataset is used.
+      # Limit the amount of data used in training. If set to -1, full dataset is used.
+      #
       DATA_LIMIT: -1
+      #
+      # Specifies how the DATA_LIMIT samples are sampled
+      #
+      # Example: to select a range of 500 samples for validation, skipping the first 1000 samples (say these are
+      # already used in the training split) and sub-sampling these elements such that each class appears equally:
+      # DATA_LIMIT: 500
+      # DATA_LIMIT_SAMPLING:
+      #   SEED: 0
+      #   IS_BALANCED: True
+      #   SKIP_NUM_SAMPLES: 1000
+      #
+      DATA_LIMIT_SAMPLING:
+        SEED: 0
+        IS_BALANCED: False
+        SKIP_NUM_SAMPLES: 0
+
       # whether the data specified (whether file list or directory) should be copied locally
       # on the machine where training is happening.
       COPY_TO_LOCAL_DISK: False
@@ -286,6 +303,10 @@ config:
       COLLATE_FUNCTION: "default_collate"
       COLLATE_FUNCTION_PARAMS: {}
       DATA_LIMIT: -1
+      DATA_LIMIT_SAMPLING:
+        SEED: 0
+        IS_BALANCED: False
+        SKIP_NUM_SAMPLES: 0
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""

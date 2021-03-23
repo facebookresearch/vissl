@@ -87,13 +87,6 @@ class DiskImageDataset(QueueDataset):
             # Avoid creating it over and over again.
             self.is_initialized = True
 
-        if self.cfg["DATA"][self.split]["DATA_LIMIT"] > 0:
-            limit = self.cfg["DATA"][self.split]["DATA_LIMIT"]
-            if self.data_source == "disk_filelist":
-                self.image_dataset = self.image_dataset[:limit]
-            elif self.data_source == "disk_folder":
-                self.image_dataset.samples = self.image_dataset.samples[:limit]
-
     def num_samples(self):
         """
         Size of the dataset

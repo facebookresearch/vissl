@@ -19,15 +19,16 @@ class SyntheticImageDataset(Dataset):
         data_source (string, Optional): data source ("synthetic") [not used]
     """
 
-    def __init__(self, cfg, path, split, dataset_name, data_source="synthetic"):
+    DEFAULT_SIZE = 50_000
+
+    def __init__(
+        self, cfg, path: str, split: str, dataset_name: str, data_source="synthetic"
+    ):
         super(SyntheticImageDataset, self).__init__()
         self.cfg = cfg
         self.split = split
         self.data_source = data_source
-        self._num_samples = 50000
-        # by default, pretend dataset size is 500 images. OR user specified limit
-        if cfg.DATA[split].DATA_LIMIT > 0:
-            self._num_samples = cfg.DATA[split].DATA_LIMIT
+        self._num_samples = max(self.DEFAULT_SIZE, cfg.DATA[split].DATA_LIMIT)
 
     def num_samples(self):
         """
