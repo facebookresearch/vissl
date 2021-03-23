@@ -234,6 +234,20 @@ class GenericSSLDataset(Dataset):
                 raise ValueError(f"unknown label source: {label_source}")
             self.label_objs.append(labels)
 
+    def _can_random_subset_data_sources(self):
+        """
+        Backward compatibility: some plug-in data sources do have an internal
+        support for data_limit, and we keep the same behavior here (we ignore
+        the DATA_LIMIT attribute in GenericSSLDataset)
+        """
+        valid_datasets = {
+            "disk_filelist",
+            "disk_folder",
+            "torchvision_dataset",
+            "synthetic",
+        }
+        return all(source in valid_datasets for source in self.data_sources)
+
     def _init_image_and_label_subset(self):
         """
         If DATA_LIMIT = K >= 0, we reduce the size of the dataset from N to K.
@@ -247,23 +261,10 @@ class GenericSSLDataset(Dataset):
         or that all data sources have the same length (same as __getitem__).
         """
 
-        valid_datasets = {
-            "disk_filelist",
-            "disk_folder",
-            "torchvision_dataset",
-            "synthetic",
-        }
-
-        # Backward compatibility: some plug-in data sources do have an internal
-        # support for data_limit, and we keep the same behavior here (take the
-        # first DATA_LIMIT elements out of the full dataset)
-        if any(source not in valid_datasets for source in self.data_sources):
-            self.image_and_label_subset = np.array(range(self.data_limit))
-
-        # Otherwise use one of the two random sampling strategies:
+        # Use one of the two random sampling strategies:
         # - unbalanced: random sampling is agnostic to labels
         # - balanced: makes sure all labels are equally represented
-        elif not self.data_limit_sampling.IS_BALANCED:
+        if not self.data_limit_sampling.IS_BALANCED:
             self.image_and_label_subset = unbalanced_sub_sampling(
                 total_num_samples=len(self.data_objs[0]),
                 num_samples=self.data_limit,
@@ -301,7 +302,7 @@ class GenericSSLDataset(Dataset):
             self._labels_init = True
 
         subset_idx = idx
-        if self.data_limit >= 0:
+        if self.data_limit >= 0 and self._can_random_subset_data_sources():
             if not self._subset_initialized:
                 self._init_image_and_label_subset()
             subset_idx = self.image_and_label_subset[idx]
