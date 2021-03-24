@@ -110,7 +110,7 @@ config:
     BACKEND: nccl
     NUM_NODES: 4
     NUM_PROC_PER_NODE: 8
-    RUN_ID: auto
+    RUN_ID: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
     INIT_METHOD: tcp
     NCCL_DEBUG: False
   MACHINE:

@@ -12,7 +12,7 @@ VISSL provides yaml configuration file containing the exact hyperparam settings 
 reproduce the model. VISSL implements all the components including loss, data
 augmentations, collators etc required for this approach.
 
-To train ResNet-50 model on 2-machines (4-nodes) on ImageNet-1K dataset with Barlow Twins approach using MLP-head, lambda of 0.0051, scale loss of 0.024 and feature projection dimension 8192:
+To train ResNet-50 model on 4 octo-gpu nodes on ImageNet-1K dataset with Barlow Twins approach using a 8192-8192-8192 MLP-head, lambda of 0.0051 and scale loss of 0.024:
 
 .. code-block:: bash
 

@@ -16,6 +16,7 @@ from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.losses.swav_loss import SwAVCriterion
 from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.misc import find_free_tcp_port
 
 logger = logging.getLogger("__name__")
 
@@ -96,31 +97,38 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
             self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
 
     @staticmethod
-    def worker_fn(gpu_id: int, world_size: int, batch_size: int):
+    def worker_fn(gpu_id: int, world_size: int, batch_size: int, port: int):
         dist.init_process_group(
             backend="nccl",
-            init_method="tcp://0.0.0.0:1234",
+            init_method=f"tcp://0.0.0.0:{port}",
             world_size=world_size,
             rank=gpu_id,
         )
         criterion = BarlowTwinsCriterion(
             lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
         )
-        embeddings = torch.randn((batch_size, EMBEDDING_DIM),
-                                 dtype=torch.float32, requires_grad=True).cuda()
+        embeddings = torch.randn(
+            (batch_size, EMBEDDING_DIM),
+            dtype=torch.float32,
+            requires_grad=True
+        ).cuda()
         criterion(embeddings).backward()
 
     def test_backward_world_size_1(self):
         if torch.cuda.device_count() >= 1:
+            port = find_free_tcp_port()
+
             WORLD_SIZE = 1
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
 
     def test_backward_world_size_2(self):
         if torch.cuda.device_count() >= 2:
+            port = find_free_tcp_port()
+
             WORLD_SIZE = 2
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
 
 
 class TestSimClrCriterion(unittest.TestCase):
@@ -182,10 +190,10 @@ class TestSimClrCriterion(unittest.TestCase):
             self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
 
     @staticmethod
-    def worker_fn(gpu_id: int, world_size: int, batch_size: int):
+    def worker_fn(gpu_id: int, world_size: int, batch_size: int, port: int):
         dist.init_process_group(
             backend="nccl",
-            init_method="tcp://0.0.0.0:1234",
+            init_method=f"tcp://0.0.0.0:{port}",
             world_size=world_size,
             rank=gpu_id,
         )
@@ -215,15 +223,19 @@ class TestSimClrCriterion(unittest.TestCase):
 
     def test_gather_embeddings_word_size_1(self):
         if torch.cuda.device_count() >= 1:
+            port = find_free_tcp_port()
+
             WORLD_SIZE = 1
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
 
     def test_gather_embeddings_word_size_2(self):
         if torch.cuda.device_count() >= 2:
+            port = find_free_tcp_port()
+
             WORLD_SIZE = 2
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE), nprocs=WORLD_SIZE)
+            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
 
 
 class TestRootConfigsLossesBuild(unittest.TestCase):
