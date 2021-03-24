@@ -9,9 +9,9 @@ import copy
 from collections import OrderedDict
 
 import torch.nn as nn
+from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.models.model_helpers import lecun_normal_init, trunc_normal_
-from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_head("vision_transformer_head")

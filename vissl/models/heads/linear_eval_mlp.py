@@ -3,9 +3,9 @@ from typing import List
 
 import torch
 import torch.nn as nn
+from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.models.heads.mlp import MLP
-from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_head("eval_mlp")

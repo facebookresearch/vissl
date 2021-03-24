@@ -11,6 +11,7 @@ from typing import Any, Callable, List
 
 import torch
 from fvcore.common.file_io import PathManager
+from vissl.config import AttrDict
 from vissl.data.dataset_catalog import get_data_files
 from vissl.engines.extract_features import extract_main
 from vissl.engines.train import train_main
@@ -21,7 +22,6 @@ from vissl.utils.checkpoint import (
     is_training_finished,
 )
 from vissl.utils.env import set_env_vars
-from vissl.utils.hydra_config import AttrDict
 from vissl.utils.io import cleanup_dir, copy_data_to_local, makedir
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import get_dist_run_id

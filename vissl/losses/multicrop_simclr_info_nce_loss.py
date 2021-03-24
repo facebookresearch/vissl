@@ -6,8 +6,8 @@ import pprint
 import numpy as np
 import torch
 from classy_vision.losses import register_loss
+from vissl.config import AttrDict
 from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion, SimclrInfoNCELoss
-from vissl.utils.hydra_config import AttrDict
 
 
 @register_loss("multicrop_simclr_info_nce_loss")

@@ -14,9 +14,9 @@ from typing import List
 
 import torch
 import torch.nn as nn
+from vissl.config import AttrDict
 from vissl.models.model_helpers import DropPath, to_2tuple, trunc_normal_
 from vissl.models.trunks import register_model_trunk
-from vissl.utils.hydra_config import AttrDict
 
 
 class Mlp(nn.Module):

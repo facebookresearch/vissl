@@ -18,7 +18,7 @@ from classy_vision.generic.distributed_util import (
 from classy_vision.losses import ClassyLoss, register_loss
 from fvcore.common.file_io import PathManager
 from torch import nn
-from vissl.utils.hydra_config import AttrDict
+from vissl.config import AttrDict
 
 
 @register_loss("swav_loss")

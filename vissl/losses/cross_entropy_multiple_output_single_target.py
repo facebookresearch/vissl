@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from classy_vision.generic.util import is_on_gpu
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import Tensor, nn
-from vissl.utils.hydra_config import AttrDict
+from vissl.config import AttrDict
 
 
 class SmoothCrossEntropy(torch.nn.modules.CrossEntropyLoss):

@@ -5,8 +5,8 @@ from typing import Any, Dict, List
 
 import torch
 from fvcore.common.file_io import PathManager
+from vissl.config import AttrDict
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.hydra_config import AttrDict
 from vissl.utils.io import makedir
 
 
