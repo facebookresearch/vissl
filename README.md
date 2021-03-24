@@ -46,6 +46,7 @@ Get started with VISSL by trying one of the **Colab tutorial notebooks**.
 - [Benchmark task: Full finetuning on ImageNet-1K](https://colab.research.google.com/drive/1m1LUa-3vIR-rxwcm0QCrefc5S6PAY874?usp=sharing)
 - [Benchmark task: Linear image classification on ImageNet-1K](https://colab.research.google.com/drive/1CCuZ50BN99JcOB6VEPytVi_i2tSMd7A3?usp=sharing)
 - [Large scale training (fp16, LARC, ZeRO)](https://colab.research.google.com/drive/1fvZdRNUyHxMOaxuEO34x7XeGndzTUfIW?usp=sharing)
+- [Using a pre-trained model in inference mode](https://colab.research.google.com/drive/1TDuCYSk6wGyNQPPShgNGVuEZ-BJfyBvo?usp=sharing)
 
 
 ## Model Zoo and Baselines
