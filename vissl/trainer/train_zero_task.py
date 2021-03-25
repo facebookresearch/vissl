@@ -6,8 +6,9 @@ from classy_vision.optim.zero import ZeRO
 from classy_vision.tasks import register_task
 from classy_vision.tasks.classification_task import BroadcastBuffersMode
 from fairscale.nn.data_parallel import ShardedDataParallel
+from vissl.config import AttrDict
 from vissl.trainer.train_task import SelfSupervisionTask
-from vissl.utils.hydra_config import AttrDict
+
 
 # More information on ShardedDDP can be found in the Fairscale repository
 # https://github.com/facebookresearch/fairscale

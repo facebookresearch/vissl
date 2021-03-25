@@ -6,6 +6,7 @@ from typing import Any, Callable, List
 
 import torch
 from classy_vision.hooks.classy_hook import ClassyHook
+from vissl.config import AttrDict
 from vissl.hooks import default_hook_generator
 from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.collect_env import collect_env_info
@@ -14,7 +15,7 @@ from vissl.utils.env import (
     print_system_env_info,
     set_env_vars,
 )
-from vissl.utils.hydra_config import AttrDict, print_cfg
+from vissl.utils.hydra_config import print_cfg
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 

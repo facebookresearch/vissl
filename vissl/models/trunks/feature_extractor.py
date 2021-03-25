@@ -3,9 +3,9 @@ import logging
 
 import torch
 import torch.nn as nn
+from vissl.config import AttrDict
 from vissl.models.model_helpers import Identity
 from vissl.models.trunks import get_model_trunk
-from vissl.utils.hydra_config import AttrDict
 
 
 POOL_OPS = {

@@ -1,8 +1,8 @@
 import unittest
 
 import torch
-from vissl.models.heads import LinearEvalMLP, MLP
-from vissl.utils.hydra_config import AttrDict
+from vissl.config import AttrDict
+from vissl.models.heads import MLP, LinearEvalMLP
 
 
 class TestMLP(unittest.TestCase):

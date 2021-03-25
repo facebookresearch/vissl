@@ -6,11 +6,11 @@ import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
 from fvcore.common.file_io import PathManager
 from torch.utils.data import Dataset
+from vissl.config import AttrDict
 from vissl.data import dataset_catalog
 from vissl.data.data_helper import balanced_sub_sampling, unbalanced_sub_sampling
 from vissl.data.ssl_transforms import get_transform
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.hydra_config import AttrDict
 
 
 def _convert_lbl_to_long(lbl):

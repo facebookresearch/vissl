@@ -3,7 +3,7 @@
 import logging
 import os
 
-from vissl.utils.hydra_config import AttrDict
+from vissl.config import AttrDict
 
 
 def set_env_vars(local_rank: int, node_id: int, cfg: AttrDict):

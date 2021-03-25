@@ -12,12 +12,12 @@ from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
+from vissl.config import AttrDict
 from vissl.data import build_dataset, get_loader, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import init_model_from_weights
-from vissl.utils.hydra_config import AttrDict
 from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
 
 

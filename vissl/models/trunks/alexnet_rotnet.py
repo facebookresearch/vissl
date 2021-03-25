@@ -3,9 +3,9 @@
 # Adapted from https://github.com/gidariss/FeatureLearningRotNet
 
 import torch.nn as nn
+from vissl.config import AttrDict
 from vissl.models.model_helpers import Flatten, get_trunk_forward_outputs_module_list
 from vissl.models.trunks import register_model_trunk
-from vissl.utils.hydra_config import AttrDict
 
 
 @register_model_trunk("alexnet_rotnet")

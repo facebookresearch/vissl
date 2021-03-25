@@ -33,13 +33,13 @@ from classy_vision.models.regnet import (
 )
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP, auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
+from vissl.config import AttrDict
 from vissl.models.model_helpers import (
     Flatten,
     get_trunk_forward_outputs,
     transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
-from vissl.utils.hydra_config import AttrDict
 
 
 def fsdp_wrapper(module, **kwargs):

@@ -8,8 +8,9 @@ import torch
 import tqdm
 from fvcore.common.timer import Timer
 from hydra.experimental import compose, initialize_config_module
+from vissl.config import AttrDict
 from vissl.data import build_dataset, get_loader
-from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
 from vissl.utils.logger import setup_logging
 
 

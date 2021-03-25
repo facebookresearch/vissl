@@ -5,7 +5,7 @@ from typing import List, Union
 import torch
 from classy_vision.generic.util import is_pos_int
 from classy_vision.meters import AccuracyMeter, ClassyMeter, register_meter
-from vissl.utils.hydra_config import AttrDict
+from vissl.config import AttrDict
 
 
 @register_meter("accuracy_list_meter")

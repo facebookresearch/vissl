@@ -12,15 +12,16 @@ from typing import Any, List
 
 import numpy as np
 from hydra.experimental import compose, initialize_config_module
+from vissl.config import AttrDict
 from vissl.data import build_dataset
 from vissl.hooks import default_hook_generator
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.distributed_launcher import launch_distributed
 from vissl.utils.env import set_env_vars
-from vissl.utils.hydra_config import AttrDict, convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
-from vissl.utils.misc import merge_features, set_seeds, is_faiss_available
+from vissl.utils.misc import is_faiss_available, merge_features, set_seeds
 
 
 def get_data_features_and_images(cfg: AttrDict):

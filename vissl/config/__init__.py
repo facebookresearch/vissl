@@ -2,6 +2,8 @@
 
 import logging
 
+from vissl.config.attr_dict import AttrDict
+
 
 # When to do version bump:
 #   - version bump is NOT required if the new keys are being added to the defaults.yaml
@@ -17,7 +19,7 @@ import logging
 LATEST_CFG_VERSION = 1
 
 
-def check_cfg_version(cfg):
+def check_cfg_version(cfg: AttrDict):
     """
     Check the config version
 
