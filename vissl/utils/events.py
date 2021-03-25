@@ -1,5 +1,7 @@
+import json
 from collections import defaultdict
 
+from fvcore.common.file_io import PathManager
 from fvcore.common.history_buffer import HistoryBuffer
 
 
@@ -114,3 +116,28 @@ class VisslEventStorage:
     def put_image(self, img_name, img_tensor):
         # implement later for tensorboard
         return NotImplementedError
+
+
+class JsonWriter(VisslEventWriter):
+    def __init__(self, json_file):
+        """
+        Args:
+            json_file: path to the json file. New data will be appended if the file
+                       exists.
+        """
+        self._file_handle = PathManager.open(json_file, "a")
+
+    def write(self):
+        storage: VisslEventStorage = get_event_storage()
+        to_save = defaultdict(dict)
+
+        for k, (v, iter) in storage.latest().items():
+            # keep scalars that have not been written
+            to_save[iter][k] = v
+        for itr, scalars_per_iter in to_save.items():
+            scalars_per_iter["iteration"] = itr
+            self._file_handle.write(json.dumps(scalars_per_iter, sort_keys=True) + "\n")
+        self._file_handle.flush()
+
+    def close(self):
+        self._file_handle.close()

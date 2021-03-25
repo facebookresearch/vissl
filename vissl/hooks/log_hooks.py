@@ -19,7 +19,8 @@ from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from fvcore.common.file_io import PathManager
 from vissl.utils.checkpoint import CheckpointWriter, is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.io import save_file
+from vissl.utils.events import VisslEventStorage
+from vissl.utils.io import create_file_symlink, save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
 
@@ -165,6 +166,7 @@ class LogLossLrEtaHook(ClassyHook):
             train_phase_idx = task.train_phase_idx
             log_freq = task.config["LOG_FREQUENCY"]
             iteration = task.iteration
+            evt_stg: VisslEventStorage = task.event_storage
 
             if torch.cuda.is_available():
                 peak_mem_used = int(torch.cuda.max_memory_allocated() / 1024.0 / 1024.0)
@@ -184,23 +186,22 @@ class LogLossLrEtaHook(ClassyHook):
                 avg_time = sum(batch_times) / len(batch_times)
 
                 eta_secs = avg_time * (task.max_iteration - iteration)
-                eta_string = str(datetime.timedelta(seconds=int(eta_secs)))
                 if isinstance(task.optimizer.options_view.lr, set):
                     lr_val = list(task.optimizer.options_view.lr)
                 else:
                     lr_val = round(task.optimizer.options_view.lr, 5)
                 batch_time = int(1000.0 * avg_time)
                 rank = get_rank()
-                log_data = {
-                    "Rank": rank,
-                    "ep": train_phase_idx,
-                    "iter": iteration,
-                    "lr": lr_val,
-                    "loss": loss_val,
-                    "btime(ms)": batch_time,
-                    "eta": eta_string,
-                    "peak_mem(M)": peak_mem_used,
-                }
+                evt_stg.put_scalars(
+                    rank=rank,
+                    epoch=train_phase_idx,
+                    iteration=iteration,
+                    lr=lr_val,
+                    loss=loss_val,
+                    batch_time=batch_time,
+                    eta=eta_secs,
+                    peak_mem_used=peak_mem_used,
+                )
                 if self.btime_freq and len(batch_times) >= self.btime_freq:
                     rolling_avg_time = (
                         sum(batch_times[-self.btime_freq :]) / self.btime_freq
@@ -212,21 +213,11 @@ class LogLossLrEtaHook(ClassyHook):
                         datetime.timedelta(seconds=int(rolling_eta_secs))
                     )
                     rolling_btime = int(1000.0 * rolling_avg_time)
-                    log_data[f"btime({self.btime_freq}iters)(ms)"] = rolling_btime
-                    log_data["rolling_eta"] = rolling_eta_str
-
-                # to maintain the backwards compatibility with the log.txt
-                # logs, we convert the json to the previous format.
-                # the stdout.json can be used to use the json format of logs.
-                stdout_data = ""
-                for key, value in log_data.items():
-                    stdout_data = (
-                        f"{stdout_data}[{key}: {value}] "
-                        if key == "ep"
-                        else f"{stdout_data}{key}: {value}; "
+                    evt_stg.put_scalars(
+                        rolling_btime=rolling_btime, rolling_eta=rolling_eta_str
                     )
-                logging.info(stdout_data.strip())
-                self.json_stdout_logger.write(json.dumps(log_data) + "\n")
+                for writer in task.event_storage_writers:
+                    writer.write()
 
 
 class LogLossMetricsCheckpointHook(ClassyHook):

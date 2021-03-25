@@ -117,12 +117,20 @@ class SelfSupervisionTask(ClassificationTask):
         # communication as much as possible
         self.set_ddp_bucket_cap_mb()
         self.use_gpu = self.device.type == "cuda"
+        self.event_storage_writers = []
 
     def initiate_vissl_event_storage(self):
         from vissl.utils.events import create_event_storage, get_event_storage
 
         create_event_storage()
         self._event_storage = get_event_storage()
+
+    def build_event_storage_writers(self):
+        from vissl.utils.events import JsonWriter
+
+        self.event_storage_writers = [
+            JsonWriter(f"{self.checkpoint_folder}/stdout.json")
+        ]
 
     @property
     def event_storage(self):
