@@ -70,6 +70,7 @@ from designing a new self-supervised task to evaluating the learned representati
 
    evaluations/linear_benchmark
    evaluations/fine_tuning
+   evaluations/low_shot_transfer
    evaluations/nearest_neighbor
    evaluations/semi_supervised
    evaluations/object_detection
