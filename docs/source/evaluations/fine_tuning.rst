@@ -51,12 +51,12 @@ The configuration for full fine-tuning on Places205 is available in `benchmark/f
 Benchmark: CIFAR-100
 ---------------------------
 
-The configuration for low shot (1000 samples) fine-tuning on CIFAR-100 provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/cifar100>`_ .
+The configuration for low shot (1000 samples) fine-tuning on CIFAR-100 provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/cifar100>`_ .
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/cifar100/eval_resnet_8gpu_transfer_cifar100_low_tune \
+      config=benchmark/low_shot_transfer/cifar100/eval_resnet_8gpu_transfer_cifar100_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
@@ -71,18 +71,18 @@ The CLEVR benchmarks evaluate the understanding of the structure of a 3D scene b
 - CLEVR/Dist: estimating the distance to the closest object in the scene
 
 The configurations for low shot (1000 samples) fine-tuning on CLEVR are available under the
-`clever_count <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/clever_count>`_ and `clevr_dist <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/clevr_dist>`_ folders.
+`clever_count <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/clever_count>`_ and `clevr_dist <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/clevr_dist>`_ folders.
 
 .. code-block:: bash
 
     # For CLEVR Count
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/clevr_count/eval_resnet_8gpu_transfer_clevr_count_low_tune \
+      config=benchmark/low_shot_transfer/clevr_count/eval_resnet_8gpu_transfer_clevr_count_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
     # For CLEVR Dist
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/clevr_dist/eval_resnet_8gpu_transfer_clevr_dist_low_tune \
+      config=benchmark/low_shot_transfer/clevr_dist/eval_resnet_8gpu_transfer_clevr_dist_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
@@ -99,18 +99,18 @@ The dSprites benchmarks evaluate the understanding of the positional information
 - dSprites/orientation: estimating the orientation of a sprite
 
 The configurations for low shot (1000 samples) fine-tuning on dSprites
-are provided under the `dsprites_loc <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/dsprites_loc>`_ and `dsprites_orient <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/dsprites_orient>`_ folders.
+are provided under the `dsprites_loc <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/dsprites_loc>`_ and `dsprites_orient <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/dsprites_orient>`_ folders.
 
 .. code-block:: bash
 
     # For dSprites location
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/dsprites_loc/eval_resnet_8gpu_transfer_dsprites_loc_low_tune \
+      config=benchmark/low_shot_transfer/dsprites_loc/eval_resnet_8gpu_transfer_dsprites_loc_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
     # For dSprites orientation
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/dsprites_orient/eval_resnet_8gpu_transfer_dsprites_orient_low_tune \
+      config=benchmark/low_shot_transfer/dsprites_orient/eval_resnet_8gpu_transfer_dsprites_orient_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
@@ -123,12 +123,12 @@ Benchmark: EuroSAT
 
 The EuroSAT benchmark evaluates the classification performance on a specialized task (satellite imaging).
 The configuration for low shot (1000 samples) fine-tuning on EuroSAT
-is provided under the `euro_sat <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/euro_sat>`_ folder.
+is provided under the `euro_sat <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/euro_sat>`_ folder.
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/euro_sat/eval_resnet_8gpu_transfer_euro_sat_low_tune \
+      config=benchmark/low_shot_transfer/euro_sat/eval_resnet_8gpu_transfer_euro_sat_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
@@ -141,12 +141,12 @@ Benchmark: KITTI/Dist
 
 The KITTI/Dist benchmark evaluates the transfer of a pre-trained model to a distance estimation task in a self-driving environment.
 The configuration for low shot (1000 samples) fine-tuning on KITTI/Dist
-is provided under the `kitti_dist <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/kitti_dist>`_ folder.
+is provided under the `kitti_dist <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/kitti_dist>`_ folder.
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/kitti_dist/eval_resnet_8gpu_transfer_kitti_dist_low_tune \
+      config=benchmark/low_shot_transfer/kitti_dist/eval_resnet_8gpu_transfer_kitti_dist_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
@@ -159,12 +159,12 @@ Benchmark: Patch Camelyon
 
 The Patch Camelyon (PCAM) benchmark evaluates the classification performance on a specialized task (medical task).
 The configuration for low shot (1000 samples) fine-tuning on PCAM
-is provided under the `pcam <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/pcam>`_ folder.
+is provided under the `pcam <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/pcam>`_ folder.
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/pcam/eval_resnet_8gpu_transfer_pcam_low_tune \
+      config=benchmark/low_shot_transfer/pcam/eval_resnet_8gpu_transfer_pcam_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
@@ -181,18 +181,18 @@ The Small NORB benchmarks evaluate the understanding of the structure of a 3D sc
 - snorb/elevation: estimating the elevation of the image
 
 The configurations for low shot (1000 samples) fine-tuning on Small NORB
-are provided under the `small_norb_azimuth <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/small_norb_azimuth>`_ and `small_norb_elevation <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/small_norb_elevation>`_ folders.
+are provided under the `small_norb_azimuth <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/small_norb_azimuth>`_ and `small_norb_elevation <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/small_norb_elevation>`_ folders.
 
 .. code-block:: bash
 
     # For dSprites location
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/small_norb_azimuth/eval_resnet_8gpu_transfer_snorb_azimuth_low_tune \
+      config=benchmark/low_shot_transfer/small_norb_azimuth/eval_resnet_8gpu_transfer_snorb_azimuth_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
     # For dSprites orientation
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/small_norb_elevation/eval_resnet_8gpu_transfer_snorb_elevation_low_tune \
+      config=benchmark/low_shot_transfer/small_norb_elevation/eval_resnet_8gpu_transfer_snorb_elevation_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
@@ -203,12 +203,12 @@ Scripts to automatically prepare the data for the Small NORB benchmarks are avai
 Benchmark: SVHN
 -----------------------
 
-The configuration for low shot (1000 samples) fine-tuning on SVHN is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_fine_tune/svhn>`_ .
+The configuration for low shot (1000 samples) fine-tuning on SVHN is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/svhn>`_ .
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/low_shot_fine_tune/svhn/eval_resnet_8gpu_transfer_svhn_low_tune \
+      config=benchmark/low_shot_transfer/svhn/eval_resnet_8gpu_transfer_svhn_low_tune \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
