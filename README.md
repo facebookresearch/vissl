@@ -41,12 +41,12 @@ Learn more about VISSL at our [documentation](https://vissl.readthedocs.io). And
 
 Get started with VISSL by trying one of the **Colab tutorial notebooks**.
 
-- [Train SimCLR on 1-gpu](https://colab.research.google.com/drive/1Rt3Plt3ph84i1A-eolLFafybwjrBFxYe?usp=sharing)
-- [Extracting Features from a pretrained model](https://colab.research.google.com/drive/1EXZyW65lXBryWE2ZmC0bar2996KEiBZb?usp=sharing)
-- [Benchmark task: Full finetuning on ImageNet-1K](https://colab.research.google.com/drive/1m1LUa-3vIR-rxwcm0QCrefc5S6PAY874?usp=sharing)
-- [Benchmark task: Linear image classification on ImageNet-1K](https://colab.research.google.com/drive/1CCuZ50BN99JcOB6VEPytVi_i2tSMd7A3?usp=sharing)
-- [Large scale training (fp16, LARC, ZeRO)](https://colab.research.google.com/drive/1fvZdRNUyHxMOaxuEO34x7XeGndzTUfIW?usp=sharing)
-- [Using a pre-trained model in inference mode](https://colab.research.google.com/drive/1TDuCYSk6wGyNQPPShgNGVuEZ-BJfyBvo?usp=sharing)
+- [Train SimCLR on 1-gpu](https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Train_SimCLR_on_1_gpu.ipynb)
+- [Extracting Features from a pretrained model](https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Feature_Extraction.ipynb)
+- [Benchmark task: Full finetuning on ImageNet-1K](https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Benchmark_Full_Finetuning_on_ImageNet_1K.ipynb)
+- [Benchmark task: Linear image classification on ImageNet-1K](https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K.ipynb)
+- [Large scale training (fp16, LARC, ZeRO)](https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Large_Scale_Training.ipynb)
+- [Using a pre-trained model in inference mode](https://colab.research.google.com/github/facebookresearch/vissl/blob/master/tutorials/Using_a_pretrained_model_for_inference.ipynb)
 
 
 ## Model Zoo and Baselines
