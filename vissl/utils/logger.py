@@ -83,9 +83,7 @@ def log_gpu_stats():
             "Failed to find the 'nvidia-smi' executable for printing GPU stats"
         )
     except subprocess.CalledProcessError as e:
-        logging.error(
-            f"nvidia-smi returned non zero error code: {e.returncode}"
-        )
+        logging.error(f"nvidia-smi returned non zero error code: {e.returncode}")
 
 
 def print_gpu_memory_usage():
