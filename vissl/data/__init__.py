@@ -35,6 +35,14 @@ DATASET_SOURCE_MAP = {
 }
 
 
+DATA_SOURCES_WITH_SUBSET_SUPPORT = {
+    "disk_filelist",
+    "disk_folder",
+    "torchvision_dataset",
+    "synthetic",
+}
+
+
 def build_dataset(cfg, split):
     """
     Given the user defined config and the dataset split (train/val), build
@@ -47,8 +55,12 @@ def build_dataset(cfg, split):
     Returns:
         Instance of GenericSSLDataset
     """
-    dataset = GenericSSLDataset(cfg, split, DATASET_SOURCE_MAP)
-    return dataset
+    return GenericSSLDataset(
+        cfg=cfg,
+        split=split,
+        dataset_source_map=DATASET_SOURCE_MAP,
+        data_sources_with_subset=DATA_SOURCES_WITH_SUBSET_SUPPORT,
+    )
 
 
 def print_sampler_config(data_sampler):
