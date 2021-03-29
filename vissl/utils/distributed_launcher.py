@@ -212,8 +212,11 @@ class _ResumableSlurmJob:
         node_id = environment.global_rank
         master_ip = environment.hostnames[0]
         master_port = self.config.SLURM.PORT_ID
+        job_id = environment.job_id
+
         self.config.DISTRIBUTED.INIT_METHOD = "tcp"
         self.config.DISTRIBUTED.RUN_ID = f"{master_ip}:{master_port}"
+        self.config.HOOKS.TENSORBOARD_SETUP.EXPERIMENT_LOG_DIR += "/" + job_id
         launch_distributed(
             cfg=self.config,
             node_id=node_id,

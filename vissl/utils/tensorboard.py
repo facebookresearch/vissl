@@ -5,8 +5,8 @@ This script contains some helpful functions to handle tensorboard setup.
 """
 
 import logging
+import os
 
-from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.io import makedir
 
 
@@ -29,20 +29,24 @@ def is_tensorboard_available():
     return tb_available
 
 
-def get_tensorboard_dir(cfg):
+def get_tensorboard_dir(config):
     """
     Get the output directory where the tensorboard events will be written.
 
     Args:
-        cfg (AttrDict): User specified config file containing the settings for the
+        config (AttrDict): User specified config file containing the settings for the
                         tensorboard as well like log directory, logging frequency etc
 
     Returns:
         tensorboard_dir (str): output directory path
 
     """
-    checkpoint_folder = get_checkpoint_folder(cfg)
-    tensorboard_dir = f"{checkpoint_folder}/tb_logs"
+    tensorboard_dir = os.path.join(
+        config.HOOKS.TENSORBOARD_SETUP.LOG_DIR,
+        config.HOOKS.TENSORBOARD_SETUP.EXPERIMENT_LOG_DIR
+    )
+    if config.DISTRIBUTED.NUM_NODES > 1 and config.CHECKPOINT.APPEND_DISTR_RUN_ID:
+        tensorboard_dir = f"{tensorboard_dir}/{config.DISTRIBUTED.RUN_ID}"
     logging.info(f"Tensorboard dir: {tensorboard_dir}")
     makedir(tensorboard_dir)
     return tensorboard_dir
