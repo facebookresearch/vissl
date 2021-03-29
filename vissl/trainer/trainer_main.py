@@ -187,7 +187,8 @@ class SelfSupervisionTrainer(object):
                         logging.info("CUDA cache cleared")
                     task = train_step_fn(task)
                     iteration_num += 1
-                    task.local_iteration_num = task.event_storage.iter = iteration_num
+                    task.local_iteration_num = iteration_num
+                    task.event_storage.iter = iteration_num
                     task.run_hooks(SSLClassyHookFunctions.on_step.name)
                 except StopIteration:
                     break

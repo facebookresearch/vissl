@@ -63,7 +63,7 @@ def save_file(data, filename):
         with PathManager.open(filename, "wb") as fopen:
             np.save(fopen, data)
     elif file_ext == ".json":
-        with PathManager.open(filename, "a") as fopen:
+        with PathManager.open(filename, "w") as fopen:
             fopen.write(json.dumps(data, sort_keys=True) + "\n")
             fopen.flush()
     elif file_ext == ".yaml":
