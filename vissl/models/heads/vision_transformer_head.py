@@ -1,4 +1,4 @@
-# (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 """
 Code modified from https://github.com/google-research/vision_transformer
