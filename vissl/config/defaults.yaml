@@ -137,6 +137,15 @@ config:
       LOG_PARAMS_EVERY_N_ITERS: 310
 
   # ----------------------------------------------------------------------------------- #
+  # MONITORING
+  # ----------------------------------------------------------------------------------- #
+  MONITORING:
+    # At which frequency do we monitor statistics on the activations:
+    # - 0 means that we do not monitor statistics
+    # - N > 0 means we monitor every N iterations
+    MONITOR_ACTIVATION_STATISTICS: 0
+
+  # ----------------------------------------------------------------------------------- #
   # DATA
   # ----------------------------------------------------------------------------------- #
   DATA:

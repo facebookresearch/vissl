@@ -6,6 +6,11 @@ import torch
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import is_primary
 from classy_vision.hooks.classy_hook import ClassyHook
+from vissl.utils.activation_statistics import (
+    ActivationStatistics,
+    ActivationStatisticsMonitor,
+    ActivationStatisticsObserver,
+)
 
 
 try:
@@ -23,6 +28,33 @@ except ImportError:
 BYTE_TO_MiB = 2 ** 20
 
 
+class ActivationStatisticsTensorboardWatcher(ActivationStatisticsObserver):
+    """
+    Implementation of ActivationStatisticsObserver which logs the
+    activation statistics to tensorboard.
+    """
+
+    def __init__(self, writer: SummaryWriter):
+        self.writer = writer
+
+    def consume(self, stat: ActivationStatistics):
+        self.writer.add_scalar(
+            tag="activations/" + stat.name + "/mean",
+            scalar_value=stat.mean,
+            global_step=stat.iteration,
+        )
+        self.writer.add_scalar(
+            tag="activations/" + stat.name + "/max",
+            scalar_value=stat.maxi,
+            global_step=stat.iteration,
+        )
+        self.writer.add_scalar(
+            tag="activations/" + stat.name + "/min",
+            scalar_value=stat.mini,
+            global_step=stat.iteration,
+        )
+
+
 class SSLTensorboardHook(ClassyHook):
     """
     SSL Specific variant of the Classy Vision tensorboard hook
@@ -30,8 +62,6 @@ class SSLTensorboardHook(ClassyHook):
 
     on_loss_and_meter = ClassyHook._noop
     on_backward = ClassyHook._noop
-    on_start = ClassyHook._noop
-    on_end = ClassyHook._noop
     on_step = ClassyHook._noop
 
     def __init__(
@@ -40,6 +70,7 @@ class SSLTensorboardHook(ClassyHook):
         log_params: bool = False,
         log_params_every_n_iterations: int = -1,
         log_params_gradients: bool = False,
+        log_activation_statistics: int = 0,
     ) -> None:
         """The constructor method of SSLTensorboardHook.
 
@@ -63,11 +94,33 @@ class SSLTensorboardHook(ClassyHook):
         self.log_params = log_params
         self.log_params_every_n_iterations = log_params_every_n_iterations
         self.log_params_gradients = log_params_gradients
+        self.log_activation_statistics = log_activation_statistics
+        if self.log_activation_statistics > 0:
+            self.activation_watcher = ActivationStatisticsMonitor(
+                observer=ActivationStatisticsTensorboardWatcher(tb_writer),
+                log_frequency=self.log_activation_statistics,
+            )
         logging.info(
             f"Tensorboard config: log_params: {self.log_params}, "
             f"log_params_freq: {self.log_params_every_n_iterations}, "
-            f"log_params_gradients: {self.log_params_gradients}"
+            f"log_params_gradients: {self.log_params_gradients}, "
+            f"log_activation_statistics: {self.log_activation_statistics}"
         )
+
+    def on_start(self, task: "tasks.ClassyTask") -> None:
+        """
+        Called at the start of training.
+        """
+        if self.log_activation_statistics and is_primary():
+            self.activation_watcher.monitor(task.base_model)
+            self.activation_watcher.set_iteration(task.iteration)
+
+    def on_end(self, task: "tasks.ClassyTask") -> None:
+        """
+        Called at the end of training.
+        """
+        if self.log_activation_statistics and is_primary():
+            self.activation_watcher.reset()
 
     def on_forward(self, task: "tasks.ClassyTask") -> None:
         """
@@ -75,12 +128,15 @@ class SSLTensorboardHook(ClassyHook):
         Logs the model parameters if the training iteration matches the
         logging frequency.
         """
-        if not self.log_params:
+        if not is_primary():
             return
 
+        if self.log_activation_statistics:
+            self.activation_watcher.set_iteration(task.iteration + 1)
+
         if (
-            self.log_params_every_n_iterations > 0
-            and is_primary()
+            self.log_params
+            and self.log_params_every_n_iterations > 0
             and task.train
             and task.iteration % self.log_params_every_n_iterations == 0
         ):
