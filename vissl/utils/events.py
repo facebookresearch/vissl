@@ -13,7 +13,7 @@ def get_event_storage():
 
 
 def create_event_storage():
-    _VISSL_EVENT_STORAGE_STACK.append(VisslEventStorage())
+    _VISSL_EVENT_STORAGE_STACK.append(VisslEventStorage(1))
 
 
 class VisslEventWriter:
@@ -125,7 +125,7 @@ class JsonWriter(VisslEventWriter):
             json_file: path to the json file. New data will be appended if the file
                        exists.
         """
-        self._file_handle = PathManager.open(json_file, "a")
+        self._file_handle = PathManager.open(json_file, "w")
 
     def write(self):
         storage: VisslEventStorage = get_event_storage()
