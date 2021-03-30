@@ -19,10 +19,9 @@ from typing import List, Tuple
 
 import torch
 import torch.nn as nn
-from classy_vision.models.regnet import (
+from classy_vision.models.anynet import (
     ActivationType,
     BlockType,
-    RegNetParams,
     ResBasicBlock,
     ResBottleneckBlock,
     ResStemCifar,
@@ -31,6 +30,7 @@ from classy_vision.models.regnet import (
     StemType,
     VanillaBlock,
 )
+from classy_vision.models.regnet import RegNetParams
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP, auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
 from vissl.config import AttrDict
