@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
+from typing import Callable, Dict, Set
 
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
@@ -60,11 +61,20 @@ class GenericSSLDataset(Dataset):
                         "disk_folder": DiskImageDataset,
                         "synthetic": SyntheticImageDataset,
                     }
+        data_sources_with_subset (Set[str]): the set of datasets for which the subset
+                    operation is supported inside GenericSSLDataset
     """
 
-    def __init__(self, cfg: AttrDict, split: str, dataset_source_map):
-        self.split = split
+    def __init__(
+        self,
+        cfg: AttrDict,
+        split: str,
+        dataset_source_map: Dict[str, Callable],
+        data_sources_with_subset: Set[str],
+    ):
         self.cfg = cfg
+        self.split = split
+        self.data_sources_with_subset = data_sources_with_subset
         self.data_objs = []
         self.label_objs = []
         self.data_paths = []
@@ -240,13 +250,9 @@ class GenericSSLDataset(Dataset):
         support for data_limit, and we keep the same behavior here (we ignore
         the DATA_LIMIT attribute in GenericSSLDataset)
         """
-        valid_datasets = {
-            "disk_filelist",
-            "disk_folder",
-            "torchvision_dataset",
-            "synthetic",
-        }
-        return all(source in valid_datasets for source in self.data_sources)
+        return all(
+            source in self.data_sources_with_subset for source in self.data_sources
+        )
 
     def _init_image_and_label_subset(self):
         """
