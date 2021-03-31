@@ -114,7 +114,9 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             "`conda install -c conda-forge tensorboard`"
         )
         tb_hook = get_tensorboard_hook(cfg)
-        hooks.extend([tb_hook])
+        if tb_hook is not None:
+            hooks.append(tb_hook)
+
     if cfg.MODEL.GRAD_CLIP.USE_GRAD_CLIP:
         hooks.extend(
             [

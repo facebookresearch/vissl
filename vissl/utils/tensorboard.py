@@ -7,6 +7,7 @@ This script contains some helpful functions to handle tensorboard setup.
 import logging
 import os
 
+from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import makedir
 
 
@@ -63,6 +64,18 @@ def get_tensorboard_hook(cfg):
     Returns:
         SSLTensorboardHook (function): the tensorboard hook constructed
     """
+
+    # Instantiate the tensor board hook on the primary worker only
+    #
+    # Note: these checks are performed before torch.distributed is
+    # initialized in the trainer (ex: SelfSupervisionTrainer) and
+    # this is why they are not based on torch.distributed
+    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+    if world_size > 1:
+        local_rank, distributed_rank = get_machine_local_and_dist_rank()
+        if local_rank != 0 or distributed_rank != 0:
+            return None
+
     from torch.utils.tensorboard import SummaryWriter
     from vissl.hooks import SSLTensorboardHook
 
