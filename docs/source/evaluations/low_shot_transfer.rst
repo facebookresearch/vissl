@@ -159,6 +159,20 @@ For fine-tuning on the full dataset, just add this option to the command line :c
 Scripts to automatically prepare the data for the Small NORB benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
 
 
+Benchmark: SUN397
+-----------------------
+
+The configuration for low shot (1000 samples) fine-tuning on SUN397 is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/sun397>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/low_shot_transfer/sun397/eval_resnet_8gpu_transfer_sun397_low_tune \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
+
+
 Benchmark: SVHN
 -----------------------
 

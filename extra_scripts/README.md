@@ -21,6 +21,7 @@ To run these benchmarks, the following data preparation scripts are mandatory:
 - `create_patch_camelyon_data_files.py`: to transform the [PatchCamelyon](https://github.com/basveeling/pcam) dataset to the `disk_folder` format
 - `create_small_norb_azimuth_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to find the azimuth or the photographed object
 - `create_small_norb_elevation_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to predict the elevation in the image
+- `create_sun397_data_files.py` to transform the [SUN397](https://vision.princeton.edu/projects/2010/SUN/) dataset to the `disk_filelist` format
 - `create_ucf101_data_files.py`: to create a `disk_folder` image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
 
 ### Unified data preparation interface
@@ -385,6 +386,28 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
     "val": ["/output_path/to/cars/val", "<ignored>"]
 },
 ```
+
+### Preparing the SUN397 data files
+
+Run the `create_sun397_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_sun397_data_files.py \
+    -i /path/to/sun397/ \
+    -o /path/to/sun397/ \
+    -d
+```
+
+The folder `/path/to/sun397/` now contains the Stanford Cars `disk_filelist` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"sun397_filelist": {
+    "train": ["/checkpoint/qduval/datasets/sun397/train_images.npy", "/checkpoint/qduval/datasets/sun397/train_labels.npy"],
+    "val": ["/checkpoint/qduval/datasets/sun397/val_images.npy", "/checkpoint/qduval/datasets/sun397/val_labels.npy"]
+},
+```
+
 
 ### Preparing UCF101/image data files
 
