@@ -4,11 +4,22 @@ import argparse
 import dataclasses
 import os
 import random
-from typing import List
+from typing import Any, List
 
 import numpy as np
+from fvcore.common.file_io import PathManager
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
+
+
+@dataclasses.dataclass
+class SplitData:
+    """
+    Data structure holding the samples associated to a given split
+    """
+
+    image_paths: List[str] = dataclasses.field(default_factory=list)
+    image_labels: List[int] = dataclasses.field(default_factory=list)
 
 
 def get_argument_parser():
@@ -58,30 +69,20 @@ TRAIN_SPLIT_SIZE = 0.7
 VALID_SPLIT_SIZE = 0.1
 
 
-@dataclasses.dataclass
-class SplitData:
-    """
-    Data structure holding the samples associated to a given split
-    """
-
-    image_paths: List[str] = dataclasses.field(default_factory=list)
-    image_labels: List[int] = dataclasses.field(default_factory=list)
-
-
-def split_sample_list(xs):
+def split_sample_list(samples: List[Any]):
     """
     Split a list of samples in train/val/test splits
     """
-    random.shuffle(xs)
-    n = len(xs)
-    val_start = int(round(n * TRAIN_SPLIT_SIZE))
-    val_length = int(round(n * VALID_SPLIT_SIZE))
+    random.shuffle(samples)
+    num_samples = len(samples)
+    val_start = int(round(num_samples * TRAIN_SPLIT_SIZE))
+    val_length = int(round(num_samples * VALID_SPLIT_SIZE))
     val_end = val_start + val_length
     return {
-        "train": xs[:val_start],
-        "val": xs[val_start:val_end],
-        "test": xs[val_end:],
-        "trainval": xs[:val_end],
+        "train": samples[:val_start],
+        "val": samples[val_start:val_end],
+        "test": samples[val_end:],
+        "trainval": samples[:val_end],
     }
 
 
@@ -91,7 +92,7 @@ def create_sun397_disk_filelist_dataset(input_path: str, output_path: str, seed:
     by allocating 70% of labels to "train", 10% to "val" and 20% to "test".
     """
     random.seed(seed)
-    os.makedirs(output_path, exist_ok=True)
+    PathManager.mkdirs(output_path)
 
     # List all the available classes in SUN397 and their path
     image_folder = os.path.join(input_path, "SUN397")
@@ -125,9 +126,11 @@ def create_sun397_disk_filelist_dataset(input_path: str, output_path: str, seed:
     # Save each split
     for split, samples in splits_data.items():
         image_output_path = os.path.join(output_path, f"{split}_images.npy")
+        with PathManager.open(image_output_path, mode="wb") as f:
+            np.save(f, np.array(samples.image_paths))
         label_output_path = os.path.join(output_path, f"{split}_labels.npy")
-        np.save(image_output_path, np.array(samples.image_paths))
-        np.save(label_output_path, np.array(samples.image_labels))
+        with PathManager.open(label_output_path, mode="wb") as f:
+            np.save(f, np.array(samples.image_labels))
 
 
 if __name__ == "__main__":
