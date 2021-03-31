@@ -44,13 +44,8 @@ class ActivationStatisticsTensorboardWatcher(ActivationStatisticsObserver):
             global_step=stat.iteration,
         )
         self.writer.add_scalar(
-            tag="activations/" + stat.name + "/max",
-            scalar_value=stat.maxi,
-            global_step=stat.iteration,
-        )
-        self.writer.add_scalar(
-            tag="activations/" + stat.name + "/min",
-            scalar_value=stat.mini,
+            tag="activations/" + stat.name + "/spread",
+            scalar_value=stat.spread,
             global_step=stat.iteration,
         )
 
@@ -99,6 +94,7 @@ class SSLTensorboardHook(ClassyHook):
             self.activation_watcher = ActivationStatisticsMonitor(
                 observer=ActivationStatisticsTensorboardWatcher(tb_writer),
                 log_frequency=self.log_activation_statistics,
+                sample_feature_map=True,
             )
         logging.info(
             f"Tensorboard config: log_params: {self.log_params}, "

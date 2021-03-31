@@ -13,15 +13,15 @@ class ActivationStatistics(NamedTuple):
     Information collected on each activation:
     - "name" of the module and "module_type"
     - current "iteration" of training
-    - mean, min and max statistics
+    - "mean" value of the activation
+    - maximum "spread" from the mean
     """
 
     name: str
     iteration: int
     module_type: str
     mean: float
-    maxi: float
-    mini: float
+    spread: float
 
 
 class ActivationStatisticsObserver(abc.ABC):
@@ -46,6 +46,19 @@ class ActivationStatisticsMonitor:
 
     Depending on the 'observer' implementation, the results can be
     accumulated or streamed to tensorboard (or any visualisation tool).
+
+    Args:
+        observer (ActivationStatisticsObserver):
+            the observer to be notified upon each new trace
+        log_frequency (int):
+            frequency at which the monitoring of activations is done (ex: 1 is every step)
+        ignored_modules (Set[str]):
+            set of modules for which tracing the activation is disabled
+        sample_feature_map (bool):
+            If 'true' feature maps will only contribute one feature to the statistics
+            (allows to reduce the compute overhead, while still maintaining the
+            ability to detect divergence since in convolution nets, all weights
+            are typically used for central elements of the feature map)
     """
 
     def __init__(
@@ -53,10 +66,12 @@ class ActivationStatisticsMonitor:
         observer: ActivationStatisticsObserver,
         log_frequency: int,
         ignored_modules: Set[str] = None,
+        sample_feature_map: bool = False,
     ):
         self.observer = observer
         self.log_frequency = log_frequency
         self.ignored_modules = ignored_modules
+        self.sample_feature_map = sample_feature_map
         if self.ignored_modules is None:
             self.ignored_modules = {"torch.nn.modules.activation.ReLU"}
         self.iteration = -1
@@ -97,18 +112,29 @@ class ActivationStatisticsMonitor:
             if self._prev_module_name != name:
                 return
 
+            # Collect all outputs
             outputs = self._collect_tensors(outputs, detach=True)
-            mean = np.mean([o.mean().item() for o in outputs])
-            maxi = np.max([o.max().item() for o in outputs])
-            mini = np.min([o.min().item() for o in outputs])
+            if len(outputs) == 0:
+                return
+
+            # Compute the statistics
+            means = []
+            spreads = []
+            for output in outputs:
+                if output.ndim == 4 and self.sample_feature_map:
+                    batch_size, channels, height, width = output.shape
+                    output = output[:, :, height // 2, width // 2]
+                means.append(output.mean().item())
+                spreads.append((output - output.mean()).abs().max())
+
+            # Emit the trace
             self.observer.consume(
                 ActivationStatistics(
                     name=name,
                     iteration=self.iteration,
                     module_type=self._get_qualified_type(module),
-                    mean=mean,
-                    maxi=maxi,
-                    mini=mini,
+                    mean=float(np.mean(means)),
+                    spread=float(np.max(spreads)),
                 )
             )
 
