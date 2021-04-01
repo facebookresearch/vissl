@@ -113,7 +113,7 @@ class ActivationStatisticsMonitor:
                 return
 
             # Collect all outputs
-            outputs = self._collect_tensors(outputs, detach=True)
+            outputs = self._collect_tensors(outputs)
             if len(outputs) == 0:
                 return
 
@@ -124,6 +124,7 @@ class ActivationStatisticsMonitor:
                 if output.ndim == 4 and self.sample_feature_map:
                     batch_size, channels, height, width = output.shape
                     output = output[:, :, height // 2, width // 2]
+                output = output.detach()
                 means.append(output.mean().item())
                 spreads.append((output - output.mean()).abs().max())
 
@@ -145,17 +146,15 @@ class ActivationStatisticsMonitor:
         return type(module).__module__ + "." + type(module).__name__
 
     @staticmethod
-    def _collect_tensors(xs, detach=False):
+    def _collect_tensors(module_outputs):
         tensors = []
-        to_visit = [xs]
+        to_visit = [module_outputs]
         while to_visit:
             x = to_visit.pop()
             if isinstance(x, torch.Tensor):
-                if detach:
-                    x = x.detach()
                 tensors.append(x)
             elif isinstance(x, tuple) or isinstance(x, list):
-                to_visit.extend(xs)
+                to_visit.extend(module_outputs)
         return tensors
 
 
