@@ -137,6 +137,22 @@ config:
       LOG_PARAMS_EVERY_N_ITERS: 310
 
   # ----------------------------------------------------------------------------------- #
+  # PROFILING
+  # ----------------------------------------------------------------------------------- #
+  PROFILING:
+    # How many iterations do we wait before running the profiler
+    START_ITERATION: 0
+    # How many iterations do we run the profiler for: after this number
+    # of iteration is reached the profiling is disabled
+    NUM_ITERATIONS: 10
+    # Folder where the traces will be generated
+    OUTPUT_FOLDER: "."
+    # Track the memory usage through the forward/backward pass, and outputs
+    # the traces complemented by estimations of the memory usage due to
+    # activations and associated activation gradients
+    TRACK_BY_LAYER_MEMORY: False
+
+  # ----------------------------------------------------------------------------------- #
   # DATA
   # ----------------------------------------------------------------------------------- #
   DATA:
