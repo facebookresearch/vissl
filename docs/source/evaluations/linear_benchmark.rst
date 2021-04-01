@@ -248,6 +248,21 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
 A script to automatically prepare the data for FOOD-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
 
 
+Benchmark: SUN397
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/sun397>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/sun397/eval_resnet_8gpu_transfer_sun397_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for SUN397 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
 Benchmark: UCF-101
 -----------------------
 

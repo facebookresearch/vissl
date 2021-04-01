@@ -95,6 +95,10 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "sun397_filelist": {
+        "train": ["<path_to_train_images.npy>", "<path_to_train_labels.npy>"],
+        "val": ["<path_to_val_images.npy>", "<path_to_val_labels.npy>"]
+    },
     "ucf101_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
