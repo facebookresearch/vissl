@@ -5,8 +5,6 @@ All the hooks involved in human-readable logging
 """
 
 import atexit
-import datetime
-import json
 import logging
 import time
 from typing import Optional
@@ -209,12 +207,9 @@ class LogLossLrEtaHook(ClassyHook):
                     rolling_eta_secs = int(
                         rolling_avg_time * (task.max_iteration - iteration)
                     )
-                    rolling_eta_str = str(
-                        datetime.timedelta(seconds=int(rolling_eta_secs))
-                    )
                     rolling_btime = int(1000.0 * rolling_avg_time)
                     evt_stg.put_scalars(
-                        rolling_btime=rolling_btime, rolling_eta=rolling_eta_str
+                        rolling_btime=rolling_btime, rolling_eta=rolling_eta_secs
                     )
                 for writer in task.event_storage_writers:
                     writer.write()
