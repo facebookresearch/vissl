@@ -9,9 +9,9 @@ from classy_vision.generic.distributed_util import (
 from classy_vision.generic.distributed_util import is_primary
 from classy_vision.tasks import register_task
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
+from vissl.config import AttrDict
 from vissl.models.heads.swav_prototypes_head import SwAVPrototypesHead
 from vissl.trainer.train_task import SelfSupervisionTask
-from vissl.utils.hydra_config import AttrDict
 
 
 @register_task("self_supervision_fsdp_task")
