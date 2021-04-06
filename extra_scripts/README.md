@@ -281,6 +281,59 @@ The last step is to set these paths in `dataset_catalog.json` and you are good t
 },
 ```
 
+### Preparing iNaturalist2018 data files
+
+#### Automatic download
+
+Run the `create_inaturalist2018_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/create_inaturalist2018_data_files.py \
+    -i /path/to/inaturalist2018/ \
+    -o /output_path/to/inaturalist2018
+    -d
+```
+
+The folder `/output_path/to/inaturalist2018` now contains the inaturalist2018 `disk_filelist` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"inaturalist20182018_filelist": {
+    "train": ["/output_path/to/inaturalist2018/train_images.npy", "/output_path/to/inaturalist2018/train_labels.npy"],
+    "val": ["/output_path/to/inaturalist2018/val_images.npy", "/output_path/to/inaturalist2018/val_labels.npy"]
+},
+```
+
+#### Manual download
+
+Download the full dataset by visiting the [Inaturalist competion Github](https://github.com/visipedia/inat_comp/tree/master/2018#data) and downloading the "All training and validation images [120GB]", "Training annotations [26MB]", and "Validation annotations [26MB]" into the same directory "/path/to/inaturalist2018/". Expand each `.tar` archive.
+
+The resulting folder should have the following structure:
+
+```bash
+/path/to/inaturalist2018/
+    train_val2018/
+        Actinopterygii/
+            2229
+                ... Images for class 2229 ...
+            2230
+                ... Images for class 2230 ...
+            ...
+        Amphibia
+        ... All 14 "super categories" ... 
+    train2018.json
+    val2018.json
+```
+
+Run the script where `/path/to/inaturalist2018/` is the path of the folder containing the expanded tars:
+
+```bash
+python extra_scripts/create_clevr_count_data_files.py \
+    -i /path/to/inaturalist2018/ \
+    -o /output_path/to/inaturalist2018
+```
+
+The folder `/output_path/to/inaturalist2018` now contains the inaturalist2018 `disk_filelist` .
 
 ### Preparing the KITTI/distance data files
 
