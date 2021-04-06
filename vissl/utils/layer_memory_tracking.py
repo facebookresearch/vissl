@@ -1,3 +1,5 @@
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+
 from typing import NamedTuple, Type, List, Union
 
 import numpy as np
@@ -13,6 +15,12 @@ class TraceForwardEvent(NamedTuple):
     memory_diff: int
     memory_activations: int
 
+    def to_dict(self):
+        return {
+            "memory_diff": self.memory_diff,
+            "memory_activations": self.memory_activations
+        }
+
 
 class TraceBackwardEvent(NamedTuple):
     """
@@ -20,6 +28,9 @@ class TraceBackwardEvent(NamedTuple):
     to trace the memory taken by activations
     """
     memory_activations: int
+
+    def to_dict(self):
+        return {"memory_activations": self.memory_activations}
 
 
 class LayerMemoryTrace(NamedTuple):
@@ -33,6 +44,16 @@ class LayerMemoryTrace(NamedTuple):
     reserved: int
     is_forward: bool
     event: Union[TraceForwardEvent, TraceBackwardEvent]
+
+    def to_dict(self):
+        return {
+            "module_name": self.module_name,
+            "module_params": self.module_params,
+            "allocated": self.allocated,
+            "reserved": self.reserved,
+            "is_forward": self.is_forward,
+            "event": self.event.to_dict()
+        }
 
 
 class LayerwiseMemoryTracker:

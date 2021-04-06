@@ -1,7 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-
+import json
 import logging
+import os
 
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import is_primary
@@ -71,8 +72,17 @@ class ProfilingHook(ClassyHook):
         # Dump memory statistics
         if self.start_iteration <= iteration < self.end_iteration:
             image = self.layer_memory_tracker.show_plots(capture=True)
-            # TODO - save the raw data as well
-            image.save(f"memory_iteration_{iteration}.jpg")
+            image_name = f"memory_iteration_{iteration}.jpg"
+            image.save(os.path.join(self.output_folder, image_name))
+            json_name = f"memory_iteration_{iteration}.json"
+            with open(json_name, "w") as f:
+                json_traces = {
+                    "traces": [
+                        t.to_dict()
+                        for t in self.layer_memory_tracker.memory_traces
+                    ]
+                }
+                json.dump(json_traces, f)
             self.layer_memory_tracker.clear_traces()
 
         # Enable / disable the profiling based on the current iteration
