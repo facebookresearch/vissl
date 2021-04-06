@@ -97,6 +97,7 @@ class ActivationStatisticsMonitor:
         """
         for h in self._hooks:
             h.remove()
+        self._hooks.clear()
         self.iteration = -1
         self._previous_module_name = None
 
