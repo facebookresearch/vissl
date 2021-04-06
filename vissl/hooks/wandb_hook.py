@@ -29,11 +29,11 @@ class SSLWandbHook(ClassyHook):
         """The constructor method of SSLWandbHook.
 
         Args:
-            log_params (bool): whether to log model params to tensorboard
+            log_params (bool): whether to log model params to wandb
             log_params_every_n_iterations (int): frequency at which parameters
-                        should be logged to tensorboard
+                        should be logged to wandb
             log_params_gradients (bool): whether to log params gradients as well
-                        to tensorboard.
+                        to wandb.
         """
         super().__init__()
         # going to assume WandB install check is already performed (TODO: check this)
@@ -52,7 +52,7 @@ class SSLWandbHook(ClassyHook):
 
     def on_forward(self, task: "tasks.ClassyTask") -> None:
         """
-        Called after every forward if tensorboard hook is enabled.
+        Called after every forward if wandb hook is enabled.
         Logs the model parameters if the training iteration matches the
         logging frequency.
         """
@@ -74,7 +74,7 @@ class SSLWandbHook(ClassyHook):
 
     def on_phase_start(self, task: "tasks.ClassyTask") -> None:
         """
-        Called at the start of every epoch if the tensorboard hook is
+        Called at the start of every epoch if the wandb hook is
         enabled.
         Logs the model parameters once at the beginning of training only.
         """
@@ -92,10 +92,10 @@ class SSLWandbHook(ClassyHook):
 
     def on_phase_end(self, task: "tasks.ClassyTask") -> None:
         """
-        Called at the end of every epoch if the tensorboard hook is
+        Called at the end of every epoch if the wandb hook is
         enabled.
         Log model parameters and/or parameter gradients as set by user
-        in the tensorboard configuration. Also resents the CUDA memory counter.
+        in the wandb configuration. Also resents the CUDA memory counter.
         """
         out_dict = {}
 
@@ -145,7 +145,7 @@ class SSLWandbHook(ClassyHook):
 
     def on_update(self, task: "tasks.ClassyTask") -> None:
         """
-        Called after every parameters update if tensorboard hook is enabled.
+        Called after every parameters update if wandb hook is enabled.
         Logs the parameter gradients if they are being set to log,
         log the scalars like training loss, learning rate, average training
         iteration time, batch size per gpu, img/sec/gpu, ETA, gpu memory used,
