@@ -108,8 +108,11 @@ class ActivationStatisticsMonitor:
 
     def _create_post_forward_hook(self, name: str):
         def _post_forward_hook(module: nn.Module, inputs, outputs):
+
             # Eliminate non-leaf modules as well as modules ignored by the forward
-            if self._prev_module_name != name:
+            previous_forward_module_name = self._prev_module_name
+            self._prev_module_name = None
+            if previous_forward_module_name != name:
                 return
 
             # Collect all outputs
