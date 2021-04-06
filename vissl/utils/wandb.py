@@ -25,7 +25,7 @@ def is_wandb_available():
 
         wandb_available = True
     except ImportError:
-        logging.info("Tensorboard is not available")
+        logging.info("Wandb is not available")
         wandb_available = False
     return wandb_available
 
@@ -69,14 +69,14 @@ def parse_hydra_config(cfg):
 
 def get_wandb_hook(cfg):
     """
-    Construct the Tensorboard hook for visualization from the specified config
+    Construct the Wandb hook for visualization from the specified config
 
     Args:
         cfg (AttrDict): User specified config file containing the settings for the
                         wandb as well like log directory, logging frequency etc
 
     Returns:
-        SSLTensorboardHook (function): the wandb hook constructed
+        SSLWandbHook (function): the wandb hook constructed
     """
     import wandb
     from vissl.hooks import SSLWandbHook
