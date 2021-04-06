@@ -15,6 +15,7 @@ from vissl.hooks.log_hooks import (  # noqa
     LogPerfTimeMetricsHook,
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
+from vissl.hooks.profiling_hook import ProfilingHook
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     FreezeParametersHook,
@@ -115,6 +116,15 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         )
         tb_hook = get_tensorboard_hook(cfg)
         hooks.extend([tb_hook])
+
+    if cfg.PROFILING.TRACK_BY_LAYER_MEMORY:
+        if cfg.PROFILING.TRACK_BY_LAYER_MEMORY:
+            hooks.append(ProfilingHook(
+                output_folder=cfg.PROFILING.OUTPUT_FOLDER,
+                start_iteration=cfg.PROFILING.START_ITERATION,
+                num_iterations=cfg.PROFILING.NUM_ITERATIONS,
+            ))
+
     if cfg.MODEL.GRAD_CLIP.USE_GRAD_CLIP:
         hooks.extend(
             [
