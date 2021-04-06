@@ -116,7 +116,7 @@ class SSLTensorboardHook(ClassyHook):
         Called at the end of training.
         """
         if self.log_activation_statistics and is_primary():
-            self.activation_watcher.reset()
+            self.activation_watcher.stop()
 
     def on_forward(self, task: "tasks.ClassyTask") -> None:
         """

@@ -91,7 +91,7 @@ class ActivationStatisticsMonitor:
                 h2 = m.register_forward_hook(self._create_post_forward_hook(name))
                 self._hooks.extend([h1, h2])
 
-    def reset(self):
+    def stop(self):
         """
         Stop any form of tracking (removes the hooks used to monitor the model)
         """
