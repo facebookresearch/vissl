@@ -16,6 +16,7 @@ class ProfilingHook(ClassyHook):
     """
 
     on_loss_and_meter = ClassyHook._noop
+    on_forward = ClassyHook._noop
     on_backward = ClassyHook._noop
     on_step = ClassyHook._noop
     on_phase_start = ClassyHook._noop
@@ -68,14 +69,14 @@ class ProfilingHook(ClassyHook):
         next_iteration = iteration + 1
 
         # Dump memory statistics
-        if iteration >= self.start_iteration:
+        if self.start_iteration <= iteration < self.end_iteration:
             image = self.layer_memory_tracker.show_plots(capture=True)
-            # TODO - save the raw data as well!
+            # TODO - save the raw data as well
             image.save(f"memory_iteration_{iteration}.jpg")
             self.layer_memory_tracker.clear_traces()
 
         # Enable / disable the profiling based on the current iteration
-        if next_iteration >= self.start_iteration:
+        if next_iteration == self.start_iteration:
             self.layer_memory_tracker.monitor(task.base_model)
-        if next_iteration >= self.end_iteration:
+        if next_iteration == self.end_iteration:
             self.layer_memory_tracker.stop()
