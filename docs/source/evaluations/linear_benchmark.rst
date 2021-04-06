@@ -138,7 +138,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/inear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear \
+      config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 
@@ -151,7 +151,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/inear_image_classification/places205/eval_resnet_8gpu_transfer_places205_linear \
+      config=benchmark/linear_image_classification/places205/eval_resnet_8gpu_transfer_places205_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 
@@ -164,7 +164,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
 .. code-block:: bash
 
     python tools/run_distributed_engines.py \
-      config=benchmark/inear_image_classification/inaturalist18/eval_resnet_8gpu_transfer_inaturalist18_linear \
+      config=benchmark/linear_image_classification/inaturalist18/eval_resnet_8gpu_transfer_inaturalist18_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 
@@ -375,7 +375,7 @@ The configuration setting for this benchmark is provided `here <https://github.c
 .. code-block:: bash
 
     python tools/train_svm.py \
-      config=benchmark/inear_image_classification/voc07/eval_resnet_8gpu_transfer_voc07_svm \
+      config=benchmark/linear_image_classification/voc07/eval_resnet_8gpu_transfer_voc07_svm \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 
