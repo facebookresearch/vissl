@@ -8,7 +8,7 @@ from vissl.utils.activation_statistics import (
 )
 
 
-class TestDataLimitSubSampling(unittest.TestCase):
+class TestActivationStatisticsMonitoring(unittest.TestCase):
     def test_activation_statistics(self):
         torch.manual_seed(0)
 
