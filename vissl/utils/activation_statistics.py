@@ -76,12 +76,15 @@ class ActivationStatisticsMonitor:
             self.ignored_modules = {"torch.nn.modules.activation.ReLU"}
         self.iteration = -1
         self._hooks = []
-        self._prev_module_name = None
+        self._previous_module_name = None
 
     def set_iteration(self, iteration: int):
         self.iteration = iteration
 
     def monitor(self, model: nn.Module):
+        """
+        Install hooks on the model to track its activation statistics
+        """
         for name, m in model.named_modules():
             if self._get_qualified_type(m) not in self.ignored_modules:
                 h1 = m.register_forward_pre_hook(self._create_pre_forward_hook(name))
@@ -89,10 +92,13 @@ class ActivationStatisticsMonitor:
                 self._hooks.extend([h1, h2])
 
     def reset(self):
+        """
+        Stop any form of tracking (removes the hooks used to monitor the model)
+        """
         for h in self._hooks:
             h.remove()
         self.iteration = -1
-        self._prev_module_name = None
+        self._previous_module_name = None
 
     def _should_log(self, module: nn.Module):
         return self.iteration % self.log_frequency == 0 and module.training
@@ -100,9 +106,9 @@ class ActivationStatisticsMonitor:
     def _create_pre_forward_hook(self, name: str):
         def _pre_forward_hook(module: nn.Module, inputs):
             if self._should_log(module):
-                self._prev_module_name = name
+                self._previous_module_name = name
             else:
-                self._prev_module_name = None
+                self._previous_module_name = None
 
         return _pre_forward_hook
 
@@ -110,8 +116,8 @@ class ActivationStatisticsMonitor:
         def _post_forward_hook(module: nn.Module, inputs, outputs):
 
             # Eliminate non-leaf modules as well as modules ignored by the forward
-            previous_forward_module_name = self._prev_module_name
-            self._prev_module_name = None
+            previous_forward_module_name = self._previous_module_name
+            self._previous_module_name = None
             if previous_forward_module_name != name:
                 return
 
