@@ -11,6 +11,7 @@ from extra_scripts.create_low_shot_samples import (
     generate_places_low_shot_samples,
 )
 from hydra.experimental import compose, initialize_config_module
+from vissl.config import AttrDict
 from vissl.data import dataset_catalog
 from vissl.hooks import default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
@@ -18,7 +19,6 @@ from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.distributed_launcher import launch_distributed
 from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import (
-    AttrDict,
     convert_to_attrdict,
     is_hydra_available,
     print_cfg,
