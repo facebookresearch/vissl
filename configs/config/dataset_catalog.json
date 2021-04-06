@@ -43,9 +43,9 @@
         "train": ["<path_to_pytorch_dataset>", "<unused>"],
         "val": ["<path_to_pytorch_dataset>", "<unused>"]
     },
-    "inaturalist2018_folder": {
-        "train": ["<img_path>", "<lbl_path>"],
-        "val": ["<img_path>", "<lbl_path>"]
+    "inaturalist2018_filelist": {
+        "train": ["<path_to_train_images.npy>", "<path_to_train_labels.npy>"],
+        "val": ["<path_to_val_images.npy>", "<path_to_val_labels.npy>"]
     },
     "yfcc100m": {
         "train": ["<img_path>", "<lbl_path>"],

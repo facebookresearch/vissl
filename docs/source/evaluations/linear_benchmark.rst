@@ -167,6 +167,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/inaturalist18/eval_resnet_8gpu_transfer_inaturalist18_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
+A script to automatically prepare the data for iNaturalist2018 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
 
 Benchmark: CIFAR-10
 -----------------------
