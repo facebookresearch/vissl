@@ -41,9 +41,9 @@ class LARS(ClassyOptimizer):
         config.setdefault("exclude_bias_and_norm", False)
 
         assert (
-                config["momentum"] >= 0.0
-                and config["momentum"] < 1.0
-                and type(config["momentum"]) == float
+            config["momentum"] >= 0.0
+            and config["momentum"] < 1.0
+            and type(config["momentum"]) == float
         ), "Config must contain a 'momentum' in [0, 1) for SGD optimizer"
 
         return cls(
@@ -63,6 +63,7 @@ class _LARS(optim.Optimizer):
         - we add a `exclude_bias_and_norm` parameter to filter out biases from the LARS adaptive LR
         - we remove the filter on weight decay as it is not needed in VISSL. See `get_optimizer_param_groups`
     """
+
     def __init__(self,
                  params,
                  lr: float = 0.1,
@@ -70,11 +71,11 @@ class _LARS(optim.Optimizer):
                  weight_decay: float = 0,
                  eta: float = 0.001,
                  exclude_bias_and_norm: bool = False):
-        defaults = dict(lr=lr,
-                        weight_decay=weight_decay,
-                        momentum=momentum,
-                        eta=eta,
-                        exclude=self._exclude_bias_and_norm if exclude_bias_and_norm else None)
+        defaults = {"lr": lr,
+                    "weight_decay": weight_decay,
+                    "momentum": momentum,
+                    "eta": eta,
+                    "exclude": self._exclude_bias_and_norm if exclude_bias_and_norm else None}
         super().__init__(params, defaults)
 
     @staticmethod
