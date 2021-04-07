@@ -27,7 +27,7 @@ At a high level, project requires following system dependencies.
 
 ### Install VISSL conda package
 
-This assumes you have conda 10.2.
+This assumes you have CUDA 10.2.
 
 ```bash
 conda create -n vissl python=3.8
