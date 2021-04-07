@@ -21,7 +21,7 @@ config:
         - name: ImgReplicatePil
           num_times: 2
         - name: RandomResizedCrop
-          size: 128
+          size: 224
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
@@ -78,7 +78,7 @@ config:
         embedding_dim: 8192
   OPTIMIZER:
       name: lars
-      weight_decay: 0.0000015
+      weight_decay: 0.000001
       momentum: 0.9
       exclude_bias_and_norm: True
       num_epochs: 1000
