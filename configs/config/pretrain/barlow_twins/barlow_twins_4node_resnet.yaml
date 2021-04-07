@@ -77,15 +77,10 @@ config:
         scale_loss: 0.024
         embedding_dim: 8192
   OPTIMIZER:
-      name: sgd
-      use_larc: True
-      larc_config:
-        clip: False
-        trust_coefficient: 0.001
-        eps: 0.00000001
+      name: lars
       weight_decay: 0.0000015
       momentum: 0.9
-      nesterov: False
+      exclude_bias_and_norm: True
       num_epochs: 1000
       regularize_bn: False
       regularize_bias: False

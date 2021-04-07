@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 
+from vissl.optimizers.lars import LARS
 from vissl.optimizers.optimizer_helper import get_optimizer_param_groups  # noqa
 
 
