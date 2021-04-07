@@ -2,3 +2,4 @@ global-exclude *.pyc
 global-exclude __pycache__
 recursive-include configs/ *.yaml
 include vissl/config/defaults.yaml
+include requirements.txt
