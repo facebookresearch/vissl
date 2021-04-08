@@ -129,17 +129,17 @@ class VisslEventStorage:
         )
 
         # Parameter for the add_histogram_raw function of SummaryWriter
-        hist_params = dict(
-            tag=hist_name,
-            min=ht_min,
-            max=ht_max,
-            num=len(hist_tensor),
-            sum=float(hist_tensor.sum()),
-            sum_squares=float(torch.sum(hist_tensor ** 2)),
-            bucket_limits=hist_edges[1:].tolist(),
-            bucket_counts=hist_counts.tolist(),
-            global_step=self._iter,
-        )
+        hist_params = {
+            "tag": hist_name,
+            "min": ht_min,
+            "max": ht_max,
+            "num": len(hist_tensor),
+            "sum": float(hist_tensor.sum()),
+            "sum_squares": float(torch.sum(hist_tensor ** 2)),
+            "bucket_limits": hist_edges["1"].tolist(),
+            "bucket_counts": hist_counts.tolist(),
+            "global_step": self._iter,
+        }
         self._histograms.append(hist_params)
 
     def put_image(self, img_name, img_tensor):
