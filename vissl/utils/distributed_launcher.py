@@ -256,10 +256,11 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
         slurm_constraint=cfg.SLURM.CONSTRAINT,
         timeout_min=cfg.SLURM.TIME_HOURS * 60,
         nodes=cfg.DISTRIBUTED.NUM_NODES,
-        cpus_per_task=8 * cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
+        cpus_per_task=cfg.SLURM.NUM_CPU_PER_PROC * cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
         tasks_per_node=1,
         gpus_per_node=cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
         mem_gb=cfg.SLURM.MEM_GB,
+        slurm_additional_parameters=cfg.SLURM.ADDITIONAL_PARAMETERS,
     )
     trainer = _ResumableSlurmJob(engine_name=engine_name, config=cfg)
     job = executor.submit(trainer)
