@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
+import os
 import random
 import tempfile
 
@@ -8,6 +9,7 @@ import numpy as np
 import pkg_resources
 import torch
 import torch.multiprocessing as mp
+from fvcore.common.file_io import PathManager
 from scipy.sparse import csr_matrix
 from vissl.utils.io import load_file
 
@@ -221,14 +223,33 @@ def merge_features(output_dir, split, layer, cfg):
     return output
 
 
+def get_data_catalog_relative_path(default_dataset_catalog_path: str) -> str:
+    """
+    Gets dataset relative path from /configs.
+    Optionally set environment variable VISSL_DATASET_CATALOG_PATH for dataset catalog path.
+    Useful for local development and/or remote server configuration.
+    """
+    dataset_catalog_path = os.environ.get(
+        "VISSL_DATASET_CATALOG_PATH", default_dataset_catalog_path
+    )
+
+    # If catalog path is the default and we cannot find it, we want to silently fail.
+    if dataset_catalog_path != default_dataset_catalog_path:
+        assert PathManager.exists(
+            f"configs/{dataset_catalog_path}"
+        ), f"Dataset catalog path: { dataset_catalog_path } not found in /configs directory."
+
+    return dataset_catalog_path
+
+
 def get_json_data_catalog_file():
     """
     Searches for the dataset_catalog.json file that contains information about
     the dataset paths if set by user.
     """
-    json_catalog_path = pkg_resources.resource_filename(
-        "configs", "config/dataset_catalog.json"
-    )
+
+    dataset_catalog_path = get_data_catalog_relative_path("config/dataset_catalog.json")
+    json_catalog_path = pkg_resources.resource_filename("configs", dataset_catalog_path)
     return json_catalog_path
 
 

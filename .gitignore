@@ -94,3 +94,6 @@ website/pages/tutorials/*
 *-checkpoint.ipynb
 **/.ipynb_checkpoints
 **/.ipynb_checkpoints/**
+
+# Configs for local development
+configs/config_local/*
