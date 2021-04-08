@@ -140,6 +140,12 @@ def set_seeds(cfg, node_id=0):
     Set the python random, numpy and torch seed for each gpu. Also set the CUDA
     seeds if the CUDA is available. This ensures deterministic nature of the training.
     """
+    # pass the seed to cfg["MODEL"] so that model init on different nodes can
+    # use the same seed.
+    # TODO (Min): once FSDP supports sync'ing weights from rank 0, we don't need
+    #             this anymore.
+    cfg["MODEL"]["_MODEL_INIT_SEED"] = cfg.SEED_VALUE
+
     node_seed = cfg.SEED_VALUE
     if cfg.DISTRIBUTED.NUM_NODES > 1:
         node_seed = node_seed * 2 * node_id
@@ -239,3 +245,32 @@ def concat_all_gather(tensor):
 
     output = torch.cat(tensors_gather, dim=0)
     return output
+
+
+def get_rng_state():
+    state = {"torch_rng_state": torch.get_rng_state()}
+    if torch.cuda.is_available():
+        state["cuda_rng_state"] = torch.cuda.get_rng_state()
+    return state
+
+
+def set_rng_state(state):
+    torch.set_rng_state(state["torch_rng_state"])
+    if torch.cuda.is_available():
+        torch.cuda.set_rng_state(state["cuda_rng_state"])
+
+
+class set_torch_seed(object):
+    def __init__(self, seed):
+        assert isinstance(seed, int)
+        self.rng_state = get_rng_state()
+
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        set_rng_state(self.rng_state)

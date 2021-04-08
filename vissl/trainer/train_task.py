@@ -174,10 +174,15 @@ class SelfSupervisionTask(ClassificationTask):
 
                 # "amp_args" are actually Apex Amp args
                 self.amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
+                logging.info(f"Setting AMP: using apex, args {self.amp_args}")
 
             elif self.amp_type == AmpType.PYTORCH:
-                # If the optimizer is sharded, then the GradScaler needs to be shard-aware
-                if self.config["OPTIMIZER"]["name"] == "zero":
+                # if the optimizer is sharded or FSDP data parallel is used, then the GradScaler
+                # needs to be shard-aware.
+                if (
+                    self.config["TRAINER"]["TASK_NAME"] == "self_supervision_fsdp_task"
+                    or self.config["OPTIMIZER"]["name"] == "zero"
+                ):
                     assert is_fairscale_sharded_available(), (
                         "To use ZeRO with PyTorch AMP, ShardedGradScaler() "
                         "from fairscale is needed. Please upgrade fairscale"
@@ -185,8 +190,10 @@ class SelfSupervisionTask(ClassificationTask):
                     from fairscale.optim.grad_scaler import ShardedGradScaler
 
                     self.amp_grad_scaler = ShardedGradScaler()
+                    logging.info("Setting AMP: using sharded grad scaler")
                 else:
                     self.amp_grad_scaler = TorchGradScaler()
+                    logging.info("Setting AMP: using pytorch grad scaler")
             logging.info(f"Setting AMP: {self.amp_type} - args: {self.amp_args}")
 
         else:

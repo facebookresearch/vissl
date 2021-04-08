@@ -13,6 +13,7 @@ accuracy is minimally impacted to the extend allowed by FSDP
 and target training speed considerations.
 """
 
+import logging
 import math
 from collections import OrderedDict
 from typing import List, Tuple
@@ -20,14 +21,11 @@ from typing import List, Tuple
 import torch
 import torch.nn as nn
 from classy_vision.models.anynet import (
-    ActivationType,
-    BlockType,
     ResBasicBlock,
     ResBottleneckBlock,
     ResStemCifar,
     ResStemIN,
     SimpleStemIN,
-    StemType,
     VanillaBlock,
 )
 from classy_vision.models.regnet import RegNetParams
@@ -40,41 +38,13 @@ from vissl.models.model_helpers import (
     transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.misc import set_torch_seed
 
 
 def fsdp_wrapper(module, **kwargs):
     """Customer wrapper that does FSDP + checkpoint at the same time."""
     # TODO (Min): enable checkpoint_wrapper
     return FSDP(module, **kwargs)
-
-
-def get_rng_state():
-    state = {"torch_rng_state": torch.get_rng_state()}
-    if torch.cuda.is_available():
-        state["cuda_rng_state"] = torch.cuda.get_rng_state()
-    return state
-
-
-def set_rng_state(state):
-    torch.set_rng_state(state["torch_rng_state"])
-    if torch.cuda.is_available():
-        torch.cuda.set_rng_state(state["cuda_rng_state"])
-
-
-class set_torch_seed(object):
-    def __init__(self, seed):
-        assert isinstance(seed, int)
-        self.rng_state = get_rng_state()
-
-        torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed(seed)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        set_rng_state(self.rng_state)
 
 
 def init_weights(module):
@@ -143,7 +113,7 @@ class AnyStage(nn.Sequential):
             init_weights(block)
 
             # Now, wrap it with fsdp+checkpoint, which will perform the sharding.
-            block = auto_wrap_bn(block)
+            block = auto_wrap_bn(block, single_rank_pg=False)
             with enable_wrap(**fsdp_config):
                 block = wrap(block)
 
@@ -159,7 +129,7 @@ class RegNetFSDP(FSDP):
     """
 
     def __init__(self, model_config: AttrDict, model_name: str):
-        module = _RegNetFSDP(model_config, model_name)
+        module = _RegNetFSDP(model_config, model_name).cuda()
         super().__init__(module, **model_config.FSDP_CONFIG)
 
 
@@ -186,11 +156,11 @@ class _RegNetFSDP(nn.Module):
             w_0=trunk_config["w_0"],
             w_a=trunk_config["w_a"],
             w_m=trunk_config["w_m"],
-            group_w=trunk_config["group_width"],
+            group_width=trunk_config["group_width"],
             stem_type=trunk_config.get("stem_type", "simple_stem_in").upper(),
             stem_width=trunk_config.get("stem_width", 32),
             block_type=trunk_config.get("block_type", "res_bottleneck_block").upper(),
-            activation_type=trunk_config.get("activation_type", "relu").upper(),
+            activation=trunk_config.get("activation_type", "relu").upper(),
             use_se=trunk_config.get("use_se", True),
             se_ratio=trunk_config.get("se_ratio", 0.25),
             bn_epsilon=trunk_config.get("bn_epsilon", 1e-05),
@@ -204,7 +174,9 @@ class _RegNetFSDP(nn.Module):
         # TODO (Min): we can make this seed coming from the config or env.
         stem = None
         trunk_output = None
-        with set_torch_seed(0):
+        seed = model_config._MODEL_INIT_SEED
+        logging.info(f"_MODEL_INIT_SEED: {seed}")
+        with set_torch_seed(seed):
             # Ad hoc stem
             #
             # Important: do NOT retain modules in self.stem or self.trunk_output. It may
@@ -214,14 +186,12 @@ class _RegNetFSDP(nn.Module):
             #
             # When debugging this, it is not enough to just dump the total module
             # params. You need to diff the module string representations.
-            activation = {
-                ActivationType.RELU: nn.ReLU(False),  # params.relu_in_place
-            }[params.activation_type]
+            activation = {"RELU": nn.ReLU(True)}[params.activation]
 
             stem = {
-                StemType.RES_STEM_CIFAR: ResStemCifar,
-                StemType.RES_STEM_IN: ResStemIN,
-                StemType.SIMPLE_STEM_IN: SimpleStemIN,
+                "RES_STEM_CIFAR": ResStemCifar,
+                "RES_STEM_IN": ResStemIN,
+                "SIMPLE_STEM_IN": SimpleStemIN,
             }[params.stem_type](
                 3,
                 params.stem_width,
@@ -230,13 +200,13 @@ class _RegNetFSDP(nn.Module):
                 activation,
             )
             init_weights(stem)
-            stem = auto_wrap_bn(stem)
+            stem = auto_wrap_bn(stem, single_rank_pg=False)
 
             # Instantiate all the AnyNet blocks in the trunk
             block_fun = {
-                BlockType.VANILLA_BLOCK: VanillaBlock,
-                BlockType.RES_BASIC_BLOCK: ResBasicBlock,
-                BlockType.RES_BOTTLENECK_BLOCK: ResBottleneckBlock,
+                "VANILLA_BLOCK": VanillaBlock,
+                "RES_BASIC_BLOCK": ResBasicBlock,
+                "RES_BOTTLENECK_BLOCK": ResBottleneckBlock,
             }[params.block_type]
 
             current_width = params.stem_width

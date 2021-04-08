@@ -272,9 +272,16 @@ class FreezeParametersHook(ClassyHook):
                 )
             return
 
+        matched_named_params = 0
         for name, p in task.model.named_parameters():
             if (
                 name in map_params_to_iters
                 and task.iteration < map_params_to_iters[name]
             ):
+                matched_named_params += 1
                 p.grad = None
+        # TODO (Min): we need to check the exact target number.
+        assert matched_named_params > 0, (
+            f"Didn't find expected number of layers: "
+            f"{matched_named_params} vs.  {len(map_params_to_iters)}"
+        )

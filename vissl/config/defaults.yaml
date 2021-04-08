@@ -424,8 +424,8 @@ config:
     #   These options should match FSDP classes init options.
     # ----------------------------------------------------------------------------------- #
     FSDP_CONFIG:
-      mixed_precision: True
       flatten_parameters: True
+      mixed_precision: True
       fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.
     # ----------------------------------------------------------------------------------- #
     # Feature evaluation settings
@@ -582,8 +582,6 @@ config:
       # specify the multiplier. By default, set to 1.0
       # this setting is helpful for scaling the model output.
       PARAMS_MULTIPLIER: 1.0
-      # set this to False for FSDP regnet
-      INPLACE_RELU: True
     # ----------------------------------------------------------------------------------- #
     # Synchronized BatchNorm Setup
     # ----------------------------------------------------------------------------------- #
