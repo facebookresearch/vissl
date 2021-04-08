@@ -67,6 +67,12 @@ While the more SLURM specific options are located in the "SLURM" configuration b
     MEM_GB: 250
     # TCP port on which the workers will synchronize themselves with torch distributed
     PORT_ID: 40050
+    # Number of CPUs per GPUs to request on the cluster.
+    NUM_CPU_PER_PROC: 8
+    # Any other parameters for slurm (e.g. account, hint, distribution, etc.,)
+    # Please see https://github.com/facebookincubator/submitit/issues/23#issuecomment-695217824.
+    ADDITIONAL_PARAMETERS: {}
+
 
 Users can customize these values by using the standard hydra override syntax (same as for any other item in the configuration), or can modify the script to fit their needs.
 

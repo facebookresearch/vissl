@@ -1002,7 +1002,7 @@ config:
     # number of machines to use in training. Each machine can have many gpus. NODES count
     # number of unique hosts.
     NUM_NODES: 1
-    # set this to the number of gpus per machine. This ensrures that each gpu of the
+    # set this to the number of gpus per machine. This ensures that each gpu of the
     # node has a process attached to it.
     NUM_PROC_PER_NODE: 8
     # this could be: tcp | env | file or any other pytorch supported methods
@@ -1042,6 +1042,11 @@ config:
     MEM_GB: 250
     # TCP port on which the workers will synchronize themselves with torch distributed
     PORT_ID: 40050
+    # Number of CPUs per GPUs to request on the cluster.
+    NUM_CPU_PER_PROC: 8
+    # Any other parameters for slurm (e.g. account, hint, distribution, etc.,) as dictated by submitit.
+    # Please see https://github.com/facebookincubator/submitit/issues/23#issuecomment-695217824.
+    ADDITIONAL_PARAMETERS: {}
 
   # ----------------------------------------------------------------------------------- #
   # SVM (benchmark)
