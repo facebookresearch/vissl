@@ -144,7 +144,8 @@ class SSLTransformsWrapper(ClassyTransform):
                 output = self.transform(sample["data"][idx])
                 if self._is_transform_with_labels():
                     sample["data"][idx] = output[0]
-                    sample["label"].append(output[1])
+                    sample["label"][-1] = output[1]
+                    # sample["label"].append(output[1])
                 else:
                     sample["data"][idx] = output
 
