@@ -182,7 +182,7 @@ def get_optimizer_param_groups(
                 if optimizer_config["regularize_bias"]:
                     trunk_regularized_params.append(module.bias)
                 else:
-                    trunk_regularized_params.append(module.bias)
+                    trunk_unregularized_params.append(module.bias)
         # trunk, BN layer
         elif isinstance(module, _BN_TYPES):
             (
