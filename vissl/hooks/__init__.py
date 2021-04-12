@@ -15,6 +15,7 @@ from vissl.hooks.log_hooks import (  # noqa
     LogPerfTimeMetricsHook,
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
+from vissl.hooks.byol_hooks import BYOLHook  # noqa
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     FreezeParametersHook,
@@ -97,6 +98,14 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
                 MoCoHook(
                     cfg.LOSS["moco_loss"]["momentum"],
                     shuffle_batch=(not cfg.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN),
+                )
+            ]
+        )
+    if cfg.LOSS.name == "byol_loss":
+        hooks.extend(
+            [
+                BYOLHook(
+                    cfg.LOSS["byol_loss"]["momentum"],
                 )
             ]
         )
