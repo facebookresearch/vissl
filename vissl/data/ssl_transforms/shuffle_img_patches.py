@@ -1,6 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
+import os
+import tempfile
 from typing import Any, Dict
 
 import numpy as np
@@ -8,7 +10,7 @@ import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 from fvcore.common.file_io import PathManager
-from vissl.utils.io import load_file
+from vissl.utils.io import cache_url, is_url, load_file
 
 
 @register_transform("ShuffleImgPatches")
@@ -32,6 +34,11 @@ class ShuffleImgPatches(ClassyTransform):
         self.perms = None
 
     def _load_perms(self):
+        if is_url(self.perm_file):
+            temp_cache_dir = tempfile.mkdtemp()
+            cache_dir = os.path.join(temp_cache_dir, "perm_file_cache")
+            cached_url_path = cache_url(url=self.perm_file, cache_dir=cache_dir)
+            self.perm_file = cached_url_path
         assert PathManager.exists(
             self.perm_file
         ), f"Permutation file NOT found: {self.perm_file}"

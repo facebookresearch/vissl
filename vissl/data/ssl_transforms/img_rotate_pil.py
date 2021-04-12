@@ -32,7 +32,7 @@ class ImgRotatePil(ClassyTransform):
         self.num_rotations_per_img = num_rotations_per_img
         # the last angle is 360 and 1st angle is 0, both give the original image.
         # 360 is not useful so remove it
-        self.angles = torch.linspace(0, 360, num_angles + 1)[:-1]
+        self.angles = torch.linspace(0, 360, num_angles + 1)[:-1].tolist()
 
     def __call__(self, image):
         label = torch.randint(self.num_angles, [1]).item()
