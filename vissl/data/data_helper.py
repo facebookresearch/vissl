@@ -144,6 +144,38 @@ class StatefulDistributedSampler(DistributedSampler):
         self.start_iter = start_iter
 
 
+class DeterministicDistributedSampler(StatefulDistributedSampler):
+    """
+    StatefulDistributedSampler that does not generates random permutations but
+    instead uses a fixed assignment of samples for each rank.
+
+    Useful for debugging: it gives 100% reproducible sample assignments.
+
+    Args:
+        dataset (Dataset): Pytorch dataset from which to sample elements
+        batch_size (int): batch size we want the sampler to sample
+    """
+
+    def __init__(self, dataset, batch_size=None):
+        super().__init__(dataset, batch_size=batch_size)
+        logging.info(f"rank: {self.rank}: DEBUGGING sampler created...")
+
+    def __iter__(self):
+        # Cut the dataset in deterministic parts
+        indices = list(
+            range((self.rank * self.num_samples), (self.rank + 1) * self.num_samples)
+        )
+
+        # make sure we have correct number of samples per replica
+        assert len(indices) == self.num_samples
+        assert self.batch_size > 0, "batch_size not set for the sampler"
+
+        # resume the sampler
+        start_index = self.start_iter * self.batch_size
+        indices = indices[start_index:]
+        return iter(indices)
+
+
 class QueueDataset(Dataset):
     """
     This class helps dealing with the invalid images in the dataset by using

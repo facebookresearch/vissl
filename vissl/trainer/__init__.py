@@ -11,6 +11,7 @@ import vissl.models.heads  # NOQA
 import vissl.models.trunks  # NOQA
 import vissl.optimizers.param_scheduler  # NOQA
 from vissl.trainer.train_fsdp_task import SelfSupervisionFSDPTask  # NOQA
+from vissl.trainer.train_fsdp_task_2 import SelfSupervisionFSDPTask2  # NOQA
 from vissl.trainer.train_task import SelfSupervisionTask  # NOQA
 from vissl.trainer.train_zero_task import SelfSupervisionZeroTask  # NOQA
 from vissl.trainer.trainer_main import SelfSupervisionTrainer  # noqa

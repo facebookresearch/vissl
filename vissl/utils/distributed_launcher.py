@@ -197,6 +197,11 @@ def _distributed_worker(
         f"Spawning process for node_id: {node_id}, local_rank: {local_rank}, "
         f"dist_rank: {dist_rank}, dist_run_id: {dist_run_id}"
     )
+
+    if cfg.REPRODUCIBILITY.CUDDN_DETERMINISTIC:
+        logging.info("torch.backends.cudnn.deterministic = True")
+        torch.backends.cudnn.deterministic = True
+
     process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
 
 

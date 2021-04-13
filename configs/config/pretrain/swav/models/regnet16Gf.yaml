@@ -13,5 +13,6 @@ config:
           group_width: 112
     HEAD:
       PARAMS: [
-        ["swav_head", {"dims": [3024, 3024, 128], "use_bn": False, "num_clusters": [3000]}],
+        ["swav_head",  # This could be override by command line to be swav_head_fsdp
+         {"dims": [3024, 3024, 128], "use_bn": False, "num_clusters": [3000]}],
       ]

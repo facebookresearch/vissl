@@ -300,7 +300,7 @@ def infer_losses_config(cfg):
     # some inference for the SwAV loss.
     if cfg.LOSS.name == "swav_loss":
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
-        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        assert cfg.MODEL.HEAD.PARAMS[0][0] in {"swav_head", "swav_head_fsdp"}
         assert cfg.DATA.TRAIN.COLLATE_FUNCTION in [
             "multicrop_collator",
             "multicrop_mixup_collator",
@@ -367,6 +367,12 @@ def assert_hydra_conf(cfg):
     """
     cfg = infer_losses_config(cfg)
     cfg = infer_learning_rate(cfg)
+
+    # pass the seed to cfg["MODEL"] so that model init on different nodes can
+    # use the same seed.
+    # TODO (Min): once FSDP supports sync'ing weights from rank 0, we don't need
+    #             this anymore.
+    cfg["MODEL"]["_MODEL_INIT_SEED"] = cfg.SEED_VALUE
 
     # in case of linear evaluation, we often evaluate several layers at a time. For each
     # layer, there's a separate accuracy meter. In such case, we want to output the layer

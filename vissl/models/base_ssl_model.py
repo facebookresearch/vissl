@@ -15,6 +15,7 @@ from vissl.models.model_helpers import (
 from vissl.models.trunks import get_model_trunk
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.misc import set_torch_seed
 
 
 @register_model("multi_input_output_model")
@@ -314,14 +315,16 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                 # head is composed of several modules
                 head_type, head_modules = [], []
                 for idx in range(len(head_param)):
-                    head_modules.append(self._build_head_module(head_param[idx]))
+                    with set_torch_seed(self.model_config._MODEL_INIT_SEED + idx):
+                        head_modules.append(self._build_head_module(head_param[idx]))
                     head_type.append(head_param[idx][0])
                 head_name = "->".join(head_type)
                 head = nn.Sequential(*head_modules)
             else:
                 # head is a single module
                 head_name = head_param[0]
-                head = self._build_head_module(head_param)
+                with set_torch_seed(self.model_config._MODEL_INIT_SEED):
+                    head = self._build_head_module(head_param)
             self.heads.append(head)
             self.head_names.append(head_name)
 

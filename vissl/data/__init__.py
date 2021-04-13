@@ -1,12 +1,17 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
+import random
 
+import numpy as np
 import torch
 from classy_vision.dataset import DataloaderAsyncGPUWrapper
 from torch.utils.data import DataLoader
 from vissl.data.collators import get_collator
-from vissl.data.data_helper import StatefulDistributedSampler
+from vissl.data.data_helper import (
+    DeterministicDistributedSampler,
+    StatefulDistributedSampler,
+)
 from vissl.data.dataloader_sync_gpu_wrapper import DataloaderSyncGPUWrapper
 from vissl.data.dataset_catalog import (
     VisslDatasetCatalog,
@@ -100,7 +105,11 @@ def get_sampler(dataset, dataset_config):
     """
     data_sampler = None
     if torch.distributed.is_available() and torch.distributed.is_initialized():
-        if dataset_config["USE_STATEFUL_DISTRIBUTED_SAMPLER"]:
+        if dataset_config["USE_DEBUGGING_SAMPLER"]:
+            data_sampler = DeterministicDistributedSampler(
+                dataset, batch_size=dataset_config["BATCHSIZE_PER_REPLICA"]
+            )
+        elif dataset_config["USE_STATEFUL_DISTRIBUTED_SAMPLER"]:
             data_sampler = StatefulDistributedSampler(
                 dataset, batch_size=dataset_config["BATCHSIZE_PER_REPLICA"]
             )
@@ -113,6 +122,12 @@ def get_sampler(dataset, dataset_config):
             "Distributed trainer not initialized. Not using the sampler and data will NOT be shuffled"  # NOQA
         )
     return data_sampler
+
+
+def debugging_worker_init_fn(worker_id: int):
+    random.seed(0)
+    np.random.seed(worker_id)
+    torch.manual_seed(worker_id)
 
 
 def get_loader(
@@ -145,14 +160,22 @@ def get_loader(
         DataloaderAsyncGPUWrapper or DataloaderSyncGPUWrapper depending
         on whether user wants to copy data to gpu async or not.
     """
+
     # pytorch dataloader requires setting the multiprocessing type.
     setup_multiprocessing_method(multi_processing_method)
+
     # we don't need to set the rank, replicas as the Sampler already does so in
     # it's init function
     data_sampler = get_sampler(dataset, dataset_config)
     collate_function = get_collator(
         dataset_config["COLLATE_FUNCTION"], dataset_config["COLLATE_FUNCTION_PARAMS"]
     )
+
+    # Replace the worker_init_fn with a deterministic one when debugging
+    if dataset_config["USE_DEBUGGING_SAMPLER"]:
+        worker_init_fn = debugging_worker_init_fn
+
+    # Create the pytorch dataloader
     dataloader = DataLoader(
         dataset=dataset,
         num_workers=num_dataloader_workers,

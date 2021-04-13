@@ -3,6 +3,7 @@ from typing import List
 
 import torch
 import torch.nn as nn
+from fairscale.nn import FullyShardedDataParallel
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 
@@ -110,3 +111,46 @@ class SwAVPrototypesHead(nn.Module):
                 out.append(getattr(self, "prototypes" + str(i))(batch))
 
         return out
+
+
+@register_model_head("swav_head_fsdp")
+def SwavPrototypesHeadFSDP(
+    model_config: AttrDict,
+    dims: List[int],
+    use_bn: bool,
+    num_clusters: int,
+    use_bias: bool = True,
+    return_embeddings: bool = True,
+    skip_last_bn: bool = True,
+    normalize_feats: bool = True,
+):
+    """
+    SwAV head specific FSDP wrapping: we keep the full precision for the prototypes
+
+    This is important for convergence:
+    Since we "normalize" this layer in the update hook, we need to keep its
+    weights in full precision. It is output is going into the loss and used
+    for clustering, so we need to have that in full precision as well.
+    """
+
+    head = SwAVPrototypesHead(
+        model_config=model_config,
+        dims=dims,
+        use_bn=use_bn,
+        num_clusters=num_clusters,
+        use_bias=use_bias,
+        return_embeddings=return_embeddings,
+        skip_last_bn=skip_last_bn,
+        normalize_feats=normalize_feats,
+    )
+
+    fp32_fsdp_config = model_config.FSDP_CONFIG.copy()
+    fp32_fsdp_config["flatten_parameters"] = False
+    fp32_fsdp_config["mixed_precision"] = False
+    fp32_fsdp_config["fp32_reduce_scatter"] = False
+
+    for j in range(head.nmb_heads):
+        module = getattr(head, "prototypes" + str(j))
+        module = FullyShardedDataParallel(module=module, **fp32_fsdp_config)
+        setattr(head, "prototypes" + str(j), module)
+    return FullyShardedDataParallel(head)

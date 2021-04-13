@@ -140,12 +140,6 @@ def set_seeds(cfg, node_id=0):
     Set the python random, numpy and torch seed for each gpu. Also set the CUDA
     seeds if the CUDA is available. This ensures deterministic nature of the training.
     """
-    # pass the seed to cfg["MODEL"] so that model init on different nodes can
-    # use the same seed.
-    # TODO (Min): once FSDP supports sync'ing weights from rank 0, we don't need
-    #             this anymore.
-    cfg["MODEL"]["_MODEL_INIT_SEED"] = cfg.SEED_VALUE
-
     node_seed = cfg.SEED_VALUE
     if cfg.DISTRIBUTED.NUM_NODES > 1:
         node_seed = node_seed * 2 * node_id

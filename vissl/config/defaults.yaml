@@ -71,6 +71,10 @@ config:
   # https://github.com/pytorch/pytorch/blob/master/torch/nn/parallel/distributed.py#L142
   MULTI_PROCESSING_METHOD: "forkserver"
 
+  # Debugging utilities
+  REPRODUCIBILITY:
+    CUDDN_DETERMINISTIC: False
+
   # ----------------------------------------------------------------------------------- #
   # HOOKS
   # ----------------------------------------------------------------------------------- #
@@ -158,6 +162,9 @@ config:
     DDP_BUCKET_CAP_MB: 25
     # Training Data Options
     TRAIN:
+      # A sampler that cuts the dataset in a deterministic way
+      USE_DEBUGGING_SAMPLER: False
+
       # if we want to resume the data sampler as well from a previous iteration. By default
       # pytorch sampler resumes from every epoch.
       USE_STATEFUL_DISTRIBUTED_SAMPLER: False
