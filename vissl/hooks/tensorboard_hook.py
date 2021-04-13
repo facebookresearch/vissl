@@ -11,6 +11,7 @@ from vissl.utils.activation_statistics import (
     ActivationStatisticsMonitor,
     ActivationStatisticsObserver,
 )
+from vissl.utils.events import VisslEventStorage
 
 
 try:
@@ -62,6 +63,7 @@ class SSLTensorboardHook(ClassyHook):
     def __init__(
         self,
         tb_writer: SummaryWriter,
+        event_storage: VisslEventStorage,
         log_params: bool = False,
         log_params_every_n_iterations: int = -1,
         log_params_gradients: bool = False,
@@ -86,6 +88,7 @@ class SSLTensorboardHook(ClassyHook):
             )
         logging.info("Setting up SSL Tensorboard Hook...")
         self.tb_writer = tb_writer
+        self.event_storage = event_storage
         self.log_params = log_params
         self.log_params_every_n_iterations = log_params_every_n_iterations
         self.log_params_gradients = log_params_gradients
@@ -137,9 +140,12 @@ class SSLTensorboardHook(ClassyHook):
             and task.iteration % self.log_params_every_n_iterations == 0
         ):
             for name, parameter in task.base_model.named_parameters():
-                self.tb_writer.add_histogram(
-                    f"Parameters/{name}", parameter, global_step=task.iteration
+                self.event_storage.put_histogram(
+                    f"Parameters/{name}", parameter
                 )
+                # self.tb_writer.add_histogram(
+                #     f"Parameters/{name}", parameter, global_step=task.iteration
+                # )
 
     def on_phase_start(self, task: "tasks.ClassyTask") -> None:
         """
@@ -153,9 +159,12 @@ class SSLTensorboardHook(ClassyHook):
         # log the parameters just once, before training starts
         if is_primary() and task.train and task.train_phase_idx == 0:
             for name, parameter in task.base_model.named_parameters():
-                self.tb_writer.add_histogram(
-                    f"Parameters/{name}", parameter, global_step=-1
+                self.event_storage.put_histogram(
+                    f"Parameters/{name}", parameter
                 )
+                # self.tb_writer.add_histogram(
+                #     f"Parameters/{name}", parameter, global_step=-1
+                # )
 
     def on_phase_end(self, task: "tasks.ClassyTask") -> None:
         """

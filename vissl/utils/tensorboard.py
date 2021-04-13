@@ -48,7 +48,7 @@ def get_tensorboard_dir(cfg):
     return tensorboard_dir
 
 
-def get_tensorboard_hook(cfg):
+def get_tensorboard_hook(cfg, event_storage):
     """
     Construct the Tensorboard hook for visualization from the specified config
 
@@ -67,6 +67,7 @@ def get_tensorboard_hook(cfg):
     flush_secs = cfg.HOOKS.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
     return SSLTensorboardHook(
         tb_writer=SummaryWriter(log_dir=tensorboard_dir, flush_secs=flush_secs),
+        event_storage,
         log_params=cfg.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS,
         log_params_every_n_iterations=cfg.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS_EVERY_N_ITERS,
         log_params_gradients=cfg.HOOKS.TENSORBOARD_SETUP.LOG_PARAMS_GRADIENTS,
