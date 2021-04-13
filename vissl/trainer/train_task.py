@@ -129,9 +129,11 @@ class SelfSupervisionTask(ClassificationTask):
     def build_event_storage_writers(self):
         from vissl.utils.events import JsonWriter, TensorboardWriter
 
+        flush_secs = self.config.HOOKS.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
+
         self.event_storage_writers = [
             JsonWriter(f"{self.checkpoint_folder}/stdout.json"),
-            TensorboardWriter("./checkpoints", 60),
+            TensorboardWriter("./checkpoints", flush_secs),
         ]
 
     @property
