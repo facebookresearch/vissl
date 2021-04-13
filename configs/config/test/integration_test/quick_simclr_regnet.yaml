@@ -15,8 +15,8 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
       BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:

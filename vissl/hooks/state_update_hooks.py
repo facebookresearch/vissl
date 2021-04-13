@@ -281,7 +281,8 @@ class FreezeParametersHook(ClassyHook):
                 matched_named_params += 1
                 p.grad = None
         # TODO (Min): we need to check the exact target number.
-        assert matched_named_params > 0, (
-            f"Didn't find expected number of layers: "
-            f"{matched_named_params} vs.  {len(map_params_to_iters)}"
-        )
+        if task.iteration >= max_iterations:
+            assert matched_named_params > 0, (
+                f"Didn't find expected number of layers: "
+                f"{matched_named_params} vs.  {len(map_params_to_iters)}"
+            )
