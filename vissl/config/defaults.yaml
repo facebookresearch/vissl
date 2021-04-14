@@ -1041,8 +1041,9 @@ config:
     PARTITION: "learnfair"
     # Where the logs produced by the SLURM jobs will be output
     LOG_FOLDER: "."
-    # Maximum number of hours needed by the job to complete. Above this limit, the job might be pre-empted.
+    # Maximum number of hours / minutes needed by the job to complete. Above this limit, the job might be pre-empted.
     TIME_HOURS: 72
+    TIME_MINUTES: 0
     # Additional constraints on the hardware of the nodes to allocate (example 'volta' to select a volta GPU)
     CONSTRAINT: ""
     # GB of RAM memory to allocate for each node

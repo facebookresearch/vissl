@@ -254,12 +254,13 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
     ), f"Specified config.SLURM.LOG_FOLDER={log_folder} doesn't exist"
 
     executor = submitit.AutoExecutor(folder=log_folder)
+    timeout_min = cfg.SLURM.TIME_HOURS * 60 + cfg.SLURM.TIME_MINUTES
     executor.update_parameters(
         name=cfg.SLURM.NAME,
         slurm_comment=cfg.SLURM.COMMENT,
         slurm_partition=cfg.SLURM.PARTITION,
         slurm_constraint=cfg.SLURM.CONSTRAINT,
-        timeout_min=cfg.SLURM.TIME_HOURS * 60,
+        timeout_min=timeout_min,
         nodes=cfg.DISTRIBUTED.NUM_NODES,
         cpus_per_task=cfg.SLURM.NUM_CPU_PER_PROC * cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
         tasks_per_node=1,
