@@ -46,8 +46,11 @@ class RegNet(nn.Module):
 
         if "name" in trunk_config:
             name = trunk_config["name"]
-            logging.info(f"Building model: RegNet: {name}")
-            model = build_model({"name": name})
+            if name == "anynet":
+                model = build_model(trunk_config)
+            else:
+                logging.info(f"Building model: RegNet: {name}")
+                model = build_model({"name": name})
         else:
             logging.info("Building model: RegNet from yaml config")
             model = ClassyRegNet.from_config(trunk_config)

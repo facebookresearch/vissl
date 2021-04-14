@@ -15,16 +15,22 @@ and target training speed considerations.
 
 import math
 from collections import OrderedDict
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
+from classy_vision.generic.util import get_torch_version
 from classy_vision.models.anynet import (
+    ActivationType,
+    AnyNetParams,
+    BlockType,
     ResBasicBlock,
     ResBottleneckBlock,
+    ResBottleneckLinearBlock,
     ResStemCifar,
     ResStemIN,
     SimpleStemIN,
+    StemType,
     VanillaBlock,
 )
 from classy_vision.models.regnet import RegNetParams
@@ -73,28 +79,33 @@ def init_weights(module):
 
 
 class RegnetBlocksFactory:
-    STEM_TYPES = {
-        "RES_STEM_CIFAR": ResStemCifar,
-        "RES_STEM_IN": ResStemIN,
-        "SIMPLE_STEM_IN": SimpleStemIN,
-    }
-
-    BLOCK_TYPES = {
-        "VANILLA_BLOCK": VanillaBlock,
-        "RES_BASIC_BLOCK": ResBasicBlock,
-        "RES_BOTTLENECK_BLOCK": ResBottleneckBlock,
-    }
-
-    ACTIVATION_TYPES = {"RELU": lambda: nn.ReLU(inplace=True)}
+    """
+    This is the basic RegNet construction class. It constructs the RegNet
+    model stem, block creation. The RegNetParams / AnyNetParams are used
+    to configure the model.
+    """
 
     def __init__(self, seed: int):
         self.seed = seed
 
-    def create_stem(self, params: RegNetParams):
-        activation = self.ACTIVATION_TYPES[params.activation]()
-        stem = self.STEM_TYPES[params.stem_type](
+    def create_stem(self, params: Union[RegNetParams, AnyNetParams]):
+        # get the activation
+        silu = None if get_torch_version() < [1, 7] else nn.SiLU()
+        activation = {
+            ActivationType.RELU: nn.ReLU(params.relu_in_place),
+            ActivationType.SILU: silu,
+        }[params.activation]
+
+        # create stem
+        stem = {
+            StemType.RES_STEM_CIFAR: ResStemCifar,
+            StemType.RES_STEM_IN: ResStemIN,
+            StemType.SIMPLE_STEM_IN: SimpleStemIN,
+        }[params.stem_type](
             3, params.stem_width, params.bn_epsilon, params.bn_momentum, activation
         )
+
+        # set stem seeds
         with set_torch_seed(self.seed):
             init_weights(stem)
             self.seed += 1
@@ -105,12 +116,25 @@ class RegnetBlocksFactory:
         width_in: int,
         width_out: int,
         stride: int,
-        params: RegNetParams,
-        bot_mul: float,
+        params: Union[RegNetParams, AnyNetParams],
+        bottleneck_multiplier: float,
         group_width: int = 1,
     ):
-        block_constructor = self.BLOCK_TYPES[params.block_type.upper()]
-        activation = self.ACTIVATION_TYPES[params.activation]()
+        # get the block constructor function to use
+        block_constructor = {
+            BlockType.VANILLA_BLOCK: VanillaBlock,
+            BlockType.RES_BASIC_BLOCK: ResBasicBlock,
+            BlockType.RES_BOTTLENECK_BLOCK: ResBottleneckBlock,
+            BlockType.RES_BOTTLENECK_LINEAR_BLOCK: ResBottleneckLinearBlock,
+        }[params.block_type]
+
+        # get the activation module
+        silu = None if get_torch_version() < [1, 7] else nn.SiLU()
+        activation = {
+            ActivationType.RELU: nn.ReLU(params.relu_in_place),
+            ActivationType.SILU: silu,
+        }[params.activation]
+
         block = block_constructor(
             width_in,
             width_out,
@@ -118,8 +142,8 @@ class RegnetBlocksFactory:
             params.bn_epsilon,
             params.bn_momentum,
             activation,
-            bot_mul,
             group_width,
+            bottleneck_multiplier,
             params.se_ratio,
         ).cuda()
         with set_torch_seed(self.seed):
@@ -129,11 +153,17 @@ class RegnetBlocksFactory:
 
 
 class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
+    """
+    Simply wrap the RegnetBlocksFactory with the FSDP
+    This takes care of wrapping BN properly,
+    initializing the weights etc.
+    """
+
     def __init__(self, seed: int, fsdp_config):
         super().__init__(seed)
         self.fsdp_config = fsdp_config
 
-    def create_stem(self, params: RegNetParams):
+    def create_stem(self, params: Union[RegNetParams, AnyNetParams]):
         stem = super().create_stem(params)
         stem = auto_wrap_bn(stem, single_rank_pg=False)
         return stem
@@ -143,12 +173,12 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
         width_in: int,
         width_out: int,
         stride: int,
-        params: "RegNetParams",
-        bot_mul: float,
+        params: Union[RegNetParams, AnyNetParams],
+        bottleneck_multiplier: float,
         group_width: int = 1,
     ):
         block = super().create_block(
-            width_in, width_out, stride, params, bot_mul, group_width
+            width_in, width_out, stride, params, bottleneck_multiplier, group_width
         )
         block = auto_wrap_bn(block, single_rank_pg=False)
         with enable_wrap(wrapper_cls=fsdp_wrapper, **self.fsdp_config):
@@ -168,9 +198,9 @@ class AnyStage(nn.Sequential):
         width_out: int,
         stride: int,
         depth: int,
-        bot_mul: float,
         group_width: int,
-        params: "RegNetParams",
+        bottleneck_multiplier: float,
+        params: Union[RegNetParams, AnyNetParams],
         stage_index: int = 0,
     ):
         super().__init__()
@@ -181,8 +211,8 @@ class AnyStage(nn.Sequential):
                 width_out=width_out,
                 stride=stride if i == 0 else 1,
                 params=params,
-                bot_mul=bot_mul,
                 group_width=group_width,
+                bottleneck_multiplier=bottleneck_multiplier,
             )
             self.stage_depth += block.depth
             self.add_module(f"block{stage_index}-{i}", block)
@@ -191,23 +221,48 @@ class AnyStage(nn.Sequential):
 def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
     assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
     trunk_config = model_config.TRUNK.TRUNK_PARAMS.REGNET
-    assert "name" not in trunk_config, "Please specify the RegNet Params dictionary"
+    if "name" in trunk_config:
+        assert (
+            trunk_config["name"] == "anynet"
+        ), "Please use AnyNetParams or specify RegNetParams dictionary"
 
-    params = RegNetParams(
-        depth=trunk_config["depth"],
-        w_0=trunk_config["w_0"],
-        w_a=trunk_config["w_a"],
-        w_m=trunk_config["w_m"],
-        group_width=trunk_config["group_width"],
-        stem_type=trunk_config.get("stem_type", "simple_stem_in").upper(),
-        stem_width=trunk_config.get("stem_width", 32),
-        block_type=trunk_config.get("block_type", "res_bottleneck_block").upper(),
-        activation=trunk_config.get("activation_type", "relu").upper(),
-        use_se=trunk_config.get("use_se", True),
-        se_ratio=trunk_config.get("se_ratio", 0.25),
-        bn_epsilon=trunk_config.get("bn_epsilon", 1e-05),
-        bn_momentum=trunk_config.get("bn_momentum", 0.1),
-    )
+    if "name" in trunk_config and trunk_config["name"] == "anynet":
+        params = AnyNetParams(
+            depths=trunk_config["depths"],
+            widths=trunk_config["widths"],
+            group_widths=trunk_config["group_widths"],
+            bottleneck_multipliers=trunk_config["bottleneck_multipliers"],
+            strides=trunk_config["strides"],
+            stem_type=StemType[trunk_config.get("stem_type", "simple_stem_in").upper()],
+            stem_width=trunk_config.get("stem_width", 32),
+            block_type=BlockType[
+                trunk_config.get("block_type", "res_bottleneck_block").upper()
+            ],
+            activation=ActivationType[trunk_config.get("activation", "relu").upper()],
+            use_se=trunk_config.get("use_se", True),
+            se_ratio=trunk_config.get("se_ratio", 0.25),
+            bn_epsilon=trunk_config.get("bn_epsilon", 1e-05),
+            bn_momentum=trunk_config.get("bn_momentum", 0.1),
+        )
+    else:
+        params = RegNetParams(
+            depth=trunk_config["depth"],
+            w_0=trunk_config["w_0"],
+            w_a=trunk_config["w_a"],
+            w_m=trunk_config["w_m"],
+            group_width=trunk_config["group_width"],
+            bottleneck_multiplier=trunk_config.get("bottleneck_multiplier", 1.0),
+            stem_type=StemType[trunk_config.get("stem_type", "simple_stem_in").upper()],
+            stem_width=trunk_config.get("stem_width", 32),
+            block_type=BlockType[
+                trunk_config.get("block_type", "res_bottleneck_block").upper()
+            ],
+            activation=ActivationType[trunk_config.get("activation", "relu").upper()],
+            use_se=trunk_config.get("use_se", True),
+            se_ratio=trunk_config.get("se_ratio", 0.25),
+            bn_epsilon=trunk_config.get("bn_epsilon", 1e-05),
+            bn_momentum=trunk_config.get("bn_momentum", 0.1),
+        )
 
     # Ad hoc stem
     #
@@ -224,9 +279,13 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
     current_width = params.stem_width
     trunk_depth = 0
     blocks = []
-    for i, (width_out, stride, depth, bot_mul, group_width) in enumerate(
-        params.get_expanded_params()
-    ):
+    for i, (
+        width_out,
+        stride,
+        depth,
+        group_width,
+        bottleneck_multiplier,
+    ) in enumerate(params.get_expanded_params()):
         blocks.append(
             (
                 f"block{i + 1}",
@@ -236,8 +295,8 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
                     width_out=width_out,
                     stride=stride,
                     depth=depth,
-                    bot_mul=bot_mul,
                     group_width=group_width,
+                    bottleneck_multiplier=bottleneck_multiplier,
                     params=params,
                     stage_index=i + 1,
                 ),
@@ -271,6 +330,12 @@ class RegNet3(nn.Module):
     def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
         self.model_config = model_config
+        self.use_activation_checkpointing = (
+            model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
+        )
+        self.activation_checkpointing_splits = (
+            model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS
+        )
         self._feature_blocks, self.trunk_depth = create_regnet_feature_blocks(
             factory=RegnetBlocksFactory(seed=self.model_config._MODEL_INIT_SEED),
             model_config=model_config,
@@ -282,8 +347,8 @@ class RegNet3(nn.Module):
             feat=model_input,
             out_feat_keys=out_feat_keys,
             feature_blocks=self._feature_blocks,
-            use_checkpointing=self.model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING,
-            checkpointing_splits=self.model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS,
+            use_checkpointing=self.use_activation_checkpointing,
+            checkpointing_splits=self.activation_checkpointing_splits,
         )
 
 
