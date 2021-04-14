@@ -45,7 +45,9 @@ In order to use a dataset with VISSL, the dataset name must be registered with :
 are registered with VISSL, ready-to-use.
 
 Users can edit the template `dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/master/configs/config/dataset_catalog.json>`_ file
-to specify their datasets paths. The json file can be fully decided by user and can have any number of supported datasets (one or more). User can give the string names to dataset as per their choice.
+to specify their datasets paths. Alternatively users can create their own dataset catalog json file and set the environment variable :code:`VISSL_DATASET_CATALOG_PATH` to its absolute path.
+This may be helpful if you are not building the code from source or are actively developing on VISSL. The json file can be fully decided by user and can have any number of supported datasets (one or more).
+User can give the string names to dataset as per their choice.
 
 Template for a dataset entry in :code:`dataset_catalog.json`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
