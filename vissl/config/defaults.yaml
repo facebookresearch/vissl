@@ -300,6 +300,8 @@ config:
       # QueueDataset, you can instead return a valid and previously seen image.
       ENABLE_QUEUE_DATASET: False
     TEST:
+      # A sampler that cuts the dataset in a deterministic way
+      USE_DEBUGGING_SAMPLER: False
       # if we want to resume the data sampler as well from a previous iteration
       USE_STATEFUL_DISTRIBUTED_SAMPLER: False
       # if users want to replace certain prefixes from the image paths and replace them with
