@@ -125,7 +125,7 @@ def get_sampler(dataset, dataset_config):
 
 
 def debugging_worker_init_fn(worker_id: int):
-    random.seed(0)
+    random.seed(worker_id)
     np.random.seed(worker_id)
     torch.manual_seed(worker_id)
 
