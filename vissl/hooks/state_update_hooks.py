@@ -272,16 +272,21 @@ class FreezeParametersHook(ClassyHook):
                 )
             return
 
-        matched_named_params = 0
+        world_size = (
+            task.config.DISTRIBUTED.NUM_NODES
+            * task.config.DISTRIBUTED.NUM_PROC_PER_NODE
+        )
+        match_param_prefix = "module." if world_size == 1 else ""
+        num_matched_named_params = 0
         for name, p in task.model.named_parameters():
+            match_param_name = f"{match_param_prefix}{name}"
             if (
-                name in map_params_to_iters
-                and task.iteration < map_params_to_iters[name]
-            ):
-                matched_named_params += 1
+                match_param_name in map_params_to_iters
+            ) and task.iteration < map_params_to_iters[match_param_name]:
+                num_matched_named_params += 1
                 p.grad = None
         # TODO (Min): we need to check the exact target number.
-        assert matched_named_params > 0, (
+        assert num_matched_named_params > 0, (
             f"Didn't find expected number of layers: "
-            f"{matched_named_params} vs.  {len(map_params_to_iters)}"
+            f"{num_matched_named_params} vs.  {len(map_params_to_iters)}"
         )
