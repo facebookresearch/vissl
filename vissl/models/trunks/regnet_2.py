@@ -279,13 +279,9 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
     current_width = params.stem_width
     trunk_depth = 0
     blocks = []
-    for i, (
-        width_out,
-        stride,
-        depth,
-        group_width,
-        bottleneck_multiplier,
-    ) in enumerate(params.get_expanded_params()):
+    for i, (width_out, stride, depth, group_width, bottleneck_multiplier) in enumerate(
+        params.get_expanded_params()
+    ):
         blocks.append(
             (
                 f"block{i + 1}",
