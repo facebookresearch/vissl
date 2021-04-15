@@ -3,12 +3,11 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        ######## resnext101-32x8d #######
-        RESNETS:
-          DEPTH: 101
-          GROUPS: 32
-          WIDTH_PER_GROUP: 8
+      ######## resnext101-32x8d #######
+      RESNETS:
+        DEPTH: 101
+        GROUPS: 32
+        WIDTH_PER_GROUP: 8
     HEAD:
       PARAMS: [['mlp', {'dims': [2048, 1000]}]]
     SYNC_BN_CONFIG:

@@ -197,7 +197,11 @@ VISSL supports automatically scaling LR as per https://arxiv.org/abs/1706.02677.
 
 - :code:`base_value` = base learning rate value that will be scaled, the current batch size is used to determine how to scale the base learning rate value.
 
-:code:`scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size`
+:code:`scale_factor = (batchsize_per_gpu * world_size) / base_lr_batch_size`
+
+if :code:`scaling_type` is set to "sqrt", :code:`scale_factor = sqrt(scale_factor)`
+
+:code:`scaled_lr = scale_factor * base_value`
 
 For different types of learning rate schedules, the LR scaling is handles as below:
 

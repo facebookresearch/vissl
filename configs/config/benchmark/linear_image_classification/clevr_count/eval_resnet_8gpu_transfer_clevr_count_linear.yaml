@@ -60,9 +60,8 @@ config:
       ]
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+      RESNETS:
+        DEPTH: 50
     HEAD:
       # CLEVR images contains from 3 to 10 objects included (8 classes)
       PARAMS: [

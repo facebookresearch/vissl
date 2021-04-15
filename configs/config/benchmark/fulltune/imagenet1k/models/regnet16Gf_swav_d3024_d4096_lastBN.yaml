@@ -3,9 +3,8 @@ config:
   MODEL:
     TRUNK:
       NAME: regnet
-      TRUNK_PARAMS:
-        REGNET:
-          name: regnet_y_16gf
+      REGNET:
+        name: regnet_y_16gf
     HEAD:
       PARAMS: [
         ["swav_head", {"dims": [3024, 4096], "use_bn": True, "skip_last_bn": False, "num_clusters": []}],

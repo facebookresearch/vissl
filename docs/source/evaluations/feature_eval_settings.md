@@ -29,9 +29,8 @@ MODEL:
     ]
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
   HEAD:
     PARAMS: [
       ["eval_mlp", {"in_channels": 64, "dims": [9216, 1000]}],
@@ -59,9 +58,8 @@ MODEL:
     ]
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
   HEAD:
     PARAMS: [
         ["mlp", {"dims": [2048, 1000]}],
@@ -81,9 +79,8 @@ MODEL:
     SHOULD_FLATTEN_FEATS: False
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
   HEAD:
     PARAMS: [
       ["eval_mlp", {"in_channels": 2048, "dims": [2048, 1000]}],
@@ -110,9 +107,8 @@ MODEL:
     ]
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
 ```
 
 ### Train SVM on the trunk output
@@ -125,9 +121,8 @@ MODEL:
     EXTRACT_TRUNK_FEATURES_ONLY: True
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
 ```
 
 ## Nearest Neighbor
@@ -143,9 +138,8 @@ MODEL:
     SHOULD_FLATTEN_FEATS: False   # don't flatten the features and return as is
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
   WEIGHTS_INIT:
     PARAMS_FILE: ""
     STATE_DICT_KEY_NAME: classy_state_dict
@@ -161,9 +155,8 @@ MODEL:
     EVAL_TRUNK_AND_HEAD: True  # initialized the model head as well from weights
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
   HEAD:
     # SimCLR model head structure
     PARAMS: [
@@ -190,9 +183,8 @@ MODEL:
     ]
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
   WEIGHTS_INIT:
     PARAMS_FILE: ""
     STATE_DICT_KEY_NAME: classy_state_dict
@@ -221,9 +213,8 @@ MODEL:
     ]
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
 ```
 
 ### Extract features of the trunk output
@@ -237,9 +228,8 @@ MODEL:
     SHOULD_FLATTEN_FEATS: False
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
 ```
 
 ### Extract features of the model head output (self-supervised head)
@@ -252,9 +242,8 @@ MODEL:
     EVAL_TRUNK_AND_HEAD: True
   TRUNK:
     NAME: resnet
-    TRUNK_PARAMS:
-      RESNETS:
-        DEPTH: 50
+    RESNETS:
+      DEPTH: 50
   HEAD:
     PARAMS: [
       ["mlp", {"dims": [2048, 2048], "use_relu": True}],

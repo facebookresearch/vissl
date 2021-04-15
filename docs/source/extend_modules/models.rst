@@ -80,7 +80,7 @@ To add a new trunk (a new architecture like vision transformers, etc.), follow t
             self.model_config = model_config
 
             # get the params trunk takes from the config
-            trunk_config = self.model_config.TRUNK.TRUNK_PARAMS.MyNewTrunk
+            trunk_config = self.model_config.TRUNK.MyNewTrunk
 
             # implement the model trunk and construct all the layers that the trunk uses
             model_layer1 = ??

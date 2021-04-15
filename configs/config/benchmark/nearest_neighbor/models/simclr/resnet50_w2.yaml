@@ -3,12 +3,11 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          WIDTH_MULTIPLIER: 2
+      RESNETS:
+        DEPTH: 50
+        WIDTH_MULTIPLIER: 2
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [4096, 4096], "use_relu": True}],
+        ["mlp", {"dims": [4096, 4096], "use_relu": True, "skip_last_layer_relu_bn": False}],
         ["mlp", {"dims": [4096, 128]}],
       ]

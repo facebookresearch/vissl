@@ -26,18 +26,17 @@ config:
   MODEL:
     TRUNK:
       NAME: efficientnet
-      TRUNK_PARAMS:
-        EFFICIENT_NETS:
-          model_version: B0
-          bn_momentum: 0.01
-          bn_epsilon: 0.001
-          drop_connect_rate: 0.2
-          width_divisor: 8
-          min_width: null
-          use_se: True
+      EFFICIENT_NETS:
+        model_version: B0
+        bn_momentum: 0.01
+        bn_epsilon: 0.001
+        drop_connect_rate: 0.2
+        width_divisor: 8
+        min_width: null
+        use_se: True
     HEAD:
       PARAMS: [
         ######### B0 AND B1 ################
-        ["mlp", {"dims": [1280, 1280], "use_relu": True}],
+        ["mlp", {"dims": [1280, 1280], "use_relu": True, "skip_last_layer_relu_bn": False}],
         ["mlp", {"dims": [1280, 128], "use_relu": False}],
       ]
