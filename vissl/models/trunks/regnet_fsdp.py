@@ -106,7 +106,7 @@ class AnyStage(nn.Sequential):
                 bot_mul,
                 group_width,
                 params.se_ratio,
-            ).cuda()
+            )
             # Init weight before wrapping and sharding.
             init_weights(block)
 
@@ -127,7 +127,7 @@ class RegNetFSDP(FSDP):
     """
 
     def __init__(self, model_config: AttrDict, model_name: str):
-        module = _RegNetFSDP(model_config, model_name).cuda()
+        module = _RegNetFSDP(model_config, model_name)
         super().__init__(module, **model_config.FSDP_CONFIG)
 
 
