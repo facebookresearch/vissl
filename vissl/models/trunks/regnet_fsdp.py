@@ -91,9 +91,7 @@ class AnyStage(nn.Sequential):
         super().__init__()
         self.stage_depth = 0
 
-        fsdp_config = {
-            "wrapper_cls": fsdp_wrapper,
-        }
+        fsdp_config = {"wrapper_cls": fsdp_wrapper}
         fsdp_config.update(model_config.FSDP_CONFIG)
         for i in range(depth):
             # Make a block and move it to cuda since shard-as-we-build of FSDP needs
@@ -193,11 +191,7 @@ class _RegNetFSDP(nn.Module):
                 "RES_STEM_IN": ResStemIN,
                 "SIMPLE_STEM_IN": SimpleStemIN,
             }[params.stem_type](
-                3,
-                params.stem_width,
-                params.bn_epsilon,
-                params.bn_momentum,
-                activation,
+                3, params.stem_width, params.bn_epsilon, params.bn_momentum, activation
             )
             init_weights(stem)
             stem = auto_wrap_bn(stem, single_rank_pg=False)
