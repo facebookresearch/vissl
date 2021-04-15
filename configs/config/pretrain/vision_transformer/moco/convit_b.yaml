@@ -13,10 +13,9 @@ config:
       PERF_STAT_FREQUENCY: 10
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR:
       FLUSH_EVERY_N_MIN: 20
   CHECKPOINT:
-    DIR:
+    DIR: "."
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 10
   DATA:
@@ -25,7 +24,7 @@ config:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
       BATCHSIZE_PER_REPLICA: 128
-      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      LABEL_TYPE: zero    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgReplicatePil
           num_times: 2
@@ -43,14 +42,25 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-      COLLATE_FUNCTION: moco_collator
+      COLLATE_FUNCTION: cutmixup_collator
+      COLLATE_FUNCTION_PARAMS: {
+        "ssl_method": "moco",
+        "mixup_alpha": 1.0, # mixup alpha value, mixup is active if > 0.
+        "cutmix_alpha": 1.0, # cutmix alpha value, cutmix is active if > 0.
+        "prob": 1.0, # probability of applying mixup or cutmix per batch or element
+        "switch_prob": 0.5, # probability of switching to cutmix instead of mixup when both are active
+        "mode": "batch", # how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
+        "correct_lam": True, # apply lambda correction when cutmix bbox clipped by image borders
+        "label_smoothing": 0.1, # apply label smoothing to the mixed target tensor
+        "num_classes": 2 # number of classes for target
+      }
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DROP_LAST: True
   MODEL:
     GRAD_CLIP:
-      USE_GRAD_CLIP: True
+      USE_GRAD_CLIP: False
     TRUNK:
       NAME: vision_transformer
       TRUNK_PARAMS:
@@ -58,16 +68,31 @@ config:
           IMAGE_SIZE: 224
           PATCH_SIZE: 16
           NUM_LAYERS: 12
-          NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
+          NUM_HEADS: 16
+          HIDDEN_DIM: 1024
+          MLP_DIM: 4096
+          CLASSIFIER: token
           DROPOUT_RATE: 0
           ATTENTION_DROPOUT_RATE: 0
-          CLASSIFIER: token
+          DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        CONVIT:
+          QKV_BIAS: False # Bias for QKV in attention layers.
+          QK_SCALE: False # Scale
+          N_GPSA_LAYERS: 10 # Number of gated positional self-attention layers
+          CLASS_TOKEN_IN_LOCAL_LAYERS: False # Whether to add class token
+          # Determines how much the positional attention is focused on the
+          # patch of maximal attention. "Alpha" in the paper. Equivalent to
+          # the temperature of positional attention softmax.
+          LOCALITY_STRENGTH: 1.
+          # Dimensionality of the relative positional embeddings * 1/3
+          LOCALITY_DIM: 10
+          # Whether to initialize the positional self-attention to be local
+          # (equivalent to a convolution)
+          USE_LOCAL_INIT: True
     HEAD:
       PARAMS: [
-      ["mlp", {"dims": [768, 2048], "use_relu": True}],
-      ["mlp", {"dims": [2048, 128]}],
+      ["mlp", {"dims": [1024, 4096], "use_relu": True}],
+      ["mlp", {"dims": [4096, 128]}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: False
@@ -85,13 +110,13 @@ config:
       temperature: 0.2
   OPTIMIZER:
     name: adamw
-    weight_decay: 0.05
+    weight_decay: 0.3
     num_epochs: 300
     param_schedulers:
       lr:
         auto_lr_scaling:
           auto_scale: True
-          base_value: 0.0005
+          base_value: 0.003
           base_lr_batch_size: 4096
         name: composite
         schedulers:
