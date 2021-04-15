@@ -4,7 +4,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn50_100ep_simclr_8node_resnet_16_07_20.8edb093e/model_final_checkpoint_phase99.torch"
           ],
@@ -21,7 +21,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn50_200ep_simclr_8node_resnet_16_07_20.a816c0ef/model_final_checkpoint_phase199.torch"
           ],
@@ -38,7 +38,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn50_400ep_simclr_8node_resnet_16_07_20.36b338ef/model_final_checkpoint_phase399.torch"
           ],
@@ -55,7 +55,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn50_800ep_simclr_8node_resnet_16_07_20.7e8feed1/model_final_checkpoint_phase799.torch"
           ],
@@ -72,7 +72,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn50_1000ep_simclr_8node_resnet_16_07_20.afe428c7/model_final_checkpoint_phase999.torch"
           ],
@@ -140,7 +140,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=101",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn101_100ep_simclr_8node_resnet_16_07_20.1ff6cb4b/model_final_checkpoint_phase99.torch"
           ],
@@ -157,7 +157,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=101",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn101_1000ep_simclr_8node_resnet_16_07_20.35063cea/model_final_checkpoint_phase999.torch"
           ],

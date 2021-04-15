@@ -4,7 +4,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/rotnet_rn50_in1k_ep105_rotnet_8gpu_resnet_17_07_20.46bada9f/model_final_checkpoint_phase125.torch"
           ],
@@ -21,7 +21,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_rotnet_in22k_ep105.torch"
           ],
@@ -75,7 +75,7 @@
         {
           "config_files": [
             "config=benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear",
-            "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50",
+            "config.MODEL.TRUNK.RESNETS.DEPTH=50",
             "config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict",
             "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_rotnet_16kclusters_in1k_ep105.torch"
           ],

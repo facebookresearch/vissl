@@ -13,6 +13,5 @@ config:
       ]
     TRUNK:
       NAME: regnet
-      TRUNK_PARAMS:
-        REGNET:
-          name: regnet_y_16gf
+      REGNET:
+        name: regnet_y_16gf

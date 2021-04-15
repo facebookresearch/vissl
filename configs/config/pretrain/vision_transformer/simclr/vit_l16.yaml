@@ -52,17 +52,16 @@ config:
       USE_GRAD_CLIP: True
     TRUNK:
       NAME: vision_transformer
-      TRUNK_PARAMS:
-        VISION_TRANSFORMERS:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 16
-          NUM_LAYERS: 24
-          NUM_HEADS: 16
-          HIDDEN_DIM: 1024
-          MLP_DIM: 4096
-          DROPOUT_RATE: 0.1
-          ATTENTION_DROPOUT_RATE: 0
-          CLASSIFIER: token
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 24
+        NUM_HEADS: 16
+        HIDDEN_DIM: 1024
+        MLP_DIM: 4096
+        DROPOUT_RATE: 0.1
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
     HEAD:
       PARAMS: [
       ["mlp", {"dims": [1024, 4096], "use_relu": True}],

@@ -60,15 +60,15 @@ VISSL supports many backbone architectures including ResNe(X)ts, wider ResNets. 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/moco/moco_1node_resnet \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101
+        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.RESNETS.DEPTH=101
 
 * **Train ResNet-50-w2 (2x wider ResNet-50):**
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/moco/moco_1node_resnet \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=50 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_MULTIPLIER=2
+        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.RESNETS.DEPTH=50 \
+        config.MODEL.TRUNK.RESNETS.WIDTH_MULTIPLIER=2
 
 
 Vary the number of gpus

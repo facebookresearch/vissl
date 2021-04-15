@@ -27,8 +27,7 @@ config:
       ]
     TRUNK:
       NAME: regnet
-      TRUNK_PARAMS:
-        REGNET:
-          name: regnet_y_8gf
+      REGNET:
+        name: regnet_y_8gf
     HEAD:
       PARAMS: [["mlp", {"dims": [2048, 20]}]]

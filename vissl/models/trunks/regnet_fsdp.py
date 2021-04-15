@@ -145,7 +145,7 @@ class _RegNetFSDP(nn.Module):
         self.model_config = model_config
 
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
-        trunk_config = model_config.TRUNK.TRUNK_PARAMS.REGNET
+        trunk_config = model_config.TRUNK.REGNET
 
         assert "name" not in trunk_config, "Please specify the RegNet Params dictionary"
 

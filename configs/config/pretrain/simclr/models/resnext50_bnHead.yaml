@@ -3,29 +3,27 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          ######## resnext50-32x4d #######
-          # GROUPS: 32
-          # WIDTH_PER_GROUP: 4
-          ######## resnext50-32x8d #######
-          # GROUPS: 32
-          # WIDTH_PER_GROUP: 8
-          ######## resnext50-32x16d #######
-          # GROUPS: 32
-          # WIDTH_PER_GROUP: 16
-          ######## resnext50-32x32d #######
-          # GROUPS: 32
-          # WIDTH_PER_GROUP: 32
-          ######## resnext50-32x48d #######
-          # GROUPS: 32
-          # WIDTH_PER_GROUP: 48
+      RESNETS:
+        DEPTH: 50
+        ######## resnext50-32x4d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 4
+        ######## resnext50-32x8d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 8
+        ######## resnext50-32x16d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 16
+        ######## resnext50-32x32d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 32
+        ######## resnext50-32x48d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 48
     HEAD:
       # setting 1
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True, "use_bn": True, "use_bias": False}],
-        ["mlp", {"dims": [2048, 128], "use_relu": False, "use_bn": False, "use_bias": False}],
+        ["mlp", {"dims": [2048, 2048, 128], "use_relu": True, "use_bn": True, "use_bias": False}],
       ]
     # HEAD:
     #   # setting 2

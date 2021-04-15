@@ -7,6 +7,11 @@ from typing import Any, List
 
 from omegaconf import DictConfig, OmegaConf
 from vissl.config import AttrDict, check_cfg_version
+from vissl.utils.io import save_file
+
+
+def save_attrdict_to_disk(cfg, filename="train_config.yaml"):
+    save_file(cfg, filename)
 
 
 def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
@@ -40,6 +45,7 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
     # assert the config and infer
     config = cfg.config
     assert_hydra_conf(config)
+    save_attrdict_to_disk(cfg)
     return cfg, config
 
 
@@ -192,7 +198,10 @@ def infer_learning_rate(cfg):
               base_value = base learning rate value that will be scaled,
               The current batch size is used to determine how to scale the base learning rate
               value.
-        scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size
+        scale_factor = (batchsize_per_gpu * world_size) / base_lr_batch_size
+        if scaling_type is sqrt, scale factor = sqrt(scale_factor)
+        scaled_lr = scale_factor * base_value
+
 
     We perform this auto-scaling for head learning rate as well if user wants to use a different
     learning rate for the head
@@ -208,7 +217,15 @@ def infer_learning_rate(cfg):
         param_schedulers = cfg.OPTIMIZER.param_schedulers.lr
         base_lr = param_schedulers.auto_lr_scaling.base_value
         base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scaling_type = param_schedulers.auto_lr_scaling.scaling_type
+        assert scaling_type in [
+            "sqrt",
+            "linear",
+        ], "Only linear | sqrt scaling_types are supported"
+
         scale_factor = float(batch_size) / base_lr_batch_size
+        if scaling_type == "sqrt":
+            scale_factor = scale_factor ** 0.5
         scaled_lr = base_lr * scale_factor
         cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
             cfg, param_schedulers, scaled_lr
@@ -223,22 +240,31 @@ def infer_learning_rate(cfg):
         and cfg.OPTIMIZER.param_schedulers.lr_head
         and cfg.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.auto_scale
     ):
-        # if the user wants a different LR value for the head, then we automatically
-        # infer the LR values for the head as well (similar to trunk above)
+        # if the user wants a different LR value for the head, then we
+        # automatically infer the LR values for the head as well (similar to
+        # trunk above)
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
         param_schedulers = cfg.OPTIMIZER.param_schedulers.lr_head
         base_lr = param_schedulers.auto_lr_scaling.base_value
         base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scaling_type = param_schedulers.auto_lr_scaling.scaling_type
+        assert scaling_type in [
+            "sqrt",
+            "linear",
+        ], "Only linear | sqrt scaling_types are supported"
+
         scale_factor = float(batch_size) / base_lr_batch_size
+        if scaling_type == "sqrt":
+            scale_factor = scale_factor ** 0.5
         scaled_lr = base_lr * scale_factor
         cfg.OPTIMIZER.param_schedulers.lr_head = get_scaled_lr_scheduler(
             cfg, param_schedulers, scaled_lr
         )
 
-    # for the head, if we want to use a different weight decay value, we verify that
-    # the specified weight decay value is valid. Otherwise, we do the inference
-    # and set the weight decay value same as the trunk.
+    # for the head, if we want to use a different weight decay value,
+    # we verify that the specified weight decay value is valid. Otherwise,
+    # we do the inference and set the weight decay value same as the trunk.
     if not cfg.OPTIMIZER.head_optimizer_params.use_different_wd:
         cfg.OPTIMIZER.head_optimizer_params.weight_decay = cfg.OPTIMIZER.weight_decay
     else:

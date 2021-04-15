@@ -39,9 +39,8 @@ For the Step1, if we want to extract features from many layers of the trunk, the
         ]
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
 
 kNN on the trunk output
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,9 +57,8 @@ If we want to perform kNN only on the trunk output, the configuration setting sh
         SHOULD_FLATTEN_FEATS: False   # don't flatten the features and return as is
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
 
 kNN on the model head output (self-supervised head)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,9 +76,8 @@ self-supervised model training.
         EVAL_TRUNK_AND_HEAD: True     # initialized the model head as well from weights
       TRUNK:
         NAME: resnet
-        TRUNK_PARAMS:
-          RESNETS:
-            DEPTH: 50
+        RESNETS:
+          DEPTH: 50
       HEAD:
         # SimCLR 2-layer model head structure
         PARAMS: [

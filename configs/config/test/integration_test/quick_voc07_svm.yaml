@@ -49,9 +49,8 @@ config:
       ]
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+      RESNETS:
+        DEPTH: 50
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 1

@@ -51,14 +51,12 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          ZERO_INIT_RESIDUAL: True
+      RESNETS:
+        DEPTH: 50
+        ZERO_INIT_RESIDUAL: True
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
-        ["mlp", {"dims": [2048, 128]}],
+        ["mlp", {"dims": [2048, 2048, 128], "use_relu": True}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: False
