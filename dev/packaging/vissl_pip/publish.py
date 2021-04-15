@@ -3,6 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 
+
 dest = "s3://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/"
 
 # we build on python3.6 but it works for 3.7, 3.8 and 3.9 too
