@@ -84,7 +84,6 @@ config:
       GROUP_SIZE: 8
     AMP_PARAMS:
       USE_AMP: True
-      # USE_AMP: True
       AMP_ARGS: {"opt_level": "O1"}
   LOSS:
     name: cross_entropy_multiple_output_single_target

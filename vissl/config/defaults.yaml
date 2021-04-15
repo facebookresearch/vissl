@@ -193,6 +193,13 @@ config:
       # standard label type is used for supervised learning and user specifis the labels to use.
       # zero sets all labels to 0, which is necessary when using necessary
       # when cutmixup_collator is being used for self-supervised training.
+      # Note that if LABEL_SOURCES (see above) is provided, it will override
+      # LABEL_TYPE. For example, if SSL training on a labeled dataset (e.g
+      # ImageNet imagefolders) and
+      # LABEL_SOURCES: [DISK_FOLDER]
+      # LABEL_TYPE: "zero"
+      # the label type will not be zero, but the label associated with the
+      # image folder.
       LABEL_TYPE: "standard"
       # whether to memory map the input data.
       MMAP_MODE: True
@@ -259,7 +266,9 @@ config:
       #  "mode": "batch", # how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
       #  "correct_lam": True, # apply lambda correction when cutmix bbox clipped by image borders
       #  "label_smoothing": 0.1, # apply label smoothing to the mixed target tensor
-      #  "num_classes": 1000 # number of classes for target
+      #  "num_classes": 2 # number of classes for target. Labels aren't
+      #  actually used for SSL, so set to a small number to avoid shuffling
+      #  large vectors around unnecessarily.
       # }
       # Also note that using the CutMixUp collator in a supervised context
       # requires using the cross_entropy_multiple_output_single_target to
@@ -541,6 +550,37 @@ config:
           DROP_PATH_RATE: 0
           QKV_BIAS: False # Bias for QKV in attention layers.
           QK_SCALE: False # Scale
+        # ------------------------------------------------------------- #
+        # Parameters unique to the ConViT and not used for standard vision
+        # transformers
+        # -------------------------------------------------------------
+        CONVIT:
+          # Notes on ConViT (D'Ascoli et al., TODO insert arxiv link):
+          # Ideally, the number of heads should be a square.
+          # The paper used: 4, 9, or 16 heads;
+          # HIDDEN_DIM = 64 * # NUM_HEADS, so 256, 576, or 1024, respectively;
+          # MLP_DIM = 4 * HIDDEN_DIM, so 1024, 2304, or 4096, respectively.
+          #
+          # ConViT Params:
+          # Number of gated positional self-attention
+          # layers. These are self-attention layers that have separate
+          # positional and content-based attention components, allowing them
+          # to function as convolutional layers if initialized to be local
+          # (see USE_LOCAL_INIT below). They're what make ConViTs ConViTs!
+          # n_gpsa_layers out of NUM_LAYERS will be gated positional self
+          # attention layers.
+          N_GPSA_LAYERS: 10
+          # Whether to add class token to gpsa layers
+          CLASS_TOKEN_IN_LOCAL_LAYERS: False
+          # Determines how much the positional attention is focused on the
+          # patch of maximal attention. "Alpha" in the paper. Equivalent to
+          # the temperature of positional attention softmax.
+          LOCALITY_STRENGTH: 1.
+          # Dimensionality of the relative positional embeddings
+          LOCALITY_DIM: 10
+          # Whether to initialize the positional component of the GPSAs
+          # locally. This is necessary for them to be convolutional.
+          USE_LOCAL_INIT: True
 
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
