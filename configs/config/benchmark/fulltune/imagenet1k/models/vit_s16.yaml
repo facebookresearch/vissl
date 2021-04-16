@@ -8,17 +8,16 @@ config:
   MODEL:
     TRUNK:
       NAME: vision_transformer
-      TRUNK_PARAMS:
-        VISION_TRANSFORMERS:
-          IMAGE_SIZE: 384
-          PATCH_SIZE: 16
-          NUM_LAYERS: 12
-          NUM_HEADS: 6
-          HIDDEN_DIM: 384
-          MLP_DIM: 1536
-          DROPOUT_RATE: 0.1
-          ATTENTION_DROPOUT_RATE: 0
-          CLASSIFIER: token
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 384
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        HIDDEN_DIM: 384
+        MLP_DIM: 1536
+        DROPOUT_RATE: 0.1
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
     HEAD:
       PARAMS: [
       ["mlp", {"dims": [384, 1000]}],

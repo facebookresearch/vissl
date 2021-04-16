@@ -211,7 +211,7 @@ class AnyStage(nn.Sequential):
 
 def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
     assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
-    trunk_config = model_config.TRUNK.TRUNK_PARAMS.REGNET
+    trunk_config = model_config.TRUNK.REGNET
     if "name" in trunk_config:
         assert (
             trunk_config["name"] == "anynet"

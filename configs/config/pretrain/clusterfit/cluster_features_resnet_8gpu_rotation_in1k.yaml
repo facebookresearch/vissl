@@ -31,9 +31,8 @@ config:
       ]
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+      RESNETS:
+        DEPTH: 50
     WEIGHTS_INIT:
       PARAMS_FILE: "specify weights to use for clustering."
       STATE_DICT_KEY_NAME: classy_state_dict

@@ -68,32 +68,31 @@ config:
   MODEL:
     TRUNK:
       NAME: convit
-      TRUNK_PARAMS:
-        VISION_TRANSFORMERS:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 16
-          NUM_LAYERS: 12
-          NUM_HEADS: 16
-          HIDDEN_DIM: 1024
-          MLP_DIM: 4096
-          CLASSIFIER: token
-          DROPOUT_RATE: 0
-          ATTENTION_DROPOUT_RATE: 0
-          DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
-          QKV_BIAS: False # Bias for QKV in attention layers.
-          QK_SCALE: False # Scale
-        CONVIT:
-          N_GPSA_LAYERS: 10 # Number of gated positional self-attention layers
-          CLASS_TOKEN_IN_LOCAL_LAYERS: False # Whether to add class token
-          # Determines how much the positional attention is focused on the
-          # patch of maximal attention. "Alpha" in the paper. Equivalent to
-          # the temperature of positional attention softmax.
-          LOCALITY_STRENGTH: 1.
-          # Dimensionality of the relative positional embeddings * 1/3
-          LOCALITY_DIM: 10
-          # Whether to initialize the positional self-attention to be local
-          # (equivalent to a convolution)
-          USE_LOCAL_INIT: True
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 16
+        HIDDEN_DIM: 1024
+        MLP_DIM: 4096
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
+      CONVIT:
+        N_GPSA_LAYERS: 10 # Number of gated positional self-attention layers
+        CLASS_TOKEN_IN_LOCAL_LAYERS: False # Whether to add class token
+        # Determines how much the positional attention is focused on the
+        # patch of maximal attention. "Alpha" in the paper. Equivalent to
+        # the temperature of positional attention softmax.
+        LOCALITY_STRENGTH: 1.
+        # Dimensionality of the relative positional embeddings * 1/3
+        LOCALITY_DIM: 10
+        # Whether to initialize the positional self-attention to be local
+        # (equivalent to a convolution)
+        USE_LOCAL_INIT: True
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [1024, 1000]}],

@@ -47,12 +47,11 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+      RESNETS:
+        DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 2048], "use_relu": True, "skip_last_layer_relu_bn": False}],
         ["mlp", {"dims": [2048, 128]}],
       ]
     TEMP_FROZEN_PARAMS_ITER_MAP: []

@@ -126,22 +126,22 @@ VISSL supports many backbone architectures including ResNe(X)ts, wider ResNets. 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/swav/swav_8node_resnet \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101
+        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.RESNETS.DEPTH=101
 
 * **Train ResNet-50-w2 (2x wider):**
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/swav/swav_8node_resnet \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_MULTIPLIER=2
+        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.RESNETS.DEPTH=101 \
+        config.MODEL.TRUNK.RESNETS.WIDTH_MULTIPLIER=2
 
 * **Train RegNetY-400MF:**
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/swav/swav_8node_resnet \
-        config.MODEL.TRUNK.NAME=regnet config.MODEL.TRUNK.TRUNK_PARAMS.REGNET.name=regnet_y_400mf
+        config.MODEL.TRUNK.NAME=regnet config.MODEL.TRUNK.REGNET.name=regnet_y_400mf
 
 
 * **Train RegNetY-256GF:**
@@ -150,11 +150,11 @@ VISSL supports many backbone architectures including ResNe(X)ts, wider ResNets. 
 
     python tools/run_distributed_engines.py config=pretrain/swav/swav_8node_resnet \
         config.MODEL.TRUNK.NAME=regnet \
-        config.MODEL.TRUNK.TRUNK_PARAMS.REGNET.depth=27 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.REGNET.w_0=640 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.REGNET.w_a=230.83 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.REGNET.w_m=2.53 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.REGNET.group_width=373 \
+        config.MODEL.TRUNK.REGNET.depth=27 \
+        config.MODEL.TRUNK.REGNET.w_0=640 \
+        config.MODEL.TRUNK.REGNET.w_a=230.83 \
+        config.MODEL.TRUNK.REGNET.w_m=2.53 \
+        config.MODEL.TRUNK.REGNET.group_width=373 \
         config.MODEL.HEAD.PARAMS=[["swav_head", {"dims": [10444, 10444, 128], "use_bn": False, "num_clusters": [3000]}]]
 
 

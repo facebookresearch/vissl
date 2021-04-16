@@ -11,12 +11,11 @@
       ]
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        ######## resnext101-32x16d #######
-        RESNETS:
-          DEPTH: 101
-          GROUPS: 32
-          WIDTH_PER_GROUP: 16
+      ######## resnext101-32x16d #######
+      RESNETS:
+        DEPTH: 101
+        GROUPS: 32
+        WIDTH_PER_GROUP: 16
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 64, "dims": [9216, 8142]}],

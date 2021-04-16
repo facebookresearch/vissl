@@ -24,10 +24,9 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          WIDTH_MULTIPLIER: 2
+      RESNETS:
+        DEPTH: 50
+        WIDTH_MULTIPLIER: 2
     HEAD:
       PARAMS: [
         ["swav_head", {"dims": [4096, 8192, 128], "use_bn": True, "num_clusters": [3000]}],

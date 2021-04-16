@@ -491,97 +491,96 @@ config:
     # ----------------------------------------------------------------------------------- #
     TRUNK:
       NAME: "resnet"
-      # for any extra params that the model requires, pass them in the trunk_params
-      TRUNK_PARAMS:
-        # ------------------------------------------------------------- #
-        # ResNe(X)t params
-        # ------------------------------------------------------------- #
-        RESNETS:
-          DEPTH: 50
-          WIDTH_MULTIPLIER: 1
-          NORM: BatchNorm    # BatchNorm | LayerNorm | GroupNorm
-          # If using GroupNorm, this sets number of groups. Recommend 32 as a
-          # naive suggestion. GroupNorm only available for ResNe(X)t.
-          GROUPNORM_GROUPS: 32
-          # Use weight-standardized convolutions
-          STANDARDIZE_CONVOLUTIONS: False
-          GROUPS: 1
-          ZERO_INIT_RESIDUAL: False
-          WIDTH_PER_GROUP: 64
-          # Colorization model uses stride=1 for last layer to retain higher spatial resolution
-          # for the pixel-wise task. Torchvision default is stride=2 and all other models
-          # use this so we set the default as 2.
-          LAYER4_STRIDE: 2
+      # ------------------------------------------------------------- #
+      # ResNe(X)t params
+      # ------------------------------------------------------------- #
+      RESNETS:
+        DEPTH: 50
+        WIDTH_MULTIPLIER: 1
+        NORM: BatchNorm    # BatchNorm | LayerNorm | GroupNorm
+        # If using GroupNorm, this sets number of groups. Recommend 32 as a
+        # naive suggestion. GroupNorm only available for ResNe(X)t.
+        GROUPNORM_GROUPS: 32
+        # Use weight-standardized convolutions
+        STANDARDIZE_CONVOLUTIONS: False
+        GROUPS: 1
+        ZERO_INIT_RESIDUAL: False
+        WIDTH_PER_GROUP: 64
+        # Colorization model uses stride=1 for last layer to retain higher spatial resolution
+        # for the pixel-wise task. Torchvision default is stride=2 and all other models
+        # use this so we set the default as 2.
+        LAYER4_STRIDE: 2
 
-        # ------------------------------------------------------------- #
-        # EfficientNet params
-        # ------------------------------------------------------------- #
-        # follow classy vision for efficientNet settings
-        EFFICIENT_NETS: {}
+      # ------------------------------------------------------------- #
+      # EfficientNet params
+      # ------------------------------------------------------------- #
+      # follow classy vision for efficientNet settings
+      EFFICIENT_NETS: {}
 
-        # ------------------------------------------------------------- #
-        # RegNet params
-        # ------------------------------------------------------------- #
-        REGNET: {}
+      # ------------------------------------------------------------- #
+      # RegNet params
+      # ------------------------------------------------------------- #
+      REGNET: {}
 
-        # ------------------------------------------------------------- #
-        # Vision Transformer/DeiT params. Using a name will
-        # override/ignore all other VISION_TRANSFORMERS parameters. Named
-        # options include vit_b_32, vit_b_16, vit_l_32, vit_l_16, vit_h_14.
-        # Using
-        # ------------------------------------------------------------- #
-        VISION_TRANSFORMERS:
-          name:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 16
-          NUM_LAYERS: 12
-          NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
-          # MLP and projection layer dropout rate
-          DROPOUT_RATE: 0
-          # Attention dropout rate
-          ATTENTION_DROPOUT_RATE: 0
-          # Use the token for classification. Currently no alternatives
-          # supported
-          CLASSIFIER: token
-          # Stochastic depth dropout rate. Turning on stochastic depth and
-          # using aggressive augmentation is essentially the difference
-          # between a DeiT and a ViT.
-          DROP_PATH_RATE: 0
-          QKV_BIAS: False # Bias for QKV in attention layers.
-          QK_SCALE: False # Scale
-        # ------------------------------------------------------------- #
-        # Parameters unique to the ConViT and not used for standard vision
-        # transformers
-        # -------------------------------------------------------------
-        CONVIT:
-          # Notes on ConViT (D'Ascoli et al., TODO insert arxiv link):
-          # Ideally, the number of heads should be a square.
-          # The paper used: 4, 9, or 16 heads;
-          # HIDDEN_DIM = 64 * # NUM_HEADS, so 256, 576, or 1024, respectively;
-          # MLP_DIM = 4 * HIDDEN_DIM, so 1024, 2304, or 4096, respectively.
-          #
-          # ConViT Params:
-          # Number of gated positional self-attention
-          # layers. These are self-attention layers that have separate
-          # positional and content-based attention components, allowing them
-          # to function as convolutional layers if initialized to be local
-          # (see USE_LOCAL_INIT below). They're what make ConViTs ConViTs!
-          # n_gpsa_layers out of NUM_LAYERS will be gated positional self
-          # attention layers.
-          N_GPSA_LAYERS: 10
-          # Whether to add class token to gpsa layers
-          CLASS_TOKEN_IN_LOCAL_LAYERS: False
-          # Determines how much the positional attention is focused on the
-          # patch of maximal attention. "Alpha" in the paper. Equivalent to
-          # the temperature of positional attention softmax.
-          LOCALITY_STRENGTH: 1.
-          # Dimensionality of the relative positional embeddings
-          LOCALITY_DIM: 10
-          # Whether to initialize the positional component of the GPSAs
-          # locally. This is necessary for them to be convolutional.
-          USE_LOCAL_INIT: True
+      # ------------------------------------------------------------- #
+      # Vision Transformer/DeiT params. Using a name will
+      # override/ignore all other VISION_TRANSFORMERS parameters. Named
+      # options include vit_b_32, vit_b_16, vit_l_32, vit_l_16, vit_h_14.
+      # Using
+      # ------------------------------------------------------------- #
+      VISION_TRANSFORMERS:
+        name:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_DIM: 3072
+        # MLP and projection layer dropout rate
+        DROPOUT_RATE: 0
+        # Attention dropout rate
+        ATTENTION_DROPOUT_RATE: 0
+        # Use the token for classification. Currently no alternatives
+        # supported
+        CLASSIFIER: token
+        # Stochastic depth dropout rate. Turning on stochastic depth and
+        # using aggressive augmentation is essentially the difference
+        # between a DeiT and a ViT.
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
+
+      # ------------------------------------------------------------- #
+      # Parameters unique to the ConViT and not used for standard vision
+      # transformers
+      # -------------------------------------------------------------
+      CONVIT:
+        # Notes on ConViT (D'Ascoli et al., TODO insert arxiv link):
+        # Ideally, the number of heads should be a square.
+        # The paper used: 4, 9, or 16 heads;
+        # HIDDEN_DIM = 64 * # NUM_HEADS, so 256, 576, or 1024, respectively;
+        # MLP_DIM = 4 * HIDDEN_DIM, so 1024, 2304, or 4096, respectively.
+        #
+        # ConViT Params:
+        # Number of gated positional self-attention
+        # layers. These are self-attention layers that have separate
+        # positional and content-based attention components, allowing them
+        # to function as convolutional layers if initialized to be local
+        # (see USE_LOCAL_INIT below). They're what make ConViTs ConViTs!
+        # n_gpsa_layers out of NUM_LAYERS will be gated positional self
+        # attention layers.
+        N_GPSA_LAYERS: 10
+        # Whether to add class token to gpsa layers
+        CLASS_TOKEN_IN_LOCAL_LAYERS: False
+        # Determines how much the positional attention is focused on the
+        # patch of maximal attention. "Alpha" in the paper. Equivalent to
+        # the temperature of positional attention softmax.
+        LOCALITY_STRENGTH: 1.
+        # Dimensionality of the relative positional embeddings
+        LOCALITY_DIM: 10
+        # Whether to initialize the positional component of the GPSAs
+        # locally. This is necessary for them to be convolutional.
+        USE_LOCAL_INIT: True
 
     # ----------------------------------------------------------------------------------- #
     # MODEL HEAD
@@ -910,6 +909,8 @@ config:
           # is used to determine how to scale the base learning rate value.
           # scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size
           base_lr_batch_size: 256
+          # scaling_type can be set to "sqrt" to reduce the impact of scaling on the base value
+          scaling_type: "linear"
         name: "multistep"
         update_interval: "epoch"
         # values indicate the step LR learning rate values. Instead of taking gamma, we
@@ -936,6 +937,7 @@ config:
           auto_scale: False
           base_value: 0.1
           base_lr_batch_size: 256
+          scaling_type: "linear"
         name: "multistep"
         update_interval: "epoch"
         values: [0.1, 0.01, 0.001]

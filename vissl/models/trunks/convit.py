@@ -439,8 +439,8 @@ class ConViT(nn.Module):
 
     def __init__(self, model_config, model_name):
         super().__init__()
-        trunk_config = copy.deepcopy(model_config.TRUNK.TRUNK_PARAMS.CONVIT)
-        trunk_config.update(model_config.TRUNK.TRUNK_PARAMS.VISION_TRANSFORMERS)
+        trunk_config = copy.deepcopy(model_config.TRUNK.CONVIT)
+        trunk_config.update(model_config.TRUNK.VISION_TRANSFORMERS)
 
         logging.info("Building model: ConViT from yaml config")
         # Hacky workaround

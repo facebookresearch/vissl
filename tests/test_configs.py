@@ -47,7 +47,7 @@ class TestConfigsComposition(unittest.TestCase):
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertEqual(
-            config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH,
+            config.MODEL.TRUNK.RESNETS.DEPTH,
             101,
             "config composition failed",
         )
@@ -78,21 +78,53 @@ class TestConfigsCliComposition(unittest.TestCase):
             [
                 "config=test/integration_test/quick_simclr",
                 "+config/pretrain/simclr/models=resnext101",
-                "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.GROUPS=32",
-                "config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_PER_GROUP=16",
+                "config.MODEL.TRUNK.RESNETS.GROUPS=32",
+                "config.MODEL.TRUNK.RESNETS.WIDTH_PER_GROUP=16",
             ]
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertEqual(
-            config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.GROUPS,
+            config.MODEL.TRUNK.RESNETS.GROUPS,
             32,
             "config composition failed",
         )
         self.assertEqual(
-            config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_PER_GROUP,
+            config.MODEL.TRUNK.RESNETS.WIDTH_PER_GROUP,
             16,
             "config composition failed",
         )
+
+
+class TestScalingTypeConfig(unittest.TestCase):
+    def test_sqrt_lr_scaling(self):
+        # compose the configs and check that the LR is changed
+        cfg = SSLHydraConfig.from_configs(
+            [
+                "config=test/integration_test/quick_simclr",
+                "+config/pretrain/simclr/models=resnext101",
+                "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=True",
+                'config.OPTIMIZER.param_schedulers.lr.name="linear"',
+                'config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.scaling_type="sqrt"',
+            ]
+        )
+        _, config = convert_to_attrdict(cfg.default_cfg)
+        param_schedulers = config.OPTIMIZER.param_schedulers.lr
+        self.assertEqual(0.3 * (0.125 ** 0.5), param_schedulers.end_value)
+
+    def test_linear_lr_scaling(self):
+        # compose the configs and check that the LR is changed
+        cfg = SSLHydraConfig.from_configs(
+            [
+                "config=test/integration_test/quick_simclr",
+                "+config/pretrain/simclr/models=resnext101",
+                "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=True",
+                'config.OPTIMIZER.param_schedulers.lr.name="linear"',
+                'config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.scaling_type="linear"',
+            ]
+        )
+        _, config = convert_to_attrdict(cfg.default_cfg)
+        param_schedulers = config.OPTIMIZER.param_schedulers.lr
+        self.assertEqual(0.3 * 0.125, param_schedulers.end_value)
 
 
 class TestConfigsKeyAddition(unittest.TestCase):

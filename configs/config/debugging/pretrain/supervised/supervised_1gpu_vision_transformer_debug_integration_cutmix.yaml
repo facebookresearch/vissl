@@ -52,21 +52,19 @@ config:
       USE_GRAD_CLIP: True
     TRUNK:
       NAME: vision_transformer
-      TRUNK_PARAMS:
-        VISION_TRANSFORMERS:
-          IMAGE_SIZE: 224
-          PATCH_SIZE: 32
-          NUM_LAYERS: 12
-          NUM_HEADS: 12
-          HIDDEN_DIM: 768
-          MLP_DIM: 3072
-          DROPOUT_RATE: 0.1
-          ATTENTION_DROPOUT_RATE: 0
-          CLASSIFIER: token
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 32
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_DIM: 3072
+        DROPOUT_RATE: 0.1
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
     HEAD:
       PARAMS: [
-        ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,
-            "num_classes": 1000}],
+        ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072, "num_classes": 1000}],
       ]
   LOSS:
     name: cross_entropy_multiple_output_single_target

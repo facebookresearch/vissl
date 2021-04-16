@@ -28,10 +28,9 @@ config:
       ]
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          LAYER4_STRIDE: 1
+      RESNETS:
+        DEPTH: 50
+        LAYER4_STRIDE: 1
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 64, "dims": [9216, 8142]}],

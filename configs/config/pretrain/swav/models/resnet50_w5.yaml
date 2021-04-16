@@ -25,10 +25,9 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          WIDTH_MULTIPLIER: 5  # on 16GB machines, use batch size 12 and 16nodes. On 32GB machines, use bs24 and 8nodes
+      RESNETS:
+        DEPTH: 50
+        WIDTH_MULTIPLIER: 5  # on 16GB machines, use batch size 12 and 16nodes. On 32GB machines, use bs24 and 8nodes
     HEAD:
       PARAMS: [
         ["swav_head", {"dims": [10240, 10240, 128], "use_bn": False, "num_clusters": [3000]}],

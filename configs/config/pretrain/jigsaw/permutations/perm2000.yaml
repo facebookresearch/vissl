@@ -25,7 +25,7 @@ config:
   MODEL:
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 1000], "use_bn": True, "use_relu": True}],
+        ["mlp", {"dims": [2048, 1000], "use_bn": True, "use_relu": True, "skip_last_layer_relu_bn": False}],
         ["siamese_concat_view", {"num_towers": 9}],
         ["mlp", {"dims": [9000, 2000]}],    # perm 2K
       ]
