@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from classy_vision.dataset import DataloaderAsyncGPUWrapper
 from torch.utils.data import DataLoader
+from vissl.data.airstore_dataset import AirstoreDataset
 from vissl.data.collators import get_collator
 from vissl.data.data_helper import (
     DeterministicDistributedSampler,
@@ -18,7 +19,6 @@ from vissl.data.dataset_catalog import (
     get_data_files,
     register_datasets,
 )
-from vissl.data.airstore_dataset import AirstoreDataset
 from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
 from vissl.data.synthetic_dataset import SyntheticImageDataset
