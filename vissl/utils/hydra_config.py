@@ -11,11 +11,11 @@ from vissl.config import AttrDict, check_cfg_version
 from vissl.utils.io import save_file
 
 
-def save_attrdict_to_disk(cfg):
+def save_attrdict_to_disk(cfg: AttrDict):
     from vissl.utils.checkpoint import get_checkpoint_folder
 
     yaml_output_file = f"{get_checkpoint_folder(cfg)}/train_config.yaml"
-    save_file(cfg, yaml_output_file)
+    save_file(cfg.to_dict(), yaml_output_file)
 
 
 def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
@@ -50,7 +50,19 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
     config = cfg.config
     assert_hydra_conf(config)
     save_attrdict_to_disk(config)
+    convert_fsdp_dtypes(config)
     return cfg, config
+
+
+def convert_fsdp_dtypes(config: AttrDict):
+    """
+    Transform configuration types (primitive types) to VISSL specific types
+    """
+    # TODO (Quentin) - remove this once FSDP accepts a boolean
+    if config["MODEL"]["FSDP_CONFIG"]["compute_dtype"] == "float32":
+        config["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float32
+    else:
+        config["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float16
 
 
 def is_hydra_available():
@@ -403,12 +415,6 @@ def assert_hydra_conf(cfg):
     # TODO (Min): once FSDP supports sync'ing weights from rank 0, we don't need
     #             this anymore.
     cfg["MODEL"]["_MODEL_INIT_SEED"] = cfg.SEED_VALUE
-
-    # FSDP configuration: transforming the types to the one compatible with FSDP's API
-    if cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] == "float32":
-        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float32
-    else:
-        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float16
 
     # in case of linear evaluation, we often evaluate several layers at a time. For each
     # layer, there's a separate accuracy meter. In such case, we want to output the layer
