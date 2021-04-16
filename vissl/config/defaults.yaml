@@ -445,6 +445,7 @@ config:
       flatten_parameters: True
       mixed_precision: True
       fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.
+      compute_dtype: float32  # Choose "float32" or "float16"
     # ----------------------------------------------------------------------------------- #
     # Feature evaluation settings
     # ----------------------------------------------------------------------------------- #

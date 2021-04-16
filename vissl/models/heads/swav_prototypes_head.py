@@ -148,6 +148,7 @@ def SwavPrototypesHeadFSDP(
     fp32_fsdp_config["flatten_parameters"] = False
     fp32_fsdp_config["mixed_precision"] = False
     fp32_fsdp_config["fp32_reduce_scatter"] = False
+    fp32_fsdp_config["compute_dtype"] = torch.float32
 
     for j in range(head.nmb_heads):
         module = getattr(head, "prototypes" + str(j))

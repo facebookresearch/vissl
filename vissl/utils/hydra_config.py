@@ -5,6 +5,7 @@ import pprint
 import sys
 from typing import Any, List
 
+import torch
 from omegaconf import DictConfig, OmegaConf
 from vissl.config import AttrDict, check_cfg_version
 
@@ -373,6 +374,12 @@ def assert_hydra_conf(cfg):
     # TODO (Min): once FSDP supports sync'ing weights from rank 0, we don't need
     #             this anymore.
     cfg["MODEL"]["_MODEL_INIT_SEED"] = cfg.SEED_VALUE
+
+    # FSDP configuration: transforming the types to the one compatible with FSDP's API
+    if cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] == "float32":
+        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float32
+    else:
+        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float16
 
     # in case of linear evaluation, we often evaluate several layers at a time. For each
     # layer, there's a separate accuracy meter. In such case, we want to output the layer
