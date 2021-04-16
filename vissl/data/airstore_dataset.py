@@ -1,3 +1,5 @@
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+
 import io
 import logging
 
@@ -5,25 +7,33 @@ import torch
 from classy_vision.generic.distributed_util import get_rank, get_world_size
 from iopath.common.file_io import PathManager
 from PIL import Image, ImageFile
+from typing import (
+    Any,
+    Iterable,
+    Tuple,
+)
+from vissl.config import AttrDict
 from vissl.data.data_helper import QueueDataset, get_mean_image
 
 
-def create_path_manager():
-    # inline import until we have an AIRStore OSS public package
+def create_path_manager() -> PathManager:
+    # TODO: move this inline import out after AIRStore OSS public released
     from airstore.client.airstore_tabular import AIRStorePathHandler
 
-    pathmgr = PathManager()
-    pathmgr.register_handler(AIRStorePathHandler())
-    pathmgr.set_strict_kwargs_checking(False)
-    return pathmgr
+    pathmanager = PathManager()
+    pathmanager.register_handler(AIRStorePathHandler())
+    pathmanager.set_strict_kwargs_checking(False)
+    return pathmanager
 
 
 class AirstoreDataset(QueueDataset):
-    def __init__(self, cfg, data_source, path, split, dataset_name):
+    def __init__(
+        self, cfg: AttrDict, data_source: str, path: str, split: str, dataset_name: str
+    ):
         super(AirstoreDataset, self).__init__(
             queue_size=cfg["DATA"][split]["BATCHSIZE_PER_REPLICA"]
         )
-        self.pathmgr = create_path_manager()
+        self.pathmanager = create_path_manager()
         self.cfg = cfg
         self.batch_size = cfg["DATA"][split]["BATCHSIZE_PER_REPLICA"]
         self.airstore_uri = path
@@ -35,22 +45,24 @@ class AirstoreDataset(QueueDataset):
         self.global_world_size = get_world_size()
         self._iterator = None
 
-    def set_epoch(self, epoch):
+    def set_epoch(self, epoch: int):
         # set by trainer when train on new epoch or restore from a checkpoint
         logging.info(f"set epoch to {epoch} in airstore dataset")
         self.epoch = epoch
 
-    def set_start_iter(self, start_iter):
+    def set_start_iter(self, start_iter: int):
         # set by trainer when train on restoring from a checkpoint
         self.start_iter = start_iter
 
-    def _open_iterator(self):
+    def _open_iterator(self) -> Iterable[Any]:
         # data iterator from airstore for current data split.
         # data are sharded by global total number of workers after shuffling
 
-        data_cfg = self.cfg["DATA"]
-        split_cfg = data_cfg[self.split]
+        split_cfg = self.cfg["DATA"][self.split]
 
+        # extract numbers of dataloading workers and current worker id (range from
+        # 0 to num_workers-1) from torch.utils. If we can't get worker_info we
+        # assume the current process is the only dataloading worker.
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is None:
             num_workers = 1
@@ -64,7 +76,7 @@ class AirstoreDataset(QueueDataset):
         # each worker take it's split by it's parent process rank and worker id
         airstore_rank = self.global_rank * num_workers + worker_id
 
-        return self.pathmgr.opent(
+        return self.pathmanager.opent(
             self.airstore_uri,
             "r",
             skip_samples=self.start_iter * self.batch_size,
@@ -85,16 +97,18 @@ class AirstoreDataset(QueueDataset):
             dataset_catalog_path=getattr(
                 split_cfg, "AIRSTORE_DS_CATALOG_PATH", None
             ), # temporary need during airstore development
-            env=getattr(data_cfg, "AIRSTORE_ENV", "OSS"),
+            env=getattr(
+                split_cfg, "AIRSTORE_ENV", "OSS"
+            ), # env need set to "fb" if run in FB, otherwise set to "OSS"
         )
 
-    def num_samples(self):
+    def num_samples(self) -> int:
         return self._open_iterator().total_size
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.num_samples()
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Tuple[Image.Image, bool]:
         if self._iterator is None:
             self._iterator = self._open_iterator()
 
