@@ -502,8 +502,8 @@ def assert_hydra_conf(cfg):
     # 3) if AMP is used, it must be PyTorch AMP
     # 4) If training SwAV, we automatically set the head to SwAV FSDP head
     # 4) Inference for the FSDP parameters to ensure the good convergence
-    if cfg.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP:
-        cfg.TRAINER.TASK_NAME = "self_supervision_fsdp_task_2"
+    if cfg.MODEL.FSDP_CONFIG.USE_FSDP:
+        cfg.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
         cfg.OPTIMIZER.construct_single_param_group_only = True
 
         # safely set flatten_parameters=True for FSDP trainings.
@@ -526,7 +526,7 @@ def assert_hydra_conf(cfg):
         if cfg.LOSS.name == "swav_loss":
             cfg.MODEL.HEAD.PARAMS[0][0] = "swav_head_fsdp"
         if cfg.MODEL.TRUNK.NAME == "regnet":
-            cfg.MODEL.TRUNK.NAME = "regnet_fsdp_2"
+            cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
 
         # finally delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
         # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP

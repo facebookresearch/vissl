@@ -12,8 +12,8 @@ from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.misc import is_fairscale_sharded_available
 
 
-@register_task("self_supervision_fsdp_task_2")
-class SelfSupervisionFSDPTask2(SelfSupervisionTask):
+@register_task("self_supervision_fsdp_task")
+class SelfSupervisionFSDPTask(SelfSupervisionTask):
     def __init__(self, config: AttrDict):
         super().__init__(config)
         # Ensure pytorch AMP type if mixed precision is on.

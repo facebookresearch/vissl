@@ -312,8 +312,8 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
     return nn.ModuleDict(feature_blocks), trunk_depth
 
 
-@register_model_trunk("regnet_2")
-class RegNet2(nn.Module):
+@register_model_trunk("regnet_v2")
+class RegNetV2(nn.Module):
     def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
         self.model_config = model_config
@@ -341,19 +341,19 @@ class RegNet2(nn.Module):
         )
 
 
-@register_model_trunk("regnet_fsdp_2")
-class RegNetFSDP2(FSDP):
+@register_model_trunk("regnet_fsdp")
+class RegNetFSDP(FSDP):
     """
     Wrap the entire trunk since we need to load checkpoint before
     train_fsdp_task.py wrapping happens.
     """
 
     def __init__(self, model_config: AttrDict, model_name: str):
-        module = _RegNetFSDP2(model_config, model_name).cuda()
+        module = _RegNetFSDP(model_config, model_name).cuda()
         super().__init__(module, **model_config.FSDP_CONFIG)
 
 
-class _RegNetFSDP2(nn.Module):
+class _RegNetFSDP(nn.Module):
     """
     Similar to RegNet trunk, but with FSDP enabled.
 
