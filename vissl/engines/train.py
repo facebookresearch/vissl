@@ -18,7 +18,6 @@ from vissl.utils.env import (
 from vissl.utils.hydra_config import print_cfg
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
-from vissl.trainer.train_task import SelfSupervisionTask
 
 
 def train_main(

@@ -5,7 +5,7 @@ import logging
 import os
 import socket
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 import torch
@@ -19,7 +19,7 @@ from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import TASK_REGISTRY, ClassyTask
 from vissl.config import AttrDict
-from vissl.hooks import SSLClassyHookFunctions
+from vissl.hooks import SSLClassyHookFunctions, default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
 from vissl.utils.env import get_machine_local_and_dist_rank
