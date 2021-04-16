@@ -164,41 +164,38 @@ class SelfSupervisionTask(ClassificationTask):
 
             # This will rightly fail if the setting is not correct
             self.amp_type = AmpType[self.config.MODEL.AMP_PARAMS.AMP_TYPE.upper()]
-
-            # Check Apex availability
             if self.amp_type == AmpType.APEX:
-                if not is_apex_available():
-                    raise RuntimeError(
-                        "Apex is not available. Can't use mixed precision"
-                    )
-
-                # "amp_args" are actually Apex Amp args
-                self.amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
-                logging.info(f"Setting AMP: using apex, args {self.amp_args}")
-
+                self._init_apex_grad_scaler()
             elif self.amp_type == AmpType.PYTORCH:
-                # if the optimizer is sharded or FSDP data parallel is used, then the GradScaler
-                # needs to be shard-aware.
-                if (
-                    self.config["TRAINER"]["TASK_NAME"] == "self_supervision_fsdp_task"
-                    or self.config["OPTIMIZER"]["name"] == "zero"
-                ):
-                    assert is_fairscale_sharded_available(), (
-                        "To use ZeRO with PyTorch AMP, ShardedGradScaler() "
-                        "from fairscale is needed. Please upgrade fairscale"
-                    )
-                    from fairscale.optim.grad_scaler import ShardedGradScaler
-
-                    self.amp_grad_scaler = ShardedGradScaler()
-                    logging.info("Setting AMP: using sharded grad scaler")
-                else:
-                    self.amp_grad_scaler = TorchGradScaler()
-                    logging.info("Setting AMP: using pytorch grad scaler")
+                self._init_pytorch_grad_scaler()
             logging.info(f"Setting AMP: {self.amp_type} - args: {self.amp_args}")
 
         else:
             self.amp_args, self.amp_type = None, None
             logging.info("Not using Automatic Mixed Precision")
+
+    def _init_apex_grad_scaler(self):
+        # Check Apex availability
+        if not is_apex_available():
+            raise RuntimeError("Apex is not available. Can't use mixed precision")
+
+        # "amp_args" are actually Apex Amp args
+        self.amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
+        logging.info(f"Setting AMP: using apex, args {self.amp_args}")
+
+    def _init_pytorch_grad_scaler(self):
+        if self.config["OPTIMIZER"]["name"] == "zero":
+            assert is_fairscale_sharded_available(), (
+                "To use ZeRO with PyTorch AMP, ShardedGradScaler() "
+                "from fairscale is needed. Please upgrade fairscale"
+            )
+            from fairscale.optim.grad_scaler import ShardedGradScaler
+
+            self.amp_grad_scaler = ShardedGradScaler()
+            logging.info("Setting AMP: using sharded grad scaler")
+        else:
+            self.amp_grad_scaler = TorchGradScaler()
+            logging.info("Setting AMP: using pytorch grad scaler")
 
     def set_checkpoint_path(self, checkpoint_path: str):
         """

@@ -13,7 +13,7 @@ from torch.nn import Linear
 from vissl.config import AttrDict
 from vissl.models.heads.swav_prototypes_head import SwAVPrototypesHead
 from vissl.trainer.train_task import SelfSupervisionTask
-from vissl.utils.misc import set_torch_seed
+from vissl.utils.misc import is_fairscale_sharded_available, set_torch_seed
 
 
 @register_task("self_supervision_fsdp_task")
@@ -27,6 +27,16 @@ class SelfSupervisionFSDPTask(SelfSupervisionTask):
                 and config["MODEL"]["AMP_PARAMS"]["AMP_TYPE"] == "pytorch"
             ):
                 raise ValueError("FSDP's mixed precision requires pytorch AMP")
+
+    def _init_pytorch_grad_scaler(self):
+        assert is_fairscale_sharded_available(), (
+            "To use FSDP with PyTorch AMP, ShardedGradScaler() "
+            "from fairscale is needed. Please upgrade fairscale"
+        )
+        from fairscale.optim.grad_scaler import ShardedGradScaler
+
+        self.amp_grad_scaler = ShardedGradScaler()
+        logging.info("Setting AMP: using sharded grad scaler")
 
     def init_distributed_data_parallel_model(self):
         """
