@@ -14,21 +14,16 @@ from vissl.trainer.train_task import SelfSupervisionTask
 # https://github.com/facebookresearch/fairscale
 
 
-@register_task("self_supervision_zero_task")
-class SelfSupervisionZeroTask(SelfSupervisionTask):
+@register_task("self_supervision_sdp_task")
+class SelfSupervisionSDPTask(SelfSupervisionTask):
     def __init__(self, config: AttrDict):
         super().__init__(config)
 
     def init_distributed_data_parallel_model(self):
         """
-        Initialize ShardedDataParallel,
-        needed for sharded distributed training.
+        Initialize ShardedDataParallel, needed for sharded distributed training.
         This is where a model should be wrapped by DDP.
         """
-
-        # Init the base class, everything but the distributed model wrap is to be reused
-        super().init_distributed_data_parallel_model()
-
         broadcast_buffers = (
             self.broadcast_buffers_mode == BroadcastBuffersMode.FORWARD_PASS
         )

@@ -475,6 +475,15 @@ def assert_hydra_conf(cfg):
         )
         cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE = cached_url_path
 
+    # ZeRO2: Infer the settings for ShardedDDP which shards the optimizer state
+    # and the model weights. For ShardedDDP, we must use the OSS optimizer,
+    # set the right task name, use the PyTorch AMP if AMP is used.
+    if cfg.MODEL.SHARDED_DDP_SETUP.USE_SDP:
+        cfg.OPTIMIZER.use_zero = True
+        cfg.TRAINER.TASK_NAME = "self_supervision_sdp_task"
+        if cfg.MODEL.AMP_PARAMS.USE_AMP:
+            cfg.MODEL.AMP_PARAMS.AMP_TYPE = "pytorch"
+
     # if we use a zero optimizer, we nest the optimizer related settings under the
     # base_optimizer.
     if cfg.OPTIMIZER.use_zero:

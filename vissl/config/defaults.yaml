@@ -436,6 +436,10 @@ config:
     # ZeRO2 sharded DDP from Fairscale https://github.com/facebookresearch/fairscale
     # ----------------------------------------------------------------------------------- #
     SHARDED_DDP_SETUP:
+      # set this to true if you want to use SDP instead of DDP.
+      # VISSL will automatically set optimizer = zero and
+      # configure the settings required to run SDP successfully.
+      USE_SDP: False
       reduce_buffer_size: -1
     # ----------------------------------------------------------------------------------- #
     # FSDP from Fairscale https://github.com/facebookresearch/fairscale
