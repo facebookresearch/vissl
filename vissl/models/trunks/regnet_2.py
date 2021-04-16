@@ -85,9 +85,6 @@ class RegnetBlocksFactory:
     to configure the model.
     """
 
-    def __init__(self, seed: int):
-        self.seed = seed
-
     def create_stem(self, params: Union[RegNetParams, AnyNetParams]):
         # get the activation
         silu = None if get_torch_version() < [1, 7] else nn.SiLU()
@@ -104,11 +101,7 @@ class RegnetBlocksFactory:
         }[params.stem_type](
             3, params.stem_width, params.bn_epsilon, params.bn_momentum, activation
         )
-
-        # set stem seeds
-        with set_torch_seed(self.seed):
-            init_weights(stem)
-            self.seed += 1
+        init_weights(stem)
         return stem
 
     def create_block(
@@ -146,9 +139,7 @@ class RegnetBlocksFactory:
             bottleneck_multiplier,
             params.se_ratio,
         ).cuda()
-        with set_torch_seed(self.seed):
-            init_weights(block)
-            self.seed += 1
+        init_weights(block)
         return block
 
 
@@ -159,8 +150,8 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
     initializing the weights etc.
     """
 
-    def __init__(self, seed: int, fsdp_config):
-        super().__init__(seed)
+    def __init__(self, fsdp_config):
+        super().__init__()
         self.fsdp_config = fsdp_config
 
     def create_stem(self, params: Union[RegNetParams, AnyNetParams]):
@@ -322,20 +313,22 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
 
 
 @register_model_trunk("regnet_2")
-class RegNet3(nn.Module):
+class RegNet2(nn.Module):
     def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
         self.model_config = model_config
+        self.seed = self.model_config._MODEL_INIT_SEED
         self.use_activation_checkpointing = (
             model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
         )
         self.activation_checkpointing_splits = (
             model_config.ACTIVATION_CHECKPOINTING.NUM_ACTIVATION_CHECKPOINTING_SPLITS
         )
-        self._feature_blocks, self.trunk_depth = create_regnet_feature_blocks(
-            factory=RegnetBlocksFactory(seed=self.model_config._MODEL_INIT_SEED),
-            model_config=model_config,
-        )
+        with set_torch_seed(self.seed):
+            self._feature_blocks, self.trunk_depth = create_regnet_feature_blocks(
+                factory=RegnetBlocksFactory(),
+                model_config=model_config,
+            )
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:
         model_input = transform_model_input_data_type(x, self.model_config)
@@ -349,18 +342,18 @@ class RegNet3(nn.Module):
 
 
 @register_model_trunk("regnet_fsdp_2")
-class RegNetFSDP3(FSDP):
+class RegNetFSDP2(FSDP):
     """
     Wrap the entire trunk since we need to load checkpoint before
     train_fsdp_task.py wrapping happens.
     """
 
     def __init__(self, model_config: AttrDict, model_name: str):
-        module = _RegNetFSDP3(model_config, model_name).cuda()
+        module = _RegNetFSDP2(model_config, model_name).cuda()
         super().__init__(module, **model_config.FSDP_CONFIG)
 
 
-class _RegNetFSDP3(nn.Module):
+class _RegNetFSDP2(nn.Module):
     """
     Similar to RegNet trunk, but with FSDP enabled.
 
@@ -370,13 +363,12 @@ class _RegNetFSDP3(nn.Module):
     def __init__(self, model_config: AttrDict, model_name: str):
         super().__init__()
         self.model_config = model_config
-        self._feature_blocks, self.trunk_depth = create_regnet_feature_blocks(
-            factory=RegnetFSDPBlocksFactory(
-                seed=self.model_config._MODEL_INIT_SEED,
-                fsdp_config=self.model_config.FSDP_CONFIG,
-            ),
-            model_config=model_config,
-        )
+        self.seed = self.model_config._MODEL_INIT_SEED
+        with set_torch_seed(self.seed):
+            self._feature_blocks, self.trunk_depth = create_regnet_feature_blocks(
+                factory=RegnetFSDPBlocksFactory(self.model_config.FSDP_CONFIG),
+                model_config=model_config,
+            )
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:
         model_input = transform_model_input_data_type(x, self.model_config)
