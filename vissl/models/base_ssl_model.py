@@ -2,18 +2,22 @@
 
 import copy
 import logging
+from typing import Any, Dict
 
 import torch
 import torch.nn as nn
 from classy_vision.models import ClassyModel, register_model
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
+from vissl.config import AttrDict
 from vissl.models.heads import get_model_head
 from vissl.models.model_helpers import (
+    fsdp_recursive_reset_lazy_init,
     get_trunk_output_feature_names,
     is_feature_extractor_model,
 )
 from vissl.models.trunks import get_model_trunk
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
+from vissl.utils.checkpoint import init_model_from_consolidated_weights
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.misc import set_torch_seed
 
@@ -387,8 +391,20 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         We call this on the state.base_model which is not wrapped with DDP.
         get the model state_dict to checkpoint
         """
-        trunk_state_dict = self.trunk.state_dict()
-        heads_state_dict = self.heads.state_dict()
+
+        if isinstance(self.trunk, FSDP):
+            trunk_state_dict = self.trunk.local_state_dict()
+        else:
+            trunk_state_dict = self.trunk.state_dict()
+
+        if any(isinstance(head, FSDP) for head in self.heads):
+            heads_state_dict = [
+                head.local_state_dict() if isinstance(head, FSDP) else head.state_dict()
+                for head in self.heads
+            ]
+        else:
+            heads_state_dict = self.heads.state_dict()
+
         model_state_dict = {
             "model": {"trunk": trunk_state_dict, "heads": heads_state_dict}
         }
@@ -410,24 +426,41 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         """
         from vissl.utils.checkpoint import print_loaded_dict_info
 
+        # Loading the trunk
         logging.info(f"Rank {self.local_rank}: Loading Trunk state dict....")
-        self.trunk.load_state_dict(state["model"]["trunk"])
-        logging.info(f"Rank {self.local_rank}: Loading Heads state dict....")
+        if isinstance(self.trunk, FSDP):
+            self.trunk.load_local_state_dict(state["model"]["trunk"])
+            fsdp_recursive_reset_lazy_init(self.trunk)
+        else:
+            self.trunk.load_state_dict(state["model"]["trunk"])
 
-        # sometimes, we want to load the partial head only, so strict=False
-        self.heads.load_state_dict(state["model"]["heads"], strict=False)
-        logging.info(f"Rank {self.local_rank}: Model state dict loaded!")
+        # Loading the head
+        logging.info(f"Rank {self.local_rank}: Loading Heads state dict....")
+        if any(isinstance(head, FSDP) for head in self.heads):
+            for i, head in enumerate(self.heads):
+                if isinstance(head, FSDP):
+                    head.load_local_state_dict(state["model"]["heads"][i])
+                    fsdp_recursive_reset_lazy_init(head)
+                else:
+                    self.head.load_state_dict(state["model"]["heads"][i])
+        else:
+            # sometimes, we want to load the partial head only, so strict=False
+            self.heads.load_state_dict(state["model"]["heads"], strict=False)
 
         # Print debug information about layers loaded.
         #
         # Get the model state dict original (if FSDP, calling it on all ranks.)
-        if self.local_rank == 0 or isinstance(self.trunk, FSDP):
+        logging.info(f"Rank {self.local_rank}: Model state dict loaded!")
+        if isinstance(self.trunk, FSDP) or any(
+            isinstance(head, FSDP) for head in self.heads
+        ):
+            return  # TODO (Quentin) - log the weights of the loaded shard
+
+        if self.local_rank == 0:
             trunk_state_dict, heads_state_dict = (
                 self.trunk.state_dict(),
                 self.heads.state_dict(),
             )
-        # Now print.
-        if self.local_rank == 0:
             model_state_dict = {}
             model_state_dict.update(trunk_state_dict)
             model_state_dict.update(heads_state_dict)
@@ -443,6 +476,49 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                 checkpoint_state_dict,
                 skip_layers=skip_layers,
                 model_config=self.model_config,
+            )
+
+    def init_model_from_weights_params_file(
+        self, config: AttrDict, checkpoint: Dict[str, Any]
+    ):
+        """
+        We initialize the weights from this checkpoint. However, we don't care
+        about the other metadata like iteration number etc.
+        So the method only reads the state_dict
+        """
+
+        # TODO (Quentin) - support: different number of nodes + different checkpoint formats + fine tuning
+        # Special cases in which we want to evaluate a model trained with FSDP:
+        # - we need to benchmark it in FSDP mode as well and with the same number of workers
+        # - we need to have it trained with VISSL (no support for other checkpoint types for now)
+        if isinstance(self.trunk, FeatureExtractorModel) and isinstance(
+            self.trunk.base_model, FSDP
+        ):
+            self.trunk.base_model.load_local_state_dict(
+                checkpoint["classy_state_dict"]["base_model"]["model"]["trunk"]
+            )
+            fsdp_recursive_reset_lazy_init(self.trunk.base_model)
+        elif isinstance(self.trunk, FSDP):
+            self.trunk.load_local_state_dict(
+                checkpoint["classy_state_dict"]["base_model"]["model"]["trunk"]
+            )
+            fsdp_recursive_reset_lazy_init(self.trunk)
+
+        # General case: support for multiple format of checkpoint
+        else:
+            params_from_file = config["MODEL"]["WEIGHTS_INIT"]
+            skip_layers = params_from_file.get("SKIP_LAYERS", [])
+            replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
+            append_prefix = params_from_file.get("APPEND_PREFIX", None)
+            state_dict_key_name = params_from_file.get("STATE_DICT_KEY_NAME", None)
+            init_model_from_consolidated_weights(
+                config,
+                self,
+                checkpoint,
+                state_dict_key_name=state_dict_key_name,
+                skip_layers=skip_layers,
+                replace_prefix=replace_prefix,
+                append_prefix=append_prefix,
             )
 
     @property

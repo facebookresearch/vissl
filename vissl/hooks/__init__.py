@@ -131,6 +131,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         if cfg.HOOKS.PERF_STATS.ROLLING_BTIME_FREQ > 0
         else None
     )
+
+    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
     hooks.extend(
         [
             CheckNanLossHook(),
@@ -140,7 +142,7 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             UpdateTrainBatchTimeHook(),
             UpdateTestBatchTimeHook(),
             UpdateTrainIterationNumHook(),
-            LogLossMetricsCheckpointHook(),
+            LogLossMetricsCheckpointHook(world_size),
             LogLossLrEtaHook(rolling_btime_freq),
         ]
     )

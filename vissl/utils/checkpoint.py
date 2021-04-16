@@ -1,13 +1,140 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import logging
+import os
 from typing import Any, Dict, List
 
 import torch
+from classy_vision.generic.util import (
+    load_and_broadcast_checkpoint,
+    load_checkpoint,
+    save_checkpoint,
+)
 from fvcore.common.file_io import PathManager
 from vissl.config import AttrDict
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.io import makedir
+from vissl.utils.io import create_file_symlink, makedir
+
+
+class CheckpointWriter:
+    """
+    Utility class to save checkpoints on the chosen backend
+    """
+
+    def __init__(
+        self,
+        checkpoint_folder: str,
+        is_final_train_phase: bool,
+        mode: str,
+        mode_num: int,
+        backend: str,
+    ):
+        assert backend == "disk", "Only disk BACKEND supported"
+        self.checkpoint_folder = checkpoint_folder
+        self.is_final_train_phase = is_final_train_phase
+        self.mode = mode
+        self.mode_num = mode_num
+
+    def save_consolidated_checkpoint(self, content: Dict[str, Any]):
+        """
+        Save a checkpoint containing the full model weights
+        (to be used with DDP on primary rank)
+        """
+        checkpoint_name = self.get_checkpoint_name()
+        self._save(name=checkpoint_name, content=content)
+        self._create_symbolic_link(checkpoint_name)
+
+    def save_sharded_checkpoint(
+        self, shard_content: Dict[str, Any], shard_rank: int, world_size: int
+    ):
+        """
+        Save a checkpoint containing only the model weights of the
+        current shard (to be used with FSDP on all ranks)
+        """
+        # Each worker saves its own shard
+        shard_name = self.get_checkpoint_shard_name(shard_rank)
+        self._save(name=shard_name, content=shard_content)
+        if shard_rank != 0:
+            return
+
+        # While the primary worker saves a checkpoint referencing all the shards
+        primary_name = self.get_checkpoint_name()
+        primary_checkpoint = {
+            "type": "master",
+            "shards": [
+                self.get_checkpoint_shard_name(rank) for rank in range(world_size)
+            ],
+        }
+        self._save(name=primary_name, content=primary_checkpoint)
+        self._create_symbolic_link(primary_name)
+
+    def get_checkpoint_name(self):
+        if self.is_final_train_phase:
+            return f"model_final_checkpoint_{self.mode}{self.mode_num}.torch"
+        return f"model_{self.mode}{self.mode_num}.torch"
+
+    def get_checkpoint_shard_name(self, rank: int):
+        if self.is_final_train_phase:
+            return (
+                f"model_final_checkpoint_{self.mode}{self.mode_num}_shard{rank}.torch"
+            )
+        return f"model_{self.mode}{self.mode_num}_shard{rank}.torch"
+
+    def _save(self, name: str, content):
+        save_checkpoint(
+            checkpoint_folder=self.checkpoint_folder,
+            state=content,
+            checkpoint_file=name,
+        )
+        logging.info(f"Saved checkpoint: {self.checkpoint_folder}/{name}")
+
+    def _create_symbolic_link(self, checkpoint_name: str):
+        """
+        Create a "checkpoint.torch" symbolic link that will point to the latest
+        checkpoint version.
+
+        It is a particularly useful feature for resuming trainings.
+        """
+        logging.info("Creating symlink...")
+        symlink_dest_file = f"{self.checkpoint_folder}/checkpoint.torch"
+        source_file = f"{self.checkpoint_folder}/{checkpoint_name}"
+        create_file_symlink(source_file, symlink_dest_file)
+        logging.info(f"Created symlink: {symlink_dest_file}")
+
+
+class CheckpointLoader:
+    """
+    Utility class to load checkpoints on the chosen backend
+    """
+
+    @classmethod
+    def load_and_broadcast_init_weights(cls, checkpoint_path: str, device):
+        """
+        Load the weights at the provided path, dealing with the
+        potential indirection due to the notion of sharded checkpoint
+        """
+        folder, _ = os.path.split(checkpoint_path)
+        return cls.load_and_broadcast_checkpoint(folder, checkpoint_path, device)
+
+    @classmethod
+    def load_and_broadcast_checkpoint(
+        cls, checkpoint_folder: str, checkpoint_path: str, device
+    ):
+        """
+        Load the checkpoint at the provided path, dealing with the
+        potential indirection due to the notion of sharded checkpoint
+        """
+        checkpoint = load_and_broadcast_checkpoint(checkpoint_path, device)
+        if cls._is_shard_aggregator_checkpoint(checkpoint):
+            _, global_rank = get_machine_local_and_dist_rank()
+            shard_name = checkpoint["shards"][global_rank]
+            shard_path = os.path.join(checkpoint_folder, shard_name)
+            checkpoint = load_checkpoint(shard_path, device)
+        return checkpoint
+
+    @staticmethod
+    def _is_shard_aggregator_checkpoint(checkpoint: Dict[str, Any]):
+        return "type" in checkpoint and checkpoint["type"] == "master"
 
 
 def is_training_finished(cfg: AttrDict, checkpoint_folder: str):
@@ -155,8 +282,9 @@ def get_checkpoint_resume_files(
         if "model_final" in f and not skip_final:
             return f
         if replace_prefix in f:
-            iter_num = int(f.replace(".torch", "").replace(replace_prefix, ""))
-            all_iters.append(iter_num)
+            iter_num = f.replace(".torch", "").replace(replace_prefix, "")
+            if iter_num.isdigit():
+                all_iters.append(int(iter_num))
 
     # make sure the checkpoint resume number is in bounds
     checkpoint_resume_num = max(0, latest_checkpoint_resume_num - 1)
@@ -174,7 +302,7 @@ def get_checkpoint_resume_files(
 
 def get_resume_checkpoint(cfg: AttrDict, checkpoint_folder: str):
     """
-    Return the checkpoint from which to resume traning. If no checkpoint found,
+    Return the checkpoint from which to resume training. If no checkpoint found,
     return None. Resuming training is optional and user can set AUTO_RESUME=false
     to not resume the training.
 
@@ -370,7 +498,7 @@ def get_checkpoint_model_state_dict(config: AttrDict, state_dict: Dict[str, Any]
     return state_dict
 
 
-def init_model_from_weights(
+def init_model_from_consolidated_weights(
     config: AttrDict,
     model,
     state_dict: Dict[str, Any],
@@ -419,6 +547,7 @@ def init_model_from_weights(
 
     # load the checkpoint now
     all_layers = model.state_dict()
+
     local_rank, _ = get_machine_local_and_dist_rank()
     max_len_model = max(len(key) for key in all_layers.keys())
     for layername in all_layers.keys():

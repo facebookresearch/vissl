@@ -4,7 +4,7 @@ import gc
 import logging
 
 import torch
-from classy_vision.generic.util import copy_model_to_gpu, load_and_broadcast_checkpoint
+from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
@@ -17,7 +17,7 @@ from vissl.data import build_dataset, get_loader, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
-from vissl.utils.checkpoint import init_model_from_weights
+from vissl.utils.checkpoint import CheckpointLoader
 from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
 
 
@@ -385,26 +385,10 @@ class SelfSupervisionTask(ClassificationTask):
         logging.info(f"Initializing model from: {init_weights_path}")
 
         if PathManager.exists(init_weights_path):
-            weights = load_and_broadcast_checkpoint(
-                init_weights_path, device=torch.device("cpu")
+            checkpoint = CheckpointLoader.load_and_broadcast_init_weights(
+                checkpoint_path=init_weights_path, device=torch.device("cpu")
             )
-            skip_layers = params_from_file.get("SKIP_LAYERS", [])
-            replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
-            append_prefix = params_from_file.get("APPEND_PREFIX", None)
-            state_dict_key_name = params_from_file.get("STATE_DICT_KEY_NAME", None)
-
-            # we initialize the weights from this checkpoint. However, we
-            # don't care about the other metadata like iteration number etc.
-            # So the method only reads the state_dict
-            init_model_from_weights(
-                self.config,
-                model,
-                weights,
-                state_dict_key_name=state_dict_key_name,
-                skip_layers=skip_layers,
-                replace_prefix=replace_prefix,
-                append_prefix=append_prefix,
-            )
+            model.init_model_from_weights_params_file(self.config, checkpoint)
         return model
 
     def _build_model(self):
@@ -670,9 +654,12 @@ class SelfSupervisionTask(ClassificationTask):
         # Restore an hypothetical checkpoint
         vissl_state_dict = None
         if self.checkpoint_path is not None:
-            self.checkpoint = load_and_broadcast_checkpoint(
-                checkpoint_path=self.checkpoint_path, device=torch.device("cpu")
+            self.checkpoint = CheckpointLoader.load_and_broadcast_checkpoint(
+                checkpoint_folder=self.checkpoint_folder,
+                checkpoint_path=self.checkpoint_path,
+                device=torch.device("cpu"),
             )
+
             self.iteration = self.checkpoint["iteration"]
             self.local_iteration_num = self.checkpoint["iteration_num"]
             vissl_state_dict = self.checkpoint.get("classy_state_dict")

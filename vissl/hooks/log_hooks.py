@@ -13,13 +13,12 @@ from typing import Optional
 import torch
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
-from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from fvcore.common.file_io import PathManager
-from vissl.utils.checkpoint import is_checkpoint_phase
+from vissl.utils.checkpoint import CheckpointWriter, is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.io import create_file_symlink, save_file
+from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
 
@@ -237,6 +236,10 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
 
+    def __init__(self, world_size: int):
+        super().__init__()
+        self.world_size = world_size
+
     # TODO: make this a standalone hook and make it optional to save runtime
     # although the overhead is minimal when the model is training fine (no nans)
     def on_forward(self, task: "tasks.ClassyTask") -> None:
@@ -350,20 +353,16 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 )
                 task.optimizer.consolidate_state_dict()
 
-            # Model's state dict may need to be obtained on all ranks if we are running
-            # with FSDP since all_gather needs to happen here.
-            model_state_dict = None
-            if isinstance(task.base_model, FSDP):
-                model_state_dict = task.get_classy_state()
-
+            # Depending on whether we are in FSDP mode or not
             # - save the checkpoint on the primary rank
-            if is_primary():
+            # - save the sharded checkpoint on all ranks
+            if is_primary() or isinstance(task.base_model, FSDP):
                 checkpoint_folder = task.checkpoint_folder
                 logging.info(
                     f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
                 )
-                if model_state_dict is None:
-                    model_state_dict = task.get_classy_state()
+                model_state_dict = task.get_classy_state()
+
                 # phase_idx is already incremented at the beginning of phase but if we
                 # are checkpointing at an iteration in the middle of phase, we should not
                 # save the incremented phase_idx as it will incorrectly assume that model
@@ -374,33 +373,33 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     if task.train:
                         train_phase_idx = train_phase_idx - 1
                         model_state_dict["train_phase_idx"] = train_phase_idx
-                checkpoint_task = {
+                checkpoint_content = {
+                    "type": "checkpoint",
                     "phase_idx": phase_idx,
                     "iteration": task.iteration,
                     "loss": task.loss.state_dict(),
                     "iteration_num": task.local_iteration_num,
                     "train_phase_idx": train_phase_idx,
-                    # TODO (Min): change the key to model_state_dict but we need to be careful
-                    #             about backward compatibilities.
                     "classy_state_dict": model_state_dict,
                 }
-                ckpt_name = f"model_{mode}{mode_num}.torch"
-                if is_final_train_phase:
-                    ckpt_name = f"model_final_checkpoint_{mode}{mode_num}.torch"
-                backend = task.config["CHECKPOINT"]["BACKEND"]
-                assert backend == "disk", "Only disk BACKEND supported"
-                save_checkpoint(
-                    checkpoint_folder, checkpoint_task, checkpoint_file=ckpt_name
+
+                checkpoint_writer = CheckpointWriter(
+                    checkpoint_folder=checkpoint_folder,
+                    is_final_train_phase=is_final_train_phase,
+                    mode=mode,
+                    mode_num=mode_num,
+                    backend=task.config["CHECKPOINT"]["BACKEND"],
                 )
-                logging.info(f"Saved checkpoint: {checkpoint_folder}/{ckpt_name}")
-                # we create the checkpoint symlink and use this symlink to load
-                # checkpoints. This helps ensure that the checkpoint we load from
-                # are valid. It's a particularly useful feature for resuming trainings.
-                logging.info("Creating symlink...")
-                symlink_dest_file = f"{checkpoint_folder}/checkpoint.torch"
-                source_file = f"{checkpoint_folder}/{ckpt_name}"
-                create_file_symlink(source_file, symlink_dest_file)
-                logging.info(f"Created symlink: {symlink_dest_file}")
+
+                if isinstance(task.base_model, FSDP):
+                    _, rank = get_machine_local_and_dist_rank()
+                    checkpoint_writer.save_sharded_checkpoint(
+                        shard_content=checkpoint_content,
+                        shard_rank=rank,
+                        world_size=self.world_size,
+                    )
+                else:
+                    checkpoint_writer.save_consolidated_checkpoint(checkpoint_content)
 
     def _print_and_save_meters(self, task, train_phase_idx):
         """

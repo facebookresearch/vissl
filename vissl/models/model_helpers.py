@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from torch.nn.modules.utils import _ntuple
 from torch.utils.checkpoint import checkpoint
 from vissl.utils.activation_checkpointing import checkpoint_trunk
@@ -95,6 +96,25 @@ class SyncBNTypes(str, Enum):
 
     apex = "apex"
     pytorch = "pytorch"
+
+
+def fsdp_recursive_reset_lazy_init(fsdp_module: FSDP):
+    """
+    Before the first forward pass, an FSDP module might have been initialized
+    for instance by calling load_state_dict or load_local_state_dict to
+    reload a previous training checkpoint.
+
+    This function will recursively walk though the sub-FSDP modules and
+    call _reset_lazy_init on each of them.
+    """
+    to_visit = list(fsdp_module.named_modules())
+    while to_visit:
+        name, module = to_visit.pop()
+        if isinstance(module, FSDP) and module._is_root is not None:
+            module._reset_lazy_init()
+        for child_name, child in module.named_modules():
+            if child_name:
+                to_visit.append((name + "." + child_name, child))
 
 
 def convert_sync_bn(config, model):
