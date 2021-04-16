@@ -36,6 +36,7 @@ from classy_vision.models.anynet import (
 from classy_vision.models.regnet import RegNetParams
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP, auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
+
 from vissl.config import AttrDict
 from vissl.models.model_helpers import (
     Flatten,

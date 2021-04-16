@@ -1,9 +1,9 @@
 import json
 from collections import defaultdict
 
+import torch
 from fvcore.common.file_io import PathManager
 from fvcore.common.history_buffer import HistoryBuffer
-import torch
 
 
 _VISSL_EVENT_STORAGE_STACK = []
@@ -47,8 +47,8 @@ class VisslEventStorage:
         self._history = defaultdict(HistoryBuffer)
         self._latest_scalars = {}
         self._iter = start_iter
-        self._vis_data = []     # later for tensorboard
-        self._histograms = []   # later for tensorboard
+        self._vis_data = []  # later for tensorboard
+        self._histograms = []  # later for tensorboard
 
     def put_scalar(self, name, value):
         """
@@ -124,7 +124,9 @@ class VisslEventStorage:
 
         # Create a histogram with PyTorch
         hist_counts = torch.histc(hist_tensor, bins=bins)
-        hist_edges = torch.linspace(start=ht_min, end=ht_max, steps=bins + 1, dtype=torch.float32)
+        hist_edges = torch.linspace(
+            start=ht_min, end=ht_max, steps=bins + 1, dtype=torch.float32
+        )
 
         # Parameter for the add_histogram_raw function of SummaryWriter
         hist_params = dict(
@@ -180,9 +182,9 @@ class JsonWriter(VisslEventWriter):
     def close(self):
         self._file_handle.close()
 
+
 class TensorboardWriter(VisslEventWriter):
- 
-  def __init__(self, log_dir: str, flush_secs: int, **kwargs):
+    def __init__(self, log_dir: str, flush_secs: int, **kwargs):
         """
         Args:
             log_dir (str): the directory to save the output events
@@ -193,17 +195,16 @@ class TensorboardWriter(VisslEventWriter):
         from torch.utils.tensorboard import SummaryWriter
 
         self._tb_writer = SummaryWriter(log_dir, **kwargs)
-  
-  def write(self):
-      storage = get_event_storage()
-      to_save = defaultdict(dict)
-      
-      # storage.put_{image,histogram} is only meant to be used by
-      # tensorboard writer. So we access its internal fields directly from here.
+
+    def write(self):
+        storage = get_event_storage()
+
+        # storage.put_{image,histogram} is only meant to be used by
+        # tensorboard writer. So we access its internal fields directly from here.
         if len(storage._vis_data) >= 1:
             for img_name, img, step_num in storage._vis_data:
                 self._tb_writer.add_image(img_name, img, step_num)
-            
+
             # Storage stores all image data and rely on this writer to clear them.
             # As a result it assumes only one writer will use its image data.
             # An alternative design is to let storage store limited recent
@@ -215,7 +216,7 @@ class TensorboardWriter(VisslEventWriter):
             for params in storage._histograms:
                 self._tb_writer.add_histogram_raw(**params)
             storage.clear_histograms()
-   
-  def close(self):
-      if hasattr(self, "_tb_writer"):  # doesn't exist when the code fails at import
+
+    def close(self):
+        if hasattr(self, "_tb_writer"):  # doesn't exist when the code fails at import
             self._writer.close()

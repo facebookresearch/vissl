@@ -12,6 +12,7 @@ from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
+
 from vissl.config import AttrDict
 from vissl.data import (
     build_dataset,
@@ -125,11 +126,12 @@ class SelfSupervisionTask(ClassificationTask):
         create_event_storage()
         self._event_storage = get_event_storage()
 
-    def build_event_storage_writers(self):
-        from vissl.utils.events import JsonWriter
+    def build_event_storage_writers(self, config: AttrDict):
+        from vissl.utils.events import JsonWriter, TensorboardWriter
 
         self.event_storage_writers = [
-            JsonWriter(f"{self.checkpoint_folder}/stdout.json")
+            JsonWriter(f"{self.checkpoint_folder}/stdout.json"),
+            TensorboardWriter(config.log_dir, config.flush_secs),
         ]
 
     @property
