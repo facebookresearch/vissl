@@ -495,3 +495,39 @@ def assert_hydra_conf(cfg):
         del cfg.OPTIMIZER.base_optimizer["num_epochs"]
         del cfg.OPTIMIZER.base_optimizer["use_zero"]
         del cfg.OPTIMIZER.base_optimizer["head_optimizer_params"]
+
+    # inference for the FSDP settings. Conditions are:
+    # 1) use the FSDP task
+    # 2) use the single param group in the optimizer
+    # 3) if AMP is used, it must be PyTorch AMP
+    # 4) If training SwAV, we automatically set the head to SwAV FSDP head
+    # 4) Inference for the FSDP parameters to ensure the good convergence
+    if cfg.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP:
+        cfg.TRAINER.TASK_NAME = "self_supervision_fsdp_task_2"
+        cfg.OPTIMIZER.construct_single_param_group_only = True
+
+        # safely set flatten_parameters=True for FSDP trainings.
+        cfg["MODEL"]["FSDP_CONFIG"]["flatten_parameters"] = True
+        # recommended FSDP settings below for the convergence
+        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
+
+        # AMP based inference
+        if cfg["MODEL"]["AMP_PARAMS"]["USE_AMP"]:
+            cfg["MODEL"]["AMP_PARAMS"]["AMP_TYPE"] = "pytorch"
+            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = True
+            cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = True
+        else:
+            # if not using AMP, we can't use mixed_precision as it requires PyTorch AMP
+            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = False
+            # if mixed_precision=False, FSDP mandates setting fp32_reduce_scatter=False
+            cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
+
+        # further inference in case of swav trainings with FSDP
+        if cfg.LOSS.name == "swav_loss":
+            cfg.MODEL.HEAD.PARAMS[0][0] = "swav_head_fsdp"
+        if cfg.MODEL.TRUNK.NAME == "regnet":
+            cfg.MODEL.TRUNK.NAME = "regnet_fsdp_2"
+
+        # finally delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
+        # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
+        del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]

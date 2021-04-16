@@ -446,6 +446,9 @@ config:
     #   These options should match FSDP classes init options.
     # ----------------------------------------------------------------------------------- #
     FSDP_CONFIG:
+      # set this option to True to enable FSDP and automatically determine the config
+      # for FSDP based on AMP true/false.
+      AUTO_SETUP_FSDP: False
       flatten_parameters: True
       mixed_precision: True
       fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.

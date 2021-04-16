@@ -32,7 +32,7 @@ class SelfSupervisionFSDPTask2(SelfSupervisionTask):
         from fairscale.optim.grad_scaler import ShardedGradScaler
 
         self.amp_grad_scaler = ShardedGradScaler()
-        logging.info("Setting AMP: using sharded grad scaler")
+        logging.info("Setting AMP: using ShardedGradScaler")
 
     def init_distributed_data_parallel_model(self):
         """
