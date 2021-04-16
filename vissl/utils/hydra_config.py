@@ -502,7 +502,7 @@ def assert_hydra_conf(cfg):
     # 3) if AMP is used, it must be PyTorch AMP
     # 4) If training SwAV, we automatically set the head to SwAV FSDP head
     # 4) Inference for the FSDP parameters to ensure the good convergence
-    if cfg.MODEL.FSDP_CONFIG.USE_FSDP:
+    if cfg.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP:
         cfg.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
         cfg.OPTIMIZER.construct_single_param_group_only = True
 
