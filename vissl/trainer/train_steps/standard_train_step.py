@@ -116,6 +116,13 @@ def standard_train_step(task):
         sample = next(task.data_iterator)
 
     sample = construct_sample_for_model(sample, task)
+    vis_period = task.config.HOOKS.TENSORBOARD_SETUP.VISUALIZATION_SAMPLE_PERIOD
+    if vis_period > 0 and task.iteration % vis_period == 0:
+        storage = task.event_storage
+        storage.put_images()
+        name = f"Model input sample: iteration: {task.iteration_num}"
+        for idx, vis_img in enumerate(sample["input"]):
+            storage.put_image(name + f" ({idx})", vis_img)
 
     # Only need gradients during training
     grad_context = torch.enable_grad() if task.train else torch.no_grad()

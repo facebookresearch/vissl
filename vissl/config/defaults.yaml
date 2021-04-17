@@ -124,6 +124,7 @@ config:
     # ----------------------------------------------------------------------------------- #
     # TENSORBOARD (visualization)
     # ----------------------------------------------------------------------------------- #
+    VISUALIZATION_SAMPLE_PERIOD: -1
     TENSORBOARD_SETUP:
       # whether to use tensorboard for the visualization
       USE_TENSORBOARD: False
