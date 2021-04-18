@@ -27,6 +27,7 @@ from vissl.utils.misc import setup_multiprocessing_method
 
 
 __all__ = [
+    "AirstoreDataset",
     "GenericSSLDataset",
     "get_data_files",
     "register_datasets",
