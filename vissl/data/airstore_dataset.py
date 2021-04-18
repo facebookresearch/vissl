@@ -52,6 +52,9 @@ class AirstoreDataset(QueueDataset):
 
     def set_start_iter(self, start_iter: int):
         # set by trainer when train on restoring from a checkpoint
+        logging.info(f"set start_iter to {start_iter} in airstore dataset")
+        if start_iter < 0:
+            raise Exception(f"{start_iter} is not a valid iteration value")
         self.start_iter = start_iter
 
     def _open_iterator(self) -> Iterable[Any]:

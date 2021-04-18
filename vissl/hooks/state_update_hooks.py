@@ -11,6 +11,7 @@ from classy_vision.generic.profiler import (
     count_params,
 )
 from classy_vision.hooks.classy_hook import ClassyHook
+from vissl.data import AirstoreDataset, GenericSSLDataset
 
 
 class SSLModelComplexityHook(ClassyHook):
@@ -95,10 +96,16 @@ class SetDataSamplerEpochHook(ClassyHook):
             if hasattr(task.dataloaders[phase_type].sampler, "set_epoch"):
                 # task.phase_idx is current running phase id
                 task.dataloaders[phase_type].sampler.set_epoch(task.phase_idx)
+
+        # call set_epoch and for AirstoreDataset since it handles shuffle
+        # behavior internally
         if hasattr(task.dataloaders[phase_type], "dataset"):
-            if hasattr(task.dataloaders[phase_type].dataset, "set_epoch"):
-                # task.phase_idx is current running phase id
-                task.dataloaders[phase_type].dataset.set_epoch(task.phase_idx)
+            dataset = task.dataloaders[phase_type].dataset
+            if isinstance(dataset, GenericSSLDataset):
+                for data_obj in dataset.data_objs:
+                    if isinstance(data_obj, AirstoreDataset):
+                        # task.phase_idx is current running phase id
+                        data_obj.set_epoch(task.phase_idx)
 
         logging.info(f"Starting phase {task.phase_idx} [{phase_type}]")
 

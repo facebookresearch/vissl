@@ -13,7 +13,13 @@ from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMod
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
-from vissl.data import build_dataset, get_loader, print_sampler_config
+from vissl.data import (
+    build_dataset,
+    get_loader,
+    print_sampler_config,
+    AirstoreDataset,
+    GenericSSLDataset,
+)
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
@@ -475,6 +481,18 @@ class SelfSupervisionTask(ClassificationTask):
 
         return model
 
+    def _compute_start_iter_from_checkpoint(self, phase_type) -> int:
+        # used for calculating the start iteration (count from current epoch) when resuming
+        # from checkpoint
+        if self.checkpoint is None or self.checkpoint["iteration"] <= 0:
+            return 0
+
+        num_iters_in_epochs = len(self.dataloaders[phase_type])
+        num_epochs = self.checkpoint["train_phase_idx"] + 1
+        num_train_iters_done = num_epochs * num_iters_in_epochs
+        return self.checkpoint["iteration"] - num_train_iters_done
+
+
     def recreate_data_iterator(self, phase_type, epoch, compute_start_iter):
         """
         Recreate data iterator (including multiprocessing workers) and destroy the
@@ -486,6 +504,10 @@ class SelfSupervisionTask(ClassificationTask):
         epoch and start_iteration so that the data is deterministically shuffled,
         so we call them here.
         """
+        start_iter = 0
+        if compute_start_iter:
+            start_iter = self._compute_start_iter_from_checkpoint(phase_type)
+
         if hasattr(self.dataloaders[phase_type], "sampler"):
             sampler = self.dataloaders[phase_type].sampler
             # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler.
@@ -493,39 +515,18 @@ class SelfSupervisionTask(ClassificationTask):
                 sampler.set_epoch(epoch)
             # Resume from the iteration if valid
             if hasattr(sampler, "set_start_iter"):
-                if (
-                    compute_start_iter
-                    and self.checkpoint is not None
-                    and self.checkpoint["iteration"] > 0
-                ):
-                    num_iters_in_epochs = len(self.dataloaders[phase_type])
-                    num_epochs = self.checkpoint["train_phase_idx"] + 1
-                    num_train_iters_done = num_epochs * num_iters_in_epochs
-                    start_iter = self.checkpoint["iteration"] - num_train_iters_done
-                else:
-                    start_iter = 0
                 sampler.set_start_iter(start_iter)
             print_sampler_config(sampler)
 
+        # call set_epoch and set_start_iter for AirstoreDataset since it handles
+        # shuffle and sample skipping behavior internally
         if hasattr(self.dataloaders[phase_type], "dataset"):
             dataset = self.dataloaders[phase_type].dataset
-            # (Re-)Shuffle data: airstore dataset handle shuffle internally.
-            if hasattr(dataset, "set_epoch"):
-                dataset.set_epoch(epoch)
-            # Resume from the iteration if valid
-            if hasattr(dataset, "set_start_iter"):
-                if (
-                    compute_start_iter
-                    and self.checkpoint is not None
-                    and self.checkpoint["iteration"] > 0
-                ):
-                    num_iters_in_epochs = len(self.dataloaders[phase_type])
-                    num_epochs = self.checkpoint["train_phase_idx"] + 1
-                    num_train_iters_done = num_epochs * num_iters_in_epochs
-                    start_iter = self.checkpoint["iteration"] - num_train_iters_done
-                else:
-                    start_iter = 0
-                dataset.set_start_iter(start_iter)
+            if isinstance(dataset, GenericSSLDataset):
+                for data_obj in dataset.data_objs:
+                    if isinstance(data_obj, AirstoreDataset):
+                        data_obj.set_epoch(epoch)
+                        data_obj.set_start_iter(start_iter)
 
         # delete the old data iterator
         del self.data_iterator
