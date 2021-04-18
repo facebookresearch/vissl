@@ -58,9 +58,13 @@ class AirstoreDataset(QueueDataset):
         self.start_iter = start_iter
 
     def _calculate_skip_samples(self, num_workers: int, worker_id: int) -> int:
+        # this function is used for calcuate how many samples we should skip per
+        # each worker when resuming from a checkpoint
         per_replica_skip = self.start_iter * self.batch_size
         per_worker_skip = per_replica_skip // num_workers
-        # dataloader round robin base on worker id when fetching data
+        # since dataloader fetching from each worker by roundrobin so we can
+        # calculate exactly which worker has one extra to skip when per_replica_skip
+        # can't be divided by num_workers cleanly
         if worker_id < per_replica_skip % num_workers:
             per_worker_skip += 1
         return per_worker_skip
