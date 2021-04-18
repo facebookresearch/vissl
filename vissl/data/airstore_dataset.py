@@ -2,16 +2,16 @@
 
 import io
 import logging
-
-import torch
-from classy_vision.generic.distributed_util import get_rank, get_world_size
-from iopath.common.file_io import PathManager
-from PIL import Image, ImageFile
 from typing import (
     Any,
     Iterable,
     Tuple,
 )
+
+import torch
+from classy_vision.generic.distributed_util import get_rank, get_world_size
+from iopath.common.file_io import PathManager
+from PIL import Image, ImageFile
 from vissl.config import AttrDict
 from vissl.data.data_helper import QueueDataset, get_mean_image
 
@@ -111,10 +111,10 @@ class AirstoreDataset(QueueDataset):
             max_retries=getattr(split_cfg, "AIRSTORE_MAX_RETRIES", 5),
             dataset_catalog_path=getattr(
                 split_cfg, "AIRSTORE_DS_CATALOG_PATH", None
-            ), # temporary need during airstore development
+            ),  # temporary need during airstore development
             env=getattr(
                 split_cfg, "AIRSTORE_ENV", "OSS"
-            ), # env need set to "fb" if run in FB, otherwise set to "OSS"
+            ),  # env need set to "fb" if run in FB, otherwise set to "OSS"
         )
 
     def num_samples(self) -> int:

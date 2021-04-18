@@ -492,7 +492,6 @@ class SelfSupervisionTask(ClassificationTask):
         num_train_iters_done = num_epochs * num_iters_in_epochs
         return self.checkpoint["iteration"] - num_train_iters_done
 
-
     def recreate_data_iterator(self, phase_type, epoch, compute_start_iter):
         """
         Recreate data iterator (including multiprocessing workers) and destroy the
