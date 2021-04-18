@@ -57,6 +57,14 @@ class AirstoreDataset(QueueDataset):
             raise Exception(f"{start_iter} is not a valid iteration value")
         self.start_iter = start_iter
 
+    def _calculate_skip_samples(self, num_workers: int, worker_id: int) -> int:
+        per_replica_skip = self.start_iter * self.batch_size
+        per_worker_skip = per_replica_skip // num_workers
+        # dataloader round robin base on worker id when fetching data
+        if worker_id < per_replica_skip % num_workers:
+            per_worker_skip += 1
+        return per_worker_skip
+
     def _open_iterator(self) -> Iterable[Any]:
         # data iterator from airstore for current data split.
         # data are sharded by global total number of workers after shuffling
@@ -82,7 +90,7 @@ class AirstoreDataset(QueueDataset):
         return self.pathmanager.opent(
             self.airstore_uri,
             "r",
-            skip_samples=self.start_iter * self.batch_size,
+            skip_samples=self._calculate_skip_samples(num_workers, worker_id),
             enable_shuffle=getattr(split_cfg, "AIRSTORE_ENABLE_SHUFFLE", True),
             shuffle_window=getattr(split_cfg, "AIRSTORE_SHUFFLE_WINDOW", 128),
             seed=self.epoch,
