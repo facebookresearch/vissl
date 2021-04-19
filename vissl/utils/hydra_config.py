@@ -528,6 +528,6 @@ def assert_hydra_conf(cfg):
         if cfg.MODEL.TRUNK.NAME == "regnet":
             cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
 
-        # finally delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
-        # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
-        del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
+    # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
+    # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
+    del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
