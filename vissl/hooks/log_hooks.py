@@ -4,6 +4,7 @@
 All the hooks involved in human-readable logging
 """
 
+import atexit
 import datetime
 import json
 import logging
@@ -126,14 +127,25 @@ class LogLossLrEtaHook(ClassyHook):
     on_step = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
 
-    def __init__(self, btime_freq: Optional[int] = None) -> None:
+    def __init__(
+        self, checkpoint_folder: str, btime_freq: Optional[int] = None
+    ) -> None:
         """
         Args:
+            checkpoint_folder: checkpoint directory where we will write the stdout.json
             btime_freq: if specified, logs average batch time of rolling_freq
                           batches also.
         """
         super().__init__()
         self.btime_freq: Optional[int] = btime_freq
+        self.json_stdout_logger = None
+        if is_primary():
+            self.json_stdout_logger = PathManager.open(
+                f"{checkpoint_folder}/stdout.json",
+                mode="a",
+                buffering=10 * 1024,  # 10KB
+            )
+            atexit.register(self.json_stdout_logger.close)
 
     def on_update(self, task: "tasks.ClassyTask") -> None:
         """
@@ -214,11 +226,7 @@ class LogLossLrEtaHook(ClassyHook):
                         else f"{stdout_data}{key}: {value}; "
                     )
                 logging.info(stdout_data.strip())
-                with PathManager.open(
-                    f"{task.checkpoint_folder}/stdout.json", "a"
-                ) as fopen:
-                    fopen.write(json.dumps(log_data) + "\n")
-                    fopen.flush()
+                self.json_stdout_logger.write(json.dumps(log_data) + "\n")
 
 
 class LogLossMetricsCheckpointHook(ClassyHook):
