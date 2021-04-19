@@ -141,9 +141,6 @@ class SSLTensorboardHook(ClassyHook):
         ):
             for name, parameter in task.base_model.named_parameters():
                 self.event_storage.put_histogram(f"Parameters/{name}", parameter)
-                # self.tb_writer.add_histogram(
-                #     f"Parameters/{name}", parameter, global_step=task.iteration
-                # )
 
     def on_phase_start(self, task: "tasks.ClassyTask") -> None:
         """
@@ -158,9 +155,6 @@ class SSLTensorboardHook(ClassyHook):
         if is_primary() and task.train and task.train_phase_idx == 0:
             for name, parameter in task.base_model.named_parameters():
                 self.event_storage.put_histogram(f"Parameters/{name}", parameter)
-                # self.tb_writer.add_histogram(
-                #     f"Parameters/{name}", parameter, global_step=-1
-                # )
 
     def on_phase_end(self, task: "tasks.ClassyTask") -> None:
         """
@@ -182,11 +176,6 @@ class SSLTensorboardHook(ClassyHook):
                                 scalar_value=round(acc, 5),
                                 global_step=task.train_phase_idx,
                             )
-                            # self.tb_writer.add_scalar(
-                            #  tag=tag_name,
-                            #  scalar_value=round(acc, 5),
-                            #  global_step=task.train_phase_idx,
-                            # )
         if not (self.log_params or self.log_params_gradients):
             return
 
@@ -194,20 +183,16 @@ class SSLTensorboardHook(ClassyHook):
             # Log the weights and bias at the end of the epoch
             if self.log_params:
                 for name, parameter in task.base_model.named_parameters():
-                    self.tb_writer.add_histogram(
-                        f"Parameters/{name}",
-                        parameter,
-                        global_step=task.train_phase_idx,
+                    self.event_storage.put_histogram(
+                        f"Parameters/{name}", parameter,
                     )
             # Log the parameter gradients at the end of the epoch
             if self.log_params_gradients:
                 for name, parameter in task.base_model.named_parameters():
                     if parameter.grad is not None:
                         try:
-                            self.tb_writer.add_histogram(
-                                f"Gradients/{name}",
-                                parameter.grad,
-                                global_step=task.train_phase_idx,
+                            self.event_storage.put_histogram(
+                                f"Gradients/{name}", parameter.grad,
                             )
                         except ValueError:
                             logging.info(
@@ -245,10 +230,8 @@ class SSLTensorboardHook(ClassyHook):
             for name, parameter in task.base_model.named_parameters():
                 if parameter.grad is not None:
                     try:
-                        self.tb_writer.add_histogram(
-                            f"Gradients/{name}",
-                            parameter.grad,
-                            global_step=task.iteration,
+                        self.event_storage.put_histogram(
+                            f"Gradients/{name}", parameter.grad,
                         )
                     except ValueError:
                         logging.info(
@@ -261,13 +244,13 @@ class SSLTensorboardHook(ClassyHook):
             iteration <= 100 and iteration % 5 == 0
         ):
             logging.info(f"Logging metrics. Iteration {iteration}")
-            self.tb_writer.add_scalar(
+            self.event_storage.put_scalars(
                 tag="Training/Loss",
                 scalar_value=round(task.last_batch.loss.data.cpu().item(), 5),
                 global_step=iteration,
             )
 
-            self.tb_writer.add_scalar(
+            self.event_storage.put_scalars(
                 tag="Training/Learning_rate",
                 scalar_value=round(task.optimizer.options_view.lr, 5),
                 global_step=iteration,
@@ -280,7 +263,7 @@ class SSLTensorboardHook(ClassyHook):
                 batch_times = [0]
 
             batch_time_avg_s = sum(batch_times) / max(len(batch_times), 1)
-            self.tb_writer.add_scalar(
+            self.event_storage.put_scalars(
                 tag="Speed/Batch_processing_time_ms",
                 scalar_value=int(1000.0 * batch_time_avg_s),
                 global_step=iteration,
@@ -295,7 +278,7 @@ class SSLTensorboardHook(ClassyHook):
                 if batch_time_avg_s > 0
                 else 0.0
             )
-            self.tb_writer.add_scalar(
+            self.event_storage.put_scalars(
                 tag="Speed/img_per_sec_per_gpu",
                 scalar_value=pic_per_batch_per_gpu_per_sec,
                 global_step=iteration,
@@ -304,7 +287,7 @@ class SSLTensorboardHook(ClassyHook):
             # ETA
             avg_time = sum(batch_times) / len(batch_times)
             eta_secs = avg_time * (task.max_iteration - iteration)
-            self.tb_writer.add_scalar(
+            self.event_storage.put_scalars(
                 tag="Speed/ETA_hours",
                 scalar_value=eta_secs / 3600.0,
                 global_step=iteration,
@@ -313,21 +296,21 @@ class SSLTensorboardHook(ClassyHook):
             # GPU Memory
             if torch.cuda.is_available():
                 # Memory actually being used
-                self.tb_writer.add_scalar(
+                self.event_storage.put_scalars(
                     tag="Memory/Peak_GPU_Memory_allocated_MiB",
                     scalar_value=torch.cuda.max_memory_allocated() / BYTE_TO_MiB,
                     global_step=iteration,
                 )
 
                 # Memory reserved by PyTorch's memory allocator
-                self.tb_writer.add_scalar(
+                self.event_storage.put_scalars(
                     tag="Memory/Peak_GPU_Memory_reserved_MiB",
                     scalar_value=torch.cuda.max_memory_reserved()
                     / BYTE_TO_MiB,  # byte to MiB
                     global_step=iteration,
                 )
 
-                self.tb_writer.add_scalar(
+                self.event_storage.put_scalars(
                     tag="Memory/Current_GPU_Memory_reserved_MiB",
                     scalar_value=torch.cuda.memory_reserved()
                     / BYTE_TO_MiB,  # byte to MiB
