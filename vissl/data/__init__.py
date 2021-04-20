@@ -14,6 +14,7 @@ from vissl.data.data_helper import (
     StatefulDistributedSampler,
 )
 from vissl.data.dataloader_sync_gpu_wrapper import DataloaderSyncGPUWrapper
+from vissl.data.dataloaders.dataloader_factory import DataLoaderFactory
 from vissl.data.dataset_catalog import (
     VisslDatasetCatalog,
     get_data_files,
@@ -48,6 +49,19 @@ DATA_SOURCES_WITH_SUBSET_SUPPORT = {
     "disk_folder",
     "torchvision_dataset",
     "synthetic",
+}
+
+DATALOADER_MAP = {
+    "dataloader": {
+        "datasets": {
+            "airstore",
+            "disk_filelist",
+            "disk_folder",
+            "torchvision_dataset",
+            "synthetic",
+        },
+        "factory_class": DataLoaderFactory,
+    }
 }
 
 
@@ -142,6 +156,7 @@ def get_loader(
     device: torch.device,
     get_sampler=get_sampler,
     worker_init_fn=None,
+    dataloader_map=DATALOADER_MAP,
 ):
     """
     Get the dataloader for the given satasets and data split
@@ -179,7 +194,11 @@ def get_loader(
         worker_init_fn = debugging_worker_init_fn
 
     # Create the pytorch dataloader
-    dataloader = DataLoader(
+    dataloader_config = dataloader_map[dataset_config["DATALOADER"]]
+    dataloader_factory = dataloader_config["factory_class"]
+    dataloader_factory = dataloader_factory(
+        dataset_config=dataset_config,
+        dataloader_config=dataloader_config,
         dataset=dataset,
         num_workers=num_dataloader_workers,
         pin_memory=pin_memory,
@@ -190,6 +209,8 @@ def get_loader(
         drop_last=dataset_config["DROP_LAST"],
         worker_init_fn=worker_init_fn,
     )
+
+    dataloader = dataloader_factory.get_dataloader()
 
     # If the targeted device is CUDA, set up async device copy:
     # - makes sure that samples are on device

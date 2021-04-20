@@ -175,6 +175,8 @@ config:
       REMOVE_IMG_PATH_PREFIX: ""
       # what prefix to replace the old prefix with. Could stay empty too
       NEW_IMG_PATH_PREFIX: ""
+      # Pytorch opensource Dataloader to use for loading data.
+      DATALOADER: dataloader
       # name of the dataset. Meaningful and used to do lookup in the dataset_catalog.json
       # it has the advantage that user needs to full the dataset_catalog.json once
       # and then simply use the dataset name without having to specify data paths every time.
@@ -319,6 +321,8 @@ config:
       # what prefix to replace the old prefix with. Could stay empty too
       NEW_IMG_PATH_PREFIX: ""
       DROP_LAST: False
+      # Pytorch opensource Dataloader to use for loading data.
+      DATALOADER: dataloader
       DATA_SOURCES: []
       DATA_PATHS: []
       LABEL_SOURCES: []
