@@ -1,11 +1,12 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Sequence
 
 import numpy as np
 import torchvision.transforms as pth_transforms
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
+from PIL import Image
 
 
 @register_transform("ImgPilToMultiCrop")
@@ -17,7 +18,13 @@ class ImgPilToMultiCrop(ClassyTransform):
     This transform was proposed in SwAV - https://arxiv.org/abs/2006.09882
     """
 
-    def __init__(self, total_num_crops, num_crops, size_crops, crop_scales):
+    def __init__(
+        self,
+        total_num_crops: int,
+        num_crops: Sequence[int],
+        size_crops: Sequence[int],
+        crop_scales: Sequence[Sequence[float]],
+    ):
         """
         Returns total_num_crops square crops of an image. Each crop is a random crop
         extracted according to the parameters specified in size_crops and crop_scales.
@@ -44,21 +51,16 @@ class ImgPilToMultiCrop(ClassyTransform):
         assert len(size_crops) == len(num_crops)
         assert len(size_crops) == len(crop_scales)
 
-        trans = []
-        for i, sc in enumerate(size_crops):
-            trans.extend(
-                [
-                    pth_transforms.Compose(
-                        [pth_transforms.RandomResizedCrop(sc, scale=crop_scales[i])]
-                    )
-                ]
-                * num_crops[i]
+        transforms = []
+        for num, size, scale in zip(num_crops, size_crops, crop_scales):
+            transforms.extend(
+                [pth_transforms.RandomResizedCrop(size, scale=scale)] * num
             )
 
-        self.transforms = trans
+        self.transforms = transforms
 
-    def __call__(self, image):
-        return list(map(lambda trans: trans(image), self.transforms))
+    def __call__(self, image: Image.Image) -> List[Image.Image]:
+        return [transform(image) for transform in self.transforms]
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "ImgPilToMultiCrop":

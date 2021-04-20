@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision.transforms import Compose, ToTensor
+from vissl.data.ssl_transforms.img_pil_to_multicrop import ImgPilToMultiCrop
 from vissl.data.ssl_transforms.img_pil_to_tensor import ImgToTensor
 from vissl.data.ssl_transforms.mnist_img_pil_to_rgb_mode import MNISTImgPil2RGB
 
@@ -54,3 +55,22 @@ class TestTransform(unittest.TestCase):
             assert (
                 output[:, 2:-2, 2:-2].sum().item() == 28 * 28 * 3
             ), "Paste should be in the middle"
+
+    def test_img_pil_to_multicrop(self):
+        torch.cuda.manual_seed(0)
+
+        transform = ImgPilToMultiCrop(
+            total_num_crops=8,
+            num_crops=[2, 6],
+            size_crops=[224, 96],
+            crop_scales=[[0.14, 1], [0.05, 0.14]],
+        )
+
+        image = torch.randn(size=(3, 256, 256))
+        image = Image.fromarray(image.numpy(), mode="RGB")
+        crops = transform(image)
+        self.assertEqual(8, len(crops))
+        for crop in crops[:2]:
+            self.assertEqual((224, 224), crop.size)
+        for crop in crops[2:]:
+            self.assertEqual((96, 96), crop.size)
