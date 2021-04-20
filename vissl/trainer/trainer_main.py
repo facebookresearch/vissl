@@ -5,7 +5,7 @@ import logging
 import os
 import socket
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 import torch
@@ -19,7 +19,7 @@ from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.hooks.classy_hook import ClassyHook
 from classy_vision.tasks import TASK_REGISTRY, ClassyTask
 from vissl.config import AttrDict
-from vissl.hooks import SSLClassyHookFunctions
+from vissl.hooks import SSLClassyHookFunctions, default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
 from vissl.utils.env import get_machine_local_and_dist_rank
@@ -72,7 +72,7 @@ class SelfSupervisionTrainer(object):
         dist_run_id: str,
         checkpoint_path: str = None,
         checkpoint_folder: str = None,
-        hooks: List[ClassyHook] = None,
+        hook_generator: Callable[[Any], List[ClassyHook]] = default_hook_generator,
     ):
         self.cfg = cfg
         self.dist_run_id = dist_run_id
@@ -83,13 +83,12 @@ class SelfSupervisionTrainer(object):
         self.task = build_task(self.cfg)
         self.task.set_checkpoint_path(checkpoint_path)
         self.task.set_checkpoint_folder(checkpoint_folder)
-        if hooks is None:
-            hooks = []
+        self.task.initiate_vissl_event_storage()
+        self.task.build_event_storage_writers()
+        hooks = hook_generator(cfg, self.task._event_storage)
         self.task.set_hooks(hooks)
 
         self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
-        self.task.initiate_vissl_event_storage()
-        self.task.build_event_storage_writers()
         self.setup_distributed(self.task.device.type == "cuda")
 
     def setup_distributed(self, use_gpu: bool):

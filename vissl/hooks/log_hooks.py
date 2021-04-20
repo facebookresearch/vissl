@@ -18,7 +18,7 @@ from fvcore.common.file_io import PathManager
 from vissl.utils.checkpoint import CheckpointWriter, is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.events import VisslEventStorage
-from vissl.utils.io import create_file_symlink, save_file
+from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
 

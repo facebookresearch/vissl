@@ -52,7 +52,7 @@ class SSLClassyHookFunctions(Enum):
     on_end = auto()
 
 
-def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
+def default_hook_generator(cfg: AttrDict, event_storage) -> List[ClassyHook]:
     """
     The utility function that prepares all the hoooks that will be used in training
     based on user selection. Some basic hooks are used by default.
@@ -114,7 +114,7 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             "If using conda and you prefer conda install of tensorboard: "
             "`conda install -c conda-forge tensorboard`"
         )
-        tb_hook = get_tensorboard_hook(cfg)
+        tb_hook = get_tensorboard_hook(cfg, event_storage)
         hooks.extend([tb_hook])
     if cfg.MODEL.GRAD_CLIP.USE_GRAD_CLIP:
         hooks.extend(
