@@ -48,7 +48,7 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
 
     # assert the config and infer
     config = cfg.config
-    assert_hydra_conf(config)
+    infer_and_assert_hydra_config(config)
     save_attrdict_to_disk(config)
     convert_fsdp_dtypes(config)
     return cfg, config
@@ -391,7 +391,7 @@ def infer_losses_config(cfg):
     return cfg
 
 
-def assert_hydra_conf(cfg):
+def infer_and_assert_hydra_config(cfg):
     """
     Infer values of few parameters in the config file using the value of other config parameters
     1. Inferring losses
