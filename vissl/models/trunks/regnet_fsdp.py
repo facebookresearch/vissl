@@ -34,6 +34,7 @@ from classy_vision.models.anynet import (
     VanillaBlock,
 )
 from classy_vision.models.regnet import RegNetParams
+from fairscale.nn import checkpoint_wrapper
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP, auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
 from vissl.config import AttrDict
@@ -150,9 +151,10 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
     initializing the weights etc.
     """
 
-    def __init__(self, fsdp_config):
+    def __init__(self, fsdp_config: AttrDict, use_activation_checkpointing: bool):
         super().__init__()
         self.fsdp_config = fsdp_config
+        self.use_activation_checkpointing = use_activation_checkpointing
 
     def create_stem(self, params: Union[RegNetParams, AnyNetParams]):
         stem = super().create_stem(params)
@@ -172,6 +174,8 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
             width_in, width_out, stride, params, bottleneck_multiplier, group_width
         )
         block = auto_wrap_bn(block, single_rank_pg=False)
+        if self.use_activation_checkpointing:
+            block = checkpoint_wrapper(block, offload_to_cpu=False)  # TODO - make this configurable
         with enable_wrap(wrapper_cls=fsdp_wrapper, **self.fsdp_config):
             block = wrap(block)
         return block
@@ -364,9 +368,15 @@ class _RegNetFSDP(nn.Module):
         super().__init__()
         self.model_config = model_config
         self.seed = self.model_config._MODEL_INIT_SEED
+        self.use_activation_checkpointing = (
+            model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
+        )
         with set_torch_seed(self.seed):
             self._feature_blocks, self.trunk_depth = create_regnet_feature_blocks(
-                factory=RegnetFSDPBlocksFactory(self.model_config.FSDP_CONFIG),
+                factory=RegnetFSDPBlocksFactory(
+                    fsdp_config=self.model_config.FSDP_CONFIG,
+                    use_activation_checkpointing=self.use_activation_checkpointing,
+                ),
                 model_config=model_config,
             )
 
