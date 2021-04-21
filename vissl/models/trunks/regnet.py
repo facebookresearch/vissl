@@ -7,10 +7,12 @@ import torch
 import torch.nn as nn
 from classy_vision.models import RegNet as ClassyRegNet, build_model
 from vissl.config import AttrDict
+from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (
     Flatten,
     get_trunk_forward_outputs,
     transform_model_input_data_type,
+    get_tunk_forward_interpolated_outputs,
 )
 from vissl.models.trunks import register_model_trunk
 
@@ -80,11 +82,25 @@ class RegNet(nn.Module):
         self._feature_blocks = nn.ModuleDict(feature_blocks)
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:
-        model_input = transform_model_input_data_type(x, self.model_config)
-        return get_trunk_forward_outputs(
-            feat=model_input,
-            out_feat_keys=out_feat_keys,
-            feature_blocks=self._feature_blocks,
-            use_checkpointing=self.use_activation_checkpointing,
-            checkpointing_splits=self.activation_checkpointing_splits,
-        )
+        if isinstance(x, MultiDimensionalTensor):
+            out = get_tunk_forward_interpolated_outputs(
+                input_type=self.model_config.INPUT_TYPE,
+                interpolate_out_feat_key_name="res5",
+                remove_padding_before_feat_key_name="avgpool",
+                feat=x,
+                feature_blocks=self._feature_blocks,
+                use_checkpointing=self.use_activation_checkpointing,
+                checkpointing_splits=self.activation_checkpointing_splits,
+            )
+        else:
+            model_input = transform_model_input_data_type(
+                x, self.model_config.INPUT_TYPE
+            )
+            out = get_trunk_forward_outputs(
+                feat=model_input,
+                out_feat_keys=out_feat_keys,
+                feature_blocks=self._feature_blocks,
+                use_checkpointing=self.use_activation_checkpointing,
+                checkpointing_splits=self.activation_checkpointing_splits,
+            )
+        return out

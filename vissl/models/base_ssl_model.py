@@ -9,6 +9,7 @@ import torch.nn as nn
 from classy_vision.models import ClassyModel, register_model
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
+from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.heads import get_model_head
 from vissl.models.model_helpers import (
     fsdp_recursive_reset_lazy_init,
@@ -116,7 +117,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         If the model is trunk feature extraction only, then we simply return the output
         of the trunk.
         """
-        assert isinstance(batch, torch.Tensor)
+        assert isinstance(batch, (torch.Tensor, MultiDimensionalTensor)), type(batch)
         feats = self.trunk(batch, feature_names)
         # if we are interested in evaluating the trunk only, we return the output of the trunk
         # and don't forward through the heads
@@ -487,10 +488,13 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         So the method only reads the state_dict
         """
 
-        # TODO (Quentin) - support: different number of nodes + different checkpoint formats + fine tuning
+        # TODO (Quentin) - support: different number of nodes + different checkpoint
+        # formats + fine tuning
         # Special cases in which we want to evaluate a model trained with FSDP:
-        # - we need to benchmark it in FSDP mode as well and with the same number of workers
-        # - we need to have it trained with VISSL (no support for other checkpoint types for now)
+        # - we need to benchmark it in FSDP mode as well and with the same number of
+        #   workers
+        # - we need to have it trained with VISSL (no support for other checkpoint
+        #   types for now)
         if isinstance(self.trunk, FeatureExtractorModel) and isinstance(
             self.trunk.base_model, FSDP
         ):

@@ -38,10 +38,12 @@ from fairscale.nn import checkpoint_wrapper
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP, auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
 from vissl.config import AttrDict
+from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (
     Flatten,
     get_trunk_forward_outputs,
     transform_model_input_data_type,
+    get_tunk_forward_interpolated_outputs,
 )
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.misc import set_torch_seed
@@ -175,7 +177,8 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
         )
         block = auto_wrap_bn(block, single_rank_pg=False)
         if self.use_activation_checkpointing:
-            block = checkpoint_wrapper(block, offload_to_cpu=False)  # TODO - make this configurable
+            # TODO - make this configurable
+            block = checkpoint_wrapper(block, offload_to_cpu=False)
         with enable_wrap(wrapper_cls=fsdp_wrapper, **self.fsdp_config):
             block = wrap(block)
         return block
@@ -335,14 +338,28 @@ class RegNetV2(nn.Module):
             )
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:
-        model_input = transform_model_input_data_type(x, self.model_config)
-        return get_trunk_forward_outputs(
-            feat=model_input,
-            out_feat_keys=out_feat_keys,
-            feature_blocks=self._feature_blocks,
-            use_checkpointing=self.use_activation_checkpointing,
-            checkpointing_splits=self.activation_checkpointing_splits,
-        )
+        if isinstance(x, MultiDimensionalTensor):
+            out = get_tunk_forward_interpolated_outputs(
+                input_type=self.model_config.INPUT_TYPE,
+                interpolate_out_feat_key_name="res5",
+                remove_padding_before_feat_key_name="avgpool",
+                feat=x,
+                feature_blocks=self._feature_blocks,
+                use_checkpointing=self.use_activation_checkpointing,
+                checkpointing_splits=self.activation_checkpointing_splits,
+            )
+        else:
+            model_input = transform_model_input_data_type(
+                x, self.model_config.INPUT_TYPE
+            )
+            out = get_trunk_forward_outputs(
+                feat=model_input,
+                out_feat_keys=out_feat_keys,
+                feature_blocks=self._feature_blocks,
+                use_checkpointing=self.use_activation_checkpointing,
+                checkpointing_splits=self.activation_checkpointing_splits,
+            )
+        return out
 
 
 @register_model_trunk("regnet_fsdp")
@@ -381,12 +398,27 @@ class _RegNetFSDP(nn.Module):
             )
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:
-        model_input = transform_model_input_data_type(x, self.model_config)
-        return get_trunk_forward_outputs(
-            feat=model_input,
-            out_feat_keys=out_feat_keys,
-            feature_blocks=self._feature_blocks,
-            # FSDP has its own activation checkpoint method: disable vissl's method here.
-            use_checkpointing=False,
-            checkpointing_splits=0,
-        )
+        if isinstance(x, MultiDimensionalTensor):
+            out = get_tunk_forward_interpolated_outputs(
+                input_type=self.model_config.INPUT_TYPE,
+                interpolate_out_feat_key_name="res5",
+                remove_padding_before_feat_key_name="avgpool",
+                feat=x,
+                feature_blocks=self._feature_blocks,
+                # FSDP has its own activation checkpoint method: disable vissl's method here.
+                use_checkpointing=False,
+                checkpointing_splits=0,
+            )
+        else:
+            model_input = transform_model_input_data_type(
+                x, self.model_config.INPUT_TYPE
+            )
+            out = get_trunk_forward_outputs(
+                feat=model_input,
+                out_feat_keys=out_feat_keys,
+                feature_blocks=self._feature_blocks,
+                # FSDP has its own activation checkpoint method: disable vissl's method here.
+                use_checkpointing=False,
+                checkpointing_splits=0,
+            )
+        return out

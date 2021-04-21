@@ -49,9 +49,10 @@ def targets_one_hot_default_collator(batch, num_classes: int):
         "This collator supports only 1 data source. "
         "Please extend it to support many data sources."
     )
-    assert (
-        len(batch[0]["label"][0]) == 2
-    ), "This collator takes positive and negative labels separately. Please modify it to suit your needs."
+    assert len(batch[0]["label"][0]) == 2, (
+        "This collator takes positive and negative labels separately. "
+        "Please modify it to suit your needs."
+    )
 
     data = torch.stack([x["data"][0] for x in batch])
     data_valid = torch.stack([torch.tensor(x["data_valid"][0]) for x in batch])
