@@ -30,6 +30,8 @@ def benchmark_data(cfg: AttrDict, split: str = "train"):
     except AttributeError:
         device = torch.device("cuda")
 
+    # Gives sampler same seed for entire distributed group as per pytorch documentation.
+    sampler_seed = cfg.SEED_VALUE
     dataloader = get_loader(
         dataset=dataset,
         dataset_config=cfg["DATA"][split],
@@ -37,6 +39,7 @@ def benchmark_data(cfg: AttrDict, split: str = "train"):
         pin_memory=False,
         multi_processing_method=cfg.MULTI_PROCESSING_METHOD,
         device=device,
+        sampler_seed=sampler_seed,
     )
 
     # Fairstore data sampler would require setting the start iter before it can start.

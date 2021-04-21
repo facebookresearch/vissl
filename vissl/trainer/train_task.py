@@ -294,6 +294,9 @@ class SelfSupervisionTask(ClassificationTask):
         """
         self.datasets, self.data_and_label_keys = self.build_datasets()
 
+        # Gives sampler same seed for entire distributed group as per pytorch documentation.
+        sampler_seed = self.config["SEED_VALUE"]
+
         loaders = {
             split.lower(): get_loader(
                 dataset=self.datasets[split],
@@ -302,6 +305,7 @@ class SelfSupervisionTask(ClassificationTask):
                 pin_memory=pin_memory,
                 multi_processing_method=self.config.MULTI_PROCESSING_METHOD,
                 device=self.device,
+                sampler_seed=sampler_seed,
             )
             for split in self.available_splits
         }
