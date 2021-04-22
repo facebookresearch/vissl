@@ -12,7 +12,6 @@ from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.heads import get_model_head
 from vissl.models.model_helpers import (
-    fsdp_recursive_reset_lazy_init,
     get_trunk_output_feature_names,
     is_feature_extractor_model,
 )
@@ -20,6 +19,7 @@ from vissl.models.trunks import get_model_trunk
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
 from vissl.utils.checkpoint import init_model_from_consolidated_weights
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.fsdp_utils import fsdp_recursive_reset_lazy_init
 from vissl.utils.misc import set_torch_seed
 
 

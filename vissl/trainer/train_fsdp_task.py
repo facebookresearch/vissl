@@ -9,6 +9,7 @@ from classy_vision.tasks import register_task
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
 from vissl.trainer.train_task import SelfSupervisionTask
+from vissl.utils.fsdp_utils import fsdp_wrapper
 from vissl.utils.misc import is_fairscale_sharded_available
 
 
@@ -58,5 +59,5 @@ class SelfSupervisionFSDPTask(SelfSupervisionTask):
         # Then, wrap the whole model. We replace the base_model since it is used
         # when checkpoint is taken.
         fsdp_config = self.config["MODEL"]["FSDP_CONFIG"]
-        self.base_model = FSDP(module=self.base_model, **fsdp_config)
+        self.base_model = fsdp_wrapper(self.base_model, **fsdp_config)
         self.distributed_model = self.base_model

@@ -35,7 +35,7 @@ from classy_vision.models.anynet import (
 )
 from classy_vision.models.regnet import RegNetParams
 from fairscale.nn import checkpoint_wrapper
-from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP, auto_wrap_bn
+from fairscale.nn.data_parallel import auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
@@ -46,13 +46,8 @@ from vissl.models.model_helpers import (
     get_tunk_forward_interpolated_outputs,
 )
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.fsdp_utils import fsdp_wrapper
 from vissl.utils.misc import set_torch_seed
-
-
-def fsdp_wrapper(module, **kwargs):
-    """Customer wrapper that does FSDP + checkpoint at the same time."""
-    # TODO (Min): enable checkpoint_wrapper
-    return FSDP(module, **kwargs)
 
 
 def init_weights(module):
@@ -333,8 +328,7 @@ class RegNetV2(nn.Module):
         )
         with set_torch_seed(self.seed):
             self._feature_blocks, self.trunk_depth = create_regnet_feature_blocks(
-                factory=RegnetBlocksFactory(),
-                model_config=model_config,
+                factory=RegnetBlocksFactory(), model_config=model_config
             )
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:
@@ -363,15 +357,13 @@ class RegNetV2(nn.Module):
 
 
 @register_model_trunk("regnet_fsdp")
-class RegNetFSDP(FSDP):
+def RegNetFSDP(model_config: AttrDict, model_name: str):
     """
     Wrap the entire trunk since we need to load checkpoint before
     train_fsdp_task.py wrapping happens.
     """
-
-    def __init__(self, model_config: AttrDict, model_name: str):
-        module = _RegNetFSDP(model_config, model_name).cuda()
-        super().__init__(module, **model_config.FSDP_CONFIG)
+    module = _RegNetFSDP(model_config, model_name).cuda()
+    return fsdp_wrapper(module, **model_config.FSDP_CONFIG)
 
 
 class _RegNetFSDP(nn.Module):

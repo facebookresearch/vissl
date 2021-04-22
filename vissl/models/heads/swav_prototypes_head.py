@@ -3,9 +3,9 @@ from typing import List
 
 import torch
 import torch.nn as nn
-from fairscale.nn import FullyShardedDataParallel
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
+from vissl.utils.fsdp_utils import fsdp_wrapper
 
 
 @register_model_head("swav_head")
@@ -152,6 +152,6 @@ def SwavPrototypesHeadFSDP(
 
     for j in range(head.nmb_heads):
         module = getattr(head, "prototypes" + str(j))
-        module = FullyShardedDataParallel(module=module, **fp32_fsdp_config)
+        module = fsdp_wrapper(module, **fp32_fsdp_config)
         setattr(head, "prototypes" + str(j), module)
-    return FullyShardedDataParallel(head)
+    return fsdp_wrapper(head, **model_config.FSDP_CONFIG)

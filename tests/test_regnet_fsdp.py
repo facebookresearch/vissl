@@ -9,11 +9,11 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch.optim as optim
-from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from hydra.experimental import compose, initialize_config_module
 from torch.nn.parallel import DistributedDataParallel
 from vissl.losses.swav_loss import SwAVLoss
 from vissl.models import build_model
+from vissl.utils.fsdp_utils import fsdp_wrapper
 from vissl.utils.hydra_config import convert_to_attrdict
 
 
@@ -76,7 +76,7 @@ class TestRegnetFSDP(unittest.TestCase):
         model = build_model(config["MODEL"], config["OPTIMIZER"])
         model = model.cuda()
         if with_fsdp:
-            model = FSDP(model)
+            model = fsdp_wrapper(model, **config.MODEL.FSDP_CONFIG)
         else:
             model = DistributedDataParallel(model, device_ids=[gpu_id])
         criterion = SwAVLoss(loss_config=config["LOSS"]["swav_loss"])
