@@ -11,6 +11,7 @@ SRC_DIR=$(dirname "${SRC_DIR}")
 
 TEST_LIST=(
     "test_regnet_fsdp.py"
+    "test_regnet_fsdp_integration.py"
 )
 
 echo "========================================================================"
