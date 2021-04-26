@@ -522,9 +522,16 @@ def infer_and_assert_hydra_config(cfg):
             # if mixed_precision=False, FSDP mandates setting fp32_reduce_scatter=False
             cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
 
-        # further inference in case of swav trainings with FSDP
-        if cfg.LOSS.name == "swav_loss":
-            cfg.MODEL.HEAD.PARAMS[0][0] = "swav_head_fsdp"
+        # Inference of the head in case of training with FSDP
+        for i, head_param in enumerate(cfg.MODEL.HEAD.PARAMS):
+            if head_param[0] == "swav_head":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "swav_head_fsdp"
+            if head_param[0] == "eval_mlp":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "eval_mlp_fsdp"
+            if head_param[0] == "mlp":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "mlp_fsdp"
+
+        # Inference of the trunk in case of training with FSDP
         if cfg.MODEL.TRUNK.NAME == "regnet":
             cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
 

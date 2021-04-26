@@ -382,7 +382,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                         train_phase_idx = train_phase_idx - 1
                         model_state_dict["train_phase_idx"] = train_phase_idx
                 checkpoint_content = {
-                    "type": "checkpoint",
                     "phase_idx": phase_idx,
                     "iteration": task.iteration,
                     "loss": task.loss.state_dict(),
@@ -402,7 +401,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 if isinstance(task.base_model, FSDP):
                     _, rank = get_machine_local_and_dist_rank()
                     checkpoint_writer.save_sharded_checkpoint(
-                        shard_content=checkpoint_content,
+                        content=checkpoint_content,
                         shard_rank=rank,
                         world_size=self.world_size,
                     )

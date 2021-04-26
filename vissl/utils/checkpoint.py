@@ -2,6 +2,7 @@
 
 import logging
 import os
+from enum import Enum, auto
 from typing import Any, Dict, List
 
 import torch
@@ -14,6 +15,19 @@ from fvcore.common.file_io import PathManager
 from vissl.config import AttrDict
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import create_file_symlink, makedir
+
+
+class CheckpointType(Enum):
+    """
+    Types of checkpoint content:
+    - consolidated: a checkpoint containing all the model weights
+    - shard: a checkpoint contained the weights of a shard
+    - shard_list: a checkpoint listing all shards of a model
+    """
+
+    consolidated = auto()
+    shard = auto()
+    shard_list = auto()
 
 
 class CheckpointWriter:
@@ -40,27 +54,35 @@ class CheckpointWriter:
         Save a checkpoint containing the full model weights
         (to be used with DDP on primary rank)
         """
+
+        # Complete the checkpoint with its type
+        content["type"] = CheckpointType.consolidated.name
+
         checkpoint_name = self.get_checkpoint_name()
         self._save(name=checkpoint_name, content=content)
         self._create_symbolic_link(checkpoint_name)
 
     def save_sharded_checkpoint(
-        self, shard_content: Dict[str, Any], shard_rank: int, world_size: int
+        self, content: Dict[str, Any], shard_rank: int, world_size: int
     ):
         """
         Save a checkpoint containing only the model weights of the
         current shard (to be used with FSDP on all ranks)
         """
+
+        # Complete the checkpoint with its type
+        content["type"] = CheckpointType.shard.name
+
         # Each worker saves its own shard
         shard_name = self.get_checkpoint_shard_name(shard_rank)
-        self._save(name=shard_name, content=shard_content)
+        self._save(name=shard_name, content=content)
         if shard_rank != 0:
             return
 
         # While the primary worker saves a checkpoint referencing all the shards
         primary_name = self.get_checkpoint_name()
         primary_checkpoint = {
-            "type": "master",
+            "type": CheckpointType.shard_list.name,
             "shards": [
                 self.get_checkpoint_shard_name(rank) for rank in range(world_size)
             ],
@@ -125,6 +147,7 @@ class CheckpointLoader:
         potential indirection due to the notion of sharded checkpoint
         """
         checkpoint = load_and_broadcast_checkpoint(checkpoint_path, device)
+        cls._update_version(checkpoint)
         if cls._is_shard_aggregator_checkpoint(checkpoint):
             _, global_rank = get_machine_local_and_dist_rank()
             shard_name = checkpoint["shards"][global_rank]
@@ -134,7 +157,13 @@ class CheckpointLoader:
 
     @staticmethod
     def _is_shard_aggregator_checkpoint(checkpoint: Dict[str, Any]):
-        return "type" in checkpoint and checkpoint["type"] == "master"
+        cp_type = checkpoint.get("type", CheckpointType.consolidated.name)
+        return cp_type == CheckpointType.shard_list.name
+
+    @staticmethod
+    def _update_version(checkpoint: Dict[str, Any]):
+        # Backward compatibility with old checkpoints saved without types
+        checkpoint.setdefault("type", CheckpointType.consolidated.name)
 
 
 def is_training_finished(cfg: AttrDict, checkpoint_folder: str):
