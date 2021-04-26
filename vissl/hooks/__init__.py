@@ -15,6 +15,7 @@ from vissl.hooks.log_hooks import (  # noqa
     LogPerfTimeMetricsHook,
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
+from vissl.hooks.profiling_hook import ProfilingHook
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     FreezeParametersHook,
@@ -32,6 +33,7 @@ from vissl.hooks.swav_momentum_hooks import (
     SwAVMomentumNormalizePrototypesHook,
 )
 from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
+from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
 
 
@@ -131,6 +133,12 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         if cfg.HOOKS.PERF_STATS.ROLLING_BTIME_FREQ > 0
         else None
     )
+
+    if ProfilingHook.is_enabled(cfg.PROFILING):
+        hooks.append(ProfilingHook(profiling_config=cfg.PROFILING))
+
+    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+    checkpoint_folder = get_checkpoint_folder(cfg)
     hooks.extend(
         [
             CheckNanLossHook(),
@@ -140,8 +148,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             UpdateTrainBatchTimeHook(),
             UpdateTestBatchTimeHook(),
             UpdateTrainIterationNumHook(),
-            LogLossMetricsCheckpointHook(),
-            LogLossLrEtaHook(rolling_btime_freq),
+            LogLossMetricsCheckpointHook(world_size),
+            LogLossLrEtaHook(checkpoint_folder, rolling_btime_freq),
         ]
     )
     return hooks

@@ -27,15 +27,14 @@ config:
   MODEL:
     TRUNK:
       NAME: efficientnet
-      TRUNK_PARAMS:
-        EFFICIENT_NETS:
-          model_version: B2
-          bn_momentum: 0.01
-          bn_epsilon: 0.001
-          drop_connect_rate: 0.2
-          width_divisor: 8
-          min_width: null
-          use_se: True
+      EFFICIENT_NETS:
+        model_version: B2
+        bn_momentum: 0.01
+        bn_epsilon: 0.001
+        drop_connect_rate: 0.2
+        width_divisor: 8
+        min_width: null
+        use_se: True
     HEAD:
       PARAMS: [
         ["swav_head", {"dims": [1408, 1408, 128], "use_bn": True, "num_clusters": [3000]}],

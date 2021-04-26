@@ -203,7 +203,7 @@ If instead, you want to use a custom data storage solution :code:`my_data_source
 
 - **Step3**: Register the name of the datasets you plan to load using the new data source. There are 2 ways to do this:
 
-  - See our documentation on "Using dataset_catalog.json" to update the :code:`configs/dataset_catalog.json` file.
+  - See our documentation on `Using dataset_catalog.json <https://vissl.readthedocs.io/en/latest/vissl_modules/data.html#using-dataset-catalog-json>`_ to update the :code:`configs/dataset_catalog.json` file.
 
   - Insert a python call following:
 

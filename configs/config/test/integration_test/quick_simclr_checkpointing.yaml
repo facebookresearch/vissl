@@ -55,7 +55,7 @@ config:
         DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_relu": True}],
+        ["mlp", {"dims": [2048, 2048], "use_relu": True, "skip_last_layer_relu_bn": False}],
         ["mlp", {"dims": [2048, 128]}],
       ]
     SYNC_BN_CONFIG:

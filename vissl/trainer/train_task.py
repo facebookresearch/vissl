@@ -4,7 +4,7 @@ import gc
 import logging
 
 import torch
-from classy_vision.generic.util import copy_model_to_gpu, load_and_broadcast_checkpoint
+from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
@@ -13,11 +13,17 @@ from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMod
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
-from vissl.data import build_dataset, get_loader, print_sampler_config
+from vissl.data import (
+    build_dataset,
+    get_loader,
+    print_sampler_config,
+    AirstoreDataset,
+    GenericSSLDataset,
+)
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
-from vissl.utils.checkpoint import init_model_from_weights
+from vissl.utils.checkpoint import CheckpointLoader
 from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
 
 
@@ -164,41 +170,38 @@ class SelfSupervisionTask(ClassificationTask):
 
             # This will rightly fail if the setting is not correct
             self.amp_type = AmpType[self.config.MODEL.AMP_PARAMS.AMP_TYPE.upper()]
-
-            # Check Apex availability
             if self.amp_type == AmpType.APEX:
-                if not is_apex_available():
-                    raise RuntimeError(
-                        "Apex is not available. Can't use mixed precision"
-                    )
-
-                # "amp_args" are actually Apex Amp args
-                self.amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
-                logging.info(f"Setting AMP: using apex, args {self.amp_args}")
-
+                self._init_apex_grad_scaler()
             elif self.amp_type == AmpType.PYTORCH:
-                # if the optimizer is sharded or FSDP data parallel is used, then the GradScaler
-                # needs to be shard-aware.
-                if (
-                    self.config["TRAINER"]["TASK_NAME"] == "self_supervision_fsdp_task"
-                    or self.config["OPTIMIZER"]["name"] == "zero"
-                ):
-                    assert is_fairscale_sharded_available(), (
-                        "To use ZeRO with PyTorch AMP, ShardedGradScaler() "
-                        "from fairscale is needed. Please upgrade fairscale"
-                    )
-                    from fairscale.optim.grad_scaler import ShardedGradScaler
-
-                    self.amp_grad_scaler = ShardedGradScaler()
-                    logging.info("Setting AMP: using sharded grad scaler")
-                else:
-                    self.amp_grad_scaler = TorchGradScaler()
-                    logging.info("Setting AMP: using pytorch grad scaler")
+                self._init_pytorch_grad_scaler()
             logging.info(f"Setting AMP: {self.amp_type} - args: {self.amp_args}")
 
         else:
             self.amp_args, self.amp_type = None, None
             logging.info("Not using Automatic Mixed Precision")
+
+    def _init_apex_grad_scaler(self):
+        # Check Apex availability
+        if not is_apex_available():
+            raise RuntimeError("Apex is not available. Can't use mixed precision")
+
+        # "amp_args" are actually Apex Amp args
+        self.amp_args = self.config.MODEL.AMP_PARAMS.AMP_ARGS
+        logging.info(f"Setting AMP: using apex, args {self.amp_args}")
+
+    def _init_pytorch_grad_scaler(self):
+        if self.config["OPTIMIZER"]["name"] == "zero":
+            assert is_fairscale_sharded_available(), (
+                "To use ZeRO with PyTorch AMP, ShardedGradScaler() "
+                "from fairscale is needed. Please upgrade fairscale"
+            )
+            from fairscale.optim.grad_scaler import ShardedGradScaler
+
+            self.amp_grad_scaler = ShardedGradScaler()
+            logging.info("Setting AMP: using sharded grad scaler")
+        else:
+            self.amp_grad_scaler = TorchGradScaler()
+            logging.info("Setting AMP: using pytorch grad scaler")
 
     def set_checkpoint_path(self, checkpoint_path: str):
         """
@@ -388,26 +391,10 @@ class SelfSupervisionTask(ClassificationTask):
         logging.info(f"Initializing model from: {init_weights_path}")
 
         if PathManager.exists(init_weights_path):
-            weights = load_and_broadcast_checkpoint(
-                init_weights_path, device=torch.device("cpu")
+            checkpoint = CheckpointLoader.load_and_broadcast_init_weights(
+                checkpoint_path=init_weights_path, device=torch.device("cpu")
             )
-            skip_layers = params_from_file.get("SKIP_LAYERS", [])
-            replace_prefix = params_from_file.get("REMOVE_PREFIX", None)
-            append_prefix = params_from_file.get("APPEND_PREFIX", None)
-            state_dict_key_name = params_from_file.get("STATE_DICT_KEY_NAME", None)
-
-            # we initialize the weights from this checkpoint. However, we
-            # don't care about the other metadata like iteration number etc.
-            # So the method only reads the state_dict
-            init_model_from_weights(
-                self.config,
-                model,
-                weights,
-                state_dict_key_name=state_dict_key_name,
-                skip_layers=skip_layers,
-                replace_prefix=replace_prefix,
-                append_prefix=append_prefix,
-            )
+            model.init_model_from_weights_params_file(self.config, checkpoint)
         return model
 
     def _build_model(self):
@@ -475,6 +462,17 @@ class SelfSupervisionTask(ClassificationTask):
 
         return model
 
+    def _compute_start_iter_from_checkpoint(self, phase_type) -> int:
+        # used for calculating the start iteration (count from current epoch) when resuming
+        # from checkpoint
+        if self.checkpoint is None or self.checkpoint["iteration"] <= 0:
+            return 0
+
+        num_iters_in_epochs = len(self.dataloaders[phase_type])
+        num_epochs = self.checkpoint["train_phase_idx"] + 1
+        num_train_iters_done = num_epochs * num_iters_in_epochs
+        return self.checkpoint["iteration"] - num_train_iters_done
+
     def recreate_data_iterator(self, phase_type, epoch, compute_start_iter):
         """
         Recreate data iterator (including multiprocessing workers) and destroy the
@@ -486,6 +484,10 @@ class SelfSupervisionTask(ClassificationTask):
         epoch and start_iteration so that the data is deterministically shuffled,
         so we call them here.
         """
+        start_iter = 0
+        if compute_start_iter:
+            start_iter = self._compute_start_iter_from_checkpoint(phase_type)
+
         if hasattr(self.dataloaders[phase_type], "sampler"):
             sampler = self.dataloaders[phase_type].sampler
             # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler.
@@ -493,19 +495,19 @@ class SelfSupervisionTask(ClassificationTask):
                 sampler.set_epoch(epoch)
             # Resume from the iteration if valid
             if hasattr(sampler, "set_start_iter"):
-                if (
-                    compute_start_iter
-                    and self.checkpoint is not None
-                    and self.checkpoint["iteration"] > 0
-                ):
-                    num_iters_in_epochs = len(self.dataloaders[phase_type])
-                    num_epochs = self.checkpoint["train_phase_idx"] + 1
-                    num_train_iters_done = num_epochs * num_iters_in_epochs
-                    start_iter = self.checkpoint["iteration"] - num_train_iters_done
-                else:
-                    start_iter = 0
                 sampler.set_start_iter(start_iter)
             print_sampler_config(sampler)
+
+        # call set_epoch and set_start_iter for AirstoreDataset since it handles
+        # shuffle and sample skipping behavior internally
+        if hasattr(self.dataloaders[phase_type], "dataset"):
+            dataset = self.dataloaders[phase_type].dataset
+            if isinstance(dataset, GenericSSLDataset):
+                for data_obj in dataset.data_objs:
+                    if isinstance(data_obj, AirstoreDataset):
+                        data_obj.set_epoch(epoch)
+                        data_obj.set_start_iter(start_iter)
+
         # delete the old data iterator
         del self.data_iterator
         gc.collect()
@@ -673,9 +675,12 @@ class SelfSupervisionTask(ClassificationTask):
         # Restore an hypothetical checkpoint
         vissl_state_dict = None
         if self.checkpoint_path is not None:
-            self.checkpoint = load_and_broadcast_checkpoint(
-                checkpoint_path=self.checkpoint_path, device=torch.device("cpu")
+            self.checkpoint = CheckpointLoader.load_and_broadcast_checkpoint(
+                checkpoint_folder=self.checkpoint_folder,
+                checkpoint_path=self.checkpoint_path,
+                device=torch.device("cpu"),
             )
+
             self.iteration = self.checkpoint["iteration"]
             self.local_iteration_num = self.checkpoint["iteration_num"]
             vissl_state_dict = self.checkpoint.get("classy_state_dict")

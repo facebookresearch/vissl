@@ -4,7 +4,9 @@
 All the hooks involved in human-readable logging
 """
 
+import atexit
 import datetime
+import json
 import logging
 import time
 from typing import Optional
@@ -12,13 +14,12 @@ from typing import Optional
 import torch
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
-from classy_vision.generic.util import save_checkpoint
 from classy_vision.hooks.classy_hook import ClassyHook
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from fvcore.common.file_io import PathManager
-from vissl.utils.checkpoint import is_checkpoint_phase
+from vissl.utils.checkpoint import CheckpointWriter, is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.io import create_file_symlink, save_file
+from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
 
@@ -126,14 +127,25 @@ class LogLossLrEtaHook(ClassyHook):
     on_step = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
 
-    def __init__(self, btime_freq: Optional[int] = None) -> None:
+    def __init__(
+        self, checkpoint_folder: str, btime_freq: Optional[int] = None
+    ) -> None:
         """
         Args:
+            checkpoint_folder: checkpoint directory where we will write the stdout.json
             btime_freq: if specified, logs average batch time of rolling_freq
                           batches also.
         """
         super().__init__()
         self.btime_freq: Optional[int] = btime_freq
+        self.json_stdout_logger = None
+        if is_primary():
+            self.json_stdout_logger = PathManager.open(
+                f"{checkpoint_folder}/stdout.json",
+                mode="a",
+                buffering=10 * 1024,  # 10KB
+            )
+            atexit.register(self.json_stdout_logger.close)
 
     def on_update(self, task: "tasks.ClassyTask") -> None:
         """
@@ -179,16 +191,16 @@ class LogLossLrEtaHook(ClassyHook):
                     lr_val = round(task.optimizer.options_view.lr, 5)
                 batch_time = int(1000.0 * avg_time)
                 rank = get_rank()
-                log_str = (
-                    f"Rank: {rank}; "
-                    f"[ep: {train_phase_idx}] "
-                    f"iter: {iteration}; "
-                    f"lr: {lr_val}; "
-                    f"loss: {loss_val}; "
-                    f"btime(ms): {batch_time}; "
-                    f"eta: {eta_string}; "
-                    f"peak_mem: {peak_mem_used}M"
-                )
+                log_data = {
+                    "Rank": rank,
+                    "ep": train_phase_idx,
+                    "iter": iteration,
+                    "lr": lr_val,
+                    "loss": loss_val,
+                    "btime(ms)": batch_time,
+                    "eta": eta_string,
+                    "peak_mem(M)": peak_mem_used,
+                }
                 if self.btime_freq and len(batch_times) >= self.btime_freq:
                     rolling_avg_time = (
                         sum(batch_times[-self.btime_freq :]) / self.btime_freq
@@ -200,12 +212,21 @@ class LogLossLrEtaHook(ClassyHook):
                         datetime.timedelta(seconds=int(rolling_eta_secs))
                     )
                     rolling_btime = int(1000.0 * rolling_avg_time)
-                    log_str = (
-                        f"{log_str}; "
-                        f"btime({self.btime_freq}iters): {rolling_btime} ms; "
-                        f"rolling_eta: {rolling_eta_str}"
+                    log_data[f"btime({self.btime_freq}iters)(ms)"] = rolling_btime
+                    log_data["rolling_eta"] = rolling_eta_str
+
+                # to maintain the backwards compatibility with the log.txt
+                # logs, we convert the json to the previous format.
+                # the stdout.json can be used to use the json format of logs.
+                stdout_data = ""
+                for key, value in log_data.items():
+                    stdout_data = (
+                        f"{stdout_data}[{key}: {value}] "
+                        if key == "ep"
+                        else f"{stdout_data}{key}: {value}; "
                     )
-                logging.info(log_str)
+                logging.info(stdout_data.strip())
+                self.json_stdout_logger.write(json.dumps(log_data) + "\n")
 
 
 class LogLossMetricsCheckpointHook(ClassyHook):
@@ -222,6 +243,10 @@ class LogLossMetricsCheckpointHook(ClassyHook):
     on_backward = ClassyHook._noop
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
+
+    def __init__(self, world_size: int):
+        super().__init__()
+        self.world_size = world_size
 
     # TODO: make this a standalone hook and make it optional to save runtime
     # although the overhead is minimal when the model is training fine (no nans)
@@ -336,20 +361,16 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 )
                 task.optimizer.consolidate_state_dict()
 
-            # Model's state dict may need to be obtained on all ranks if we are running
-            # with FSDP since all_gather needs to happen here.
-            model_state_dict = None
-            if isinstance(task.base_model, FSDP):
-                model_state_dict = task.get_classy_state()
-
+            # Depending on whether we are in FSDP mode or not
             # - save the checkpoint on the primary rank
-            if is_primary():
+            # - save the sharded checkpoint on all ranks
+            if is_primary() or isinstance(task.base_model, FSDP):
                 checkpoint_folder = task.checkpoint_folder
                 logging.info(
                     f"[{mode}: {mode_num}] Saving checkpoint to {checkpoint_folder}"
                 )
-                if model_state_dict is None:
-                    model_state_dict = task.get_classy_state()
+                model_state_dict = task.get_classy_state()
+
                 # phase_idx is already incremented at the beginning of phase but if we
                 # are checkpointing at an iteration in the middle of phase, we should not
                 # save the incremented phase_idx as it will incorrectly assume that model
@@ -360,33 +381,42 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     if task.train:
                         train_phase_idx = train_phase_idx - 1
                         model_state_dict["train_phase_idx"] = train_phase_idx
-                checkpoint_task = {
+                checkpoint_content = {
                     "phase_idx": phase_idx,
                     "iteration": task.iteration,
                     "loss": task.loss.state_dict(),
                     "iteration_num": task.local_iteration_num,
                     "train_phase_idx": train_phase_idx,
-                    # TODO (Min): change the key to model_state_dict but we need to be careful
-                    #             about backward compatibilities.
                     "classy_state_dict": model_state_dict,
                 }
-                ckpt_name = f"model_{mode}{mode_num}.torch"
-                if is_final_train_phase:
-                    ckpt_name = f"model_final_checkpoint_{mode}{mode_num}.torch"
-                backend = task.config["CHECKPOINT"]["BACKEND"]
-                assert backend == "disk", "Only disk BACKEND supported"
-                save_checkpoint(
-                    checkpoint_folder, checkpoint_task, checkpoint_file=ckpt_name
+
+                checkpoint_writer = CheckpointWriter(
+                    checkpoint_folder=checkpoint_folder,
+                    is_final_train_phase=is_final_train_phase,
+                    mode=mode,
+                    mode_num=mode_num,
+                    backend=task.config["CHECKPOINT"]["BACKEND"],
                 )
-                logging.info(f"Saved checkpoint: {checkpoint_folder}/{ckpt_name}")
-                # we create the checkpoint symlink and use this symlink to load
-                # checkpoints. This helps ensure that the checkpoint we load from
-                # are valid. It's a particularly useful feature for resuming trainings.
-                logging.info("Creating symlink...")
-                symlink_dest_file = f"{checkpoint_folder}/checkpoint.torch"
-                source_file = f"{checkpoint_folder}/{ckpt_name}"
-                create_file_symlink(source_file, symlink_dest_file)
-                logging.info(f"Created symlink: {symlink_dest_file}")
+
+                if isinstance(task.base_model, FSDP):
+                    _, rank = get_machine_local_and_dist_rank()
+                    checkpoint_writer.save_sharded_checkpoint(
+                        content=checkpoint_content,
+                        shard_rank=rank,
+                        world_size=self.world_size,
+                    )
+                else:
+                    checkpoint_writer.save_consolidated_checkpoint(checkpoint_content)
+
+                """
+                # TODO - remove this
+                if is_primary() and mode_num == 0:
+                    import subprocess
+                    import submitit
+
+                    job_id = submitit.JobEnvironment().job_id
+                    subprocess.check_call(["scancel", job_id, "--signal", "TERM"])
+                """
 
     def _print_and_save_meters(self, task, train_phase_idx):
         """

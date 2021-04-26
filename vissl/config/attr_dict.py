@@ -19,6 +19,21 @@ class AttrDict(dict):
             else:
                 self[key] = value
 
+    def to_dict(self):
+        """
+        Convert the AttrDict back to a dictionary.
+
+        Helpful to feed the configuration to generic functions
+        which only accept primitive types
+        """
+        dict = {}
+        for k, v in self.items():
+            if isinstance(v, AttrDict):
+                dict[k] = v.to_dict()
+            else:
+                dict[k] = v
+        return dict
+
     def __getattr__(self, key):
         """
         Read a key as an attribute.

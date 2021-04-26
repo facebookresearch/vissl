@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets.utils import download_url, extract_archive
 from tqdm import tqdm
 
+
 try:
     from pyunpack import Archive
 except ImportError:

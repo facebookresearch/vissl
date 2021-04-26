@@ -3,7 +3,34 @@
 
 SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SRC_DIR=$(dirname "${SRC_DIR}")
-BINARY="python ${SRC_DIR}/tools/run_distributed_engines.py"
+
+
+# -----------------------------------------------------------------------------
+# Unit tests: running important unit tests in CI
+# -----------------------------------------------------------------------------
+
+TEST_LIST=(
+    "test_regnet_fsdp.py"
+    "test_regnet_fsdp_integration.py"
+)
+
+echo "========================================================================"
+echo "Unit tests to run:"
+echo "${TEST_LIST[@]}"
+echo "========================================================================"
+
+pushd "${SRC_DIR}/tests"
+for test_file in "${TEST_LIST[@]}"; do
+  python -m unittest $test_file
+done
+popd
+
+
+# -----------------------------------------------------------------------------
+# Integration tests: running configurations
+# - verify that the configuration are valid
+# - verify that the associated jobs run to the end
+# -----------------------------------------------------------------------------
 
 CFG_LIST=(
     "test/integration_test/quick_deepcluster_v2"
@@ -19,6 +46,8 @@ echo "========================================================================"
 echo "Configs to run:"
 echo "${CFG_LIST[@]}"
 echo "========================================================================"
+
+BINARY="python ${SRC_DIR}/tools/run_distributed_engines.py"
 
 for cfg in "${CFG_LIST[@]}"; do
     echo "========================================================================"

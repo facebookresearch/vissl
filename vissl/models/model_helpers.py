@@ -11,9 +11,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.utils import _ntuple
 from torch.utils.checkpoint import checkpoint
+from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.utils.activation_checkpointing import checkpoint_trunk
 from vissl.utils.misc import is_apex_available
-
 
 # Tuple of classes of BN layers.
 _bn_cls = (nn.BatchNorm2d, torch.nn.modules.batchnorm.SyncBatchNorm)
@@ -29,18 +29,18 @@ if is_apex_available():
         _bn_cls = _bn_cls + (apex.parallel.SyncBatchNorm,)
 
 
-def transform_model_input_data_type(model_input, model_config):
+def transform_model_input_data_type(model_input, input_type: str):
     """
     Default model input follow RGB format. Based the model input specified,
     change the type. Supported types: RGB, BGR, LAB
     """
     model_output = model_input
     # In case the model takes BGR input type, we convert the RGB to BGR
-    if model_config.INPUT_TYPE == "bgr":
+    if input_type == "bgr":
         model_output = model_input[:, [2, 1, 0], :, :]
     # In case of LAB image, we take only "L" channel as input. Split the data
     # along the channel dimension into [L, AB] and keep only L channel.
-    if model_config.INPUT_TYPE == "lab":
+    if input_type == "lab":
         model_output = torch.split(model_input, [1, 2], dim=1)[0]
     return model_output
 
@@ -326,12 +326,81 @@ def get_trunk_forward_outputs_module_list(
     return out_feats
 
 
+def get_tunk_forward_interpolated_outputs(
+    input_type: str,  # bgr or rgb or lab
+    interpolate_out_feat_key_name: str,
+    remove_padding_before_feat_key_name: str,
+    feat: MultiDimensionalTensor,
+    feature_blocks: nn.ModuleDict,
+    feature_mapping: Dict[str, str] = None,
+    use_checkpointing: bool = False,
+    checkpointing_splits: int = 2,
+) -> List[torch.Tensor]:
+    """
+    Args:
+        input_type (AttrDict): whether the model input should be RGB or BGR or LAB
+        interpolate_out_feat_key_name (str): what feature dimensions should be
+            used to interpolate the mask
+        remove_padding_before_feat_key_name (str): name of the feature block for which
+            the input should have padding removed using the interpolated mask
+        feat (MultiDimensionalTensor): model input
+        feature_blocks (nn.ModuleDict): ModuleDict containing feature blocks in the model
+        feature_mapping (Dict[str, str]): an optional correspondence table in between
+            the requested feature names and the model's.
+
+    Returns:
+        out_feats: a list with the asked output features placed in the same order as in
+            `out_feat_keys`.
+    """
+    if feature_mapping is not None:
+        interpolate_out_feat_key_name = feature_mapping[interpolate_out_feat_key_name]
+
+    model_input = transform_model_input_data_type(feat.tensor, input_type)
+    out = get_trunk_forward_outputs(
+        feat=model_input,
+        out_feat_keys=[interpolate_out_feat_key_name],
+        feature_blocks=feature_blocks,
+        use_checkpointing=use_checkpointing,
+        checkpointing_splits=checkpointing_splits,
+    )
+    # mask is of shape N x H x W and has 1.0 value for places with padding
+    # we interpolate the mask spatially to N x out.shape[-2] x out.shape[-1].
+    interp_mask = F.interpolate(feat.mask[None].float(), size=out[0].shape[-2:]).to(
+        torch.bool
+    )[0]
+
+    # we want to iterate over the rest of the feature blocks now
+    _, max_out_feat = parse_out_keys_arg(
+        [interpolate_out_feat_key_name], list(feature_blocks.keys())
+    )
+    for i, (feature_name, feature_block) in enumerate(feature_blocks.items()):
+        # We have already done the forward till the max_out_feat.
+        # we forward through rest of the blocks now.
+        if i >= (max_out_feat + 1):
+            if remove_padding_before_feat_key_name and (
+                feature_name == remove_padding_before_feat_key_name
+            ):
+                # negate the mask so that the padded locations have 0.0 and the non-padded
+                # locations have 1.0. This is used to extract the h, w of the original tensors.
+                interp_mask = (~interp_mask).chunk(len(feat.image_sizes))
+                tensors = out[0].chunk(len(feat.image_sizes))
+                res = []
+                for i, tensor in enumerate(tensors):
+                    w = torch.sum(interp_mask[i][0], dim=0)[0]
+                    h = torch.sum(interp_mask[i][0], dim=1)[0]
+                    res.append(feature_block(tensor[:, :, :w, :h]))
+                out[0] = torch.cat(res)
+            else:
+                out[0] = feature_block(out[0])
+    return out
+
+
 def get_trunk_forward_outputs(
     feat: torch.Tensor,
     out_feat_keys: List[str],
     feature_blocks: nn.ModuleDict,
     feature_mapping: Dict[str, str] = None,
-    use_checkpointing: bool = True,
+    use_checkpointing: bool = False,
     checkpointing_splits: int = 2,
 ) -> List[torch.Tensor]:
     """
@@ -374,7 +443,7 @@ def get_trunk_forward_outputs(
 
     # Go through the blocks, and save the features as we go
     # NOTE: we are not doing several forward passes but instead just checking
-    # whether the feature should is requested to be returned.
+    # whether the feature is requested to be returned.
     for i, (feature_name, feature_block) in enumerate(feature_blocks.items()):
         # The last chunk has to be non-volatile
         if use_checkpointing and i < len(feature_blocks) - 1:
@@ -408,7 +477,6 @@ def get_trunk_forward_outputs(
     output_feats = []
     for key_name in out_feat_keys:
         output_feats.append(unique_out_feats[key_name])
-
     return output_feats
 
 

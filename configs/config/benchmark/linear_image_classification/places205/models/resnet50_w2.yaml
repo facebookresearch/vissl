@@ -11,10 +11,9 @@
       ]
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          WIDTH_MULTIPLIER: 2
+      RESNETS:
+        DEPTH: 50
+        WIDTH_MULTIPLIER: 2
     HEAD:
       PARAMS: [
         ########## res50-w2 #############

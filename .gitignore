@@ -38,6 +38,7 @@ var/
 .hydra/
 tb_logs/
 metrics.json
+stdout.json
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -94,3 +95,7 @@ website/pages/tutorials/*
 *-checkpoint.ipynb
 **/.ipynb_checkpoints
 **/.ipynb_checkpoints/**
+
+# Configs for local development
+configs/config_local/*
+train_config.yaml

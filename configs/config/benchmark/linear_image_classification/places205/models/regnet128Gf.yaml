@@ -9,9 +9,8 @@ config:
       ]
     TRUNK:
       NAME: regnet
-      TRUNK_PARAMS:
-        REGNET:
-          name: regnet_y_128gf
+      REGNET:
+        name: regnet_y_128gf
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 2904, "dims": [8712, 205]}],

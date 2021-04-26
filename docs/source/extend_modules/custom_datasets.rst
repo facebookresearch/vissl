@@ -22,7 +22,7 @@ Follow the steps below to register and use the new dataset:
 
 .. note::
 
-    VISSL also supports registering the dataset via a custom :code:`json` file, or registering :code:`dict` with bunch of datasets.
+    VISSL also supports registering the dataset via a custom :code:`json` file, or registering :code:`dict` with bunch of datasets. Please see our documentation on `Using dataset_catalog.json <https://vissl.readthedocs.io/en/latest/vissl_modules/data.html#using-dataset-catalog-json>`_
 
 
 - **Step2 (Optional)**: If the dataset requires a new data source other than disk or supported disk formats (:code:`disk_folder` or :code:`disk_filelist`), please add the new data source to VISSL.

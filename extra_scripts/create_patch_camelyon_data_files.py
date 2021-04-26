@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
 
+
 try:
     import h5py
 except ImportError:

@@ -57,7 +57,6 @@ def get_collator(collator_name, collate_params):
         return default_collate
     else:
         assert collator_name in COLLATOR_REGISTRY, "Unknown collator"
-        # return COLLATOR_REGISTRY[collator_name]
         return partial(COLLATOR_REGISTRY[collator_name], **collate_params)
 
 

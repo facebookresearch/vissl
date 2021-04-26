@@ -62,12 +62,11 @@ config:
       ]
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+      RESNETS:
+        DEPTH: 50
     HEAD:
       PARAMS: [
-        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 1000]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 10]}],
       ]
     WEIGHTS_INIT:
       PARAMS_FILE: "specify the model weights"

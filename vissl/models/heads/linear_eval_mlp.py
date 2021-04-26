@@ -3,9 +3,12 @@ from typing import List
 
 import torch
 import torch.nn as nn
+from fairscale.nn.data_parallel import auto_wrap_bn
+
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.models.heads.mlp import MLP
+from vissl.utils.fsdp_utils import fsdp_wrapper
 
 
 @register_model_head("eval_mlp")
@@ -44,7 +47,6 @@ class LinearEvalMLP(nn.Module):
             eps=model_config.HEAD.BATCHNORM_EPS,
             momentum=model_config.HEAD.BATCHNORM_MOMENTUM,
         )
-
         self.clf = MLP(model_config, dims, use_bn=use_bn, use_relu=use_relu)
 
     def forward(self, batch: torch.Tensor):
@@ -66,3 +68,25 @@ class LinearEvalMLP(nn.Module):
         out = torch.flatten(out, start_dim=1)
         out = self.clf(out)
         return out
+
+
+@register_model_head("eval_mlp_fsdp")
+class FSDPLinearEvalMLP(nn.Module):
+    """
+    A version of the LinearEvalMLP module wrapped with FSDP
+    """
+    def __init__(
+        self,
+        model_config: AttrDict,
+        in_channels: int,
+        dims: List[int],
+        use_bn: bool = False,
+        use_relu: bool = False,
+    ):
+        super().__init__()
+        mlp = LinearEvalMLP(model_config, in_channels, dims, use_bn, use_relu)
+        mlp = auto_wrap_bn(mlp, single_rank_pg=False)
+        self.mlp = fsdp_wrapper(mlp, **model_config.FSDP_CONFIG)
+
+    def forward(self, batch: torch.Tensor):
+        return self.mlp(batch)

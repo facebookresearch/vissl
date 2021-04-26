@@ -67,15 +67,15 @@ VISSL supports many backbone architectures including ResNe(X)ts, wider ResNets. 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/pirl/pirl_jigsaw_4node_resnet50 \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101
+        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.RESNETS.DEPTH=101
 
 * **Train ResNet-50-w2 (2x wider):**
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/pirl/pirl_jigsaw_4node_resnet50 \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_MULTIPLIER=2
+        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.RESNETS.DEPTH=101 \
+        config.MODEL.TRUNK.RESNETS.WIDTH_MULTIPLIER=2
 
 
 Training with Gaussian Blur augmentation

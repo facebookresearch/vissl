@@ -2,10 +2,11 @@
 
 import torch
 from vissl.data.collators import register_collator
+from vissl.data.collators.collator_helper import MultiDimensionalTensor
 
 
 @register_collator("multicrop_collator")
-def multicrop_collator(batch):
+def multicrop_collator(batch, create_multidimensional_tensor: bool = False):
     """
     This collator is used in SwAV approach.
 
@@ -45,11 +46,12 @@ def multicrop_collator(batch):
             output_data_idx.append(data_idx[idx][pos])
         output_data.append(torch.stack(_output_data))
 
+    if create_multidimensional_tensor:
+        output_data = MultiDimensionalTensor.from_tensors(output_data)
     output_batch = {
         "data": [output_data],
         "label": [torch.stack(output_label)],
         "data_valid": [torch.stack(output_data_valid)],
         "data_idx": [torch.stack(output_data_idx)],
     }
-
     return output_batch

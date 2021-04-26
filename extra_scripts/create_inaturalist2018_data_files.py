@@ -24,6 +24,7 @@ from fvcore.common.file_io import PathManager
 from torchvision.datasets.utils import download_and_extract_archive
 from vissl.utils.io import save_file
 
+
 # Initiate the logger
 FORMAT = "[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s"
 logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)

@@ -34,7 +34,7 @@ VISSL supports many backbone architectures including AlexNet, ResNe(X)ts. Some e
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/rotnet/rotnet_8gpu_resnet \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101
+        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.RESNETS.DEPTH=101
 
 
 

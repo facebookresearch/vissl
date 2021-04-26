@@ -5,8 +5,17 @@ import pprint
 import sys
 from typing import Any, List
 
+import torch
 from omegaconf import DictConfig, OmegaConf
 from vissl.config import AttrDict, check_cfg_version
+from vissl.utils.io import save_file
+
+
+def save_attrdict_to_disk(cfg: AttrDict):
+    from vissl.utils.checkpoint import get_checkpoint_folder
+
+    yaml_output_file = f"{get_checkpoint_folder(cfg)}/train_config.yaml"
+    save_file(cfg.to_dict(), yaml_output_file)
 
 
 def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
@@ -39,8 +48,21 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
 
     # assert the config and infer
     config = cfg.config
-    assert_hydra_conf(config)
+    infer_and_assert_hydra_config(config)
+    save_attrdict_to_disk(config)
+    convert_fsdp_dtypes(config)
     return cfg, config
+
+
+def convert_fsdp_dtypes(config: AttrDict):
+    """
+    Transform configuration types (primitive types) to VISSL specific types
+    """
+    # TODO (Quentin) - remove this once FSDP accepts a boolean
+    if config["MODEL"]["FSDP_CONFIG"]["compute_dtype"] == "float32":
+        config["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float32
+    else:
+        config["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = torch.float16
 
 
 def is_hydra_available():
@@ -192,7 +214,10 @@ def infer_learning_rate(cfg):
               base_value = base learning rate value that will be scaled,
               The current batch size is used to determine how to scale the base learning rate
               value.
-        scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size
+        scale_factor = (batchsize_per_gpu * world_size) / base_lr_batch_size
+        if scaling_type is sqrt, scale factor = sqrt(scale_factor)
+        scaled_lr = scale_factor * base_value
+
 
     We perform this auto-scaling for head learning rate as well if user wants to use a different
     learning rate for the head
@@ -208,7 +233,15 @@ def infer_learning_rate(cfg):
         param_schedulers = cfg.OPTIMIZER.param_schedulers.lr
         base_lr = param_schedulers.auto_lr_scaling.base_value
         base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scaling_type = param_schedulers.auto_lr_scaling.scaling_type
+        assert scaling_type in [
+            "sqrt",
+            "linear",
+        ], "Only linear | sqrt scaling_types are supported"
+
         scale_factor = float(batch_size) / base_lr_batch_size
+        if scaling_type == "sqrt":
+            scale_factor = scale_factor ** 0.5
         scaled_lr = base_lr * scale_factor
         cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
             cfg, param_schedulers, scaled_lr
@@ -223,22 +256,31 @@ def infer_learning_rate(cfg):
         and cfg.OPTIMIZER.param_schedulers.lr_head
         and cfg.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.auto_scale
     ):
-        # if the user wants a different LR value for the head, then we automatically
-        # infer the LR values for the head as well (similar to trunk above)
+        # if the user wants a different LR value for the head, then we
+        # automatically infer the LR values for the head as well (similar to
+        # trunk above)
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA * world_size
         param_schedulers = cfg.OPTIMIZER.param_schedulers.lr_head
         base_lr = param_schedulers.auto_lr_scaling.base_value
         base_lr_batch_size = param_schedulers.auto_lr_scaling.base_lr_batch_size
+        scaling_type = param_schedulers.auto_lr_scaling.scaling_type
+        assert scaling_type in [
+            "sqrt",
+            "linear",
+        ], "Only linear | sqrt scaling_types are supported"
+
         scale_factor = float(batch_size) / base_lr_batch_size
+        if scaling_type == "sqrt":
+            scale_factor = scale_factor ** 0.5
         scaled_lr = base_lr * scale_factor
         cfg.OPTIMIZER.param_schedulers.lr_head = get_scaled_lr_scheduler(
             cfg, param_schedulers, scaled_lr
         )
 
-    # for the head, if we want to use a different weight decay value, we verify that
-    # the specified weight decay value is valid. Otherwise, we do the inference
-    # and set the weight decay value same as the trunk.
+    # for the head, if we want to use a different weight decay value,
+    # we verify that the specified weight decay value is valid. Otherwise,
+    # we do the inference and set the weight decay value same as the trunk.
     if not cfg.OPTIMIZER.head_optimizer_params.use_different_wd:
         cfg.OPTIMIZER.head_optimizer_params.weight_decay = cfg.OPTIMIZER.weight_decay
     else:
@@ -349,7 +391,7 @@ def infer_losses_config(cfg):
     return cfg
 
 
-def assert_hydra_conf(cfg):
+def infer_and_assert_hydra_config(cfg):
     """
     Infer values of few parameters in the config file using the value of other config parameters
     1. Inferring losses
@@ -433,6 +475,15 @@ def assert_hydra_conf(cfg):
         )
         cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE = cached_url_path
 
+    # ZeRO2: Infer the settings for ShardedDDP which shards the optimizer state
+    # and the model weights. For ShardedDDP, we must use the OSS optimizer,
+    # set the right task name, use the PyTorch AMP if AMP is used.
+    if cfg.MODEL.SHARDED_DDP_SETUP.USE_SDP:
+        cfg.OPTIMIZER.use_zero = True
+        cfg.TRAINER.TASK_NAME = "self_supervision_sdp_task"
+        if cfg.MODEL.AMP_PARAMS.USE_AMP:
+            cfg.MODEL.AMP_PARAMS.AMP_TYPE = "pytorch"
+
     # if we use a zero optimizer, we nest the optimizer related settings under the
     # base_optimizer.
     if cfg.OPTIMIZER.use_zero:
@@ -444,3 +495,46 @@ def assert_hydra_conf(cfg):
         del cfg.OPTIMIZER.base_optimizer["num_epochs"]
         del cfg.OPTIMIZER.base_optimizer["use_zero"]
         del cfg.OPTIMIZER.base_optimizer["head_optimizer_params"]
+
+    # inference for the FSDP settings. Conditions are:
+    # 1) use the FSDP task
+    # 2) use the single param group in the optimizer
+    # 3) if AMP is used, it must be PyTorch AMP
+    # 4) If training SwAV, we automatically set the head to SwAV FSDP head
+    # 4) Inference for the FSDP parameters to ensure the good convergence
+    if cfg.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP:
+        cfg.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
+        cfg.OPTIMIZER.construct_single_param_group_only = True
+
+        # safely set flatten_parameters=True for FSDP trainings.
+        cfg["MODEL"]["FSDP_CONFIG"]["flatten_parameters"] = True
+        # recommended FSDP settings below for the convergence
+        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
+
+        # AMP based inference
+        if cfg["MODEL"]["AMP_PARAMS"]["USE_AMP"]:
+            cfg["MODEL"]["AMP_PARAMS"]["AMP_TYPE"] = "pytorch"
+            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = True
+            cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = True
+        else:
+            # if not using AMP, we can't use mixed_precision as it requires PyTorch AMP
+            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = False
+            # if mixed_precision=False, FSDP mandates setting fp32_reduce_scatter=False
+            cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
+
+        # Inference of the head in case of training with FSDP
+        for i, head_param in enumerate(cfg.MODEL.HEAD.PARAMS):
+            if head_param[0] == "swav_head":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "swav_head_fsdp"
+            if head_param[0] == "eval_mlp":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "eval_mlp_fsdp"
+            if head_param[0] == "mlp":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "mlp_fsdp"
+
+        # Inference of the trunk in case of training with FSDP
+        if cfg.MODEL.TRUNK.NAME == "regnet":
+            cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
+
+    # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
+    # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
+    del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]

@@ -1,0 +1,153 @@
+# @package _global_
+config:
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      ROLLING_BTIME_FREQ: 313
+      PERF_STAT_FREQUENCY: 1
+    TENSORBOARD_SETUP:
+      USE_TENSORBOARD: True
+      EXPERIMENT_LOG_DIR:
+      FLUSH_EVERY_N_MIN: 20
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 1
+  DATA:
+    NUM_DATALOADER_WORKERS: 8
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      LABEL_TYPE: "zero"
+      BATCHSIZE_PER_REPLICA: 32 # Assuming 32gb ram/gpu
+      DROP_LAST: True
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 4
+          size_crops: [224, 224]
+          num_crops: [2, 2]
+          crop_scales: [[0.14, 1], [0.05, 0.14]]
+        - name: RandomHorizontalFlip
+        - name: RandAugment
+          magnitude: 9
+          magnitude_std: 0.5
+          increasing_severity: True
+        - name: ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.4
+        - name: ToTensor
+        - name: RandomErasing
+          p: 0.25
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: cutmixup_collator
+      COLLATE_FUNCTION_PARAMS: {
+        "ssl_method": "swav",
+        "mixup_alpha": 1.0, # mixup alpha value, mixup is active if > 0.
+        "cutmix_alpha": 1.0, # cutmix alpha value, cutmix is active if > 0.
+        "prob": 1.0, # probability of applying mixup or cutmix per batch or element
+        "switch_prob": 0.5, # probability of switching to cutmix instead of mixup when both are active
+        "mode": "batch", # how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
+        "correct_lam": True, # apply lambda correction when cutmix bbox clipped by image borders
+        "label_smoothing": 0.1, # apply label smoothing to the mixed target tensor
+        "num_classes": 2 # number of classes for target
+      }
+  MODEL:
+    TRUNK:
+      NAME: convit
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 9
+        HIDDEN_DIM: 576
+        MLP_DIM: 2304
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
+      CONVIT:
+        N_GPSA_LAYERS: 10 # Number of gated positional self-attention layers
+        CLASS_TOKEN_IN_LOCAL_LAYERS: False # Whether to add class token
+        # Determines how much the positional attention is focused on the
+        # patch of maximal attention. "Alpha" in the paper. Equivalent to
+        # the temperature of positional attention softmax.
+        LOCALITY_STRENGTH: 1.
+        # Dimensionality of the relative positional embeddings * 1/3
+        LOCALITY_DIM: 10
+        # Whether to initialize the positional self-attention to be local
+        # (equivalent to a convolution)
+        USE_LOCAL_INIT: True
+    HEAD:
+      PARAMS: [
+      ["swav_head", {"dims": [576, 2048, 128], "use_bn": True, "num_clusters":
+        [3000]}],
+      ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+    ['module.heads.0.prototypes0.weight', 313],
+    ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_ARGS: {"opt_level": "O1"}
+  LOSS:
+    name: swav_loss
+    swav_loss:
+      temperature: 0.1
+      use_double_precision: False
+      normalize_last_layer: True
+      num_iters: 3
+      epsilon: 0.05
+      crops_for_assign: [0, 1]
+      queue:
+        queue_length: 0
+        start_iter: 0
+  OPTIMIZER:
+    name: adamw
+    weight_decay: 0.05
+    num_epochs: 300
+    # We don't want to regularize the position embedding or classification token
+    non_regularized_parameters: [pos_embedding, class_token]
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: True
+          base_value: 0.0005
+          base_lr_batch_size: 512
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.00001
+            end_value: 0.0005
+          - name: cosine
+            start_value: 0.0005
+            end_value: 0.000001
+        interval_scaling: [rescaled, fixed]
+        update_interval: step
+        lengths: [0.05, 0.95]
+  METERS:
+    name: ""
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8 # 1 GPU
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  VERBOSE: True
+  LOG_FREQUENCY: 100
+  TEST_ONLY: False
+  TEST_EVERY_NUM_EPOCH: 1
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: fork
