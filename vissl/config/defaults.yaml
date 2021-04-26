@@ -150,6 +150,27 @@ config:
     MONITOR_ACTIVATION_STATISTICS: 0
 
   # ----------------------------------------------------------------------------------- #
+  # PROFILING
+  # ----------------------------------------------------------------------------------- #
+  PROFILING:
+    # How many iterations do we wait before running the profiler
+    START_ITERATION: 0
+    # How many iterations do we run the profiler for: after this number
+    # of iteration is reached the profiling is disabled
+    NUM_ITERATIONS: 10
+    # Folder where the traces will be generated
+    OUTPUT_FOLDER: "."
+    # Ranks on which the profiling will be performed
+    # The rank is the index of the GPU in the overall distributed training
+    PROFILED_RANKS: [0, 1]
+    # The available memory profiling options
+    MEMORY_PROFILING:
+      # Track the memory usage through the forward/backward pass, and outputs
+      # the traces complemented by estimations of the memory usage due to
+      # activations and associated activation gradients
+      TRACK_BY_LAYER_MEMORY: False
+
+  # ----------------------------------------------------------------------------------- #
   # DATA
   # ----------------------------------------------------------------------------------- #
   DATA:

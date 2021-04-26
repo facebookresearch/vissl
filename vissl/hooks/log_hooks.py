@@ -408,6 +408,16 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 else:
                     checkpoint_writer.save_consolidated_checkpoint(checkpoint_content)
 
+                """
+                # TODO - remove this
+                if is_primary() and mode_num == 0:
+                    import subprocess
+                    import submitit
+
+                    job_id = submitit.JobEnvironment().job_id
+                    subprocess.check_call(["scancel", job_id, "--signal", "TERM"])
+                """
+
     def _print_and_save_meters(self, task, train_phase_idx):
         """
         Executed only on master gpu at the end of each epoch. Computes the

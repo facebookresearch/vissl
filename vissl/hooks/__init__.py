@@ -15,6 +15,7 @@ from vissl.hooks.log_hooks import (  # noqa
     LogPerfTimeMetricsHook,
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
+from vissl.hooks.profiling_hook import ProfilingHook
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     FreezeParametersHook,
@@ -132,6 +133,9 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         if cfg.HOOKS.PERF_STATS.ROLLING_BTIME_FREQ > 0
         else None
     )
+
+    if ProfilingHook.is_enabled(cfg.PROFILING):
+        hooks.append(ProfilingHook(profiling_config=cfg.PROFILING))
 
     world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
     checkpoint_folder = get_checkpoint_folder(cfg)
