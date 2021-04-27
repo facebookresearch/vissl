@@ -4,7 +4,6 @@ from typing import List
 import torch
 import torch.nn as nn
 from fairscale.nn.data_parallel import auto_wrap_bn
-
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.utils.fsdp_utils import fsdp_wrapper
@@ -115,6 +114,7 @@ class MLP_FSDP(nn.Module):
     """
     A version of the MLP module wrapped with FSDP
     """
+
     def __init__(
         self,
         model_config: AttrDict,
@@ -126,7 +126,15 @@ class MLP_FSDP(nn.Module):
         skip_last_layer_relu_bn: bool = True,
     ):
         super().__init__()
-        mlp = MLP(model_config, dims, use_bn, use_relu, use_dropout, use_bias, skip_last_layer_relu_bn)
+        mlp = MLP(
+            model_config,
+            dims,
+            use_bn,
+            use_relu,
+            use_dropout,
+            use_bias,
+            skip_last_layer_relu_bn,
+        )
         mlp = auto_wrap_bn(mlp, single_rank_pg=False)
         self.mlp = fsdp_wrapper(mlp, **model_config.FSDP_CONFIG)
 

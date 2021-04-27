@@ -10,7 +10,6 @@ from vissl.utils.layer_memory_tracking import LayerwiseMemoryTracker
 
 
 class TestLayerMemoryTracking(unittest.TestCase):
-
     @unittest.skipIf(not torch.cuda.is_available(), "Test requires at least 1 GPU")
     def test_memory_tracking(self):
 

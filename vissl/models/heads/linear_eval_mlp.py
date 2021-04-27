@@ -4,7 +4,6 @@ from typing import List
 import torch
 import torch.nn as nn
 from fairscale.nn.data_parallel import auto_wrap_bn
-
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.models.heads.mlp import MLP
@@ -75,6 +74,7 @@ class FSDPLinearEvalMLP(nn.Module):
     """
     A version of the LinearEvalMLP module wrapped with FSDP
     """
+
     def __init__(
         self,
         model_config: AttrDict,

@@ -7,6 +7,7 @@ def matplotlib_figure_to_image(fig):
     to save it on disk
     """
     import io
+
     from PIL import Image
 
     buf = io.BytesIO()

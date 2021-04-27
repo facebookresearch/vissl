@@ -5,12 +5,10 @@ from typing import List
 
 from hydra.core.global_hydra import GlobalHydra
 from hydra.experimental import initialize_config_module, compose
-
 from vissl.utils.hydra_config import convert_to_attrdict
 
 
 class TestUtilsHydraConfig(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls) -> None:
         if GlobalHydra.instance().is_initialized():
@@ -36,7 +34,9 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_task")
 
-        cfg = self._create_config(overrides + ["config.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP=True"])
+        cfg = self._create_config(
+            overrides + ["config.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP=True"]
+        )
         self.assertEqual(cfg["MODEL"]["AMP_PARAMS"]["AMP_TYPE"], "pytorch")
         self.assertEqual(cfg.MODEL.HEAD.PARAMS[0][0], "swav_head_fsdp")
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet_fsdp")
@@ -53,7 +53,9 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_task")
 
-        cfg = self._create_config(overrides + ["config.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP=True"])
+        cfg = self._create_config(
+            overrides + ["config.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP=True"]
+        )
         self.assertEqual(cfg.MODEL.HEAD.PARAMS[0][0], "mlp_fsdp")
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet_fsdp")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_fsdp_task")
