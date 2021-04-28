@@ -80,7 +80,11 @@ setup_venv: &setup_venv
         python --version
         which python
         which pip
+        pip --version
         pip install --upgrade pip
+        which python
+        which pip
+        pip --version
         pip install -U setuptools
 
 pip_list: &pip_list
@@ -145,7 +149,7 @@ jobs:
       # Cache the vissl_venv directory that contains dependencies
       - restore_cache:
           keys:
-            - v2-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+            - v3-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
@@ -155,7 +159,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v2-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+          key: v3-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl
 
@@ -188,7 +192,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v2-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+            - v3-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
@@ -203,7 +207,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v2-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+          key: v3-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl
 
