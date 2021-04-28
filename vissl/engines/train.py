@@ -76,7 +76,7 @@ def train_main(
 
     # set seeds
     logging.info("Setting seed....")
-    set_seeds(cfg, node_id)
+    set_seeds(cfg, dist_rank)
 
     # We set the CUDA device here as well as a safe solution for all downstream
     # `torch.cuda.current_device()` calls to return correct device.

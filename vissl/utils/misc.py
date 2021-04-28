@@ -137,20 +137,34 @@ def setup_multiprocessing_method(method_name: str):
         pass
 
 
-def set_seeds(cfg, node_id=0):
+def set_seeds(cfg, dist_rank):
     """
     Set the python random, numpy and torch seed for each gpu. Also set the CUDA
     seeds if the CUDA is available. This ensures deterministic nature of the training.
     """
-    node_seed = cfg.SEED_VALUE
-    if cfg.DISTRIBUTED.NUM_NODES > 1:
-        node_seed = node_seed * 2 * node_id
-    logging.info(f"MACHINE SEED: {node_seed}")
-    random.seed(node_seed)
-    np.random.seed(node_seed)
-    torch.manual_seed(node_seed)
+    # Since in the pytorch sampler, we increment the seed by 1 for every epoch.
+    seed_value = (cfg.SEED_VALUE + dist_rank) * cfg.OPTIMIZER.num_epochs
+    logging.info(f"MACHINE SEED: {seed_value}")
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    torch.manual_seed(seed_value)
     if cfg["MACHINE"]["DEVICE"] == "gpu" and torch.cuda.is_available():
-        torch.cuda.manual_seed_all(node_seed)
+        torch.cuda.manual_seed_all(seed_value)
+
+
+def set_dataloader_seeds(_worker_id: int):
+    """
+    See: https://tanelp.github.io/posts/a-bug-that-plagues-thousands-of-open-source-ml-projects/
+    When using "Fork" process spawning, the dataloader workers inherit the seeds of the
+    parent process for numpy. While torch seeds are handled correctly across dataloaders and
+    across epochs, numpy seeds are not. Therefore in order to ensure each worker has a
+    different and deterministic seed, we must explicitly set the numpy seed to the torch seed.
+    Also see https://pytorch.org/docs/stable/data.html#randomness-in-multi-process-data-loading
+    """
+    # numpy and random seed must be between 0 and 2 ** 32 - 1.
+    torch_seed = torch.utils.data.get_worker_info().seed % (2 ** 32)
+    random.seed(torch_seed)
+    np.random.seed(torch_seed)
 
 
 def get_indices_sparse(data):

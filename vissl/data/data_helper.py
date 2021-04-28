@@ -94,7 +94,7 @@ class StatefulDistributedSampler(DistributedSampler):
     we want to resume the data sampler from the training iteration.
     """
 
-    def __init__(self, dataset, batch_size=None):
+    def __init__(self, dataset, batch_size=None, seed: int = 0):
         """
         Initializes the instance of StatefulDistributedSampler. Random seed is set
         for the epoch set and data is shuffled. For starting the sampling, use
@@ -104,8 +104,9 @@ class StatefulDistributedSampler(DistributedSampler):
         Args:
             dataset (Dataset): Pytorch dataset that sampler will shuffle
             batch_size (int): batch size we want the sampler to sample
+            seed (int): Seed for the torch generator.
         """
-        super().__init__(dataset, shuffle=False)
+        super().__init__(dataset, shuffle=False, seed=seed)
 
         self.start_iter = 0
         self.batch_size = batch_size
@@ -116,7 +117,7 @@ class StatefulDistributedSampler(DistributedSampler):
     def __iter__(self):
         # partition data into num_replicas and optionally shuffle within a rank
         g = torch.Generator()
-        g.manual_seed(self.epoch)
+        g.manual_seed(self.epoch + self.seed)
         shuffling = torch.randperm(self.num_samples, generator=g).tolist()
         indices = np.array(
             list(
