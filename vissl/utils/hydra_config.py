@@ -535,6 +535,8 @@ def infer_and_assert_hydra_config(cfg):
         if cfg.MODEL.TRUNK.NAME == "regnet":
             cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
 
+        logging.info(f"Using the FSDP config: {cfg.MODEL.FSDP_CONFIG}")
+
     # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
     # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
     del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]

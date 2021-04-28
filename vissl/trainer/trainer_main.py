@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import torch
+import torch.distributed as dist
 from classy_vision.generic.distributed_util import (
     barrier,
     is_primary,
@@ -117,6 +118,9 @@ class SelfSupervisionTrainer(object):
                 world_size=distributed_world_size,
                 rank=self.distributed_rank,
             )
+            # perform a dummy all-reduce to initialize the NCCL communicator
+            if torch.cuda.is_available() and (self.cfg.DISTRIBUTED.BACKEND == "nccl"):
+                dist.all_reduce(torch.zeros(1).cuda())
         else:
             logging.warning(
                 "Torch distributed has already been initialized, \

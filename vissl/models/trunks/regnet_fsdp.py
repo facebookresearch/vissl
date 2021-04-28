@@ -13,6 +13,7 @@ accuracy is minimally impacted to the extend allowed by FSDP
 and target training speed considerations.
 """
 
+import logging
 import math
 from collections import OrderedDict
 from typing import List, Tuple, Union
@@ -152,6 +153,8 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
         super().__init__()
         self.fsdp_config = fsdp_config
         self.use_activation_checkpointing = use_activation_checkpointing
+        if self.use_activation_checkpointing:
+            logging.info("Using Activation Checkpointing for FSDP training")
 
     def create_stem(self, params: Union[RegNetParams, AnyNetParams]):
         stem = super().create_stem(params)
@@ -171,9 +174,6 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
             width_in, width_out, stride, params, bottleneck_multiplier, group_width
         )
         block = auto_wrap_bn(block, single_rank_pg=False)
-        if self.use_activation_checkpointing:
-            # TODO - make this configurable
-            block = checkpoint_wrapper(block, offload_to_cpu=False)
         with enable_wrap(wrapper_cls=fsdp_wrapper, **self.fsdp_config):
             block = wrap(block)
         return block
@@ -269,26 +269,32 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
     stem = factory.create_stem(params)
 
     # Instantiate all the AnyNet blocks in the trunk
-    current_width = params.stem_width
-    trunk_depth = 0
-    blocks = []
+    current_width, trunk_depth, blocks = params.stem_width, 0, []
     for i, (width_out, stride, depth, group_width, bottleneck_multiplier) in enumerate(
         params.get_expanded_params()
     ):
+        new_stage = AnyStage(
+            factory=factory,
+            width_in=current_width,
+            width_out=width_out,
+            stride=stride,
+            depth=depth,
+            group_width=group_width,
+            bottleneck_multiplier=bottleneck_multiplier,
+            params=params,
+            stage_index=i + 1,
+        )
+        if model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING:
+            logging.info("Using activation checkpointing")
+            new_stage = checkpoint_wrapper(new_stage, offload_to_cpu=False)
+
+        with enable_wrap(wrapper_cls=fsdp_wrapper, **model_config.FSDP_CONFIG):
+            new_stage = wrap(new_stage)
+
         blocks.append(
             (
                 f"block{i + 1}",
-                AnyStage(
-                    factory=factory,
-                    width_in=current_width,
-                    width_out=width_out,
-                    stride=stride,
-                    depth=depth,
-                    group_width=group_width,
-                    bottleneck_multiplier=bottleneck_multiplier,
-                    params=params,
-                    stage_index=i + 1,
-                ),
+                new_stage,
             )
         )
         trunk_depth += blocks[-1][1].stage_depth
@@ -386,7 +392,7 @@ class _RegNetFSDP(nn.Module):
                     fsdp_config=self.model_config.FSDP_CONFIG,
                     use_activation_checkpointing=self.use_activation_checkpointing,
                 ),
-                model_config=model_config,
+                model_config=self.model_config,
             )
 
     def forward(self, x, out_feat_keys: List[str] = None) -> List[torch.Tensor]:

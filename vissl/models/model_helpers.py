@@ -161,7 +161,7 @@ def convert_sync_bn(config, model):
         else:
             logging.warning(
                 "Process groups not supported with PyTorch SyncBN currently. "
-                "Traning will be slow. Please consider installing Apex for SyncBN."
+                "Training will be slow. Please consider using Apex for SyncBN."
             )
             process_group = None
             # TODO (prigoyal): process groups don't work well with pytorch.
