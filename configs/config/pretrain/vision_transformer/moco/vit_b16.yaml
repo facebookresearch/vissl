@@ -109,7 +109,7 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 4
-    NUM_PROC_PER_NODE: 8 # 1 GPU
+    NUM_PROC_PER_NODE: 8 # 8 gpus
     RUN_ID: "60215"
   MACHINE:
     DEVICE: gpu

@@ -35,13 +35,10 @@ config:
           hue: 0.4
         - name: RandomResizedCrop
           size: 224
-        - name: VisslAutoAugment
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-        - name: RandomErasing
-          p: 0.25
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
@@ -68,17 +65,16 @@ config:
         NUM_HEADS: 12
         HIDDEN_DIM: 768
         MLP_DIM: 3072
-        DROPOUT_RATE: 0
+        DROPOUT_RATE: 0.1
         ATTENTION_DROPOUT_RATE: 0
         CLASSIFIER: token
-        DROP_PATH_RATE: 0.1
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,
                                    "num_classes": 1000}],
       ]
     SYNC_BN_CONFIG:
-      CONVERT_BN_TO_SYNC_BN: True
+      CONVERT_BN_TO_SYNC_BN: False
       SYNC_BN_TYPE: apex
       GROUP_SIZE: 8
     AMP_PARAMS:
@@ -118,8 +114,8 @@ config:
     TRAIN_STEP_NAME: standard_train_step
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 4
-    NUM_PROC_PER_NODE: 8 # 1 GPU
-    RUN_ID: "60215"
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1 # 1 GPU
+    RUN_ID: "auto"
   MACHINE:
     DEVICE: gpu
