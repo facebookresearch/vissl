@@ -284,12 +284,13 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
             params=params,
             stage_index=i + 1,
         )
-        if model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING:
-            logging.info("Using activation checkpointing")
-            new_stage = checkpoint_wrapper(new_stage, offload_to_cpu=False)
+        if isinstance(factory, RegnetFSDPBlocksFactory):
+            if model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING:
+                logging.info("Using activation checkpointing")
+                new_stage = checkpoint_wrapper(new_stage, offload_to_cpu=False)
 
-        with enable_wrap(wrapper_cls=fsdp_wrapper, **model_config.FSDP_CONFIG):
-            new_stage = wrap(new_stage)
+            with enable_wrap(wrapper_cls=fsdp_wrapper, **model_config.FSDP_CONFIG):
+                new_stage = wrap(new_stage)
 
         blocks.append(
             (
