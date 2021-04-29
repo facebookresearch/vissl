@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, NamedTuple, Tuple, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 from vissl.utils.visualize import matplotlib_figure_to_image
@@ -315,34 +316,29 @@ def compare_memory_traces_in_plot(
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=figsize, ncols=2, nrows=2)
+    graph_creator = MemoryGraphCreator()
 
     ax[0, 0].set_title("memory allocated")
     for job_name, memory_traces in memory_traces_by_job.items():
-        ax[0, 0].plot([trace.allocated for trace in memory_traces], label=job_name)
+        graph_creator.allocated_memory_curve(ax[0, 0], job_name, memory_traces)
     if len(memory_traces_by_job) > 1:
         ax[0, 0].legend()
 
     ax[0, 1].set_title("memory reserved")
     for job_name, memory_traces in memory_traces_by_job.items():
-        ax[0, 1].plot([trace.reserved for trace in memory_traces], label=job_name)
+        graph_creator.reserved_memory_curve(ax[0, 1], job_name, memory_traces)
     if len(memory_traces_by_job) > 1:
         ax[0, 1].legend()
 
     ax[1, 0].set_title("activation allocations")
     for job_name, memory_traces in memory_traces_by_job.items():
-        forward_activations = [
-            t.event.memory_activations if t.is_forward else 0 for t in memory_traces
-        ]
-        backward_activations = [
-            t.event.memory_activations if not t.is_forward else 0 for t in memory_traces
-        ]
-        ax[1, 0].plot(forward_activations, label=f"forward ({job_name})")
-        ax[1, 0].plot(backward_activations, label=f"backward ({job_name})")
-    ax[1, 0].legend()
+        graph_creator.activation_allocations(ax[1, 0], job_name, memory_traces)
+    if len(memory_traces_by_job) > 1:
+        ax[1, 0].legend()
 
     ax[1, 1].set_title("parameter memory")
     for job_name, memory_traces in memory_traces_by_job.items():
-        ax[1, 1].plot([a.module_params for a in memory_traces], label=job_name)
+        graph_creator.module_parameters(ax[1, 1], job_name, memory_traces)
     if len(memory_traces_by_job) > 1:
         ax[1, 1].legend()
 
@@ -350,3 +346,79 @@ def compare_memory_traces_in_plot(
         plt.show()
     else:
         return matplotlib_figure_to_image(fig)
+
+
+class MemoryGraphCreator:
+    """
+    Helper class to create graphs to display memory
+    """
+
+    def __init__(self):
+        import matplotlib
+
+        self.font = {
+            "family": matplotlib.rcParams["font.family"],
+            "weight": "normal",
+            "size": 12,
+        }
+
+    def allocated_memory_curve(
+        self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
+    ):
+        allocated_memory = [t.allocated for t in memory_traces]
+        x, y_forward, y_backward = self._split_forward_backward(
+            memory_traces, allocated_memory
+        )
+        ax.plot(x, y_forward, x, y_backward, label=job_name)
+
+        max_index = np.argmax(allocated_memory)
+        max_trace = memory_traces[max_index]
+        max_module = ".".join(
+            [n for n in max_trace.module_name.split(".") if not n.startswith("_")]
+        )
+        max_phase = "fwd" if max_trace.is_forward else "bwd"
+        ax.set_ylim([None, max_trace.allocated * 1.1])
+        x_text, y_text = max(0, max_index * 0.8), max_trace.allocated * 1.04
+        ax.text(x_text, y_text, f"{max_module} ({max_phase})", fontdict=self.font)
+
+    def reserved_memory_curve(
+        self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
+    ):
+        reserved_memory = [t.reserved for t in memory_traces]
+        x, y_forward, y_backward = self._split_forward_backward(
+            memory_traces, reserved_memory
+        )
+        ax.plot(x, y_forward, x, y_backward, label=job_name)
+
+    def activation_allocations(
+        self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
+    ):
+        event_allocations = [t.event.memory_activations for t in memory_traces]
+        x, y_forward, y_backward = self._split_forward_backward(
+            memory_traces, event_allocations
+        )
+        ax.plot(x, y_forward, x, y_backward, label=job_name)
+
+    def module_parameters(
+        self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
+    ):
+        module_parameters = [t.module_params for t in memory_traces]
+        x, y_forward, y_backward = self._split_forward_backward(
+            memory_traces, module_parameters
+        )
+        ax.plot(x, y_forward, x, y_backward, label=job_name)
+
+    @classmethod
+    def _split_forward_backward(cls, memory_traces: List[LayerMemoryTrace], values):
+        x_values = np.array(list(range(len(memory_traces))))
+        mask_forwards, mask_backwards = cls._mask_forward_backward(memory_traces)
+        return (
+            x_values,
+            np.ma.masked_where(mask_forwards, values),
+            np.ma.masked_where(mask_backwards, values),
+        )
+
+    @classmethod
+    def _mask_forward_backward(cls, memory_traces: List[LayerMemoryTrace]):
+        mask_forwards = np.array([t.is_forward for t in memory_traces])
+        return mask_forwards, ~mask_forwards
