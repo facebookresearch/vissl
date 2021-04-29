@@ -129,7 +129,7 @@ class BarlowTwinsCriterion(nn.Module):
         )
 
         # cross-correlation matrix
-        correlation_matrix = torch.mm(embedding_normed_a.T, embedding_normed_b) / batch_size
+        correlation_matrix = torch.mm(embedding_normed_a.T, embedding_normed_b) / (batch_size / self.num_copies)
 
         # Reduce cross-correlation matrices from all processes
         correlation_matrix = all_reduce_mean(correlation_matrix)

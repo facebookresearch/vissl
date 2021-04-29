@@ -211,4 +211,4 @@ There is some standard deviation in linear results if we run the same eval sever
 
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
-| [Barlow Twins](https://arxiv.org/abs/2103.03230)   |    RN50 - 1000 epochs - 2048 batch-size         |    ImageNet-1K      | #TODO | #TODO 
+| [Barlow Twins](https://arxiv.org/abs/2103.03230)   |    RN50 - 300 epochs - 2048 batch-size         |    ImageNet-1K      | 70.75 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/barlow_twins/barlow_twins_32gpus_4node_imagenet1k_300ep_resnet50.torch)
