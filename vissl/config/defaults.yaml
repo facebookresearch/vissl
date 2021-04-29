@@ -126,6 +126,7 @@ config:
     # ----------------------------------------------------------------------------------- #
     TENSORBOARD_SETUP:
       # whether to use tensorboard for the visualization
+      VISUALIZATION_SAMPLE_PERIOD: -1
       USE_TENSORBOARD: False
       # log directory for tensorboard events
       LOG_DIR: "."

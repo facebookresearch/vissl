@@ -38,6 +38,7 @@ from classy_vision.models.regnet import RegNetParams
 from fairscale.nn import checkpoint_wrapper
 from fairscale.nn.data_parallel import auto_wrap_bn
 from fairscale.nn.wrap import enable_wrap, wrap
+
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (

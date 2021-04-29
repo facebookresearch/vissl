@@ -12,6 +12,7 @@ from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
 from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
+
 from vissl.config import AttrDict
 from vissl.data import (
     build_dataset,
@@ -88,6 +89,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.phase_idx = -1
         # id of the current training phase training is at. Starts from 0
         self.train_phase_idx = -1  # set by trainer
+        self._event_storage = None
         # metrics stored during the training.
         self.metrics = {}  # set by the trainer
         self.start_time = -1  # set by trainer
@@ -116,6 +118,28 @@ class SelfSupervisionTask(ClassificationTask):
         # communication as much as possible
         self.set_ddp_bucket_cap_mb()
         self.use_gpu = self.device.type == "cuda"
+        self.event_storage_writers = []
+
+    def initiate_vissl_event_storage(self):
+        from vissl.utils.events import create_event_storage, get_event_storage
+
+        create_event_storage()
+        self._event_storage = get_event_storage()
+
+    def build_event_storage_writers(self):
+        from vissl.utils.events import JsonWriter, TensorboardWriter
+
+        flush_secs = self.config.HOOKS.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
+        checkpoint_dir = self.config.CHECKPOINT.DIR
+
+        self.event_storage_writers = [
+            JsonWriter(f"{self.checkpoint_folder}/stdout.json"),
+            TensorboardWriter(checkpoint_dir, flush_secs),
+        ]
+
+    @property
+    def event_storage(self):
+        return self._event_storage
 
     def set_device(self):
         """

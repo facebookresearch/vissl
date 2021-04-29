@@ -89,16 +89,13 @@ def train_main(
         print_cfg(cfg)
         logging.info("System config:\n{}".format(collect_env_info()))
 
-    # get the hooks - these hooks are executed per replica
-    hooks = hook_generator(cfg)
-
     # build the SSL trainer. The trainer first prepares a "task" object which
     # acts as a container for various things needed in a training: datasets,
     # dataloader, optimizers, losses, hooks, etc. "Task" will also have information
     # about phases (train, test) both. The trainer then sets up distributed
     # training.
     trainer = SelfSupervisionTrainer(
-        cfg, dist_run_id, checkpoint_path, checkpoint_folder, hooks
+        cfg, dist_run_id, checkpoint_path, checkpoint_folder, hook_generator,
     )
     trainer.train()
     logging.info("All Done!")
