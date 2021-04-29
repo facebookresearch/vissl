@@ -1,16 +1,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-import os
-import re
-import shutil
-import tempfile
 import unittest
-from contextlib import contextmanager
 
 import torch
 from hydra.experimental import compose, initialize_config_module
-from vissl.hooks import default_hook_generator
-from vissl.utils.distributed_launcher import launch_distributed
 from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.test_utils import (
+    gpu_test,
+    in_temporary_directory,
+    run_integration_test,
+)
 
 
 class TestRegnetFSDPIntegration(unittest.TestCase):
@@ -61,30 +59,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         config.MODEL.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING = (
             with_activation_checkpointing
         )
-        return args, config
-
-    @staticmethod
-    @contextmanager
-    def _in_temporary_directory():
-        temp_dir = tempfile.mkdtemp()
-        old_cwd = os.getcwd()
-        os.chdir(temp_dir)
-        yield temp_dir
-        os.chdir(old_cwd)
-        shutil.rmtree(temp_dir)
-
-    def capture_losses(self, file_name: str):
-        losses = []
-        regex = re.compile(r"iter: (.*?); lr: (?:.*?); loss: (.*?);")
-        with open(file_name, "r") as file:
-            for line in file:
-                if not line.startswith("INFO"):
-                    continue
-                match = regex.search(line)
-                if match is not None:
-                    loss = float(match.group(2))
-                    losses.append(loss)
-        return losses
+        return config
 
     def run_pretraining(
         self,
@@ -92,21 +67,16 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         with_activation_checkpointing: bool,
         with_mixed_precision: bool,
     ):
-        with self._in_temporary_directory() as dir_name:
-            args, config = self._create_pretraining_config(
+        with in_temporary_directory():
+            config = self._create_pretraining_config(
                 with_fsdp=with_fsdp,
                 with_activation_checkpointing=with_activation_checkpointing,
                 with_mixed_precision=with_mixed_precision,
             )
-            launch_distributed(
-                cfg=config,
-                node_id=args.node_id,
-                engine_name=args.engine_name,
-                hook_generator=default_hook_generator,
-            )
-            return self.capture_losses(os.path.join(dir_name, "log.txt"))
+            result = run_integration_test(config)
+            return result.get_losses()
 
-    @unittest.skipIf(torch.cuda.device_count() < 2, "Not enough GPUs to run the test")
+    @gpu_test(gpu_count=2)
     def test_fsdp_integration(self):
         ddp_losses = self.run_pretraining(
             with_fsdp=False,
@@ -120,7 +90,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         )
         self.assertEqual(ddp_losses, fsdp_losses)
 
-    @unittest.skipIf(torch.cuda.device_count() < 2, "Not enough GPUs to run the test")
+    @gpu_test(gpu_count=2)
     def test_fsdp_integration_mixed_precision(self):
         ddp_losses = self.run_pretraining(
             with_fsdp=False,

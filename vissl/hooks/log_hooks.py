@@ -343,6 +343,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         """
         phase_idx = task.phase_idx
         num_epochs = task.num_epochs
+
         # check if we need to checkpoint this phase
         is_checkpointing_phase = is_checkpoint_phase(
             mode_num, mode_frequency, train_phase_idx, num_epochs, mode
@@ -376,14 +377,21 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 # save the incremented phase_idx as it will incorrectly assume that model
                 # trained for that phase already.
                 if mode == "iteration":
-                    phase_idx = phase_idx - 1
                     model_state_dict["phase_idx"] = model_state_dict["phase_idx"] - 1
                     if task.train:
                         train_phase_idx = train_phase_idx - 1
                         model_state_dict["train_phase_idx"] = train_phase_idx
+                    restart_phase = phase_idx - 1
+                    restart_iteration = task.iteration
+
+                # When loading from a phase checkpoint:
+                else:
+                    restart_phase = phase_idx
+                    restart_iteration = task.iteration
+
                 checkpoint_content = {
-                    "phase_idx": phase_idx,
-                    "iteration": task.iteration,
+                    "phase_idx": restart_phase,
+                    "iteration": restart_iteration,
                     "loss": task.loss.state_dict(),
                     "iteration_num": task.local_iteration_num,
                     "train_phase_idx": train_phase_idx,
@@ -407,16 +415,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     )
                 else:
                     checkpoint_writer.save_consolidated_checkpoint(checkpoint_content)
-
-                """
-                # TODO - remove this
-                if is_primary() and mode_num == 0:
-                    import subprocess
-                    import submitit
-
-                    job_id = submitit.JobEnvironment().job_id
-                    subprocess.check_call(["scancel", job_id, "--signal", "TERM"])
-                """
 
     def _print_and_save_meters(self, task, train_phase_idx):
         """
