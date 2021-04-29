@@ -44,25 +44,6 @@ To use SyncBN during training, one needs to set the following parameters in conf
         #     global sync is done.
         GROUP_SIZE: 8
 
-Using LARC for training
---------------------------------------------
-
-Barlow Twins training uses LARC from `NVIDIA's Apex LARC <https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py>`_. To use LARC, users need to set config option
-:code:`OPTIMIZER.use_larc=True`. VISSL exposed LARC parameters that users can tune. Full list of LARC parameters exposed by VISSL:
-
-.. code-block:: yaml
-
-    OPTIMIZER:
-      name: "sgd"
-      use_larc: False  # supported for SGD only for now
-      larc_config:
-        clip: False
-        eps: 1e-08
-        trust_coefficient: 0.001
-
-.. note::
-
-    LARC is currently supported for SGD optimizer only.
 
 Vary the training loss settings
 ------------------------------------------------
