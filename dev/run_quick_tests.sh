@@ -22,7 +22,7 @@ echo "========================================================================"
 
 pushd "${SRC_DIR}/tests"
 for test_file in "${TEST_LIST[@]}"; do
-  python -m unittest $test_file
+  python -m unittest $test_file || exit
 done
 popd
 

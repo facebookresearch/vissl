@@ -159,6 +159,9 @@ class TestStateCheckpointing(unittest.TestCase):
             results = run_integration_test(config)
             return results.get_losses(), results.get_accuracies()
 
+    @unittest.skip(
+        "FAILING due to https://github.com/facebookresearch/fairscale/issues/643"
+    )
     @gpu_test(gpu_count=2)
     def test_benchmarking_from_a_consolidated_checkpoint(self):
         with in_temporary_directory() as checkpoint_folder:
@@ -177,6 +180,9 @@ class TestStateCheckpointing(unittest.TestCase):
             self.assertEqual(ddp_losses, fsdp_losses)
             self.assertEqual(ddp_accuracies, fsdp_accuracies)
 
+    @unittest.skip(
+        "FAILING due to https://github.com/facebookresearch/fairscale/issues/643"
+    )
     @gpu_test(gpu_count=2)
     def test_benchmarking_from_sharded_checkpoint(self):
         with in_temporary_directory() as checkpoint_folder:

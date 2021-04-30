@@ -37,14 +37,13 @@ from classy_vision.models.anynet import (
 from classy_vision.models.regnet import RegNetParams
 from fairscale.nn import checkpoint_wrapper
 from fairscale.nn.data_parallel import auto_wrap_bn
-from fairscale.nn.wrap import enable_wrap, wrap
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (
     Flatten,
     get_trunk_forward_outputs,
-    transform_model_input_data_type,
     get_tunk_forward_interpolated_outputs,
+    transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.fsdp_utils import fsdp_wrapper
@@ -174,8 +173,7 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
             width_in, width_out, stride, params, bottleneck_multiplier, group_width
         )
         block = auto_wrap_bn(block, single_rank_pg=False)
-        with enable_wrap(wrapper_cls=fsdp_wrapper, **self.fsdp_config):
-            block = wrap(block)
+        block = fsdp_wrapper(module=block, **self.fsdp_config)
         return block
 
 
@@ -284,20 +282,14 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
             params=params,
             stage_index=i + 1,
         )
+
         if isinstance(factory, RegnetFSDPBlocksFactory):
             if model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING:
                 logging.info("Using activation checkpointing")
                 new_stage = checkpoint_wrapper(new_stage, offload_to_cpu=False)
+            new_stage = fsdp_wrapper(module=new_stage, **model_config.FSDP_CONFIG)
 
-            with enable_wrap(wrapper_cls=fsdp_wrapper, **model_config.FSDP_CONFIG):
-                new_stage = wrap(new_stage)
-
-        blocks.append(
-            (
-                f"block{i + 1}",
-                new_stage,
-            )
-        )
+        blocks.append((f"block{i + 1}", new_stage))
         trunk_depth += blocks[-1][1].stage_depth
         current_width = width_out
 
