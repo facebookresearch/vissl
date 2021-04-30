@@ -71,7 +71,9 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_task")
 
-        cfg = self._create_config(overrides + ["config.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP=True"])
+        cfg = self._create_config(
+            overrides + ["config.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP=True"]
+        )
         self.assertEqual(cfg.MODEL.HEAD.PARAMS[0][0], "eval_mlp_fsdp")
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet_fsdp")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_fsdp_task")
