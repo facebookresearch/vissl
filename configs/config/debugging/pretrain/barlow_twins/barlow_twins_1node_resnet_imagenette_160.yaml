@@ -1,0 +1,118 @@
+# @package _global_
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 1
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      ROLLING_BTIME_FREQ: 313
+    TENSORBOARD_SETUP:
+      USE_TENSORBOARD: True
+      EXPERIMENT_LOG_DIR:
+      LOG_PARAMS: False
+      LOG_PARAMS_GRADIENTS: False
+      FLUSH_EVERY_N_MIN: 20
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenette_160_folder]
+      BATCHSIZE_PER_REPLICA: 256
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 128
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 0.5
+        - name: ImgPilMultiCropRandomApply
+          transforms:
+            - name: ImgPilGaussianBlur
+              p: 1.0
+              radius_min: 0.1
+              radius_max: 2.0
+          prob: [1.0, 0.1]
+        - name: ImgPilMultiCropRandomApply
+          transforms:
+            - name: ImgPilRandomSolarize
+              p: 1.0
+          prob: [0.0, 0.2]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: simclr_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenette_160/
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 8192], "use_relu": True, "use_bn": True, "use_bias": False, "skip_last_layer_relu_bn": False}],
+        ["mlp", {"dims": [8192, 8192], "use_relu": True, "use_bn": True, "use_bias": False, "skip_last_layer_relu_bn": False}],
+        ["mlp", {"dims": [8192, 8192], "use_bias": False}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_TYPE: pytorch
+  LOSS:
+      name: barlow_twins_loss
+      barlow_twins_loss:
+        lambda_: 0.0051
+        scale_loss: 0.024
+        embedding_dim: 8192
+  OPTIMIZER:
+      name: lars
+      weight_decay: 0.0000015
+      momentum: 0.9
+      exclude_bias_and_norm: True
+      num_epochs: 1000
+      regularize_bn: False
+      regularize_bias: False
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.2
+            base_lr_batch_size: 256
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.0
+              end_value: 0.2 # Automatically rescaled if needed
+            - name: cosine
+              start_value: 0.2 # Automatically rescaled if needed
+              end_value: 0.002 # Automatically rescaled if needed
+          update_interval: step
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.01, 0.99]             # 1000ep
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8
+    RUN_ID: auto
+    INIT_METHOD: tcp
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 100

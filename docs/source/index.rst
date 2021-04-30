@@ -62,6 +62,7 @@ from designing a new self-supervised task to evaluating the learned representati
    ssl_approaches/moco
    ssl_approaches/deepclusterv2
    ssl_approaches/swav
+   ssl_approaches/barlow_twins
 
 
 .. toctree::

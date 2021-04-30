@@ -34,6 +34,7 @@ popd
 # -----------------------------------------------------------------------------
 
 CFG_LIST=(
+    "test/integration_test/quick_barlow_twins"
     "test/integration_test/quick_deepcluster_v2"
     "test/integration_test/quick_pirl"
     "test/integration_test/quick_simclr"
