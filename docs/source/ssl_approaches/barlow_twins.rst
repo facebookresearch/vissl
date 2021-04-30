@@ -75,15 +75,15 @@ VISSL supports many backbone architectures including ResNe(X)ts, wider ResNets. 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/barlow_twins/barlow_twins_4node_resnet \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101
+        config.MODEL.NAME=resnet config.MODEL.RESNETS.DEPTH=101
 
 * **Train ResNet-50-w2 (2x wider):**
 
 .. code-block:: bash
 
     python tools/run_distributed_engines.py config=pretrain/barlow_twins/barlow_twins_4node_resnet \
-        config.MODEL.TRUNK.NAME=resnet config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.DEPTH=101 \
-        config.MODEL.TRUNK.TRUNK_PARAMS.RESNETS.WIDTH_MULTIPLIER=2
+        config.MODEL.NAME=resnet config.MODEL.RESNETS.DEPTH=101 \
+        config.MODEL.RESNETS.WIDTH_MULTIPLIER=2
 
 
 Vary the number of gpus
