@@ -58,9 +58,10 @@ config:
   METERS:
     name: ""
   MODEL:
-    NAME: resnet
-    RESNETS:
-      DEPTH: 50
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 8192], "use_relu": True, "use_bn": True, "use_bias": False, "skip_last_layer_relu_bn": False}],

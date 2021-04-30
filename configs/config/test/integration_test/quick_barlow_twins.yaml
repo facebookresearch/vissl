@@ -54,9 +54,10 @@ config:
   METERS:
     name: ""
   MODEL:
-    NAME: resnet
-    RESNETS:
-      DEPTH: 50
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
     HEAD:
       # Reduced MLP size to limit memory footprint
       PARAMS: [
