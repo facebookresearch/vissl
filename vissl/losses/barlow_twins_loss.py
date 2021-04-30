@@ -115,7 +115,7 @@ class BarlowTwinsCriterion(nn.Module):
 
         batch_size = embedding.shape[0]
         assert (
-                batch_size % self.num_copies == 0
+            batch_size % self.num_copies == 0
         ), f"Batch size {batch_size} should be divisible by num_copies ({self.num_copies})."
 
         # normalize embeddings along the batch dimension
@@ -129,14 +129,20 @@ class BarlowTwinsCriterion(nn.Module):
         )
 
         # cross-correlation matrix
-        correlation_matrix = torch.mm(embedding_normed_a.T, embedding_normed_b) / (batch_size / self.num_copies)
+        correlation_matrix = torch.mm(embedding_normed_a.T, embedding_normed_b) / (
+            batch_size / self.num_copies
+        )
 
         # Reduce cross-correlation matrices from all processes
         correlation_matrix = all_reduce_mean(correlation_matrix)
 
         # loss
-        on_diag = torch.diagonal(correlation_matrix).add(-1).pow(2).sum().mul(self.scale_loss)
-        off_diag = self._off_diagonal(correlation_matrix).pow(2).sum().mul(self.scale_loss)
+        on_diag = (
+            torch.diagonal(correlation_matrix).add(-1).pow(2).sum().mul(self.scale_loss)
+        )
+        off_diag = (
+            self._off_diagonal(correlation_matrix).pow(2).sum().mul(self.scale_loss)
+        )
         loss = on_diag + self.lambda_ * off_diag
 
         return loss

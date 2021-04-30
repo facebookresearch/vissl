@@ -1,7 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import torch
-
 from classy_vision.generic.distributed_util import all_reduce_mean
 from torch.autograd import Function
 
@@ -12,6 +11,7 @@ class SyncNormalizeFunction(Function):
 
     Normalizes a NxD input over the first dimension and across all processes.
     """
+
     @staticmethod
     def forward(ctx, input, eps):
         with torch.no_grad():
@@ -49,13 +49,16 @@ class SyncNormalizeFunction(Function):
             # dh = gamma * (var + eps)**(-1. / 2.) * (dy - np.mean(dy, axis=0)
             #     - (h - mu) * (var + eps)**(-1.0) * np.mean(dy * (h - mu), axis=0))
             mean_dy = grad_output.mean(0)
-            mean_dy_xmu = (grad_output * (last_input - mean)).view(-1, num_features).mean(0)
+            mean_dy_xmu = (
+                (grad_output * (last_input - mean)).view(-1, num_features).mean(0)
+            )
             # If running on a distributed setting, perform mean reduction of tensors over
             # all processes.
             mean_dy = all_reduce_mean(mean_dy)
             mean_dy_xmu = all_reduce_mean(mean_dy_xmu)
 
-            grad_input = (grad_output - mean_dy - (last_input - mean) / (
-                    var + eps) * mean_dy_xmu) / torch.sqrt(var + eps)
+            grad_input = (
+                grad_output - mean_dy - (last_input - mean) / (var + eps) * mean_dy_xmu
+            ) / torch.sqrt(var + eps)
 
         return grad_input, None

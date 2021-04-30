@@ -108,9 +108,7 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
             lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
         )
         embeddings = torch.randn(
-            (batch_size, EMBEDDING_DIM),
-            dtype=torch.float32,
-            requires_grad=True
+            (batch_size, EMBEDDING_DIM), dtype=torch.float32, requires_grad=True
         ).cuda()
         criterion(embeddings).backward()
 
@@ -120,7 +118,9 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
 
             WORLD_SIZE = 1
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
 
     def test_backward_world_size_2(self):
         if torch.cuda.device_count() >= 2:
@@ -128,7 +128,9 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
 
             WORLD_SIZE = 2
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
 
 
 class TestSimClrCriterion(unittest.TestCase):
@@ -227,7 +229,9 @@ class TestSimClrCriterion(unittest.TestCase):
 
             WORLD_SIZE = 1
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
 
     def test_gather_embeddings_word_size_2(self):
         if torch.cuda.device_count() >= 2:
@@ -235,7 +239,9 @@ class TestSimClrCriterion(unittest.TestCase):
 
             WORLD_SIZE = 2
             BATCH_SIZE = 2
-            mp.spawn(self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE)
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
 
 
 class TestRootConfigsLossesBuild(unittest.TestCase):

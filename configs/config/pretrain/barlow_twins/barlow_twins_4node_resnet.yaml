@@ -52,16 +52,14 @@ config:
   METERS:
     name: ""
   MODEL:
-    TRUNK:
-      NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
+    NAME: resnet
+    RESNETS:
+      DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 8192], "use_relu": True, "use_bn": True}],
-        ["mlp", {"dims": [8192, 8192], "use_relu": True, "use_bn": True}],
-        ["mlp", {"dims": [8192, 8192]}],
+        ["mlp", {"dims": [2048, 8192], "use_relu": True, "use_bn": True, "use_bias": False, "skip_last_layer_relu_bn": False}],
+        ["mlp", {"dims": [8192, 8192], "use_relu": True, "use_bn": True, "use_bias": False, "skip_last_layer_relu_bn": False}],
+        ["mlp", {"dims": [8192, 8192], "use_bias": False}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True

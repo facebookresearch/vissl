@@ -9,12 +9,14 @@ from torch import optim
 
 @register_optimizer("lars")
 class LARS(ClassyOptimizer):
-    def __init__(self,
-                 lr: float = 0.1,
-                 momentum: float = 0.9,
-                 weight_decay: float = 0.0,
-                 eta: float = 0.001,
-                 exclude_bias_and_norm: bool = False):
+    def __init__(
+        self,
+        lr: float = 0.1,
+        momentum: float = 0.9,
+        weight_decay: float = 0.0,
+        eta: float = 0.001,
+        exclude_bias_and_norm: bool = False,
+    ):
         super(LARS, self).__init__()
 
         self._lr = lr
@@ -26,12 +28,14 @@ class LARS(ClassyOptimizer):
         self.optimizer = None
 
     def prepare(self, param_groups):
-        self.optimizer = _LARS(param_groups,
-                               lr=self._lr,
-                               momentum=self._momentum,
-                               weight_decay=self._weight_decay,
-                               eta=self._eta,
-                               exclude_bias_and_norm=self._exclude_bias_and_norm)
+        self.optimizer = _LARS(
+            param_groups,
+            lr=self._lr,
+            momentum=self._momentum,
+            weight_decay=self._weight_decay,
+            eta=self._eta,
+            exclude_bias_and_norm=self._exclude_bias_and_norm,
+        )
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "LARS":
@@ -66,18 +70,22 @@ class _LARS(optim.Optimizer):
         - we remove the filter on weight decay as it is not needed in VISSL. See `get_optimizer_param_groups`
     """
 
-    def __init__(self,
-                 params,
-                 lr: float = 0.1,
-                 momentum: float = 0.9,
-                 weight_decay: float = 0,
-                 eta: float = 0.001,
-                 exclude_bias_and_norm: bool = False):
-        defaults = {"lr": lr,
-                    "weight_decay": weight_decay,
-                    "momentum": momentum,
-                    "eta": eta,
-                    "exclude": self._exclude_bias_and_norm if exclude_bias_and_norm else None}
+    def __init__(
+        self,
+        params,
+        lr: float = 0.1,
+        momentum: float = 0.9,
+        weight_decay: float = 0,
+        eta: float = 0.001,
+        exclude_bias_and_norm: bool = False,
+    ):
+        defaults = {
+            "lr": lr,
+            "weight_decay": weight_decay,
+            "momentum": momentum,
+            "eta": eta,
+            "exclude": self._exclude_bias_and_norm if exclude_bias_and_norm else None,
+        }
         super().__init__(params, defaults)
 
     @staticmethod
@@ -87,28 +95,32 @@ class _LARS(optim.Optimizer):
     @torch.no_grad()
     def step(self):
         for g in self.param_groups:
-            for p in g['params']:
+            for p in g["params"]:
                 dp = p.grad
 
                 if dp is None:
                     continue
 
-                dp = dp.add(p, alpha=g['weight_decay'])
+                dp = dp.add(p, alpha=g["weight_decay"])
 
-                if g['exclude'] is None or not g['exclude'](p):
+                if g["exclude"] is None or not g["exclude"](p):
                     param_norm = torch.norm(p)
                     update_norm = torch.norm(dp)
 
                     one = torch.ones_like(param_norm)
-                    q = torch.where(param_norm > 0.,
-                                    torch.where(update_norm > 0,
-                                                (g['eta'] * param_norm / update_norm), one), one)
+                    q = torch.where(
+                        param_norm > 0.0,
+                        torch.where(
+                            update_norm > 0, (g["eta"] * param_norm / update_norm), one
+                        ),
+                        one,
+                    )
                     dp = dp.mul(q)
 
                 param_state = self.state[p]
-                if 'mu' not in param_state:
-                    param_state['mu'] = torch.zeros_like(p)
-                mu = param_state['mu']
-                mu.mul_(g['momentum']).add_(dp)
+                if "mu" not in param_state:
+                    param_state["mu"] = torch.zeros_like(p)
+                mu = param_state["mu"]
+                mu.mul_(g["momentum"]).add_(dp)
 
-                p.add_(mu, alpha=-g['lr'])
+                p.add_(mu, alpha=-g["lr"])
