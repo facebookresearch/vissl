@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from typing import List, Tuple
 
 import torch
+import torch.distributed as dist
 from vissl.config.attr_dict import AttrDict
 from vissl.hooks import default_hook_generator
 from vissl.utils.distributed_launcher import launch_distributed
@@ -15,7 +16,7 @@ from vissl.utils.distributed_launcher import launch_distributed
 @contextmanager
 def in_temporary_directory(enabled: bool = True):
     """
-    Context manager tocCreate a temporary direction and remove
+    Context manager to create a temporary direction and remove
     it at the end of the context
     """
     if enabled:
@@ -29,6 +30,23 @@ def in_temporary_directory(enabled: bool = True):
         yield os.getcwd()
 
 
+@contextmanager
+def with_temp_files(count: int):
+    """
+    Context manager to create temporary files and remove them
+    after at the end of the context
+    """
+    if count == 1:
+        fd, file_name = tempfile.mkstemp()
+        yield file_name
+        os.close(fd)
+    else:
+        temp_files = [tempfile.mkstemp() for _ in range(count)]
+        yield [t[1] for t in temp_files]
+        for t in temp_files:
+            os.close(t[0])
+
+
 def gpu_test(gpu_count: int = 1):
     """
     Annotation for GPU tests, skipping the test if the
@@ -38,6 +56,20 @@ def gpu_test(gpu_count: int = 1):
 
     message = f"Not enough GPUs to run the test: required {gpu_count}"
     return unittest.skipIf(torch.cuda.device_count() < gpu_count, message)
+
+
+def init_distributed_on_file(world_size: int, gpu_id: int, sync_file: str):
+    """
+    Init the process group need to do distributed training, by syncing
+    the different workers on a file.
+    """
+    torch.cuda.set_device(gpu_id)
+    dist.init_process_group(
+        backend="nccl",
+        init_method="file://" + sync_file,
+        world_size=world_size,
+        rank=gpu_id,
+    )
 
 
 def parse_losses_from_log_file(file_name: str):

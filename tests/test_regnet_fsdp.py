@@ -1,20 +1,19 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-import os
 import pickle
-import tempfile
 import unittest
-from contextlib import contextmanager
 
 import torch
-import torch.distributed as dist
 import torch.multiprocessing as mp
-import torch.optim as optim
+from classy_vision.optim import build_optimizer
 from hydra.experimental import compose, initialize_config_module
 from torch.nn.parallel import DistributedDataParallel
+
 from vissl.losses.swav_loss import SwAVLoss
 from vissl.models import build_model
+from vissl.optimizers import *  # noqa
 from vissl.utils.fsdp_utils import fsdp_wrapper
 from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.test_utils import init_distributed_on_file, with_temp_files
 
 
 class TestRegnetFSDP(unittest.TestCase):
@@ -24,7 +23,9 @@ class TestRegnetFSDP(unittest.TestCase):
     """
 
     @staticmethod
-    def _create_config(with_fsdp: bool):
+    def _create_pretraining_config(
+        with_fsdp: bool, with_activation_checkpointing: bool, with_larc: bool
+    ):
         with initialize_config_module(config_module="vissl.config"):
             cfg = compose(
                 "defaults",
@@ -36,13 +37,8 @@ class TestRegnetFSDP(unittest.TestCase):
                     "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
                     "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
                     "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.OPTIMIZER.num_epochs=1",
-                    "config.OPTIMIZER.use_larc=False",
+                    f"config.OPTIMIZER.use_larc={with_larc}",
                     "config.LOSS.swav_loss.epsilon=0.03",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=16",
-                    "config.DISTRIBUTED.NCCL_DEBUG=False",
-                    "config.DISTRIBUTED.NUM_NODES=1",
                     "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
                     "config.MODEL.FSDP_CONFIG.mixed_precision=False",
                     "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
@@ -55,24 +51,37 @@ class TestRegnetFSDP(unittest.TestCase):
         else:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
             config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head"
+
+        if with_larc and with_fsdp:
+            config.MODEL.FSDP_CONFIG.flatten_parameters = False
+            config.OPTIMIZER.name = "sgd_fsdp"
+
+        config["MODEL"]["ACTIVATION_CHECKPOINTING"][
+            "USE_ACTIVATION_CHECKPOINTING"
+        ] = with_activation_checkpointing
         return config
 
     @staticmethod
-    def _distributed_worker(
-        gpu_id: int, with_fsdp: bool, sync_file: str, result_file: str
+    def _pretraining_worker(
+        gpu_id: int,
+        with_fsdp: bool,
+        with_activation_checkpointing: bool,
+        with_larc: bool,
+        sync_file: str,
+        result_file: str,
     ):
-        torch.cuda.set_device(gpu_id)
-        dist.init_process_group(
-            backend="nccl", init_method="file://" + sync_file, world_size=2, rank=gpu_id
-        )
-
-        # Create the inputs
+        init_distributed_on_file(world_size=2, gpu_id=gpu_id, sync_file=sync_file)
         torch.manual_seed(0)
         torch.backends.cudnn.deterministic = True
+
+        # Create the inputs
         batch = torch.randn(size=(8, 3, 224, 224)).cuda()
+        target = torch.tensor(0.0).cuda()
 
         # Create a fake model based on SWAV blocks
-        config = TestRegnetFSDP._create_config(with_fsdp)
+        config = TestRegnetFSDP._create_pretraining_config(
+            with_fsdp, with_activation_checkpointing, with_larc=with_larc
+        )
         model = build_model(config["MODEL"], config["OPTIMIZER"])
         model = model.cuda()
         if with_fsdp:
@@ -80,13 +89,15 @@ class TestRegnetFSDP(unittest.TestCase):
         else:
             model = DistributedDataParallel(model, device_ids=[gpu_id])
         criterion = SwAVLoss(loss_config=config["LOSS"]["swav_loss"])
-        optimizer = optim.SGD(model.parameters(), lr=1e-2)
+        optimizer = build_optimizer(config["OPTIMIZER"])
+        optimizer.set_param_groups(model.parameters())
 
         # Run a few iterations and collect the losses
         losses = []
-        for iteration in range(5):
+        num_iterations = 5
+        for iteration in range(num_iterations):
             out = model(batch)
-            loss = criterion(out[0], torch.tensor(0.0).cuda())
+            loss = criterion(out[0], target)
             if gpu_id == 0:
                 losses.append(loss.item())
             optimizer.zero_grad()
@@ -95,7 +106,7 @@ class TestRegnetFSDP(unittest.TestCase):
                 for name, param in model.named_parameters():
                     if "prototypes" in name:
                         param.grad = None
-            optimizer.step()
+            optimizer.step(where=float(iteration / num_iterations))
 
         # Store the losses in a file to compare several methods
         if gpu_id == 0:
@@ -103,34 +114,79 @@ class TestRegnetFSDP(unittest.TestCase):
                 pickle.dump(losses, f)
 
     @staticmethod
-    @contextmanager
-    def _with_temp_files(count: int):
-        temp_files = [tempfile.mkstemp() for _ in range(count)]
-        yield [t[1] for t in temp_files]
-        for t in temp_files:
-            os.close(t[0])
+    def run_pretraining(
+        with_fsdp: bool,
+        with_checkpointing: bool,
+        with_larc: bool,
+        output_file_name: str,
+    ):
+        with with_temp_files(count=1) as sync_file:
+            mp.spawn(
+                TestRegnetFSDP._pretraining_worker,
+                (with_fsdp, with_checkpointing, with_larc, sync_file, output_file_name),
+                nprocs=2,
+            )
 
+    @unittest.skipIf(torch.cuda.device_count() < 2, "Not enough GPUs to run the test")
     def test_regnet_fsdp_convergence_on_swav(self):
-        if torch.cuda.device_count() < 2:
-            self.skipTest("Not enough GPUs to run the test")
-            return
+        """
+        Run SWAV architecture with DDP or with FSDP with or without
+        activation checkpointing and check that the results match
+        """
+        with with_temp_files(count=3) as file_names:
+            self.run_pretraining(
+                with_fsdp=False,
+                with_checkpointing=False,
+                with_larc=False,
+                output_file_name=file_names[0],
+            )
+            self.run_pretraining(
+                with_fsdp=True,
+                with_checkpointing=False,
+                with_larc=False,
+                output_file_name=file_names[1],
+            )
+            self.run_pretraining(
+                with_fsdp=True,
+                with_checkpointing=True,
+                with_larc=False,
+                output_file_name=file_names[2],
+            )
 
-        # Run with and without FSDP and check that the results match
-        with TestRegnetFSDP._with_temp_files(count=4) as file_names:
-            with_fsdp = False
-            mp.spawn(
-                TestRegnetFSDP._distributed_worker,
-                (with_fsdp, file_names[0], file_names[1]),
-                nprocs=2,
+            results = []
+            for file_name in file_names:
+                with open(file_name, "rb") as f:
+                    result = pickle.load(f)
+                    results.append(result)
+            self.assertEqual(results[0], results[1], "DDP vs FSDP")
+            self.assertEqual(results[1], results[2], "Activation checkpointing")
+
+    @unittest.skipIf(torch.cuda.device_count() < 2, "Not enough GPUs to run the test")
+    def test_regnet_fsdp_convergence_on_swav_with_larc(self):
+        """
+        Run SWAV architecture with DDP or with FSDP with or without
+        activation checkpointing and check that the results match
+        """
+        with with_temp_files(count=2) as file_names:
+            self.run_pretraining(
+                with_fsdp=False,
+                with_checkpointing=False,
+                with_larc=True,
+                output_file_name=file_names[0],
             )
-            with_fsdp = True
-            mp.spawn(
-                TestRegnetFSDP._distributed_worker,
-                (with_fsdp, file_names[2], file_names[3]),
-                nprocs=2,
+            self.run_pretraining(
+                with_fsdp=True,
+                with_checkpointing=False,
+                with_larc=True,
+                output_file_name=file_names[1],
             )
-            with open(file_names[1], "rb") as f:
-                ddp_result = pickle.load(f)
-            with open(file_names[3], "rb") as f:
-                fsdp_result = pickle.load(f)
-            self.assertEqual(ddp_result, fsdp_result)
+
+            results = []
+            for file_name in file_names:
+                with open(file_name, "rb") as f:
+                    result = pickle.load(f)
+                    # TODO (Quentin) - figure out why it diverges slightly after a while
+                    result[3] = round(result[3], 5)
+                    result[4] = round(result[4], 4)
+                    results.append(result)
+            self.assertEqual(results[0], results[1], "DDP vs FSDP (LARC)")

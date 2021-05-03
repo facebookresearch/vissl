@@ -26,6 +26,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
             "config=pretrain/swav/swav_8node_resnet",
             "+config/pretrain/swav/models=regnet16Gf",
             "config.MODEL.AMP_PARAMS.USE_AMP=True",
+            "config.OPTIMIZER.use_larc=True",
         ]
 
         cfg = self._create_config(overrides)
@@ -33,6 +34,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.HEAD.PARAMS[0][0], "swav_head")
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_task")
+        self.assertEqual(cfg.OPTIMIZER.name, "sgd")
 
         cfg = self._create_config(
             overrides + ["config.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP=True"]
@@ -41,6 +43,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.HEAD.PARAMS[0][0], "swav_head_fsdp")
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet_fsdp")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_fsdp_task")
+        self.assertEqual(cfg.OPTIMIZER.name, "sgd_fsdp")
 
     def test_inference_of_fsdp_settings_for_linear_evaluation(self):
         overrides = [

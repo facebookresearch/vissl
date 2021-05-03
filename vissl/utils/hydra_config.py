@@ -511,6 +511,10 @@ def infer_and_assert_hydra_config(cfg):
         # recommended FSDP settings below for the convergence
         cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
 
+        # Inference of optimizer configuration
+        if cfg["OPTIMIZER"]["use_larc"]:
+            cfg["OPTIMIZER"]["name"] = "sgd_fsdp"
+
         # AMP based inference
         if cfg["MODEL"]["AMP_PARAMS"]["USE_AMP"]:
             cfg["MODEL"]["AMP_PARAMS"]["AMP_TYPE"] = "pytorch"
