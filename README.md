@@ -5,6 +5,7 @@
 ## What's New
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
 
+- **[May 2021]**: [Barlow Twins: Self-Supervised Learning via Redundancy Reduction](https://arxiv.org/abs/2103.03230) code released.
 - **[April 2021]**: [ConViT: Improving Vision Transformers with Soft Convolutional Inductive Biases](https://arxiv.org/pdf/2103.10697.pdf) code released.
 - **[March 2021]**: Added most datasets used in [VTAB](https://arxiv.org/pdf/1910.04867.pdf) and [CLIP](https://arxiv.org/abs/2103.00020) benchmark tasks.
 - **[February 2021]**: Added [Vision Transformers](https://arxiv.org/pdf/2010.11929v1.pdf) (ViT) backbone and [training self-supervision with ViT](https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/vision_transformer).
