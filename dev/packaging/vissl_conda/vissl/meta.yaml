@@ -55,6 +55,6 @@ build:
 
 about:
   home: https://github.com/facebookresearch/vissl
-  license: CC-NC 4.0 International
+  license: MIT
   license_file: LICENSE
   summary: computer VIsion library for state-of-the-art Self-Supervised Learning research with PyTorch

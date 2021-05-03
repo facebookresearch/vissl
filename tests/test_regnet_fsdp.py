@@ -1,4 +1,8 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Copyright (c) Facebook, Inc. and its affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import pickle
 import unittest
 
@@ -7,7 +11,6 @@ import torch.multiprocessing as mp
 from classy_vision.optim import build_optimizer
 from hydra.experimental import compose, initialize_config_module
 from torch.nn.parallel import DistributedDataParallel
-
 from vissl.losses.swav_loss import SwAVLoss
 from vissl.models import build_model
 from vissl.optimizers import *  # noqa

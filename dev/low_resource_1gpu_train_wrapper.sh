@@ -1,5 +1,8 @@
 #!/bin/bash -e
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Copyright (c) Facebook, Inc. and its affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 # ----------------------------------- USAGE ----------------------------------------------------- #
 # TYPE=engine ./dev/low_resource_1gpu_train_wrapper.sh config=pretrain/swav/swav_8node_resnet
