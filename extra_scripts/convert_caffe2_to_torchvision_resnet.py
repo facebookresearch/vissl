@@ -1,4 +1,7 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Copyright (c) Facebook, Inc. and its affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 """
 Convert the ResNet-50 models from ICCV'19 paper https://arxiv.org/abs/1905.01235

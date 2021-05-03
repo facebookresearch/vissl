@@ -1,4 +1,7 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Copyright (c) Facebook, Inc. and its affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 import os
 import pathlib
@@ -36,7 +39,7 @@ setup(
     version=get_version(),
     author="Facebook AI Research",
     author_email="vissl@fb.com",
-    license="CC-BY-NC 4.0 (Attr Non-Commercial Inter.)",
+    license="MIT",
     url="https://github.com/facebookresearch/vissl",
     description="VISSL is an extensible, modular and scalable library for "
     "SOTA Self-Supervised Learning with images.",
