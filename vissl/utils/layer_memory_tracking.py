@@ -4,11 +4,13 @@
 # LICENSE file in the root directory of this source tree.
 
 from dataclasses import dataclass
+from enum import Enum, auto
 from typing import Dict, List, NamedTuple, Tuple, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
+from fairscale.nn import FullyShardedDataParallel
 from vissl.utils.visualize import matplotlib_figure_to_image
 
 
@@ -27,6 +29,13 @@ class TraceForwardEvent(NamedTuple):
             "memory_activations": self.memory_activations,
         }
 
+    @classmethod
+    def from_dict(cls, serialized):
+        return TraceForwardEvent(
+            memory_diff=serialized["memory_diff"],
+            memory_activations=serialized["memory_activations"],
+        )
+
 
 class TraceBackwardEvent(NamedTuple):
     """
@@ -38,6 +47,10 @@ class TraceBackwardEvent(NamedTuple):
 
     def to_dict(self):
         return {"memory_activations": self.memory_activations}
+
+    @classmethod
+    def from_dict(cls, serialized):
+        return TraceBackwardEvent(memory_activations=serialized["memory_activations"])
 
 
 class LayerMemoryTrace(NamedTuple):
@@ -51,6 +64,8 @@ class LayerMemoryTrace(NamedTuple):
     allocated: int
     reserved: int
     is_forward: bool
+    all_gathered: int
+    cumul_all_gathered: int
     event: Union[TraceForwardEvent, TraceBackwardEvent]
 
     def to_dict(self):
@@ -60,8 +75,27 @@ class LayerMemoryTrace(NamedTuple):
             "allocated": self.allocated,
             "reserved": self.reserved,
             "is_forward": self.is_forward,
+            "all_gathered": self.all_gathered,
+            "cumul_all_gathered": self.cumul_all_gathered,
             "event": self.event.to_dict(),
         }
+
+    @classmethod
+    def from_dict(cls, serialized):
+        if serialized["is_forward"]:
+            event = TraceForwardEvent.from_dict(serialized["event"])
+        else:
+            event = TraceBackwardEvent.from_dict(serialized["event"])
+        return LayerMemoryTrace(
+            module_name=serialized["module_name"],
+            module_params=serialized["module_params"],
+            allocated=serialized["allocated"],
+            reserved=serialized["reserved"],
+            is_forward=serialized["is_forward"],
+            all_gathered=serialized["all_gathered"],
+            cumul_all_gathered=serialized["cumul_all_gathered"],
+            event=event,
+        )
 
 
 @dataclass
@@ -75,6 +109,31 @@ class LayerwiseMemoryTrackerSummary:
     total_activation_allocations: int
     total_forward_allocations: int
     top_forward_activation_producers: List[LayerMemoryTrace]
+
+
+class ProcessGroupTrackingEvent(Enum):
+    allgather = auto()
+
+
+class ProcessGroupTracker:
+    """
+    A way to track the calls to distributed groups
+    """
+
+    def __init__(self, group, listener=None):
+        self.group = group
+        self.listener = listener
+
+    def allgather(self, output_tensors, input_tensors, *args, **kwargs):
+        if self.listener is not None:
+            self.listener(
+                ProcessGroupTrackingEvent.allgather, output_tensors, input_tensors
+            )
+        return self.group.allgather(output_tensors, input_tensors, *args, **kwargs)
+
+    def __getattr__(self, item):
+        # Forward: for functions not traces
+        return getattr(self.group, item)
 
 
 class LayerwiseMemoryTracker:
@@ -91,6 +150,8 @@ class LayerwiseMemoryTracker:
         self.memory_traces: List[LayerMemoryTrace] = []
         self._hooks = []
         self._previous_module_name = None
+        self._last_all_gather_memory = 0
+        self._cumul_all_gather_memory = []
         self._memory_pre_forward = 0
         self._traced_module_names = set()
 
@@ -103,6 +164,9 @@ class LayerwiseMemoryTracker:
             h2 = m.register_forward_hook(self._create_post_forward_hook(name))
             h3 = m.register_backward_hook(self._create_backward_hook(name))
             self._hooks.extend([h1, h2, h3])
+            if isinstance(m, FullyShardedDataParallel):
+                if isinstance(m.process_group, ProcessGroupTracker):
+                    m.process_group.listener = self._handle_process_group_call
         torch.cuda.empty_cache()
 
     def clear_traces(self):
@@ -120,6 +184,8 @@ class LayerwiseMemoryTracker:
         self._hooks.clear()
         self._previous_module_name = None
         self._memory_pre_forward = 0
+        self._last_all_gather_memory = 0
+        self._cumul_all_gather_memory.clear()
 
     @property
     def forward_traces(self) -> List[LayerMemoryTrace]:
@@ -174,21 +240,56 @@ class LayerwiseMemoryTracker:
             self.forward_traces, key=lambda a: a.event.memory_activations, reverse=True
         )[:top]
 
-    def show_plots(self, figsize=(16, 12), capture: bool = False):
+    def show_plots(self, figsize=(16, 20), capture: bool = False):
         return compare_memory_traces_in_plot(
             {"run": self.memory_traces}, figsize=figsize, capture=capture
         )
 
+    def save_traces(self, path: str):
+        """
+        Save the traces in a JSON file
+        """
+        import json
+
+        with open(path, "w") as f:
+            json_traces = [t.to_dict() for t in self.memory_traces]
+            json.dump({"traces": json_traces}, f)
+
+    @classmethod
+    def load(cls, path: str):
+        import json
+
+        out = cls()
+        with open(path, "r") as f:
+            traces = json.load(f)["traces"]
+        out.memory_traces = [LayerMemoryTrace.from_dict(t) for t in traces]
+        return out
+
     def _create_pre_forward_hook(self, name: str):
         def _pre_forward_hook(module: nn.Module, inputs):
+            torch.cuda.synchronize()
             allocated, reserved = self._capture_memory()
             self._previous_module_name = name
             self._memory_pre_forward = allocated
+            if isinstance(module, FullyShardedDataParallel):
+                self._cumul_all_gather_memory.append(0)
 
         return _pre_forward_hook
 
+    def _handle_process_group_call(self, event: ProcessGroupTrackingEvent, *args):
+        torch.cuda.synchronize()
+        if event == ProcessGroupTrackingEvent.allgather:
+            outputs, inputs = args
+            output_size = self._get_module_output_size(outputs)
+            self._last_all_gather_memory = output_size
+            if self._cumul_all_gather_memory:
+                self._cumul_all_gather_memory[-1] += output_size
+
     def _create_post_forward_hook(self, name: str):
         def _post_forward_hook(module: nn.Module, inputs, outputs):
+            torch.cuda.synchronize()
+            if isinstance(module, FullyShardedDataParallel):
+                self._cumul_all_gather_memory.pop()
 
             # Only if it is a leaf module
             if name == self._previous_module_name:
@@ -207,12 +308,15 @@ class LayerwiseMemoryTracker:
                         allocated=allocated,
                         reserved=reserved,
                         is_forward=True,
+                        all_gathered=self._last_all_gather_memory,
+                        cumul_all_gathered=sum(self._cumul_all_gather_memory),
                         event=TraceForwardEvent(
                             memory_diff=allocated - self._memory_pre_forward,
                             memory_activations=activations,
                         ),
                     )
                 )
+                self._last_all_gather_memory = 0
 
             # Clean previous forward call values
             self._previous_module_name = None
@@ -224,6 +328,7 @@ class LayerwiseMemoryTracker:
         def _backward_hook(
             module: nn.Module, grad_input: torch.Tensor, grad_output: torch.Tensor
         ):
+            torch.cuda.synchronize()
             if name not in self._traced_module_names:
                 return
 
@@ -237,9 +342,14 @@ class LayerwiseMemoryTracker:
                     allocated=allocated,
                     reserved=reserved,
                     is_forward=False,
+                    all_gathered=self._last_all_gather_memory,
+                    cumul_all_gathered=0,
                     event=TraceBackwardEvent(memory_activations=memory),
                 )
             )
+
+            # Cleaning accumulated values since last call
+            self._last_all_gather_memory = 0
 
         return _backward_hook
 
@@ -310,7 +420,7 @@ class LayerwiseMemoryTracker:
 
 def compare_memory_traces_in_plot(
     memory_traces_by_job: Dict[str, List[LayerMemoryTrace]],
-    figsize: Tuple[int, int] = (16, 12),
+    figsize: Tuple[int, int] = (16, 20),
     capture: bool = False,
 ):
     """
@@ -319,7 +429,7 @@ def compare_memory_traces_in_plot(
     """
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=figsize, ncols=2, nrows=2)
+    fig, ax = plt.subplots(figsize=figsize, ncols=2, nrows=3)
     graph_creator = MemoryGraphCreator()
 
     ax[0, 0].set_title("memory allocated")
@@ -340,11 +450,23 @@ def compare_memory_traces_in_plot(
     if len(memory_traces_by_job) > 1:
         ax[1, 0].legend()
 
-    ax[1, 1].set_title("parameter memory")
+    ax[1, 1].set_title("cumulative forward activations")
     for job_name, memory_traces in memory_traces_by_job.items():
-        graph_creator.module_parameters(ax[1, 1], job_name, memory_traces)
+        graph_creator.cumulative_activations(ax[1, 1], job_name, memory_traces)
     if len(memory_traces_by_job) > 1:
         ax[1, 1].legend()
+
+    ax[2, 0].set_title("all gathered memory")
+    for job_name, memory_traces in memory_traces_by_job.items():
+        graph_creator.all_gathered_memory(ax[2, 0], job_name, memory_traces)
+    if len(memory_traces_by_job) > 1:
+        ax[2, 0].legend()
+
+    ax[2, 1].set_title("parameter memory")
+    for job_name, memory_traces in memory_traces_by_job.items():
+        graph_creator.module_parameters(ax[2, 1], job_name, memory_traces)
+    if len(memory_traces_by_job) > 1:
+        ax[2, 1].legend()
 
     if not capture:
         plt.show()
@@ -384,6 +506,7 @@ class MemoryGraphCreator:
         ax.set_ylim([None, max_trace.allocated * 1.1])
         x_text, y_text = max(0, max_index * 0.8), max_trace.allocated * 1.04
         ax.text(x_text, y_text, f"{max_module} ({max_phase})", fontdict=self.font)
+        self._y_axis_in_gigabytes(ax)
 
     def reserved_memory_curve(
         self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
@@ -393,6 +516,7 @@ class MemoryGraphCreator:
             memory_traces, reserved_memory
         )
         ax.plot(x, y_forward, x, y_backward, label=job_name)
+        self._y_axis_in_gigabytes(ax)
 
     def activation_allocations(
         self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
@@ -402,6 +526,41 @@ class MemoryGraphCreator:
             memory_traces, event_allocations
         )
         ax.plot(x, y_forward, x, y_backward, label=job_name)
+        self._y_axis_in_gigabytes(ax)
+
+    def cumulative_activations(
+        self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
+    ):
+        event_allocations = [t.event.memory_activations for t in memory_traces]
+        x, y_forward, y_backward = self._split_forward_backward(
+            memory_traces, event_allocations
+        )
+        cumulative_forward_activations = np.cumsum(y_forward)
+        ax.plot(x, cumulative_forward_activations, label=job_name)
+        self._y_axis_in_gigabytes(ax)
+
+    def all_gathered_memory(
+        self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
+    ):
+        # Plot the all_gathered and cumulative all_gathered memory
+        gathered_memory = [t.all_gathered for t in memory_traces]
+        cumul_gathered_memory = [t.cumul_all_gathered for t in memory_traces]
+        x, y_forward, y_backward = self._split_forward_backward(
+            memory_traces, gathered_memory
+        )
+        ax.plot(x, y_forward, x, y_backward, label=job_name)
+        ax.plot(x, cumul_gathered_memory, label=job_name)
+        self._y_axis_in_gigabytes(ax)
+
+        # Adding the name of the layer with max cumulative all_gathered memory
+        max_index = np.argmax(cumul_gathered_memory)
+        max_trace = memory_traces[max_index]
+        max_module = ".".join(
+            [n for n in max_trace.module_name.split(".") if not n.startswith("_")]
+        )
+        ax.set_ylim([None, max_trace.cumul_all_gathered * 1.1])
+        x_text, y_text = max(0, max_index * 0.8), max_trace.cumul_all_gathered * 1.04
+        ax.text(x_text, y_text, f"{max_module} (fwd)", fontdict=self.font)
 
     def module_parameters(
         self, ax, job_name: str, memory_traces: List[LayerMemoryTrace]
@@ -411,6 +570,11 @@ class MemoryGraphCreator:
             memory_traces, module_parameters
         )
         ax.plot(x, y_forward, x, y_backward, label=job_name)
+        self._y_axis_in_gigabytes(ax)
+
+    @staticmethod
+    def _y_axis_in_gigabytes(ax):
+        ax.ticklabel_format(axis="y", style="sci", scilimits=(9, 9))
 
     @classmethod
     def _split_forward_backward(cls, memory_traces: List[LayerMemoryTrace], values):
@@ -418,8 +582,8 @@ class MemoryGraphCreator:
         mask_forwards, mask_backwards = cls._mask_forward_backward(memory_traces)
         return (
             x_values,
-            np.ma.masked_where(mask_forwards, values),
             np.ma.masked_where(mask_backwards, values),
+            np.ma.masked_where(mask_forwards, values),
         )
 
     @classmethod
