@@ -49,7 +49,7 @@ def extract_main(
 
     # set seeds
     logging.info("Setting seed....")
-    set_seeds(cfg)
+    set_seeds(cfg, node_id)
 
     # print the training settings and system settings
     local_rank, _ = get_machine_local_and_dist_rank()
