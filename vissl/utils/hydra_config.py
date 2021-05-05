@@ -542,6 +542,10 @@ def infer_and_assert_hydra_config(cfg):
         if cfg.MODEL.TRUNK.NAME == "regnet":
             cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
 
+        # Profiling the communication requires some setup for FSDP
+        if cfg.PROFILING.MEMORY_PROFILING.TRACK_BY_LAYER_MEMORY:
+            cfg["MODEL"]["FSDP_CONFIG"]["_TRACK_COMMUNICATIONS"] = True
+
         logging.info(f"Using the FSDP config: {cfg.MODEL.FSDP_CONFIG}")
 
     # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG

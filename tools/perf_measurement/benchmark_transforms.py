@@ -37,7 +37,7 @@ N_QUEUES = torch.multiprocessing.cpu_count()  # Simulate the load of N dataloade
 
 # ---- Tooling -----
 def benchmark(transform: Callable, title: str, requires_pil: bool = False) -> float:
-    """ Given a transform, simulate a real-world load by creating multiple workers """
+    """Given a transform, simulate a real-world load by creating multiple workers"""
 
     #  Test the multi-queue speed
     global benchmark_results
@@ -63,7 +63,7 @@ def store_result(result: List[float]) -> None:
 
 
 def load_one_queue(transform: Callable, requires_pil: bool = False) -> float:
-    """ Run a given transform repeatedly to simulate a single dataloader worker"""
+    """Run a given transform repeatedly to simulate a single dataloader worker"""
     start = time.time()
     for _ in range(ITERATIONS):
         transform(RAND_PIL) if requires_pil else transform(RAND_TENSOR)

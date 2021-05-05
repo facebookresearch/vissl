@@ -45,6 +45,11 @@ def fsdp_wrapper(module, **kwargs):
     """
     Customer FSDP wrapper, adding the missing options
     """
+    from vissl.utils.layer_memory_tracking import ProcessGroupTracker
+
     fsdp_config = dict(**kwargs)
     fsdp_config["process_group"] = get_global_group()
+    if fsdp_config.get("_TRACK_COMMUNICATIONS", False):
+        fsdp_config["process_group"] = ProcessGroupTracker(fsdp_config["process_group"])
+        del fsdp_config["_TRACK_COMMUNICATIONS"]
     return FSDP(module, **fsdp_config)
