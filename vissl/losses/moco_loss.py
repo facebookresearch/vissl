@@ -20,7 +20,7 @@ _MoCoLossConfig = namedtuple(
 
 
 class MoCoLossConfig(_MoCoLossConfig):
-    """ Settings for the MoCo loss"""
+    """Settings for the MoCo loss"""
 
     @staticmethod
     def defaults() -> "MoCoLossConfig":
