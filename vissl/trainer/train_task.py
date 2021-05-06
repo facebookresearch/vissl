@@ -8,6 +8,7 @@ import logging
 
 import torch
 from classy_vision.generic.util import copy_model_to_gpu
+from classy_vision.hooks import ClassyHook
 from classy_vision.losses import build_loss
 from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
@@ -17,11 +18,11 @@ from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
 from vissl.data import (
+    AirstoreDataset,
+    GenericSSLDataset,
     build_dataset,
     get_loader,
     print_sampler_config,
-    AirstoreDataset,
-    GenericSSLDataset,
 )
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_param_groups
@@ -615,12 +616,12 @@ class SelfSupervisionTask(ClassificationTask):
                 broadcast_buffers_mode=broadcast_buffers_enum_mode
             )  # NOQA
 
-    def run_hooks(self, hook_function_name):
+    def run_hooks(self, hook_function_name: str):
         """
         Override the ClassyTask run_hook function and run the hooks whenever called
         """
         for hook in self.hooks:
-            getattr(hook, hook_function_name)(self)
+            getattr(hook, hook_function_name, ClassyHook._noop)(self)
 
     def prepare_optimizer(self):
         """

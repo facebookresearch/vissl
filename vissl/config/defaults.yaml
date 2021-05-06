@@ -106,6 +106,9 @@ config:
       # at what iteration number should the memory summary be printed. usually
       # set to 1 for very large models
       LOG_ITERATION_NUM: 0
+      # set this to true if you want to print the tensor residing in memory
+      # in event of an exception (such as out of memory exception)
+      DUMP_MEMORY_ON_EXCEPTION: False
 
     # ----------------------------------------------------------------------------------- #
     # nvidia-smi print

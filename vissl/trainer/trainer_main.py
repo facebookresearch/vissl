@@ -196,6 +196,9 @@ class SelfSupervisionTrainer(object):
                     task.run_hooks(SSLClassyHookFunctions.on_step.name)
                 except StopIteration:
                     break
+                except Exception as e:
+                    task.run_hooks(SSLClassyHookFunctions.on_exception.name)
+                    raise e
             for meter in task.meters:
                 meter.sync_state()
             logging.info("Meters synced")
