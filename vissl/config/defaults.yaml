@@ -476,6 +476,11 @@ config:
       # set this option to True to enable FSDP and automatically determine the config
       # for FSDP based on AMP true/false.
       AUTO_SETUP_FSDP: False
+      # Set this option to a positive number to automatically wrap "big" layers with
+      # a dedicated FSDP wrapping: the number provided here is the number of
+      # parameters that serves as threshold to decide if a layer is "big"
+      AUTO_WRAP_THRESHOLD: 0
+      # Parameters of fairscale FSDP
       flatten_parameters: True
       mixed_precision: True
       fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.

@@ -49,7 +49,7 @@ from vissl.models.model_helpers import (
     transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
-from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.fsdp_utils import auto_wrap_big_layers, fsdp_wrapper
 from vissl.utils.misc import set_torch_seed
 
 
@@ -212,6 +212,8 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
             width_in, width_out, stride, params, bottleneck_multiplier, group_width
         )
         block = auto_wrap_bn(block, single_rank_pg=False)
+        if self.fsdp_config.AUTO_WRAP_THRESHOLD > 0:
+            block = auto_wrap_big_layers(block, self.fsdp_config)
         block = fsdp_wrapper(module=block, **self.fsdp_config)
         return block
 
