@@ -378,7 +378,7 @@ class SelfSupervisionTask(ClassificationTask):
         Returns meters for task.
         """
         meter_names = self.config["METERS"].get("names", "")
-        if not meter_name:
+        if not meter_names:
             meter_name = self.config["METERS"].get("name", "")
             if not meter_name:
                 return []
