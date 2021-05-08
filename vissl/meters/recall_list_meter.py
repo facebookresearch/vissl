@@ -72,10 +72,8 @@ class RecallListMeter(ClassyMeter):
         val_dict = {}
         for ind, meter in enumerate(self._meters):
             meter_val = meter.value
-            sample_count = meter._total_sample_count
             val_dict[ind] = {}
             val_dict[ind]["val"] = meter_val
-            val_dict[ind]["sample_count"] = sample_count
         # also create dict w.r.t top-k
         output_dict = {}
         for k in self._topk_values:
