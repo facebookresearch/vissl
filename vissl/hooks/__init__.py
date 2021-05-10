@@ -20,6 +20,7 @@ from vissl.hooks.log_hooks import (  # noqa
     LogPerfTimeMetricsHook,
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
+from vissl.hooks.nnclr_hooks import NNCLRHook  # noqa
 from vissl.hooks.profiling_hook import ProfilingHook
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
@@ -110,6 +111,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
                 )
             ]
         )
+    if cfg.LOSS.name == "nnclr_info_nce_loss":
+        hooks.append(NNCLRHook())
     if cfg.HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
     if cfg.HOOKS.LOG_GPU_STATS:

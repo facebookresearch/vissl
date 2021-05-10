@@ -83,7 +83,6 @@ class SimclrInfoNCECriterion(nn.Module):
         self.temperature = temperature
         self.num_pos = 2
         self.buffer_params = buffer_params
-        self.criterion = nn.CrossEntropyLoss()
         self.dist_rank = get_rank()
         self.pos_mask = None
         self.neg_mask = None
@@ -131,16 +130,21 @@ class SimclrInfoNCECriterion(nn.Module):
         assert embedding.shape[1] == int(self.buffer_params.embedding_dim)
 
         batch_size = embedding.shape[0]
-        T = self.temperature
         num_pos = self.num_pos
         assert batch_size % num_pos == 0, "Batch size should be divisible by num_pos"
 
-        # Step 1: gather all the embeddings. Shape example: 4096 x 128
+        # Gather all the embeddings. Shape example: 4096 x 128
         embeddings_buffer = self.gather_embeddings(embedding)
 
-        # Step 2: matrix multiply: 64 x 128 with 4096 x 128 = 64 x 4096 and
+        loss = self._info_nce(embedding, embeddings_buffer)
+        return loss
+
+    def _info_nce(self, embedding: torch.Tensor, gathered_embedding: torch.Tensor):
+        # Matrix multiply: 64 x 128 with 4096 x 128 = 64 x 4096 and
         # divide by temperature.
-        similarity = torch.exp(torch.mm(embedding, embeddings_buffer.t()) / T)
+        similarity = torch.exp(
+            torch.mm(embedding, gathered_embedding.t()) / self.temperature
+        )
         pos = torch.sum(similarity * self.pos_mask, 1)
         neg = torch.sum(similarity * self.neg_mask, 1)
         loss = -(torch.mean(torch.log(pos / (pos + neg))))

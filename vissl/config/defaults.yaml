@@ -832,6 +832,19 @@ config:
       num_train_samples: -1    # @auto-filled
 
     # ----------------------------------------------------------------------------------- #
+    # NNCLR InfoNCE LOSS (Specific to NNCLR https://arxiv.org/abs/2104.14548)
+    # ----------------------------------------------------------------------------------- #
+    nnclr_info_nce_loss:
+      prediction_head_params: { "dims": [ 256, 4096, 256 ], "use_relu": True, "use_bn": True, "use_bias": False, "skip_last_layer_relu_bn": True }
+      queue_size: 98304
+      temperature: 0.1
+      buffer_params:
+        world_size: 64                # automatically inferred
+        embedding_dim: 256
+        effective_batch_size: 4096    # automatically inferred
+
+
+    # ----------------------------------------------------------------------------------- #
     # SimCLR InfoNCE LOSS (Specific to SimCLR https://arxiv.org/abs/2002.05709)
     # ----------------------------------------------------------------------------------- #
     simclr_info_nce_loss:

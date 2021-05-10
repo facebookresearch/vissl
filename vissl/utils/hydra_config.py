@@ -312,7 +312,7 @@ def infer_losses_config(cfg):
     )
 
     # some inference for the Info-NCE loss.
-    if "simclr_info_nce_loss" in cfg.LOSS.name:
+    if "info_nce_loss" in cfg.LOSS.name:
         cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"] = (
             cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         )
