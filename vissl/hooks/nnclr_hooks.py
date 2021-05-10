@@ -39,8 +39,8 @@ class NNCLRHook(ClassyHook):
         task.loss.criterion.prediction_head.to(task.device)
 
         # Restore an hypothetical checkpoint
-        if task.loss.criterion.checkpoint is not None:
-            task.loss.criterion.load_state_dict(task.loss.criterion.checkpoint)
+        if task.loss.checkpoint is not None:
+            task.loss.load_state_dict(task.loss.checkpoint)
 
     def on_forward(self, task: tasks.ClassyTask) -> None:
         """

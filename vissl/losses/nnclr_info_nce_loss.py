@@ -44,6 +44,9 @@ class NNclrInfoNCELoss(ClassyLoss):
             self.queue_size,
         )
 
+        # Used if loading a state dict before NNCLRHook had time to initialize the prediction head
+        self.checkpoint = None
+
     @classmethod
     def from_config(cls, loss_config: AttrDict):
         """
@@ -65,6 +68,22 @@ class NNclrInfoNCELoss(ClassyLoss):
     def __repr__(self):
         repr_dict = {"name": self._get_name(), "info_average": self.criterion}
         return pprint.pformat(repr_dict, indent=2)
+
+    def load_state_dict(self, state_dict, *args, **kwargs):
+        """
+        Restore the loss state given a checkpoint
+
+        Args:
+            state_dict (serialized via torch.save)
+        """
+
+        # If the prediction head has been allocated, use the normal pytorch restoration
+        if self.criterion.prediction_head is None:
+            self.checkpoint = state_dict
+            logging.info("Storing the checkpoint for later use")
+        else:
+            logging.info("Restoring checkpoint")
+            super().load_state_dict(state_dict, *args, **kwargs)
 
 
 class NNclrInfoNCECriterion(SimclrInfoNCECriterion):
@@ -105,9 +124,6 @@ class NNclrInfoNCECriterion(SimclrInfoNCECriterion):
         # Will be set by NNCLRHook
         self.prediction_head = None
         self.preds = None
-
-        # Used if loading a state dict before NNCLRHook had time to initialize the prediction head
-        self.checkpoint = None
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self, keys: torch.Tensor):
@@ -172,19 +188,3 @@ class NNclrInfoNCECriterion(SimclrInfoNCECriterion):
             "dist_rank": self.dist_rank,
         }
         return pprint.pformat(repr_dict, indent=2)
-
-    def load_state_dict(self, state_dict, *args, **kwargs):
-        """
-        Restore the loss state given a checkpoint
-
-        Args:
-            state_dict (serialized via torch.save)
-        """
-
-        # If the prediction head has been allocated, use the normal pytorch restoration
-        if self.prediction_head is None:
-            self.checkpoint = state_dict
-            logging.info("Storing the checkpoint for later use")
-        else:
-            logging.info("Restoring checkpoint")
-            super().load_state_dict(state_dict, *args, **kwargs)
