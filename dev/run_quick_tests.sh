@@ -16,6 +16,7 @@ TEST_LIST=(
     "test_regnet_fsdp.py"
     "test_regnet_fsdp_integration.py"
     "test_state_checkpointing.py"
+    "test_layer_memory_tracking.py"
 )
 
 echo "========================================================================"

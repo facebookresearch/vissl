@@ -4,7 +4,10 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch.distributed as dist
+import torch.nn as nn
+from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
+from vissl.config.attr_dict import AttrDict
 
 
 def fsdp_recursive_reset_lazy_init(fsdp_module: FSDP):
@@ -47,9 +50,53 @@ def fsdp_wrapper(module, **kwargs):
     """
     from vissl.utils.layer_memory_tracking import ProcessGroupTracker
 
+    # Add global process group to the list of keys
     fsdp_config = dict(**kwargs)
     fsdp_config["process_group"] = get_global_group()
     if fsdp_config.get("_TRACK_COMMUNICATIONS", False):
         fsdp_config["process_group"] = ProcessGroupTracker(fsdp_config["process_group"])
-        del fsdp_config["_TRACK_COMMUNICATIONS"]
+
+    # Remove keys that are not supported in FSDP
+    for key in {"_TRACK_COMMUNICATIONS", "AUTO_WRAP_THRESHOLD"}:
+        fsdp_config.pop(key, None)
+
     return FSDP(module, **fsdp_config)
+
+
+class _FSDP_WRAPPER:
+    # TODO (Quentin) - remove this hack after issue is solved:
+    #  https://github.com/facebookresearch/fairscale/issues/649
+    def __new__(cls, module, **kwargs):
+        return fsdp_wrapper(module, **kwargs)
+
+
+class _BigConvAutoWrapPolicy:
+    """
+    Wrap convolution layers bigger than the provided number of parameters
+    """
+
+    def __init__(self, threshold: int):
+        self.threshold = threshold
+
+    def __call__(self, module: nn.Module, recurse: bool, unwrapped_params: int):
+        is_large = unwrapped_params >= self.threshold
+        force_leaf_modules = default_auto_wrap_policy.FORCE_LEAF_MODULES
+        if recurse:
+            # We should recurse if the module is big enough but not in force_leaf_modules.
+            return is_large and not isinstance(module, tuple(force_leaf_modules))
+        else:
+            # If we are not recursing, we should wrap but not the exclude list.
+            is_conv = isinstance(module, nn.Conv2d)
+            return is_conv and is_large
+
+
+def auto_wrap_big_layers(module: nn.Module, fsdp_config: AttrDict):
+    """
+    Automatically wrap the bigger layer in the module
+    """
+    with enable_wrap(
+        auto_wrap_policy=_BigConvAutoWrapPolicy(fsdp_config.AUTO_WRAP_THRESHOLD),
+        wrapper_cls=_FSDP_WRAPPER,
+        **fsdp_config
+    ):
+        return auto_wrap(module)

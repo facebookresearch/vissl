@@ -8,6 +8,7 @@ import re
 import shutil
 import tempfile
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import List, Tuple
 
 import torch
@@ -49,6 +50,27 @@ def with_temp_files(count: int):
         yield [t[1] for t in temp_files]
         for t in temp_files:
             os.close(t[0])
+
+
+@dataclass
+class TestTimer:
+    elapsed_time_ms: int
+
+
+@contextmanager
+def with_timing(name: str):
+    """
+    Test utilities for basic performance tests
+    """
+    test_timer = TestTimer(elapsed_time_ms=0)
+    start_event = torch.cuda.Event(enable_timing=True)
+    end_event = torch.cuda.Event(enable_timing=True)
+    start_event.record()
+    yield test_timer
+    end_event.record()
+    torch.cuda.synchronize()  # Wait for the events to be recorded!
+    test_timer.elapsed_time_ms = start_event.elapsed_time(end_event)
+    print(name, ":", test_timer.elapsed_time_ms, "ms")
 
 
 def gpu_test(gpu_count: int = 1):

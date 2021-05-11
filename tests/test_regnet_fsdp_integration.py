@@ -23,7 +23,10 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
 
     @staticmethod
     def _create_pretraining_config(
-        with_fsdp: bool, with_activation_checkpointing: bool, with_mixed_precision: bool
+        with_fsdp: bool,
+        with_activation_checkpointing: bool,
+        with_mixed_precision: bool,
+        auto_wrap_threshold: int,
     ):
         with initialize_config_module(config_module="vissl.config"):
             cfg = compose(
@@ -55,6 +58,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
             config.MODEL.FSDP_CONFIG.mixed_precision = with_mixed_precision
             config.MODEL.FSDP_CONFIG.fp32_reduce_scatter = with_mixed_precision
             config.MODEL.FSDP_CONFIG.compute_dtype = torch.float32
+            config.MODEL.FSDP_CONFIG.AUTO_WRAP_THRESHOLD = auto_wrap_threshold
         else:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
             config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head"
@@ -70,12 +74,14 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         with_fsdp: bool,
         with_activation_checkpointing: bool,
         with_mixed_precision: bool,
+        auto_wrap_threshold: int = 0,
     ):
         with in_temporary_directory():
             config = self._create_pretraining_config(
                 with_fsdp=with_fsdp,
                 with_activation_checkpointing=with_activation_checkpointing,
                 with_mixed_precision=with_mixed_precision,
+                auto_wrap_threshold=auto_wrap_threshold,
             )
             result = run_integration_test(config)
             return result.get_losses()
@@ -87,12 +93,19 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
             with_activation_checkpointing=False,
             with_mixed_precision=False,
         )
-        fsdp_losses = self.run_pretraining(
+        fsdp_losses_1 = self.run_pretraining(
             with_fsdp=True,
             with_activation_checkpointing=False,
             with_mixed_precision=False,
         )
-        self.assertEqual(ddp_losses, fsdp_losses)
+        fsdp_losses_2 = self.run_pretraining(
+            with_fsdp=True,
+            with_activation_checkpointing=False,
+            with_mixed_precision=False,
+            auto_wrap_threshold=100,
+        )
+        self.assertEqual(ddp_losses, fsdp_losses_1)
+        self.assertEqual(ddp_losses, fsdp_losses_2)
 
     @gpu_test(gpu_count=2)
     def test_fsdp_integration_mixed_precision(self):

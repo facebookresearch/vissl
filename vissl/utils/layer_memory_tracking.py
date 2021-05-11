@@ -5,6 +5,7 @@
 
 from dataclasses import dataclass
 from enum import Enum, auto
+from functools import lru_cache
 from typing import Dict, List, NamedTuple, Tuple, Union
 
 import numpy as np
@@ -416,6 +417,92 @@ class LayerwiseMemoryTracker:
             elif isinstance(x, tuple) or isinstance(x, list):
                 to_visit.extend(module_io_tensors)
         return tensors
+
+
+def find_best_reset_points(
+    activation_sizes: List[int], nb_checkpoints: int
+) -> Tuple[int, List[int]]:
+    """
+    Assuming constant memory requirement from the model, its gradients
+    and the associated optimizer state (realistic for small models
+    or models that are sharded enough to be considered small), this
+    function computes the ideal placement for the checkpoints by
+    returning the limits at which we should reset memory.
+    """
+    n = len(activation_sizes)
+
+    @lru_cache(maxsize=None)
+    def visit(pos: int, remaining: int) -> Tuple[int, List[int]]:
+        if pos == n:
+            return 0, []
+        if remaining == 0:
+            return sum(activation_sizes[pos:]), []
+
+        min_val = float("inf")
+        allocation = []
+
+        current_chunk = 0
+        for curr_pos in range(pos, n):
+            current_chunk += activation_sizes[curr_pos]
+            sub_result, sub_alloc = visit(curr_pos + 1, remaining - 1)
+            result = max(current_chunk, sub_result)
+            if result < min_val:
+                min_val = result
+                allocation = list(sub_alloc)
+                allocation.append(curr_pos + 1)
+
+        return min_val, allocation
+
+    best_score, best_allocation = visit(0, nb_checkpoints)
+    return best_score, best_allocation[::-1]
+
+
+@dataclass
+class SuggestedCheckpoints:
+    max_memory: int
+    split_modules: List[str]
+    all_modules: List[str]
+
+
+def suggest_checkpoint_location(
+    traces: List[LayerMemoryTrace], nb_checkpoints: int, num_skipped_layers: int
+) -> SuggestedCheckpoints:
+    """
+    Given a trace of a model, collected with or without checkpoint,
+    return the best places to insert a reset of activation memory.
+
+    The names of the returned modules are the boundaries of the
+    suggested checkpoint_wrapper wrappings
+    """
+
+    # From the traces, extract how much activation memory
+    # is generated during the forward pass, layer by layer
+    visited = set()
+    modules, allocations = [], []
+    for t in traces:
+        if t.is_forward:
+            name = t.module_name
+            memory = t.event.memory_activations
+            if name not in visited:
+                visited.add(name)
+                modules.append(name)
+                allocations.append(memory)
+
+    # remove the stem part
+    modules = modules[num_skipped_layers:]
+    allocations = allocations[num_skipped_layers:]
+
+    # Compute the best positions to reset the memory
+    max_memory, reset_indices = find_best_reset_points(
+        allocations, nb_checkpoints=nb_checkpoints
+    )
+
+    # Then map it back to module names
+    return SuggestedCheckpoints(
+        max_memory=max_memory,
+        split_modules=[modules[i] for i in reset_indices],
+        all_modules=modules,
+    )
 
 
 def compare_memory_traces_in_plot(

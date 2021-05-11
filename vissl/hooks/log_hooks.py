@@ -79,6 +79,47 @@ class LogGpuMemoryHook(ClassyHook):
             )
 
 
+class DumpMemoryOnException(ClassyHook):
+    """
+    Hook that dumps the pytoch tensor in memory upon
+    occurrence of an exception
+    """
+
+    on_forward = ClassyHook._noop
+    on_backward = ClassyHook._noop
+    on_phase_start = ClassyHook._noop
+    on_phase_end = ClassyHook._noop
+    on_loss_and_meter = ClassyHook._noop
+    on_update = ClassyHook._noop
+    on_start = ClassyHook._noop
+    on_end = ClassyHook._noop
+    on_step = ClassyHook._noop
+
+    def __init__(self):
+        super().__init__()
+        self.dist_rank = get_machine_local_and_dist_rank()[1]
+
+    def on_exception(self, task: "tasks.ClassyTask"):
+        import gc
+
+        iteration = task.local_iteration_num
+        dump_name = f"memory_rank_{self.dist_rank}_dump_{iteration}.txt"
+        with open(dump_name, "w") as f:
+            for obj in gc.get_objects():
+                try:
+                    if self._is_pytorch(obj):
+                        print(type(obj), obj.size(), file=f)
+                except Exception:
+                    pass
+            print(torch.cuda.memory_summary(), file=f)
+
+    @staticmethod
+    def _is_pytorch(obj):
+        return torch.is_tensor(obj) or (
+            hasattr(obj, "data") and torch.is_tensor(obj.data)
+        )
+
+
 class LogGpuStatsHook(ClassyHook):
     """
     Hook executed at the start of training and after every training iteration is done.

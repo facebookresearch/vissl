@@ -3,7 +3,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import json
 import logging
 import os
 
@@ -61,6 +60,11 @@ class ProfilingHook(ClassyHook):
         if self.profile_memory and self.start_iteration == 0:
             self.layer_memory_tracker.monitor(task.base_model)
 
+    def on_exception(self, task: "tasks.ClassyTask"):
+        if self.profile_memory:
+            iteration = task.local_iteration_num
+            self._dump_memory_stats(iteration)
+
     def on_end(self, task: "tasks.ClassyTask") -> None:
         """
         Called at the end of training.
@@ -88,17 +92,7 @@ class ProfilingHook(ClassyHook):
         # Dump memory statistics
         if self.start_iteration <= iteration < self.end_iteration:
             # TODO (prigoyal): figure out how to save when using non-disk backend
-            image = self.layer_memory_tracker.show_plots(capture=True)
-            image_name = f"memory_rank_{self.dist_rank}_iteration_{iteration}.jpg"
-            image.save(os.path.join(self.output_folder, image_name))
-            json_name = f"memory_rank_{self.dist_rank}_iteration_{iteration}.json"
-            with open(json_name, "w") as f:
-                json_traces = {
-                    "traces": [
-                        t.to_dict() for t in self.layer_memory_tracker.memory_traces
-                    ]
-                }
-                json.dump(json_traces, f)
+            self._dump_memory_stats(iteration)
             self.layer_memory_tracker.clear_traces()
 
         # Enable / disable the profiling based on the current iteration
@@ -106,3 +100,10 @@ class ProfilingHook(ClassyHook):
             self.layer_memory_tracker.monitor(task.base_model)
         if next_iteration == self.end_iteration:
             self.layer_memory_tracker.stop()
+
+    def _dump_memory_stats(self, iteration: int):
+        image = self.layer_memory_tracker.show_plots(capture=True)
+        image_name = f"memory_rank_{self.dist_rank}_iteration_{iteration}.jpg"
+        image.save(os.path.join(self.output_folder, image_name))
+        json_name = f"memory_rank_{self.dist_rank}_iteration_{iteration}.json"
+        self.layer_memory_tracker.save_traces(json_name)
