@@ -80,7 +80,8 @@ class ClassificationMeterTest(unittest.TestCase):
         qerr = self.mp.Queue()
         qio = (qin, qout, qerr)
         args = qio + (func,) + args
-        process = self.mp.Process(target=_run, name=name, args=args, daemon=True)
+        process = self.mp.Process(
+            target=_run, name=name, args=args, daemon=True)
         process.start()
         self.processes.append(process)
         return qio
@@ -103,7 +104,7 @@ class ClassificationMeterTest(unittest.TestCase):
         meter.sync_state()
         meter_value = meter.value
         for key, val in expected_value.items():
-            val *=100.0 
+            val *= 100.0
             self.assertTrue(
                 key in meter_value, msg="{0} not in meter value!".format(key)
             )
@@ -122,9 +123,11 @@ class ClassificationMeterTest(unittest.TestCase):
 
     def _values_match_expected_value(self, value0, value1, expected_value):
         for key, val in expected_value.items():
-            val*=100.0
-            self.assertTrue(key in value0, msg="{0} not in meter value!".format(key))
-            self.assertTrue(key in value1, msg="{0} not in meter value!".format(key))
+            val *= 100.0
+            self.assertTrue(
+                key in value0, msg="{0} not in meter value!".format(key))
+            self.assertTrue(
+                key in value1, msg="{0} not in meter value!".format(key))
             if torch.is_tensor(val):
                 self.assertTrue(
                     torch.all(torch.eq(value0[key][0], val)),
@@ -219,7 +222,7 @@ class ClassificationMeterTest(unittest.TestCase):
         meter1.sync_state()
         value1 = meter1.value
         for key, val in value0.items():
-            val = val[0]*100.0
+            val = val[0] * 100.0
             if torch.is_tensor(value1[key][0]):
                 self.assertFalse(
                     torch.all(torch.eq(value1[key][0], val)),
@@ -239,24 +242,28 @@ class ClassificationMeterTest(unittest.TestCase):
             if torch.is_tensor(value1[key]):
                 self.assertTrue(
                     torch.all(torch.eq(value1[key][0], val)),
-                    msg="{0} meter value mismatch after state transfer!".format(key),
+                    msg="{0} meter value mismatch after state transfer!".format(
+                        key),
                 )
                 self.assertTrue(
                     torch.all(torch.eq(value1[key], expected_value[key])),
-                    msg="{0} meter value mismatch from ground truth!".format(key),
+                    msg="{0} meter value mismatch from ground truth!".format(
+                        key),
                 )
             else:
                 self.assertAlmostEqual(
                     value1[key][0],
                     val,
                     places=4,
-                    msg="{0} meter value mismatch after state transfer!".format(key),
+                    msg="{0} meter value mismatch after state transfer!".format(
+                        key),
                 )
                 self.assertAlmostEqual(
                     value1[key][0],
-                    expected_value[key]*100.0,
+                    expected_value[key] * 100.0,
                     places=4,
-                    msg="{0} meter value mismatch from ground truth!".format(key),
+                    msg="{0} meter value mismatch from ground truth!".format(
+                        key),
                 )
 
     def _spawn_all_meter_workers(self, world_size, meters, is_train):

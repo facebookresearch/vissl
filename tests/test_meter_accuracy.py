@@ -9,11 +9,13 @@ from vissl.meters.accuracy_list_meter import AccuracyListMeter
 from tests.generic.meter_test_utils import ClassificationMeterTest
 
 from classy_vision.meters import build_meter
-import vissl.meters as meters
+import vissl.meters  # noqa: F401,F811
+
 
 class TestAccuracyListMeter(ClassificationMeterTest):
     def test_accuracy_meter_registry(self):
-        meter = build_meter({"name": "accuracy_list_meter", "num_meters": 1, "topk_values": [1, 3], "meter_names": []})
+        meter = build_meter({"name": "accuracy_list_meter", "num_meters": 1, "topk_values": [
+                            1, 3], "meter_names": []})
         self.assertTrue(isinstance(meter, AccuracyListMeter))
 
     def test_single_meter_update_and_reset(self):
@@ -21,7 +23,8 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         This test verifies that the meter works as expected on a single
         update + reset + same single update.
         """
-        meter = AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = AccuracyListMeter(num_meters=1, topk_values=[
+                                  1, 2], meter_names=[])
 
         # Batchsize = 3, num classes = 3, score is a value in {1, 2,
         # 3}...3 is the highest score
@@ -34,10 +37,12 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         # sample have correct class in top 2
         expected_value = {"top_1": 1 / 3.0, "top_2": 2 / 3.0}
 
-        self.meter_update_and_reset_test(meter, model_output, target, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_output, target, expected_value)
 
     def test_double_meter_update_and_reset(self):
-        meter = AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = AccuracyListMeter(num_meters=1, topk_values=[
+                                  1, 2], meter_names=[])
 
         # Batchsize = 3, num classes = 3, score is a value in {1, 2,
         # 3}...3 is the highest score...two batches in this test
@@ -54,14 +59,16 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         # Second batch has top-1 accuracy of 2/3.0, top-2 accuracy of 3/3.0
         expected_value = {"top_1": 3 / 6.0, "top_2": 5 / 6.0}
 
-        self.meter_update_and_reset_test(meter, model_outputs, targets, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_outputs, targets, expected_value)
 
     def test_single_meter_update_and_reset_onehot(self):
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update with onehot target.
         """
-        meter = AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = AccuracyListMeter(num_meters=1, topk_values=[
+                                  1, 2], meter_names=[])
 
         # Batchsize = 3, num classes = 3, score is a value in {1, 2,
         # 3}...3 is the highest score
@@ -74,14 +81,16 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         # sample have correct class in top 2
         expected_value = {"top_1": 1 / 3.0, "top_2": 2 / 3.0}
 
-        self.meter_update_and_reset_test(meter, model_output, target, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_output, target, expected_value)
 
     def test_single_meter_update_and_reset_multilabel(self):
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update with multilabel target.
         """
-        meter = AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = AccuracyListMeter(num_meters=1, topk_values=[
+                                  1, 2], meter_names=[])
 
         # Batchsize = 7, num classes = 3, score is a value in {1, 2,
         # 3}...3 is the highest score
@@ -113,7 +122,8 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         # one correct class in top 2.
         expected_value = {"top_1": 4 / 7.0, "top_2": 6 / 7.0}
 
-        self.meter_update_and_reset_test(meter, model_output, target, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_output, target, expected_value)
 
     def test_meter_invalid_model_output(self):
         # TODO fill when meters execute validate
@@ -133,7 +143,8 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         # transfer the state from meter1 to meter0 and validate they
         # give same expected value.
         # Expected value is the expected value of meter1
-        meters = [AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[]), AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
+        meters = [AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[
+        ]), AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
 
         # Batchsize = 3, num classes = 3, score is a value in {1, 2,
         # 3}...3 is the highest score
@@ -154,7 +165,8 @@ class TestAccuracyListMeter(ClassificationMeterTest):
 
     def test_meter_distributed(self):
         # Meter0 will execute on one process, Meter1 on the other
-        meters = [AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[]), AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
+        meters = [AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[
+        ]), AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
 
         # Batchsize = 3, num classes = 3, score is a value in {1, 2,
         # 3}...3 is the highest score
@@ -176,8 +188,11 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         # In first two updates there are 3 correct top-2, 5 correct in top 2
         # The same occurs in the second two updates and is added to first
         expected_values = [
-            {"top_1": 3 / 6.0, "top_2": 5 / 6.0},  # After one update to each meter
-            {"top_1": 6 / 12.0, "top_2": 10 / 12.0},  # After two updates to each meter
+            # After one update to each meter
+            {"top_1": 3 / 6.0, "top_2": 5 / 6.0},
+            # After two updates to each meter
+            {"top_1": 6 / 12.0, "top_2": 10 / 12.0},
         ]
 
-        self.meter_distributed_test(meters, model_outputs, targets, expected_values)
+        self.meter_distributed_test(
+            meters, model_outputs, targets, expected_values)

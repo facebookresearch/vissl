@@ -9,12 +9,13 @@ from vissl.meters.precision_list_meter import PrecisionListMeter
 from tests.generic.meter_test_utils import ClassificationMeterTest
 
 from classy_vision.meters import build_meter
-import vissl.meters as meters
+import vissl.meters  # noqa: F401,F811
 
 
 class TestPrecisionListMeter(ClassificationMeterTest):
     def test_precision_meter_registry(self):
-        meter = build_meter({'name': 'precision_list_meter', 'num_meters': 1, 'topk_values': [1, 3], 'meter_names': []})
+        meter = build_meter({'name': 'precision_list_meter',
+                            'num_meters': 1, 'topk_values': [1, 3], 'meter_names': []})
         self.assertTrue(isinstance(meter, PrecisionListMeter))
 
     def test_single_meter_update_and_reset(self):
@@ -22,7 +23,8 @@ class TestPrecisionListMeter(ClassificationMeterTest):
         This test verifies that the meter works as expected on a single
         update + reset + same single update.
         """
-        meter = PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = PrecisionListMeter(num_meters=1, topk_values=[
+                                   1, 2], meter_names=[])
 
         # Batchsize = 3, num classes = 3, score is probability of class
         model_output = torch.tensor(
@@ -40,15 +42,19 @@ class TestPrecisionListMeter(ClassificationMeterTest):
         # Note for ties, we select randomly, so we should not use ambiguous ties
         expected_value = {"top_1": 2 / 3.0, "top_2": 4 / 6.0}
 
-        self.meter_update_and_reset_test(meter, model_output, target, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_output, target, expected_value)
 
     def test_double_meter_update_and_reset(self):
-        meter = PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = PrecisionListMeter(num_meters=1, topk_values=[
+                                   1, 2], meter_names=[])
 
         # Batchsize = 3, num classes = 3, score is probability of class
         model_outputs = [
-            torch.tensor([[0.3, 0.4, 0.3], [0.2, 0.65, 0.15], [0.33, 0.33, 0.34]]),
-            torch.tensor([[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
+            torch.tensor(
+                [[0.3, 0.4, 0.3], [0.2, 0.65, 0.15], [0.33, 0.33, 0.34]]),
+            torch.tensor(
+                [[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
         ]
 
         # One-hot encoding, 1 = positive for class
@@ -63,7 +69,8 @@ class TestPrecisionListMeter(ClassificationMeterTest):
         # Second batch has top-1 precision of 2/3.0, top-2 precision of 2/6.0
         expected_value = {"top_1": 4 / 6.0, "top_2": 6 / 12.0}
 
-        self.meter_update_and_reset_test(meter, model_outputs, targets, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_outputs, targets, expected_value)
 
     def test_meter_invalid_model_output(self):
         # TODO fill when meters execute validate
@@ -86,10 +93,13 @@ class TestPrecisionListMeter(ClassificationMeterTest):
         # Expected value is the expected value of meter1 For this test
         # to work, top-1 / top-2 values of meter0 / meter1 should be
         # different
-        meters = [PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[]), PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
+        meters = [PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[
+        ]), PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
         model_outputs = [
-            torch.tensor([[0.05, 0.4, 0.05], [0.2, 0.65, 0.15], [0.33, 0.33, 0.34]]),
-            torch.tensor([[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
+            torch.tensor(
+                [[0.05, 0.4, 0.05], [0.2, 0.65, 0.15], [0.33, 0.33, 0.34]]),
+            torch.tensor(
+                [[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
         ]
         targets = [
             torch.tensor([[0, 1, 0], [1, 0, 0], [1, 1, 0]]),
@@ -105,7 +115,8 @@ class TestPrecisionListMeter(ClassificationMeterTest):
 
     def test_meter_distributed(self):
         # Meter0 will execute on one process, Meter1 on the other
-        meters = [PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[]), PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
+        meters = [PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[
+        ]), PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])]
 
         # Batchsize = 3, num classes = 3, score is probability of class
         model_outputs = [
@@ -134,23 +145,29 @@ class TestPrecisionListMeter(ClassificationMeterTest):
         # In first two updates there are 4 correct top-1, 6 correct in top 2
         # The same occurs in the second two updates and is added to first
         expected_values = [
-            {"top_1": 4 / 6.0, "top_2": 6 / 12.0},  # After one update to each meter
-            {"top_1": 8 / 12.0, "top_2": 12 / 24.0},  # After two updates to each meter
+            # After one update to each meter
+            {"top_1": 4 / 6.0, "top_2": 6 / 12.0},
+            # After two updates to each meter
+            {"top_1": 8 / 12.0, "top_2": 12 / 24.0},
         ]
 
-        self.meter_distributed_test(meters, model_outputs, targets, expected_values)
+        self.meter_distributed_test(
+            meters, model_outputs, targets, expected_values)
 
     def test_non_onehot_target(self):
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update.
         """
-        meter = PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = PrecisionListMeter(num_meters=1, topk_values=[
+                                   1, 2], meter_names=[])
 
         # Batchsize = 2, num classes = 3, score is probability of class
         model_outputs = [
-            torch.tensor([[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
-            torch.tensor([[0.2, 0.4, 0.4], [0.2, 0.65, 0.15], [0.1, 0.8, 0.1]]),
+            torch.tensor(
+                [[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
+            torch.tensor(
+                [[0.2, 0.4, 0.4], [0.2, 0.65, 0.15], [0.1, 0.8, 0.1]]),
         ]
 
         # One-hot encoding, 1 = positive for class
@@ -164,19 +181,23 @@ class TestPrecisionListMeter(ClassificationMeterTest):
         # Second batch has top-1 precision of 1/3.0, top-2 precision of 1/6.0
         expected_value = {"top_1": 3 / 6.0, "top_2": 3 / 12.0}
 
-        self.meter_update_and_reset_test(meter, model_outputs, targets, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_outputs, targets, expected_value)
 
     def test_non_onehot_target_one_dim_target(self):
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update with one dimensional targets.
         """
-        meter = PrecisionListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
+        meter = PrecisionListMeter(num_meters=1, topk_values=[
+                                   1, 2], meter_names=[])
 
         # Batchsize = 2, num classes = 3, score is probability of class
         model_outputs = [
-            torch.tensor([[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
-            torch.tensor([[0.2, 0.4, 0.4], [0.2, 0.65, 0.15], [0.1, 0.8, 0.1]]),
+            torch.tensor(
+                [[0.05, 0.4, 0.05], [0.15, 0.65, 0.2], [0.4, 0.2, 0.4]]),
+            torch.tensor(
+                [[0.2, 0.4, 0.4], [0.2, 0.65, 0.15], [0.1, 0.8, 0.1]]),
         ]
 
         # One-hot encoding, 1 = positive for class
@@ -190,4 +211,5 @@ class TestPrecisionListMeter(ClassificationMeterTest):
         # Second batch has top-1 precision of 1/3.0, top-2 precision of 1/6.0
         expected_value = {"top_1": 3 / 6.0, "top_2": 3 / 12.0}
 
-        self.meter_update_and_reset_test(meter, model_outputs, targets, expected_value)
+        self.meter_update_and_reset_test(
+            meter, model_outputs, targets, expected_value)
