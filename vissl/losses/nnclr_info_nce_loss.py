@@ -169,9 +169,9 @@ class NNclrInfoNCECriterion(SimclrInfoNCECriterion):
                 torch.cdist(embedding, self.queue, 2).argmin(1)
             ]
 
-        embeddings_buffer = self.gather_embeddings(embedding)
+        predictions_buffer = self.gather_embeddings(self.preds)
 
-        loss = self._info_nce(nearest_neighbors, embeddings_buffer)
+        loss = self._info_nce(nearest_neighbors, predictions_buffer)
 
         self._dequeue_and_enqueue(embedding)
 
