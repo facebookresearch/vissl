@@ -11,6 +11,7 @@ from vissl.config import AttrDict
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
 from vissl.hooks.log_hooks import (  # noqa
+    DumpMemoryOnException,
     LogGpuMemoryHook,
     LogGpuStatsHook,
     LogLossLrEtaHook,
@@ -54,6 +55,7 @@ class SSLClassyHookFunctions(Enum):
     on_step = auto()
     on_phase_end = auto()
     on_end = auto()
+    on_exception = auto()
 
 
 def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
@@ -111,6 +113,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         hooks.extend([LogGpuStatsHook()])
     if cfg.HOOKS.MEMORY_SUMMARY.PRINT_MEMORY_SUMMARY:
         hooks.extend([LogGpuMemoryHook(cfg.HOOKS.MEMORY_SUMMARY.LOG_ITERATION_NUM)])
+    if cfg.HOOKS.MEMORY_SUMMARY.DUMP_MEMORY_ON_EXCEPTION:
+        hooks.append(DumpMemoryOnException())
     if cfg.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD:
         assert is_tensorboard_available(), (
             "Tensorboard must be installed to use it. Please install tensorboard using:"

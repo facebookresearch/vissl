@@ -3,17 +3,20 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import contextlib
 import unittest
 
 import torch
 import torch.nn as nn
 import torchvision.models as models
-from vissl.utils.layer_memory_tracking import LayerwiseMemoryTracker
+from vissl.utils.layer_memory_tracking import (
+    LayerwiseMemoryTracker,
+    find_best_reset_points,
+)
+from vissl.utils.test_utils import gpu_test, with_timing
 
 
 class TestLayerMemoryTracking(unittest.TestCase):
-    @unittest.skipIf(not torch.cuda.is_available(), "Test requires at least 1 GPU")
+    @gpu_test(gpu_count=1)
     def test_memory_tracking(self):
 
         # Create a model with a hierarchy of modules
@@ -70,24 +73,68 @@ class TestLayerMemoryTracking(unittest.TestCase):
         for trace in top_act_producers:
             self.assertEqual(25233408, trace.event.memory_activations)
 
-    @contextlib.contextmanager
-    def with_timing(self, name: str):
-        start_event = torch.cuda.Event(enable_timing=True)
-        end_event = torch.cuda.Event(enable_timing=True)
-        start_event.record()
-        yield
-        end_event.record()
-        torch.cuda.synchronize()  # Wait for the events to be recorded!
-        elapsed_time_ms = start_event.elapsed_time(end_event)
-        print(name, ":", elapsed_time_ms, "ms")
-
-    @unittest.skipIf(not torch.cuda.is_available(), "Test requires at least 1 GPU")
+    @gpu_test(gpu_count=1)
     def test_memory_tracking_performance_impact(self):
         torch.manual_seed(0)
         model = models.resnet18()
-        with self.with_timing("no_tracking"):
+        with with_timing("no_tracking"):
             model(torch.randn(size=(1, 3, 224, 224)))
-        with self.with_timing("with_tracking"):
+        with with_timing("with_tracking"):
             tracker = LayerwiseMemoryTracker()
             tracker.monitor(model)
             model(torch.randn(size=(1, 3, 224, 224)))
+
+    def test_find_best_reset_points(self):
+        """
+        Verify that the reset points are correctly computed
+        """
+        activations = [10, 8, 8, 9, 7, 7, 5, 4, 4]
+
+        # Check boundary condition: no checkpoints
+        memory, split_points = find_best_reset_points(activations, nb_checkpoints=0)
+        self.assertEqual(memory, sum(activations))
+
+        # Check boundary condition: checkpoints everywhere
+        memory, split_points = find_best_reset_points(
+            activations, nb_checkpoints=len(activations)
+        )
+        self.assertEqual(memory, max(activations))
+
+        # Check one checkpoint allocation
+        memory, split_points = find_best_reset_points(activations, nb_checkpoints=1)
+        self.assertEqual(memory, 35)
+        self.assertEqual(split_points, [4])
+        self.assertEqual(sum(activations[: split_points[0]]), 35)
+        self.assertEqual(sum(activations[split_points[0] :]), 27)
+
+        # Check multiple checkpoint allocation
+        memory, split_points = find_best_reset_points(activations, nb_checkpoints=2)
+        self.assertEqual(memory, 24)
+        delimiters = [0] + split_points + [len(activations)]
+        splits_memory = [
+            sum(activations[i:j]) for i, j in zip(delimiters[:-1], delimiters[1:])
+        ]
+        self.assertEqual(max(splits_memory), memory)
+
+    @gpu_test(gpu_count=1)
+    def test_find_best_reset_points_performance(self):
+        """
+        Test that the algorithm is O(N**2) complexity for N activations
+        """
+        import numpy as np
+
+        activations_1000 = list(np.random.randint(low=0, high=1_000_000, size=1_000))
+        activations_2000 = list(np.random.randint(low=0, high=1_000_000, size=2_000))
+        nb_checkpoints = 10
+        with with_timing(name="best_reset_points_1000") as timer_1000:
+            find_best_reset_points(activations_1000, nb_checkpoints=nb_checkpoints)
+        with with_timing(name="best_reset_points_2000") as timer_2000:
+            find_best_reset_points(activations_2000, nb_checkpoints=nb_checkpoints)
+        self.assertGreaterEqual(timer_2000.elapsed_time_ms, timer_1000.elapsed_time_ms)
+        self.assertLessEqual(timer_2000.elapsed_time_ms, timer_1000.elapsed_time_ms * 6)
+
+
+if __name__ == "__main__":
+    test = TestLayerMemoryTracking()
+    test.test_find_best_reset_points()
+    test.test_find_best_reset_points_performance()

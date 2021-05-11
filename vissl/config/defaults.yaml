@@ -106,6 +106,9 @@ config:
       # at what iteration number should the memory summary be printed. usually
       # set to 1 for very large models
       LOG_ITERATION_NUM: 0
+      # set this to true if you want to print the tensor residing in memory
+      # in event of an exception (such as out of memory exception)
+      DUMP_MEMORY_ON_EXCEPTION: False
 
     # ----------------------------------------------------------------------------------- #
     # nvidia-smi print
@@ -497,6 +500,11 @@ config:
       # set this option to True to enable FSDP and automatically determine the config
       # for FSDP based on AMP true/false.
       AUTO_SETUP_FSDP: False
+      # Set this option to a positive number to automatically wrap "big" layers with
+      # a dedicated FSDP wrapping: the number provided here is the number of
+      # parameters that serves as threshold to decide if a layer is "big"
+      AUTO_WRAP_THRESHOLD: 0
+      # Parameters of fairscale FSDP
       flatten_parameters: True
       mixed_precision: True
       fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.

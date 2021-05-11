@@ -49,7 +49,7 @@ from vissl.models.model_helpers import (
     transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
-from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.fsdp_utils import auto_wrap_big_layers, fsdp_wrapper
 from vissl.utils.misc import set_torch_seed
 
 
@@ -77,6 +77,16 @@ def init_weights(module):
         "Detecting bugs where we call init_weights in the wrong place "
         "and not end up finding any modules to init"
     )
+
+
+class AnyStage(nn.Sequential):
+    """
+    AnyNet stage (sequence of blocks w/ the same output shape).
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.stage_depth = 0
 
 
 class RegnetBlocksFactory:
@@ -143,6 +153,32 @@ class RegnetBlocksFactory:
         init_weights(block)
         return block
 
+    def create_any_stage(
+        self,
+        width_in: int,
+        width_out: int,
+        stride: int,
+        depth: int,
+        group_width: int,
+        bottleneck_multiplier: float,
+        params: Union[RegNetParams, AnyNetParams],
+        stage_index: int = 0,
+        checkpoints: List[int] = 0,
+    ) -> AnyStage:
+        any_stage = AnyStage()
+        for i in range(depth):
+            block = self.create_block(
+                width_in=width_in if i == 0 else width_out,
+                width_out=width_out,
+                stride=stride if i == 0 else 1,
+                params=params,
+                group_width=group_width,
+                bottleneck_multiplier=bottleneck_multiplier,
+            )
+            any_stage.stage_depth += block.depth
+            any_stage.add_module(f"block{stage_index}-{i}", block)
+        return any_stage
+
 
 class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
     """
@@ -176,18 +212,13 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
             width_in, width_out, stride, params, bottleneck_multiplier, group_width
         )
         block = auto_wrap_bn(block, single_rank_pg=False)
+        if self.fsdp_config.AUTO_WRAP_THRESHOLD > 0:
+            block = auto_wrap_big_layers(block, self.fsdp_config)
         block = fsdp_wrapper(module=block, **self.fsdp_config)
         return block
 
-
-class AnyStage(nn.Sequential):
-    """
-    AnyNet stage (sequence of blocks w/ the same output shape).
-    """
-
-    def __init__(
+    def create_any_stage(
         self,
-        factory: RegnetBlocksFactory,
         width_in: int,
         width_out: int,
         stride: int,
@@ -196,20 +227,36 @@ class AnyStage(nn.Sequential):
         bottleneck_multiplier: float,
         params: Union[RegNetParams, AnyNetParams],
         stage_index: int = 0,
+        checkpoints: List[int] = 0,
     ):
-        super().__init__()
-        self.stage_depth = 0
-        for i in range(depth):
-            block = factory.create_block(
-                width_in=width_in if i == 0 else width_out,
-                width_out=width_out,
-                stride=stride if i == 0 else 1,
-                params=params,
-                group_width=group_width,
-                bottleneck_multiplier=bottleneck_multiplier,
+        assert sorted(checkpoints) == checkpoints, "Checkpoint indices should be sorted"
+
+        with_checkpointing = len(checkpoints) > 0
+        block_delimiters = [depth] if len(checkpoints) == 0 else checkpoints
+
+        any_stage = AnyStage()
+        prev_depth = 0
+        for block_group_index, next_depth in enumerate(block_delimiters):
+            block_group = nn.Sequential()
+            for i in range(prev_depth, next_depth):
+                block = self.create_block(
+                    width_in=width_in if i == 0 else width_out,
+                    width_out=width_out,
+                    stride=stride if i == 0 else 1,
+                    params=params,
+                    group_width=group_width,
+                    bottleneck_multiplier=bottleneck_multiplier,
+                )
+                any_stage.stage_depth += block.depth
+                block_group.add_module(f"block{stage_index}-{i}", block)
+            prev_depth = next_depth
+            if with_checkpointing:
+                block_group = checkpoint_wrapper(block_group)
+            block_group = fsdp_wrapper(block_group, **self.fsdp_config)
+            any_stage.add_module(
+                f"block{stage_index}-part{block_group_index}", block_group
             )
-            self.stage_depth += block.depth
-            self.add_module(f"block{stage_index}-{i}", block)
+        return any_stage
 
 
 def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
@@ -274,8 +321,34 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
     for i, (width_out, stride, depth, group_width, bottleneck_multiplier) in enumerate(
         params.get_expanded_params()
     ):
-        new_stage = AnyStage(
-            factory=factory,
+        # Starting from 1
+        stage_index = i + 1
+
+        # Specify where the checkpoints are set in the stage
+        stage_checkpoints = []
+        if model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING:
+            checkpoint_config = trunk_config.get("stage_checkpoints", [])
+
+            # TODO (Quentin) - Remove: do this by configuration
+            if (
+                not checkpoint_config
+                and hasattr(params, "depths")
+                and params.depths == [3, 10, 23, 1]
+            ):
+                checkpoint_config = [
+                    [1, 3],  # 3
+                    [1, 4, 8, 10],  # 10
+                    [4, 11, 18, 23],  # 23
+                    [],  # 1 - no checkpoint here
+                ]
+
+            if len(checkpoint_config) > 0:
+                stage_checkpoints = checkpoint_config[i]
+            else:
+                stage_checkpoints.append(depth)
+
+        # Create the stage and add it to the trunk
+        new_stage = factory.create_any_stage(
             width_in=current_width,
             width_out=width_out,
             stride=stride,
@@ -283,16 +356,10 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
             group_width=group_width,
             bottleneck_multiplier=bottleneck_multiplier,
             params=params,
-            stage_index=i + 1,
+            stage_index=stage_index,
+            checkpoints=stage_checkpoints,
         )
-
-        if isinstance(factory, RegnetFSDPBlocksFactory):
-            if model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING:
-                logging.info("Using activation checkpointing")
-                new_stage = checkpoint_wrapper(new_stage, offload_to_cpu=False)
-            new_stage = fsdp_wrapper(module=new_stage, **model_config.FSDP_CONFIG)
-
-        blocks.append((f"block{i + 1}", new_stage))
+        blocks.append((f"block{stage_index}", new_stage))
         trunk_depth += blocks[-1][1].stage_depth
         current_width = width_out
 
