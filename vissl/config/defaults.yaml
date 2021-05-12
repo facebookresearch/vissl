@@ -502,6 +502,9 @@ config:
       mixed_precision: True
       fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.
       compute_dtype: float32  # Choose "float32" or "float16"
+      bucket_cap_mb: 0
+      clear_autocast_cache: True
+      verbose: True
     # ----------------------------------------------------------------------------------- #
     # Feature evaluation settings
     # ----------------------------------------------------------------------------------- #
