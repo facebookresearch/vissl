@@ -39,7 +39,6 @@ from classy_vision.models.anynet import (
 )
 from classy_vision.models.regnet import RegNetParams
 from fairscale.nn import checkpoint_wrapper
-from fairscale.nn.data_parallel import auto_wrap_bn
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (
@@ -49,7 +48,7 @@ from vissl.models.model_helpers import (
     transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
-from vissl.utils.fsdp_utils import auto_wrap_big_layers, fsdp_wrapper
+from vissl.utils.fsdp_utils import auto_wrap_big_layers, fsdp_auto_wrap_bn, fsdp_wrapper
 from vissl.utils.misc import set_torch_seed
 
 
@@ -196,7 +195,7 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
 
     def create_stem(self, params: Union[RegNetParams, AnyNetParams]):
         stem = super().create_stem(params)
-        stem = auto_wrap_bn(stem, single_rank_pg=False)
+        stem = fsdp_auto_wrap_bn(stem)
         return stem
 
     def create_block(
@@ -211,7 +210,7 @@ class RegnetFSDPBlocksFactory(RegnetBlocksFactory):
         block = super().create_block(
             width_in, width_out, stride, params, bottleneck_multiplier, group_width
         )
-        block = auto_wrap_bn(block, single_rank_pg=False)
+        block = fsdp_auto_wrap_bn(block)
         if self.fsdp_config.AUTO_WRAP_THRESHOLD > 0:
             block = auto_wrap_big_layers(block, self.fsdp_config)
         block = fsdp_wrapper(module=block, **self.fsdp_config)

@@ -7,11 +7,10 @@ from typing import List
 
 import torch
 import torch.nn as nn
-from fairscale.nn.data_parallel import auto_wrap_bn
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.models.heads.mlp import MLP
-from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.fsdp_utils import fsdp_auto_wrap_bn, fsdp_wrapper
 
 
 @register_model_head("eval_mlp")
@@ -89,7 +88,7 @@ class FSDPLinearEvalMLP(nn.Module):
     ):
         super().__init__()
         mlp = LinearEvalMLP(model_config, in_channels, dims, use_bn, use_relu)
-        mlp = auto_wrap_bn(mlp, single_rank_pg=False)
+        mlp = fsdp_auto_wrap_bn(mlp)
         self.mlp = fsdp_wrapper(mlp, **model_config.FSDP_CONFIG)
 
     def forward(self, batch: torch.Tensor):
