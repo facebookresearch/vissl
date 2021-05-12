@@ -1,7 +1,7 @@
 # Keep this sorted for easy search.
 # Keep versions pinned for testing reproducibility.
 cython==0.29.22
-fairscale==0.3.6
+fairscale@https://github.com/facebookresearch/fairscale/tarball/8a42a8e3ff1c33ccde9ee603426b17a29cfead3c
 fvcore==0.1.3.post20210317
 hydra-core==1.0.6
 numpy==1.19.5
