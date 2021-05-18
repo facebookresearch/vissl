@@ -22,14 +22,9 @@ def fsdp_recursive_reset_lazy_init(fsdp_module: FSDP):
     This function will recursively walk though the sub-FSDP modules and
     call _reset_lazy_init on each of them.
     """
-    to_visit = list(fsdp_module.named_modules())
-    while to_visit:
-        name, module = to_visit.pop()
+    for module in fsdp_module.modules():
         if isinstance(module, FSDP) and module._is_root is not None:
             module._reset_lazy_init()
-        for child_name, child in module.named_modules():
-            if child_name:
-                to_visit.append((name + "." + child_name, child))
 
 
 def get_global_group():
