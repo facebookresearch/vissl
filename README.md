@@ -5,6 +5,7 @@
 ## What's New
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
 
+- **[May 2021]**: [DINO: Emerging Properties in Self-Supervised Vision Transformers](https://arxiv.org/pdf/2104.14294.pdf) code released.
 - **[May 2021]**: VISSL relicensed under [MIT License](LICENSE).
 - **[May 2021]**: [Barlow Twins: Self-Supervised Learning via Redundancy Reduction](https://arxiv.org/abs/2103.03230) code released.
 - **[April 2021]**: [ConViT: Improving Vision Transformers with Soft Convolutional Inductive Biases](https://arxiv.org/pdf/2103.10697.pdf) code released.
