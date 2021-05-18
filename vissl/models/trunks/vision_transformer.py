@@ -14,6 +14,7 @@ import copy
 import logging
 import math
 from typing import List
+from functools import partial
 
 import torch
 import torch.nn as nn
@@ -189,7 +190,7 @@ class VisionTransformer(nn.Module):
         # TODO Implement hybrid backbones
         if "HYBRID" in trunk_config.keys():
             hybrid_backbone_string = trunk_config.HYBRID
-        norm_layer = nn.LayerNorm
+        norm_layer = partial(nn.LayerNorm, eps=1e-6)
 
         self.num_features = (
             self.embed_dim

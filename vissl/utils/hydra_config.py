@@ -391,6 +391,15 @@ def infer_losses_config(cfg):
         cfg.LOSS.swav_momentum_loss.queue.local_queue_length = (
             queue_length // world_size
         )
+
+    # some inference for Simdist loss.
+    if cfg.LOSS.name == "dino_loss":
+        assert len(cfg.MODEL.HEAD.PARAMS) == 1
+        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        cfg.LOSS.dino_loss.output_dim = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"][0]
+        cfg.LOSS.dino_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
+
     return cfg
 
 

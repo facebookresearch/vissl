@@ -888,6 +888,20 @@ config:
         start_iter: 0
         local_queue_length: 0 # automatically inferred to queue_length // world_size
 
+    # ----------------------------------------------------------------------------------- #
+    # DINO LOSS (Specific to DINO https://arxiv.org/abs/2104.14294)
+    # ----------------------------------------------------------------------------------- #
+    dino_loss:
+      momentum: 0.996
+      student_temp: 0.1
+      teacher_temp_min: 0.04
+      teacher_temp_max: 0.07
+      teacher_temp_warmup_iters: 37500 # 30 epochs
+      crops_for_teacher: [0, 1]
+      ema_center: 0.9
+      normalize_last_layer: true
+      output_dim: 65536  # automatically inferred from model HEAD settings
+
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#
