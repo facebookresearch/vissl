@@ -219,6 +219,9 @@ config:
       REMOVE_IMG_PATH_PREFIX: ""
       # what prefix to replace the old prefix with. Could stay empty too
       NEW_IMG_PATH_PREFIX: ""
+      # Base dataset to use to wrap the datasets defined. The default and only current oss supported
+      # default is the generic_ssl_dataset.
+      BASE_DATASET: "generic_ssl"
       # name of the dataset. Meaningful and used to do lookup in the dataset_catalog.json
       # it has the advantage that user needs to full the dataset_catalog.json once
       # and then simply use the dataset name without having to specify data paths every time.
@@ -378,6 +381,9 @@ config:
         SEED: 0
         IS_BALANCED: False
         SKIP_NUM_SAMPLES: 0
+      # Base dataset to use to wrap the datasets defined. The default and only current oss supported
+      # default is the generic_ssl_dataset.
+      BASE_DATASET: "generic_ssl"
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""
