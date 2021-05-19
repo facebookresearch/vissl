@@ -47,9 +47,7 @@ class DINOHook(ClassyHook):
         logging.info("Building momentum encoder")
 
         # - same architecture but do not apply stochastic depth
-        task.config["MODEL"]["TRUNK"]["VISION_TRANSFORMERS"][
-            "DROP_PATH_RATE"
-        ] = 0
+        task.config["MODEL"]["TRUNK"]["VISION_TRANSFORMERS"]["DROP_PATH_RATE"] = 0
         task.loss.momentum_teacher = build_model(
             task.config["MODEL"], task.config["OPTIMIZER"]
         )

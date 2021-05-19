@@ -13,8 +13,8 @@ Leavitt (ito@fb.com, matthew.l.leavitt@gmail.com) and Vedanuj Goswami
 import copy
 import logging
 import math
-from typing import List
 from functools import partial
+from typing import List
 
 import torch
 import torch.nn as nn

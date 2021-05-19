@@ -9,6 +9,7 @@ from typing import List
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.config import AttrDict
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
+from vissl.hooks.dino_hooks import DINOHook
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
 from vissl.hooks.log_hooks import (  # noqa
     DumpMemoryOnException,
@@ -36,7 +37,6 @@ from vissl.hooks.swav_momentum_hooks import (
     SwAVMomentumHook,
     SwAVMomentumNormalizePrototypesHook,
 )
-from vissl.hooks.dino_hooks import DINOHook
 from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
