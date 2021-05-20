@@ -118,6 +118,7 @@ def standard_train_step(task):
     with PerfTimer("read_sample", perf_stats):
         sample = next(task.data_iterator)
 
+    sample = task.post_process_batch(sample)
     sample = construct_sample_for_model(sample, task)
 
     # Only need gradients during training

@@ -18,10 +18,9 @@ from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
 from vissl.data import (
-    AirstoreDataset,
-    GenericSSLDataset,
     build_dataset,
-    get_loader,
+    build_dataloader,
+    build_dataloader_iterator,
     print_sampler_config,
 )
 from vissl.models import build_model, convert_sync_bn
@@ -48,7 +47,6 @@ class SelfSupervisionTask(ClassificationTask):
     Task also supports 2 additional things:
     1) converts the model BatchNorm layers to the synchronized batchnorm
     2) sets mixed precision (apex and pytorch both supported)
-
     """
 
     def __init__(self, config: AttrDict):
@@ -279,42 +277,70 @@ class SelfSupervisionTask(ClassificationTask):
             output_phases = [{"train": False} for _ in range(num_epochs)]
         return output_phases
 
-    def build_datasets(self):
+    def build_datasets(self, current_phase_id=0):
         """
         Get the datasets for the data splits we will use in the training. The
         set_available_splits variable determines the splits used in the training.
         """
         datasets, data_and_label_keys = {}, {}
         for split in self.available_splits:
-            datasets[split] = build_dataset(self.config, split)
+            datasets[split.lower()] = build_dataset(
+                cfg=self.config,
+                split=split,
+                current_phase_id=current_phase_id,
+            )
             data_and_label_keys["input"] = self.config.DATA[split].INPUT_KEY_NAMES
             data_and_label_keys["target"] = self.config.DATA[split].TARGET_KEY_NAMES
+
         return datasets, data_and_label_keys
 
-    def build_dataloaders(self, pin_memory: bool) -> torch.utils.data.DataLoader:
+    def build_dataloaders(
+        self, pin_memory: bool, current_phase_id=0
+    ) -> torch.utils.data.DataLoader:
         """
-        Build PyTorch dataloaders for all the available_splits. We construct the
+        Build PyTorch dataloaders for all the available_splits. By default, we construct the
         standard PyTorch Dataloader and allow setting all dataloader options.
         """
-        self.datasets, self.data_and_label_keys = self.build_datasets()
+        self.datasets, self.data_and_label_keys = self.build_datasets(current_phase_id)
 
         # Gives sampler same seed for entire distributed group as per pytorch documentation.
         sampler_seed = self.config["SEED_VALUE"]
 
         loaders = {
-            split.lower(): get_loader(
-                dataset=self.datasets[split],
+            split.lower(): build_dataloader(
+                dataset=self.datasets[split.lower()],
                 dataset_config=self.config["DATA"][split],
                 num_dataloader_workers=self.config.DATA.NUM_DATALOADER_WORKERS,
                 pin_memory=pin_memory,
                 multi_processing_method=self.config.MULTI_PROCESSING_METHOD,
                 device=self.device,
                 sampler_seed=sampler_seed,
+                split=split.lower(),
             )
             for split in self.available_splits
         }
 
         return loaders
+
+    def build_dataloader_iterator(self, phase_type: str):
+        """
+        Builds the data loader iterator in order to iterate over each
+        batch of data.
+        """
+        # Gives sampler same seed for entire distributed group as per pytorch documentation.
+        sampler_seed = self.config["SEED_VALUE"]
+
+        return build_dataloader_iterator(
+            dataloader=self.dataloaders[phase_type],
+            dataset=self.datasets[phase_type],
+            dataset_config=self.config["DATA"][phase_type.upper()],
+            num_dataloader_workers=self.config.DATA.NUM_DATALOADER_WORKERS,
+            pin_memory=self.config.DATA.PIN_MEMORY,
+            multi_processing_method=self.config.MULTI_PROCESSING_METHOD,
+            split=phase_type,
+            device=self.device,
+            sampler_seed=sampler_seed,
+        )
 
     def get_global_batchsize(self):
         """
@@ -367,9 +393,9 @@ class SelfSupervisionTask(ClassificationTask):
         if "num_train_samples" in loss_config.keys():
             for split in self.available_splits:
                 if split == "TRAIN":
-                    loss_config["num_train_samples"] = len(self.datasets["TRAIN"])
+                    loss_config["num_train_samples"] = len(self.datasets["train"])
                 if split == "TEST":
-                    loss_config["num_train_samples"] = len(self.datasets["TEST"])
+                    loss_config["num_train_samples"] = len(self.datasets["test"])
         loss_config["name"] = loss_name
         loss = build_loss(loss_config)
         return loss
@@ -496,31 +522,14 @@ class SelfSupervisionTask(ClassificationTask):
         if compute_start_iter:
             start_iter = self._compute_start_iter_from_checkpoint(phase_type)
 
-        if hasattr(self.dataloaders[phase_type], "sampler"):
-            sampler = self.dataloaders[phase_type].sampler
-            # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler.
-            if hasattr(sampler, "set_epoch"):
-                sampler.set_epoch(epoch)
-            # Resume from the iteration if valid
-            if hasattr(sampler, "set_start_iter"):
-                sampler.set_start_iter(start_iter)
-            print_sampler_config(sampler)
-
-        # call set_epoch and set_start_iter for AirstoreDataset since it handles
-        # shuffle and sample skipping behavior internally
-        if hasattr(self.dataloaders[phase_type], "dataset"):
-            dataset = self.dataloaders[phase_type].dataset
-            if isinstance(dataset, GenericSSLDataset):
-                for data_obj in dataset.data_objs:
-                    if isinstance(data_obj, AirstoreDataset):
-                        data_obj.set_epoch(epoch)
-                        data_obj.set_start_iter(start_iter)
+        self.set_epoch(phase_type, epoch, start_iter)
 
         # delete the old data iterator
         del self.data_iterator
         gc.collect()
-        # recreate the data iterator
-        self.data_iterator = iter(self.dataloaders[phase_type])
+
+        # recreate the dataloader and data iterator
+        self.data_iterator = self.build_dataloader_iterator(phase_type)
 
     def _set_classy_state(self, state):
         """
@@ -572,6 +581,13 @@ class SelfSupervisionTask(ClassificationTask):
         phase_type = "train" if self.train else "test"
         phase = self.phases[self.phase_idx]
 
+        # Rebuild Dataloader with current phase.
+        current_phase_id = self.phase_idx + 1 if self.train else 0
+        pin_memory = self.config.DATA.PIN_MEMORY
+        self.dataloaders = self.build_dataloaders(
+            pin_memory=pin_memory, current_phase_id=current_phase_id
+        )
+
         # Re-create the data iterator.
         # We are restoring from a checkpoint, which means we need to
         #   (1) set the right epoch
@@ -580,7 +596,7 @@ class SelfSupervisionTask(ClassificationTask):
         # start_iter is computed in recreate_data_iterator based on iteration
         # number from the checkpoint state.
         self.recreate_data_iterator(
-            phase_type, epoch=self.phase_idx + 1, compute_start_iter=True
+            phase_type, epoch=current_phase_id, compute_start_iter=True
         )
 
         # set the model to train or eval depending on what phase we are in
@@ -698,6 +714,29 @@ class SelfSupervisionTask(ClassificationTask):
 
         return self._update_classy_state(vissl_state_dict)
 
+    def set_epoch(self, phase_type: str, epoch: int, start_iter: int):
+        if hasattr(self.dataloaders[phase_type], "sampler"):
+            sampler = self.dataloaders[phase_type].sampler
+            # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler
+            # Resume from the iteration if valid
+            self.set_epoch_start_iter(sampler, epoch, start_iter)
+            print_sampler_config(sampler)
+
+        # call set_epoch and set_start_iter for AirstoreDataset since it handles
+        # shuffle and sample skipping behavior internally
+        dataset = self.datasets[phase_type]
+        if hasattr(dataset, "data_objs"):
+            for data_obj in dataset.data_objs:
+                self.set_epoch_start_iter(data_obj, epoch, start_iter)
+
+    def set_epoch_start_iter(self, dataset_sampler, epoch: int, start_iter: int):
+        # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler
+        if hasattr(dataset_sampler, "set_epoch"):
+            dataset_sampler.set_epoch(epoch)
+        # Resume from the iteration if valid
+        if hasattr(dataset_sampler, "set_start_iter"):
+            dataset_sampler.set_start_iter(start_iter)
+
     def prepare_extraction(self, pin_memory: bool = False):
         """
         Prepares a light-weight task for feature extraction on multi-gpu. The model
@@ -730,3 +769,29 @@ class SelfSupervisionTask(ClassificationTask):
         )
         if self._enable_manual_gradient_reduction:
             logging.info("Enabling manual gradient reduction")
+
+    def num_phase_samples(self, phase_type: str) -> int:
+        """
+        Number of samples in a phase.
+        """
+        dataset = self.datasets[phase_type.lower()]
+        return dataset.num_samples()
+
+    def current_phase(self) -> str:
+        """
+        Current phase in training: Train or test.
+        """
+        return "train" if self.train else "test"
+
+    def current_dataset(self):
+        """
+        Current dataset used in training, either the train or test dataset.
+        """
+        return self.datasets[self.current_phase()]
+
+    def post_process_batch(self, sample):
+        """
+        Post process batch after dataloader iterator has returned the batch.
+        """
+        current_dataset = self.current_dataset()
+        return current_dataset.post_process_batch(sample)

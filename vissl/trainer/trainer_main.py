@@ -80,6 +80,8 @@ class SelfSupervisionTrainer(object):
     ):
         self.cfg = cfg
         self.dist_run_id = dist_run_id
+        self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
+        self.setup_distributed(self.cfg.MACHINE.DEVICE == "gpu")
 
         # now we should build the task. The task will also have the State attached
         # to it. It will have information about phases (train, test) both. It will
@@ -91,13 +93,9 @@ class SelfSupervisionTrainer(object):
             hooks = []
         self.task.set_hooks(hooks)
 
-        self.local_rank, self.distributed_rank = get_machine_local_and_dist_rank()
-        self.setup_distributed(self.task.device.type == "cuda")
-
     def setup_distributed(self, use_gpu: bool):
         """
         Setup the distributed training. VISSL support both GPU and CPU only training.
-
         (1) Initialize the torch.distributed.init_process_group if the distributed is
             not already initialized. The init_method, backend are specified by user in the
             yaml config file. See vissl/defaults.yaml file for description on how to set
@@ -237,6 +235,7 @@ class SelfSupervisionTrainer(object):
             loader_key = "train"
         else:
             loader_key = "test"
+
         task.max_iteration = task.num_epochs * len(task.dataloaders[loader_key])
 
         if task.checkpoint is not None:
@@ -248,7 +247,8 @@ class SelfSupervisionTrainer(object):
             task.iteration = 0
             task.local_iteration_num = iteration_num
         num_iter_in_epoch = len(task.dataloaders[loader_key])
-        num_samples = task.dataloaders[loader_key].dataset.num_samples()
+
+        num_samples = task.num_phase_samples(loader_key)
         task.start_time = time.time()
         task.batch_time = []
         task.metrics = {}

@@ -9,11 +9,14 @@ from typing import Callable, Dict, Set
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
 from fvcore.common.file_io import PathManager
-from torch.utils.data import Dataset
 from vissl.config import AttrDict
 from vissl.data import dataset_catalog
-from vissl.data.data_helper import balanced_sub_sampling, unbalanced_sub_sampling
+from vissl.data.data_helper import (
+    balanced_sub_sampling,
+    unbalanced_sub_sampling,
+)
 from vissl.data.ssl_transforms import get_transform
+from vissl.data.vissl_dataset_base import VisslDatasetBase
 from vissl.utils.env import get_machine_local_and_dist_rank
 
 
@@ -33,7 +36,7 @@ def _convert_lbl_to_long(lbl):
     return out_lbl
 
 
-class GenericSSLDataset(Dataset):
+class GenericSSLDataset(VisslDatasetBase):
     """
     Base Self Supervised Learning Dataset Class.
 
@@ -74,6 +77,7 @@ class GenericSSLDataset(Dataset):
         split: str,
         dataset_source_map: Dict[str, Callable],
         data_sources_with_subset: Set[str],
+        **kwargs,
     ):
         self.cfg = cfg
         self.split = split
@@ -408,3 +412,9 @@ class GenericSSLDataset(Dataset):
         The global batch size across all the trainers
         """
         return self.get_batchsize_per_replica() * get_world_size()
+
+    def post_process_batch(self, batch_data):
+        """
+        Identity function. Other base datasets may need to #post_process_batch.
+        """
+        return batch_data
