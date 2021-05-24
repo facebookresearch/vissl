@@ -18,7 +18,14 @@ _TRANSFORMS_WITH_COPIES = [
     "ImgPilToMultiCrop",
 ]
 _TRANSFORMS_WITH_GROUPING = ["ImgPilMultiCropRandomApply"]
-_TRANSFORMS_WITH_ENTIRE_SAMPLE = ["TensorToImgPil"]
+_TRANSFORMS_WITH_ENTIRE_SAMPLE = []
+
+_DEFAULT_TRANSFORM_TYPES = {
+    "TRANSFORMS_WITH_LABELS": _TRANSFORMS_WITH_LABELS,
+    "TRANSFORMS_WITH_COPIES": _TRANSFORMS_WITH_COPIES,
+    "TRANSFORMS_WITH_GROUPING": _TRANSFORMS_WITH_GROUPING,
+    "TRANSFORMS_WITH_ENTIRE_SAMPLE": _TRANSFORMS_WITH_ENTIRE_SAMPLE,
+}
 
 
 # we wrap around transforms so that they work with the multimodal input
@@ -82,7 +89,7 @@ class SSLTransformsWrapper(ClassyTransform):
         prob=0.2
     """
 
-    def __init__(self, indices, **args):
+    def __init__(self, indices, transform_types, **args):
         """
         Args:
             indices (List[int]) (Optional): the indices list on which transform should
@@ -96,14 +103,18 @@ class SSLTransformsWrapper(ClassyTransform):
         self.indices = set(indices)
         self.name = args["name"]
         self.transform = build_transform(args)
+        self.transforms_with_labels = transform_types["TRANSFORMS_WITH_LABELS"]
+        self.transforms_with_copies = transform_types["TRANSFORMS_WITH_COPIES"]
+        self.transforms_with_entire_sample = transform_types[
+            "TRANSFORMS_WITH_ENTIRE_SAMPLE"
+        ]
+        self.transforms_with_grouping = transform_types["TRANSFORMS_WITH_GROUPING"]
 
     def _is_transform_with_labels(self):
         """
         _TRANSFORMS_WITH_LABELS = ["ImgRotatePil", "ShuffleImgPatches"]
         """
-        if self.name in _TRANSFORMS_WITH_LABELS:
-            return True
-        return False
+        return self.name in self.transforms_with_labels
 
     def _is_transform_with_copies(self):
         """
@@ -113,21 +124,19 @@ class SSLTransformsWrapper(ClassyTransform):
             "ImgPilToMultiCrop",
         ]
         """
-        if self.name in _TRANSFORMS_WITH_COPIES:
-            return True
-        return False
+        return self.name in self.transforms_with_copies
 
     def _is_entire_sample_transform(self):
         """
-        _TRANSFORMS_WITH_ENTIRE_SAMPLE = ["TensorToImgPil"]
+        _TRANSFORMS_WITH_ENTIRE_SAMPLE = []
         """
-        return self.name in _TRANSFORMS_WITH_ENTIRE_SAMPLE
+        return self.name in self.transforms_with_entire_sample
 
     def _is_grouping_transform(self):
         """
         _TRANSFORMS_WITH_GROUPING = ["ImgPilMultiCropRandomApply"]
         """
-        return self.name in _TRANSFORMS_WITH_GROUPING
+        return self.name in self.transforms_with_grouping
 
     def __call__(self, sample):
         """
@@ -175,6 +184,10 @@ class SSLTransformsWrapper(ClassyTransform):
         return sample
 
     @classmethod
-    def from_config(cls, config: Dict[str, Any]) -> "SSLTransformsWrapper":
+    def from_config(
+        cls,
+        config: Dict[str, Any],
+        transform_types: Dict[str, Any],
+    ) -> "SSLTransformsWrapper":
         indices = config.get("indices", [])
-        return cls(indices, **config)
+        return cls(indices, transform_types=transform_types, **config)

@@ -7,7 +7,10 @@ from pathlib import Path
 
 import torchvision.transforms as pth_transforms
 from classy_vision.generic.registry_utils import import_all_modules
-from vissl.data.ssl_transforms.ssl_transforms_wrapper import SSLTransformsWrapper
+from vissl.data.ssl_transforms.ssl_transforms_wrapper import (
+    SSLTransformsWrapper,
+    _DEFAULT_TRANSFORM_TYPES,
+)
 
 
 def get_transform(input_transforms_list):
@@ -19,7 +22,9 @@ def get_transform(input_transforms_list):
     """
     output_transforms = []
     for transform_config in input_transforms_list:
-        transform = SSLTransformsWrapper.from_config(transform_config)
+        transform = SSLTransformsWrapper.from_config(
+            transform_config, transform_types=_DEFAULT_TRANSFORM_TYPES
+        )
         output_transforms.append(transform)
     return pth_transforms.Compose(output_transforms)
 
