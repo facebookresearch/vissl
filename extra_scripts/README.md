@@ -617,6 +617,27 @@ python extra_scripts/generate_jigsaw_permutations.py \
 
 <br>
 
+## Converting FSDP checkpoints
+
+VISSL allows to pretrain algorithms such as SwAV with FullyShardedDataParallel (FSDP) instead of DistributedDataParallel (DDP) to reduce the amount of GPU memory used during training and therefore train much bigger models.
+
+FSDP models will save sharded checkpoints (one parameter file for each model shard, i.e. one parameter file for each GPU) instead of consolidated checkpoints (which contain all the weights).
+
+While this allow faster training, it also couples the evaluation with the pre-training by forcing the benchmarking code to use exactly as many GPUs as the pre-training did. In some cases (linear evaluation), we would like to reduce the number of GPUs used during evaluation.
+
+The `convert_sharded_checkpoint.py` script allow to transform sharded training checkpoints, containing parameters and optimizer states, into evaluation checkpoints containing only the parameter of the trunk to evaluate them, and compatible with any number of GPUs.
+
+You can use the script like so:
+
+```
+python extra_scripts/convert_sharded_checkpoint.py \
+    -i path/to/fsdp_checkpoint.torch \
+    -o path/to/eval_checkpoint.torch \
+    -t consolidated
+```
+
+The resulting `eval_checkpoint.torch` will be usable in DDP mode or FSDP mode, with any number of GPU.
+
 ## Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
 We provide scripts to convert VISSL models to [Detectron2](https://github.com/facebookresearch/detectron2) and [ClassyVision](https://github.com/facebookresearch/ClassyVision) compatible models.
 

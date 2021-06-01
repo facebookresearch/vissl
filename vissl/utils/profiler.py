@@ -7,6 +7,8 @@ import logging
 import os
 from contextlib import contextmanager
 
+from vissl.utils.layer_memory_tracking import null_context
+
 
 class Profiler:
     """
@@ -98,11 +100,6 @@ def is_nvtx_available():
         return True
     except ImportError:
         return False
-
-
-@contextmanager
-def null_context():
-    yield
 
 
 @functools.lru_cache(maxsize=1)

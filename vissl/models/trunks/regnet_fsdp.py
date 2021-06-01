@@ -164,18 +164,32 @@ class RegnetBlocksFactory:
         stage_index: int = 0,
         checkpoints: List[int] = 0,
     ) -> AnyStage:
+        assert sorted(checkpoints) == checkpoints, "Checkpoint indices should be sorted"
+
+        with_checkpointing = len(checkpoints) > 0
+        block_delimiters = [depth] if len(checkpoints) == 0 else checkpoints
+
         any_stage = AnyStage()
-        for i in range(depth):
-            block = self.create_block(
-                width_in=width_in if i == 0 else width_out,
-                width_out=width_out,
-                stride=stride if i == 0 else 1,
-                params=params,
-                group_width=group_width,
-                bottleneck_multiplier=bottleneck_multiplier,
+        prev_depth = 0
+        for block_group_index, next_depth in enumerate(block_delimiters):
+            block_group = nn.Sequential()
+            for i in range(prev_depth, next_depth):
+                block = self.create_block(
+                    width_in=width_in if i == 0 else width_out,
+                    width_out=width_out,
+                    stride=stride if i == 0 else 1,
+                    params=params,
+                    group_width=group_width,
+                    bottleneck_multiplier=bottleneck_multiplier,
+                )
+                any_stage.stage_depth += block.depth
+                block_group.add_module(f"block{stage_index}-{i}", block)
+            prev_depth = next_depth
+            if with_checkpointing:
+                block_group = checkpoint_wrapper(block_group)
+            any_stage.add_module(
+                f"block{stage_index}-part{block_group_index}", block_group
             )
-            any_stage.stage_depth += block.depth
-            any_stage.add_module(f"block{stage_index}-{i}", block)
         return any_stage
 
 

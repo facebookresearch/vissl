@@ -428,6 +428,7 @@ class SelfSupervisionTask(ClassificationTask):
             checkpoint = CheckpointLoader.load_and_broadcast_init_weights(
                 checkpoint_path=init_weights_path, device=torch.device("cpu")
             )
+            logging.info(f"Checkpoint loaded: {init_weights_path}...")
             model.init_model_from_weights_params_file(self.config, checkpoint)
         return model
 

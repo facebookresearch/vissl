@@ -20,7 +20,10 @@ from vissl.models.model_helpers import (
 )
 from vissl.models.trunks import get_model_trunk
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
-from vissl.utils.checkpoint import CheckpointType, init_model_from_consolidated_weights
+from vissl.utils.checkpoint import (
+    CheckpointLoader,
+    init_model_from_consolidated_weights,
+)
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.fsdp_utils import fsdp_recursive_reset_lazy_init
 from vissl.utils.misc import set_torch_seed
@@ -398,8 +401,10 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
 
         if isinstance(self.trunk, FSDP):
             trunk_state_dict = self.trunk.local_state_dict()
+            trunk_metadata_dict = self.trunk.local_metadata_dict()
         else:
             trunk_state_dict = self.trunk.state_dict()
+            trunk_metadata_dict = {}
 
         if any(isinstance(head, FSDP) for head in self.heads):
             heads_state_dict = [
@@ -410,7 +415,8 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             heads_state_dict = self.heads.state_dict()
 
         model_state_dict = {
-            "model": {"trunk": trunk_state_dict, "heads": heads_state_dict}
+            "model": {"trunk": trunk_state_dict, "heads": heads_state_dict},
+            "meta": {"trunk": trunk_metadata_dict},
         }
         if deep_copy:
             model_state_dict = copy.deepcopy(model_state_dict)
@@ -501,24 +507,18 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         if isinstance(self.trunk, FeatureExtractorModel) and isinstance(
             self.trunk.base_model, FSDP
         ):
-            if checkpoint["type"] == CheckpointType.consolidated.name:
-                self.trunk.base_model.load_state_dict(
-                    checkpoint["classy_state_dict"]["base_model"]["model"]["trunk"]
-                )
-            else:
-                self.trunk.base_model.load_local_state_dict(
-                    checkpoint["classy_state_dict"]["base_model"]["model"]["trunk"]
-                )
+            CheckpointLoader.init_fsdp_model_from_weights(
+                self.trunk.base_model,
+                checkpoint,
+                weights_path=["classy_state_dict", "base_model", "model", "trunk"],
+            )
             fsdp_recursive_reset_lazy_init(self.trunk.base_model)
         elif isinstance(self.trunk, FSDP):
-            if checkpoint["type"] == CheckpointType.consolidated.name:
-                self.trunk.load_state_dict(
-                    checkpoint["classy_state_dict"]["base_model"]["model"]["trunk"]
-                )
-            else:
-                self.trunk.load_local_state_dict(
-                    checkpoint["classy_state_dict"]["base_model"]["model"]["trunk"]
-                )
+            CheckpointLoader.init_fsdp_model_from_weights(
+                self.trunk,
+                checkpoint,
+                weights_path=["classy_state_dict", "base_model", "model", "trunk"],
+            )
             fsdp_recursive_reset_lazy_init(self.trunk)
 
         # General case: support for multiple format of checkpoint
