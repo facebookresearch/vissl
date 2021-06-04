@@ -1167,8 +1167,8 @@ config:
     NAME: "vissl"
     # Comment of the job on SLURM
     COMMENT: "vissl job"
-    # Partition of SLURM on which to run the job
-    PARTITION: "learnfair"
+    # Partition of SLURM on which to run the job. This is a required field if using SLURM.
+    PARTITION: ""
     # Where the logs produced by the SLURM jobs will be output
     LOG_FOLDER: "."
     # Maximum number of hours / minutes needed by the job to complete. Above this limit, the job might be pre-empted.
