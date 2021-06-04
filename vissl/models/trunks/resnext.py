@@ -17,8 +17,8 @@ from vissl.models.model_helpers import (
     Flatten,
     _get_norm,
     get_trunk_forward_outputs,
-    transform_model_input_data_type,
     get_tunk_forward_interpolated_outputs,
+    transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
 

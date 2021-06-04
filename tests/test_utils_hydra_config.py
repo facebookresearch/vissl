@@ -7,7 +7,7 @@ import unittest
 from typing import List
 
 from hydra.core.global_hydra import GlobalHydra
-from hydra.experimental import initialize_config_module, compose
+from hydra.experimental import compose, initialize_config_module
 from vissl.utils.hydra_config import convert_to_attrdict
 
 

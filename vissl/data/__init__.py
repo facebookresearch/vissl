@@ -26,7 +26,7 @@ from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
 from vissl.data.synthetic_dataset import SyntheticImageDataset
 from vissl.data.torchvision_dataset import TorchvisionDataset
-from vissl.utils.misc import setup_multiprocessing_method, set_dataloader_seeds
+from vissl.utils.misc import set_dataloader_seeds, setup_multiprocessing_method
 
 
 __all__ = [
