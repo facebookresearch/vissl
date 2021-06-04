@@ -24,6 +24,7 @@ from vissl.utils.misc import is_apex_available
 from vissl.utils.perf_stats import PerfTimer
 from vissl.utils.profiler import record_function
 
+
 if is_apex_available():
     import apex
 

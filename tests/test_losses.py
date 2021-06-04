@@ -21,6 +21,7 @@ from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
 from vissl.utils.misc import find_free_tcp_port
 
+
 logger = logging.getLogger("__name__")
 
 set_cpu_device()

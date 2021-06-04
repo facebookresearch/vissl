@@ -50,9 +50,7 @@ class TestConfigsComposition(unittest.TestCase):
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertEqual(
-            config.MODEL.TRUNK.RESNETS.DEPTH,
-            101,
-            "config composition failed",
+            config.MODEL.TRUNK.RESNETS.DEPTH, 101, "config composition failed"
         )
 
 
@@ -87,14 +85,10 @@ class TestConfigsCliComposition(unittest.TestCase):
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         self.assertEqual(
-            config.MODEL.TRUNK.RESNETS.GROUPS,
-            32,
-            "config composition failed",
+            config.MODEL.TRUNK.RESNETS.GROUPS, 32, "config composition failed"
         )
         self.assertEqual(
-            config.MODEL.TRUNK.RESNETS.WIDTH_PER_GROUP,
-            16,
-            "config composition failed",
+            config.MODEL.TRUNK.RESNETS.WIDTH_PER_GROUP, 16, "config composition failed"
         )
 
 

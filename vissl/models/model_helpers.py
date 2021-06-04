@@ -18,6 +18,7 @@ from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.utils.activation_checkpointing import checkpoint_trunk
 from vissl.utils.misc import is_apex_available
 
+
 # Tuple of classes of BN layers.
 _bn_cls = (nn.BatchNorm2d, torch.nn.modules.batchnorm.SyncBatchNorm)
 

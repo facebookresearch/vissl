@@ -8,6 +8,7 @@ from typing import Any, Dict
 from classy_vision.dataset.transforms import build_transform, register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 
+
 # Below the transforms that require passing the labels as well. This is specifc
 # to SSL only where we automatically generate the labels for training. All other
 # transforms (including torchvision) require passing image only as input.

@@ -18,9 +18,9 @@ from fvcore.common.file_io import PathManager
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
 from vissl.data import (
-    build_dataset,
     build_dataloader,
     build_dataloader_iterator,
+    build_dataset,
     print_sampler_config,
 )
 from vissl.models import build_model, convert_sync_bn
@@ -285,9 +285,7 @@ class SelfSupervisionTask(ClassificationTask):
         datasets, data_and_label_keys = {}, {}
         for split in self.available_splits:
             datasets[split.lower()] = build_dataset(
-                cfg=self.config,
-                split=split,
-                current_phase_id=current_phase_id,
+                cfg=self.config, split=split, current_phase_id=current_phase_id
             )
             data_and_label_keys["input"] = self.config.DATA[split].INPUT_KEY_NAMES
             data_and_label_keys["target"] = self.config.DATA[split].TARGET_KEY_NAMES
