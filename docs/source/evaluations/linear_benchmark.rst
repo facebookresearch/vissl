@@ -230,6 +230,51 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 
+Benchmark: Caltech-101
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/caltech101>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/caltech101/eval_resnet_8gpu_transfer_caltech101_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for Caltech-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: Describable Textures
+--------------------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/dtd>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/dtd/eval_resnet_8gpu_transfer_dtd_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for DTD is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: FGVC Aircrafts
+---------------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/aircrafts>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/aircrafts/eval_resnet_8gpu_transfer_aircrafts_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for FGVC Aircrafts is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
 Benchmark: FOOD-101
 -----------------------
 
@@ -243,6 +288,51 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
 A script to automatically prepare the data for FOOD-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: GTSRB
+-----------------------
+
+The configuration setting for the German Traffic Sign Recognition Benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/gtsrb>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/gtsrb/eval_resnet_8gpu_transfer_gtsrb_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for GTSRB is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: Oxford Flowers
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/oxford_flowers>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/oxford_flowers/eval_resnet_8gpu_transfer_oxford_flowers_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for Oxford Flowers is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: Oxford Pets
+-----------------------
+
+The configuration setting for this benchmark
+is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/oxford_pets>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/linear_image_classification/oxford_pets/eval_resnet_8gpu_transfer_oxford_pets_linear \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+A script to automatically prepare the data for Oxford Pets is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
 
 
 Benchmark: SUN397

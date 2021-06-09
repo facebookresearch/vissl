@@ -140,7 +140,7 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/create_dsprites_location_data_files.py -i /path/to/dsprites/ -o /output_path/to/dsprites_loc -d
+    python extra_scripts/datasets/create_dsprites_location_data_files.py -i /path/to/dsprites/ -o /output_path/to/dsprites_loc -d
     ```
     """
     args = get_argument_parser().parse_args()

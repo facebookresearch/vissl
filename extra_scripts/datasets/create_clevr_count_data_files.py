@@ -4,7 +4,6 @@
 # LICENSE file in the root directory of this source tree.
 
 import argparse
-import bisect
 import json
 import os
 
@@ -22,7 +21,7 @@ def get_argument_parser():
         "-i",
         "--input",
         type=str,
-        help="Path to the folder containing the original CLEVR_v1.0 dataset",
+        help="Path to the folder containing the original CLEVR_v1.0 folder",
     )
     parser.add_argument(
         "-o",
@@ -49,34 +48,45 @@ def download_dataset(root: str):
     download_and_extract_archive(url=URL, download_root=root)
 
 
-def create_clevr_distance_disk_folder(input_path: str, output_path: str):
+def create_clevr_count_disk_filelist(input_path: str, output_path: str):
     """
     Transform the CLEVR_v1.0 dataset in folder 'input_path' to a classifcation dataset following the
-    disk_folder format at 'output_path' where the goal is to estimate the distance of the closest object
+    disk_folder format at 'output_path' where the goal is to count the number of objects in the scene
     """
-    thresholds = np.array([8.0, 8.5, 9.0, 9.5, 10.0, 100.0])
-    target_labels = [f"below_{threshold}" for threshold in thresholds]
-
+    train_unique_targets = set()
     for split in ("train", "val"):
         print(f"Processing the {split} split...")
 
         # Read the scene description, holding all object information
+        input_image_path = os.path.join(input_path, "images", split)
         scenes_path = os.path.join(input_path, "scenes", f"CLEVR_{split}_scenes.json")
         with open(scenes_path) as f:
             scenes = json.load(f)["scenes"]
+        image_names = [scene["image_filename"] for scene in scenes]
+        targets = [len(scene["objects"]) for scene in scenes]
 
-        # Associate the images with their corresponding target
+        # Make sure that the categories in the train and validation sets are the same
+        # and assigning an identifier to each of the unique target
+        if split == "train":
+            train_unique_targets = set(targets)
+            print("Number of classes:", len(train_unique_targets))
+        else:
+            valid_indices = {
+                i for i in range(len(image_names)) if targets[i] in train_unique_targets
+            }
+            image_names = [
+                image_name
+                for i, image_name in enumerate(image_names)
+                if i in valid_indices
+            ]
+            targets = [target for i, target in enumerate(targets) if i in valid_indices]
+
+        # List the images and labels of the partition
         image_paths = []
         image_labels = []
-        for scene in tqdm(scenes):
-            image_path = os.path.join(
-                input_path, "images", split, scene["image_filename"]
-            )
-            distance = min(object["pixel_coords"][2] for object in scene["objects"])
-            target_id = bisect.bisect_left(thresholds, distance)
-            target = target_labels[target_id]
-            image_paths.append(image_path)
-            image_labels.append(target)
+        for image_name, target in tqdm(zip(image_names, targets), total=len(targets)):
+            image_paths.append(os.path.join(input_image_path, image_name))
+            image_labels.append(f"count_{target}")
 
         # Save the these lists in the disk_filelist format
         os.makedirs(output_path, exist_ok=True)
@@ -91,11 +101,11 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/create_clevr_dist_data_files.py -i /path/to/clevr/ -o /output_path/to/clevr_dist
+    python extra_scripts/datasets/create_clevr_count_data_files.py -i /path/to/clevr/ -o /output_path/to/clevr_count
     ```
     """
     args = get_argument_parser().parse_args()
     if args.download:
         download_dataset(args.input)
     input_path = os.path.join(args.input, "CLEVR_v1.0")
-    create_clevr_distance_disk_folder(input_path=input_path, output_path=args.output)
+    create_clevr_count_disk_filelist(input_path=input_path, output_path=args.output)

@@ -105,7 +105,7 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/create_imagenet_ood_data_files.py
+    python extra_scripts/datasets/create_imagenet_ood_data_files.py
         -i /path/to/imagenet_ood/
         -o /output_path/to/imagenet_ood
         -d

@@ -155,7 +155,7 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/create_ucf101_data_files.py -i /path/to/ucf101 -o /output_path/ucf101 -d
+    python extra_scripts/datasets/create_ucf101_data_files.py -i /path/to/ucf101 -o /output_path/ucf101 -d
     ```
     """
     args = get_argument_parser().parse_args()

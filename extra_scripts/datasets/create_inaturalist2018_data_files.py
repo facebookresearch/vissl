@@ -9,7 +9,7 @@ train and validation source/label `.npy` files.
 These files will be written to the '-o' path.
 
 Usage Example run from parent directory:
-$ python extra_scripts/create_inaturalist2018_data_files.py \
+$ python extra_scripts/datasets/create_inaturalist2018_data_files.py \
     -i "/path/to/inaturalist2018/" \
     -o "/output_path/to/inaturalist2018" -d
 """

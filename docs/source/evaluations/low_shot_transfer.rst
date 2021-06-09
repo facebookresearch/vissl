@@ -7,6 +7,22 @@ VISSL provides a set of low-shot transfer tasks to benchmark your models on and 
 A lost of the low shot transfer benchmarks listed below are directly inspired from the `VTAB <https://arxiv.org/pdf/1910.04867.pdf>`_ paper.
 
 
+Benchmark: Caltech-101
+---------------------------
+
+The configuration for low shot (1000 samples) fine-tuning on Caltech-101 provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/caltech101>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/low_shot_transfer/caltech101/eval_resnet_8gpu_transfer_caltech101_low_tune \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
+
+A script to automatically prepare the data for Caltech-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
 Benchmark: CIFAR-100
 ---------------------------
 
@@ -77,6 +93,22 @@ For fine-tuning on the full dataset, just add this option to the command line :c
 Scripts to automatically prepare the data for the dSprites benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
 
 
+Benchmark: Describable Textures
+--------------------------------
+
+The configuration for low shot (1000 samples) fine-tuning on DTD is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/dtd>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/low_shot_transfer/dtd/eval_resnet_8gpu_transfer_dtd_low_tune \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
+
+A script to automatically prepare the data for DTD is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
 Benchmark: EuroSAT
 ----------------------------
 
@@ -111,6 +143,38 @@ is provided under the `kitti_dist <https://github.com/facebookresearch/vissl/tre
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
 A script to automatically prepare the data for KITTI/Dist is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: Oxford Flowers
+---------------------------
+
+The configuration for low shot (1000 samples) fine-tuning on Oxford Flowers is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/oxford_flowers>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/low_shot_transfer/oxford_pets/eval_resnet_8gpu_transfer_oxford_flowers_low_tune \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
+
+A script to automatically prepare the data for Oxford Flowers is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+
+
+Benchmark: Oxford Pets
+---------------------------
+
+The configuration for low shot (1000 samples) fine-tuning on Oxford Pets is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/oxford_pets>`_ .
+
+.. code-block:: bash
+
+    python tools/run_distributed_engines.py \
+      config=benchmark/low_shot_transfer/oxford_pets/eval_resnet_8gpu_transfer_oxford_pets_low_tune \
+      config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
+
+A script to automatically prepare the data for Oxford Pets is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
 
 
 Benchmark: Patch Camelyon

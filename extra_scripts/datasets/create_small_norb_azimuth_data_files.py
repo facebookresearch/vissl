@@ -28,7 +28,7 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/create_small_norb_azimuth_data_files.py -i /path/to/small_norb/ -o /output_path/to/small_norb
+    python extra_scripts/datasets/create_small_norb_azimuth_data_files.py -i /path/to/small_norb/ -o /output_path/to/small_norb
     ```
     """
     norb_module = import_norb_elevation_module()
