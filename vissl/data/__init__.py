@@ -122,9 +122,7 @@ def get_sampler(dataset, dataset_config, sampler_seed=0):
                 seed=sampler_seed,
             )
         else:
-            data_sampler = torch.utils.data.distributed.DistributedSampler(
-                dataset, seed=sampler_seed
-            )
+            data_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
         logging.info("Created the Distributed Sampler....")
         print_sampler_config(data_sampler)
     else:
