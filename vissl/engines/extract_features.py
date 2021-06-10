@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import os
 
 from vissl.config import AttrDict
 from vissl.trainer import SelfSupervisionTrainer
@@ -49,7 +50,8 @@ def extract_main(
 
     # set seeds
     logging.info("Setting seed....")
-    set_seeds(cfg)
+    dist_rank = int(os.environ["RANK"])
+    set_seeds(cfg, dist_rank)
 
     # print the training settings and system settings
     local_rank, _ = get_machine_local_and_dist_rank()
