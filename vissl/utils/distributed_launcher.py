@@ -255,6 +255,7 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
     assert PathManager.exists(
         log_folder
     ), f"Specified config.SLURM.LOG_FOLDER={log_folder} doesn't exist"
+    assert cfg.SLURM.PARTITION, "SLURM.PARTITION must be set when using SLURM"
 
     executor = submitit.AutoExecutor(folder=log_folder)
     timeout_min = cfg.SLURM.TIME_HOURS * 60 + cfg.SLURM.TIME_MINUTES
