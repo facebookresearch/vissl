@@ -73,23 +73,13 @@ class LinearEvalMLP(nn.Module):
 
 
 @register_model_head("eval_mlp_fsdp")
-class FSDPLinearEvalMLP(nn.Module):
-    """
-    A version of the LinearEvalMLP module wrapped with FSDP
-    """
-
-    def __init__(
-        self,
-        model_config: AttrDict,
-        in_channels: int,
-        dims: List[int],
-        use_bn: bool = False,
-        use_relu: bool = False,
-    ):
-        super().__init__()
-        mlp = LinearEvalMLP(model_config, in_channels, dims, use_bn, use_relu)
-        mlp = fsdp_auto_wrap_bn(mlp)
-        self.mlp = fsdp_wrapper(mlp, **model_config.FSDP_CONFIG)
-
-    def forward(self, batch: torch.Tensor):
-        return self.mlp(batch)
+def FSDPLinearEvalMLP(
+    model_config: AttrDict,
+    in_channels: int,
+    dims: List[int],
+    use_bn: bool = False,
+    use_relu: bool = False,
+):
+    mlp = LinearEvalMLP(model_config, in_channels, dims, use_bn, use_relu)
+    mlp = fsdp_auto_wrap_bn(mlp)
+    return fsdp_wrapper(mlp, **model_config.FSDP_CONFIG)

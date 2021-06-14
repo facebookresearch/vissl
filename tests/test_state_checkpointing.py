@@ -110,14 +110,22 @@ class TestStateCheckpointing(unittest.TestCase):
 
     @staticmethod
     def _create_benchmark_config(
-        checkpoint_path: str, with_fsdp: bool, num_gpu: int = 2
+        checkpoint_path: str,
+        with_fsdp: bool,
+        with_eval_mlp: bool = True,
+        num_gpu: int = 2,
     ):
+        if with_eval_mlp:
+            head_config = "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_eval_mlp"
+        else:
+            head_config = "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_mlp"
+
         with initialize_config_module(config_module="vissl.config"):
             cfg = compose(
                 "defaults",
                 overrides=[
                     "config=debugging/benchmark/linear_image_classification/eval_resnet_8gpu_transfer_imagenette_160",
-                    "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_eval_mlp",
+                    head_config,
                     f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
                     "config.SEED_VALUE=2",
                     "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
@@ -153,11 +161,13 @@ class TestStateCheckpointing(unittest.TestCase):
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
-            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "eval_mlp_fsdp"
+            head_type = "eval_mlp_fsdp" if with_eval_mlp else "mlp_fsdp"
+            config["MODEL"]["HEAD"]["PARAMS"][0][0] = head_type
             config.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
         else:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
-            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "eval_mlp"
+            head_type = "eval_mlp" if with_eval_mlp else "mlp"
+            config["MODEL"]["HEAD"]["PARAMS"][0][0] = head_type
         return config
 
     def run_benchmarking(self, checkpoint_path: str, with_fsdp: bool, num_gpu: int = 2):
@@ -294,3 +304,49 @@ class TestStateCheckpointing(unittest.TestCase):
                 )
                 self.assertGreater(len(fsdp_losses), 0)
                 self.assertEqual(len(fsdp_accuracies), 4)
+
+    def run_benchmarking_preemption_test(
+        self,
+        checkpoint_path: str,
+        with_fsdp: bool,
+        with_eval_mlp: bool,
+        num_gpu: int = 2,
+    ):
+        with in_temporary_directory() as temp_dir:
+            config = self._create_benchmark_config(
+                checkpoint_path,
+                with_fsdp=with_fsdp,
+                with_eval_mlp=with_eval_mlp,
+                num_gpu=num_gpu,
+            )
+            config.CHECKPOINT.DIR = temp_dir
+            results = run_integration_test(config)
+            initial_losses = results.get_losses()
+
+            results.clean_final_checkpoint()
+            results.clean_logs()
+
+            results = run_integration_test(config)
+            restart_losses = results.get_losses()
+
+            print("INITIAL:", initial_losses)
+            print("RESTART:", restart_losses)
+
+            self.assertEqual(initial_losses[5:], restart_losses)
+
+    @gpu_test(gpu_count=2)
+    def test_benchmarking_from_sharded_checkpoint_with_preemption(self):
+        with in_temporary_directory() as checkpoint_folder:
+            # Run a pre-training in FSDP mode and save a sharded checkpoing
+            config = self._create_pretraining_config(with_fsdp=True)
+            run_integration_test(config)
+            checkpoint_path = os.path.join(checkpoint_folder, "checkpoint.torch")
+
+            # Verify that FSDP can load the checkpoint and run a benchmark on it
+            # and that it can restart from a preemption of the benchmark
+            self.run_benchmarking_preemption_test(
+                checkpoint_path, with_fsdp=True, with_eval_mlp=True
+            )
+            self.run_benchmarking_preemption_test(
+                checkpoint_path, with_fsdp=True, with_eval_mlp=False
+            )

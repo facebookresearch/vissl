@@ -402,6 +402,11 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         if isinstance(self.trunk, FSDP):
             trunk_state_dict = self.trunk.local_state_dict()
             trunk_metadata_dict = self.trunk.local_metadata_dict()
+        elif isinstance(self.trunk, FeatureExtractorModel) and isinstance(
+            self.trunk.base_model, FSDP
+        ):
+            trunk_state_dict = self.trunk.base_model.local_state_dict()
+            trunk_metadata_dict = self.trunk.base_model.local_metadata_dict()
         else:
             trunk_state_dict = self.trunk.state_dict()
             trunk_metadata_dict = {}
@@ -441,6 +446,11 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         if isinstance(self.trunk, FSDP):
             self.trunk.load_local_state_dict(state["model"]["trunk"])
             fsdp_recursive_reset_lazy_init(self.trunk)
+        elif isinstance(self.trunk, FeatureExtractorModel) and isinstance(
+            self.trunk.base_model, FSDP
+        ):
+            self.trunk.base_model.load_local_state_dict(state["model"]["trunk"])
+            fsdp_recursive_reset_lazy_init(self.trunk.base_model)
         else:
             self.trunk.load_state_dict(state["model"]["trunk"])
 
