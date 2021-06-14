@@ -341,20 +341,6 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
         stage_checkpoints = []
         if model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING:
             checkpoint_config = trunk_config.get("stage_checkpoints", [])
-
-            # TODO (Quentin) - Remove: do this by configuration
-            if (
-                not checkpoint_config
-                and hasattr(params, "depths")
-                and params.depths == [3, 10, 23, 1]
-            ):
-                checkpoint_config = [
-                    [1, 3],  # 3
-                    [1, 4, 8, 10],  # 10
-                    [4, 11, 18, 23],  # 23
-                    [],  # 1 - no checkpoint here
-                ]
-
             if len(checkpoint_config) > 0:
                 stage_checkpoints = checkpoint_config[i]
             else:
