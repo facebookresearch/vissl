@@ -113,7 +113,10 @@ def load_file(filename, mmap_mode=None):
                 data = np.load(fopen, encoding="latin1")
     elif file_ext == ".json":
         with PathManager.open(filename, "r") as fopen:
-            data = json.loads(fopen)
+            data = json.load(fopen)
+    elif file_ext == ".yaml":
+        with PathManager.open(filename, "r") as fopen:
+            data = yaml.load(fopen, Loader=yaml.FullLoader)
     else:
         raise Exception(f"Reading from {file_ext} is not supported yet")
     return data

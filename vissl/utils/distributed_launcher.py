@@ -275,3 +275,5 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
     trainer = _ResumableSlurmJob(engine_name=engine_name, config=cfg)
     job = executor.submit(trainer)
     print(f"SUBMITTED: {job.job_id}")
+
+    return job

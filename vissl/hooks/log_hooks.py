@@ -245,6 +245,11 @@ class LogLossLrEtaHook(ClassyHook):
                     "eta": eta_string,
                     "peak_mem(M)": peak_mem_used,
                 }
+
+                if iteration == 1:
+                    # Set max iterations. Currently used in benchmark_suite_scheduler.py
+                    log_data["max_iterations"] = task.max_iteration
+
                 if self.btime_freq and len(batch_times) >= self.btime_freq:
                     rolling_avg_time = (
                         sum(batch_times[-self.btime_freq :]) / self.btime_freq
