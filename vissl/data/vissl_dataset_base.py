@@ -43,10 +43,3 @@ class VisslDatasetBase(abc.ABC):
         batch_size_per_replica * world_size
         """
         ...
-
-    @abc.abstractmethod
-    def post_process_batch(self, batch_data):
-        """
-        Post process batch after data iterator has returned.
-        """
-        ...

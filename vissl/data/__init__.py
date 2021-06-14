@@ -204,19 +204,6 @@ def build_dataloader(
     return dataloader
 
 
-def build_dataloader_iterator(dataloader, **kwargs):
-    """
-    Get the dataloader iterator for the given datasets and data split
-
-    Args:
-        dataloader (Dataloader): the dataloader object.
-
-    Returns:
-        An iterable of the dataloader.
-    """
-    return iter(dataloader)
-
-
 def wrap_dataloader(dataloader, enable_async_gpu_copy: bool, device: torch.device):
     """
     If the targeted device is CUDA, set up async device copy:

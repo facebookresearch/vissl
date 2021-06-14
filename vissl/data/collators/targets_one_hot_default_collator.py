@@ -64,7 +64,6 @@ def targets_one_hot_default_collator(batch, num_classes: int):
     labels = [x["label"][0] for x in batch]
     output_labels = []
     for idx in range(data.shape[0]):
-        # import pdb; pdb.set_trace()
         output_labels.append(
             convert_to_one_hot(labels[idx][0], labels[idx][1], num_classes)
         )

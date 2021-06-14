@@ -228,15 +228,14 @@ class SelfSupervisionTrainer(object):
         """
 
         phase_idx, iteration_num = -1, -1
-        task.num_phases = len(task.phases)
-        task.num_epochs = task.num_train_phases
+
         # Ensure that train loader exists. Will NOT exist if config.TEST_ONLY is True
         if "train" in task.dataloaders.keys():
             loader_key = "train"
         else:
             loader_key = "test"
 
-        task.max_iteration = task.num_epochs * len(task.dataloaders[loader_key])
+        task.max_iteration = task.num_train_phases * len(task.dataloaders[loader_key])
 
         if task.checkpoint is not None:
             phase_idx = task.checkpoint["phase_idx"]
@@ -246,17 +245,24 @@ class SelfSupervisionTrainer(object):
         else:
             task.iteration = 0
             task.local_iteration_num = iteration_num
-        num_iter_in_epoch = len(task.dataloaders[loader_key])
+
+        num_iter_in_phase = len(task.dataloaders[loader_key])
+        num_iter_in_epoch = num_iter_in_phase * task.num_train_phases_per_epoch
 
         num_samples = task.num_phase_samples(loader_key)
         task.start_time = time.time()
         task.batch_time = []
         task.metrics = {}
-        logging.info(
-            f"Training {task.num_epochs} epochs. One epoch = {num_iter_in_epoch} iterations"
-        )
-        logging.info(f"Total {task.max_iteration} iterations for training")
+        logging.info(f"Training {task.num_epochs} epochs")
+        logging.info(f"One epoch = {num_iter_in_epoch} iterations.")
         logging.info(f"Total {num_samples} samples in one epoch")
+
+        if task.num_epochs != task.num_train_phases:
+            logging.info(f"Training a total of {task.num_train_phases} train phases.")
+            logging.info(f"One phase = {num_iter_in_phase} iterations.")
+
+        logging.info(f"Total {task.max_iteration} iterations for training")
+
         return task, phase_idx, task.local_iteration_num
 
     def _advance_phase(self, task: ClassyTask):
@@ -297,8 +303,12 @@ class SelfSupervisionTrainer(object):
             task.train_phase_idx - 1
         ):
             compute_start_iter = True
+
         task.recreate_data_iterator(
-            phase_type, epoch=task.phase_idx, compute_start_iter=compute_start_iter
+            phase_type,
+            epoch=task.phase_idx,
+            compute_start_iter=compute_start_iter,
+            train_phase_idx=task.train_phase_idx,
         )
 
         # set the model to train or eval depending on what phase we are in

@@ -567,3 +567,8 @@ def infer_and_assert_hydra_config(cfg):
     # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
     # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
     del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
+
+    if cfg.DATA.TRAIN.BASE_DATASET == "generic_ssl":
+        assert (
+            cfg.DATA.TRAIN.get("TRAIN_PHASES_PER_EPOCH", 1) == 1
+        ), "When using the generic_ssl, we must set TRAIN_PHASES_PER_EPOCH = 1."

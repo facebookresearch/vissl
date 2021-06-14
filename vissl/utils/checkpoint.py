@@ -462,7 +462,11 @@ def get_checkpoint_folder(config: AttrDict):
 
 
 def is_checkpoint_phase(
-    mode_num: int, mode_frequency: int, train_phase_idx: int, num_epochs: int, mode: str
+    mode_num: int,
+    mode_frequency: int,
+    train_phase_idx: int,
+    num_train_phases: int,
+    mode: str,
 ):
     """
     Determines if a checkpoint should be saved on current epoch. If epoch=1, then
@@ -476,7 +480,7 @@ def is_checkpoint_phase(
                         checkpoint at.
         mode_frequency (int): checkpoint frequency - every N iterations or every N epochs/phase
         train_phase_idx (int): the current training phase we are in. Starts from 0
-        num_epochs (int): total number of epochs in training
+        num_train_phases (int): total number of training phases. Usually the same as num_epochs.
 
     Returns:
         checkpointing_phase (bool): whether the model should be checkpointed or not
@@ -485,7 +489,7 @@ def is_checkpoint_phase(
         checkpointing_phase = (mode_num % mode_frequency) == 0
     elif mode == "phase":
         checkpointing_phase = (mode_num % mode_frequency) == 0 or train_phase_idx == (
-            num_epochs - 1
+            num_train_phases - 1
         )
     return checkpointing_phase
 

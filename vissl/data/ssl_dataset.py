@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Callable, Dict, Set
+from typing import Any, Callable, Dict, Set
 
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
@@ -410,8 +410,21 @@ class GenericSSLDataset(VisslDatasetBase):
         """
         return self.get_batchsize_per_replica() * get_world_size()
 
-    def post_process_batch(self, batch_data):
+    def get_classy_state(self):
         """
-        Identity function. Other base datasets may need to #post_process_batch.
+        No-op method. Used with other datasets that need state.
         """
-        return batch_data
+        return {}
+
+    def set_classy_state(self, state: Dict[str, Any]):
+        """
+        No-op method. Used with other datasets that need state.
+        """
+        pass
+
+    def rebuild_dataloader(self):
+        """
+        Whether or not to rebuild the dataloader. This is called
+        after every training phase.
+        """
+        return False

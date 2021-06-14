@@ -19,13 +19,13 @@ _TRANSFORMS_WITH_COPIES = [
     "ImgPilToMultiCrop",
 ]
 _TRANSFORMS_WITH_GROUPING = ["ImgPilMultiCropRandomApply"]
-_TRANSFORMS_WITH_ENTIRE_SAMPLE = []
+_TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH = []
 
 DEFAULT_TRANSFORM_TYPES = {
     "TRANSFORMS_WITH_LABELS": _TRANSFORMS_WITH_LABELS,
     "TRANSFORMS_WITH_COPIES": _TRANSFORMS_WITH_COPIES,
     "TRANSFORMS_WITH_GROUPING": _TRANSFORMS_WITH_GROUPING,
-    "TRANSFORMS_WITH_ENTIRE_SAMPLE": _TRANSFORMS_WITH_ENTIRE_SAMPLE,
+    "TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH": _TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH,
 }
 
 
@@ -90,7 +90,9 @@ class SSLTransformsWrapper(ClassyTransform):
         prob=0.2
     """
 
-    def __init__(self, indices, transform_types, **args):
+    def __init__(
+        self, indices, transform_types, transform_receives_entire_batch=False, **args
+    ):
         """
         Args:
             indices (List[int]) (Optional): the indices list on which transform should
@@ -99,15 +101,19 @@ class SSLTransformsWrapper(ClassyTransform):
                                  If indices is not specified, transform is applied
                                  to all the multi-modal input.
             args (dict): the arguments that the transform takes
+            transform_types (dict): Types of transforms.
+            transform_receives_entire_batch (bool): Whether or not the transforms receive the
+                                           entire batch, or just one img.
 
         """
         self.indices = set(indices)
         self.name = args["name"]
         self.transform = build_transform(args)
+        self.transform_receives_entire_batch = transform_receives_entire_batch
         self.transforms_with_labels = transform_types["TRANSFORMS_WITH_LABELS"]
         self.transforms_with_copies = transform_types["TRANSFORMS_WITH_COPIES"]
-        self.transforms_with_entire_sample = transform_types[
-            "TRANSFORMS_WITH_ENTIRE_SAMPLE"
+        self.transforms_with_overwrite_entire_batch = transform_types[
+            "TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH"
         ]
         self.transforms_with_grouping = transform_types["TRANSFORMS_WITH_GROUPING"]
 
@@ -127,11 +133,11 @@ class SSLTransformsWrapper(ClassyTransform):
         """
         return self.name in self.transforms_with_copies
 
-    def _is_entire_sample_transform(self):
+    def _is_overwrite_entire_batch_transform(self):
         """
-        _TRANSFORMS_WITH_ENTIRE_SAMPLE = []
+        _TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH = []
         """
-        return self.name in self.transforms_with_entire_sample
+        return self.name in self.transforms_with_overwrite_entire_batch
 
     def _is_grouping_transform(self):
         """
@@ -139,17 +145,31 @@ class SSLTransformsWrapper(ClassyTransform):
         """
         return self.name in self.transforms_with_grouping
 
-    def __call__(self, sample):
+    def __call__(self, batch_or_img):
         """
         Apply each transform on the specified indices of each entry in
-        the input sample.
+        the input sample or batch.
         """
+        if (
+            self.transform_receives_entire_batch
+            and self._is_overwrite_entire_batch_transform()
+        ):
+            # Transform the entire batch. This is currently only used for hive dataset.
+            batch_or_img = self.transform(batch_or_img)
+        elif self.transform_receives_entire_batch:
+            # Transform every sample of the batch. This is currently only used for hive dataset.
+            for i, sample in enumerate(batch_or_img):
+                batch_or_img[i] = self._transform(sample)
+        else:
+            # Transform the sample. This is the default behavior.
+            batch_or_img = self._transform(batch_or_img)
+
+        return batch_or_img
+
+    def _transform(self, sample):
         # Run on all indices if empty set is passed.
         indices = self.indices if self.indices else set(range(len(sample["data"])))
-        if self._is_entire_sample_transform():
-            # If transform should overwrite the entire sample.
-            sample = self.transform(sample)
-        elif self._is_grouping_transform():
+        if self._is_grouping_transform():
             # if the transform needs to be applied to all the indices
             # together. For example: one might want to vary the intensity
             # of a transform across several crops of an image as in BYOL.
@@ -189,6 +209,12 @@ class SSLTransformsWrapper(ClassyTransform):
         cls,
         config: Dict[str, Any],
         transform_types: Dict[str, Any],
+        transform_receives_entire_batch=False,
     ) -> "SSLTransformsWrapper":
         indices = config.get("indices", [])
-        return cls(indices, transform_types=transform_types, **config)
+        return cls(
+            indices,
+            transform_types=transform_types,
+            transform_receives_entire_batch=transform_receives_entire_batch,
+            **config,
+        )
