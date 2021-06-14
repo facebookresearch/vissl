@@ -1,0 +1,33 @@
+{
+    "params": {
+           "training_checkpoint_dir": "(str) Training checkpoint directory. That is the CHECKPOINT.DIR of the training config",
+           "benchmarks": [
+               {
+                   "evaluation_name": "(str) Name of benchmark for convenience",
+                   "config_files": [
+                       "config=path/to/evaluation/config",
+                       "config.OVERRIDES=new_value"
+                   ]
+               }
+           ],
+           "evaluation_iter_freq": "(int, default=-1) Evaluate the checkpoint every N iterations",
+           "evaluation_phase_freq": "(int, default=-1) Evaluate the checkpoint every N phases",
+           "evaluate_final_phase": "(bool, default=True) Evaluate the final phase",
+           "autoload_slurm_evaluator_checkpoint": "(bool, default=False) Whether or not to automatically load the benchmark checkpoint",
+           "slurm_evaluator_checkpoint": "(str, default=None) Path to load the benchmark checkpoint",
+           "auto_retry_evaluations": "(bool, default=False) Whether or not to automatically retry the evaluations",
+           "retry_evaluation_job_ids": "(array[int], default=[]) Array of job_ids to retry",
+           "max_retries": "(int, default=3) Maximum number of retries",
+           "pytorch_ports": "(List[int], default=[40500]) List of pytorch ports to cycle through as you are launching your evaluations, in order to prevent Pytorch DDP port colissions."
+       },
+       "slurm_options": {
+            "PARTITION": "(str) Partition",
+            "NAME": "(str, default=vissl) Name of slurm job",
+            "COMMENT": "(str, default=vissl evaluation job) Comment of slurm job",
+            "CONSTRAINT": "(str, default='') Constraing of slurm job",
+            "TIMEOUT_MIN": "(int, default=72 * 60) Minimum amount of minutes to timeout",
+            "CPUS_PER_TASK": "(int, default=8) Numer of cpus per task.",
+            "MEM_GB": "(int, default=32) Amount of RAM to request from slurm",
+            "ADDITIONAL_PARAMETERS": "(Dict[[str, Any]], default={}) Any default slurm options to pass to submitit"
+    }
+}
