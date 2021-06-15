@@ -16,8 +16,7 @@ import torch
 from fvcore.common.file_io import PathManager
 from vissl.config import AttrDict
 from vissl.data.dataset_catalog import get_data_files
-from vissl.engines.extract_features import extract_main
-from vissl.engines.train import train_main
+from vissl.engines import run_engine
 from vissl.hooks import ClassyHook, default_hook_generator
 from vissl.utils.checkpoint import (
     get_checkpoint_folder,
@@ -181,21 +180,6 @@ def _distributed_worker(
     hook_generator: Callable[[Any], List[ClassyHook]],
 ):
     dist_rank = cfg.DISTRIBUTED.NUM_PROC_PER_NODE * node_id + local_rank
-    if engine_name == "extract_features":
-        process_main = extract_main
-    else:
-
-        def process_main(cfg, dist_run_id, local_rank, node_id):
-            train_main(
-                cfg,
-                dist_run_id,
-                checkpoint_path,
-                checkpoint_folder,
-                local_rank=local_rank,
-                node_id=node_id,
-                hook_generator=hook_generator,
-            )
-
     logging.info(
         f"Spawning process for node_id: {node_id}, local_rank: {local_rank}, "
         f"dist_rank: {dist_rank}, dist_run_id: {dist_run_id}"
@@ -205,7 +189,16 @@ def _distributed_worker(
         logging.info("torch.backends.cudnn.deterministic = True")
         torch.backends.cudnn.deterministic = True
 
-    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+    run_engine(
+        engine_name,
+        cfg,
+        dist_run_id,
+        checkpoint_path,
+        checkpoint_folder,
+        local_rank=local_rank,
+        node_id=node_id,
+        hook_generator=hook_generator,
+    )
 
 
 class _ResumableSlurmJob:
