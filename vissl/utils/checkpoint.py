@@ -278,14 +278,19 @@ class CheckpointFormatConverter:
     @classmethod
     def _read_shards(cls, input_checkpoint_path: str, device="cpu"):
         logging.info(f"Reading sharded checkpoint from: {input_checkpoint_path}")
-        checkpoint = torch.load(input_checkpoint_path, map_location=device)
+        with PathManager.open(input_checkpoint_path, "rb") as f:
+            checkpoint = torch.load(f, map_location=device)
+
         assert checkpoint["type"] == CheckpointItemType.shard_list.name
         weights, metadata = [], []
         for shard_path in checkpoint["shards"]:
             if not os.path.isabs(shard_path):
                 checkpoint_folder = os.path.split(input_checkpoint_path)[0]
                 shard_path = os.path.join(checkpoint_folder, shard_path)
-            shard_content = torch.load(shard_path, map_location=device)
+
+            with PathManager.open(shard_path, "rb") as f:
+                shard_content = torch.load(f, map_location=device)
+
             trunk_data = shard_content["classy_state_dict"]["base_model"]["model"][
                 "trunk"
             ]
@@ -381,7 +386,8 @@ class SlicedCheckpointLoader:
         weight_path = cls._clean_path(weight_path)
         file_name = checkpoint["layers"].get(weight_path, None)
         assert file_name is not None, f"Could not find buffer: {weight_path}"
-        layer_checkpoint = torch.load(file_name)
+        with PathManager.open(file_name, "rb") as f:
+            layer_checkpoint = torch.load(f)
         assert layer_checkpoint["type"] == CheckpointItemType.slice.name
         weight.copy_(layer_checkpoint["weight"])
 
