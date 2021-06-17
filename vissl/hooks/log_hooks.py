@@ -495,7 +495,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 save_metrics[metric_key] = meter_value
                 logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
         meter_file = f"{checkpoint_folder}/metrics.json"
-        save_file(save_metrics, meter_file)
+        save_file(save_metrics, meter_file,rewrite=True)
 
 
 class LogPerfTimeMetricsHook(ClassyHook):

@@ -51,7 +51,7 @@ def create_file_symlink(file1, file2):
         logging.info(f"Could NOT create symlink. Error: {e}")
 
 
-def save_file(data, filename):
+def save_file(data, filename,rewrite=True):
     """
     Common i/o utility to handle saving data to various file formats.
     Supported:
@@ -66,9 +66,14 @@ def save_file(data, filename):
         with PathManager.open(filename, "wb") as fopen:
             np.save(fopen, data)
     elif file_ext == ".json":
-        with PathManager.open(filename, "a") as fopen:
-            fopen.write(json.dumps(data, sort_keys=True) + "\n")
-            fopen.flush()
+        if rewrite:
+             with PathManager.open(filename, "w") as fopen:
+                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
+                 fopen.flush()
+        else:
+            with PathManager.open(filename, "a") as fopen:
+                fopen.write(json.dumps(data, sort_keys=True) + "\n")
+                fopen.flush()
     elif file_ext == ".yaml":
         with PathManager.open(filename, "w") as fopen:
             dump = yaml.dump(data)
