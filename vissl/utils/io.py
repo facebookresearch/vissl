@@ -51,7 +51,7 @@ def create_file_symlink(file1, file2):
         logging.info(f"Could NOT create symlink. Error: {e}")
 
 
-def save_file(data, filename,append_to_json=True):
+def save_file(data, filename, append_to_json=True):
     """
     Common i/o utility to handle saving data to various file formats.
     Supported:
