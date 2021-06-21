@@ -72,7 +72,7 @@ In your python interpretor:
         }
     }
 >>> from vissl.utils.io import save_file
->>> save_file(json_data, "/tmp/configs/config/dataset_catalog.json")
+>>> save_file(json_data, "/tmp/configs/config/dataset_catalog.json", append_to_json=False)
 >>> from vissl.data.dataset_catalog import VisslDatasetCatalog
 >>> print(VisslDatasetCatalog.list())
 ['imagenet1k_folder']
