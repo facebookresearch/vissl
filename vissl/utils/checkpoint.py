@@ -2,35 +2,52 @@
 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
+import contextlib
+import hashlib
 import logging
 import os
 from enum import Enum, auto
 from typing import Any, Dict, List
 
 import torch
+import torch.distributed as dist
 from classy_vision.generic.util import (
     load_and_broadcast_checkpoint,
     load_checkpoint,
     save_checkpoint,
 )
+from fairscale.nn import FullyShardedDataParallel
 from fvcore.common.file_io import PathManager
 from vissl.config import AttrDict
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import create_file_symlink, makedir
+from vissl.utils.layer_memory_tracking import null_context
 
 
-class CheckpointType(Enum):
+class CheckpointItemType(Enum):
     """
-    Types of checkpoint content:
+    The different types of checkpoint content:
     - consolidated: a checkpoint containing all the model weights
-    - shard: a checkpoint contained the weights of a shard
+    - shard: a checkpoint containing the weights of a shard of the model
     - shard_list: a checkpoint listing all shards of a model
+    - slice: a checkpoint containing the full weights of a slice of the model
+    - slice_list: a checkpoint containing the list of slices for a full model
+
+    Consolidated checkpoints contain all the weights of a model and are
+    suitable for models of limited number of parameters.
+
+    For bigger models, we have two different ways to cut the weights:
+    - by sharding the model: each shard contains a part of each layer
+      and the shard_list contains the path of all the shards
+    - by slicing model: each part contains complete parameters weights
+      for a sub-part of the model
     """
 
     consolidated = auto()
     shard = auto()
     shard_list = auto()
+    slice = auto()
+    slice_list = auto()
 
 
 class CheckpointWriter:
@@ -59,7 +76,7 @@ class CheckpointWriter:
         """
 
         # Complete the checkpoint with its type
-        content["type"] = CheckpointType.consolidated.name
+        content["type"] = CheckpointItemType.consolidated.name
 
         checkpoint_name = self.get_checkpoint_name()
         self._save(name=checkpoint_name, content=content)
@@ -74,7 +91,7 @@ class CheckpointWriter:
         """
 
         # Complete the checkpoint with its type
-        content["type"] = CheckpointType.shard.name
+        content["type"] = CheckpointItemType.shard.name
 
         # Each worker saves its own shard
         shard_name = self.get_checkpoint_shard_name(shard_rank)
@@ -85,7 +102,7 @@ class CheckpointWriter:
         # While the primary worker saves a checkpoint referencing all the shards
         primary_name = self.get_checkpoint_name()
         primary_checkpoint = {
-            "type": CheckpointType.shard_list.name,
+            "type": CheckpointItemType.shard_list.name,
             "shards": [
                 self.get_checkpoint_shard_name(rank) for rank in range(world_size)
             ],
@@ -133,6 +150,28 @@ class CheckpointLoader:
     """
 
     @classmethod
+    def init_fsdp_model_from_weights(
+        cls,
+        model: FullyShardedDataParallel,
+        checkpoint: Dict[str, Any],
+        weights_path: List[str],
+    ):
+        """
+        Load the weights of the checkpoint to the FSDP model:
+        Take into account the type of checkpoint to decide how
+        to perform the load (sharded or consolidated load)
+        """
+
+        if checkpoint["type"] == CheckpointItemType.slice_list.name:
+            SlicedCheckpointLoader.init_model_weights(model, checkpoint)
+        elif checkpoint["type"] == CheckpointItemType.consolidated.name:
+            weights = cls._extract_weights(checkpoint, weights_path)
+            model.load_state_dict(weights)
+        else:
+            weights = cls._extract_weights(checkpoint, weights_path)
+            model.load_local_state_dict(weights)
+
+    @classmethod
     def load_and_broadcast_init_weights(cls, checkpoint_path: str, device):
         """
         Load the weights at the provided path, dealing with the
@@ -160,13 +199,233 @@ class CheckpointLoader:
 
     @staticmethod
     def _is_shard_aggregator_checkpoint(checkpoint: Dict[str, Any]):
-        cp_type = checkpoint.get("type", CheckpointType.consolidated.name)
-        return cp_type == CheckpointType.shard_list.name
+        cp_type = checkpoint.get("type", CheckpointItemType.consolidated.name)
+        return cp_type == CheckpointItemType.shard_list.name
 
     @staticmethod
     def _update_version(checkpoint: Dict[str, Any]):
         # Backward compatibility with old checkpoints saved without types
-        checkpoint.setdefault("type", CheckpointType.consolidated.name)
+        checkpoint.setdefault("type", CheckpointItemType.consolidated.name)
+
+    @staticmethod
+    def _extract_weights(checkpoint: Dict[str, Any], weights_path: List[str]):
+        weights = checkpoint
+        for key in weights_path:
+            weights = weights[key]
+        return weights
+
+
+class CheckpointFormatConverter:
+    """
+    Convert a checkpoint from one format to another format more suited
+    for evaluation of the model
+    """
+
+    @classmethod
+    def sharded_to_consolidated_checkpoint(
+        cls, input_checkpoint_path: str, output_checkpoint_path: str
+    ):
+        """
+        Given a path to a sharded checkpoint, create a consolidated checkpoint
+        in which the weights of the trunk are stitched back together
+
+        This function does not copy the optimizer state nor the head
+        state as these states are not used for evaluation
+        """
+        weights, metadata = cls._read_shards(input_checkpoint_path)
+        full_weights = cls._consolidate_shards(weights, metadata)
+        consolidated_checkpoint = {
+            "type": CheckpointItemType.consolidated.name,
+            "classy_state_dict": {
+                "base_model": {"model": {"trunk": full_weights, "heads": {}}}
+            },
+        }
+        logging.info(f"Saving consolidated checkpoint at: {output_checkpoint_path}")
+        with PathManager.open(output_checkpoint_path, "wb") as f:
+            torch.save(consolidated_checkpoint, f)
+        logging.info(f"Done! Checkpoint available at: {output_checkpoint_path}")
+
+    @classmethod
+    def sharded_to_sliced_checkpoint(
+        cls, input_checkpoint_path: str, output_checkpoint_path: str
+    ):
+        """
+        Given a path to a sharded checkpoint, create a sliced checkpoint
+        in which the weights of the trunk are stitched back together
+        before saving them weight by weights in separate files
+
+        This function does not copy the optimizer state nor the head
+        state as these states are not used for evaluation
+        """
+        weights, metadata = cls._read_shards(input_checkpoint_path)
+        saved_parameters = {}
+        full_weights = cls._consolidate_shards(weights, metadata)
+
+        logging.info(f"Saving sliced checkpoint at: {output_checkpoint_path}")
+        for param_path, param in full_weights.items():
+            file_path = SlicedCheckpointLoader.save_slice(
+                output_checkpoint_path, param_path, param
+            )
+            saved_parameters[param_path] = file_path
+        checkpoint_list = {
+            "type": CheckpointItemType.slice_list.name,
+            "layers": saved_parameters,
+        }
+        with PathManager.open(output_checkpoint_path, "wb") as f:
+            torch.save(checkpoint_list, f)
+        logging.info(f"Done! Checkpoint available at: {output_checkpoint_path}")
+
+    @classmethod
+    def _read_shards(cls, input_checkpoint_path: str, device="cpu"):
+        logging.info(f"Reading sharded checkpoint from: {input_checkpoint_path}")
+        with PathManager.open(input_checkpoint_path, "rb") as f:
+            checkpoint = torch.load(f, map_location=device)
+
+        assert checkpoint["type"] == CheckpointItemType.shard_list.name
+        weights, metadata = [], []
+        for shard_path in checkpoint["shards"]:
+            if not os.path.isabs(shard_path):
+                checkpoint_folder = os.path.split(input_checkpoint_path)[0]
+                shard_path = os.path.join(checkpoint_folder, shard_path)
+
+            with PathManager.open(shard_path, "rb") as f:
+                shard_content = torch.load(f, map_location=device)
+
+            trunk_data = shard_content["classy_state_dict"]["base_model"]["model"][
+                "trunk"
+            ]
+            trunk_meta = shard_content["classy_state_dict"]["base_model"]["meta"][
+                "trunk"
+            ]
+            weights.append(trunk_data)
+            metadata.append(trunk_meta)
+        return weights, metadata
+
+    @classmethod
+    def _consolidate_shards(
+        cls, weights: List[Dict[str, torch.Tensor]], metadata: List[Dict[str, Any]]
+    ):
+        logging.info("Consolidating shards...")
+        return FullyShardedDataParallel.consolidate_shard_weights(weights, metadata)
+
+
+class SlicedCheckpointLoader:
+    """
+    Save a checkpoint by scanning the parameters one by one and saving
+    them on the fly, summoning the minimum number of FSDP parameters
+    possible along the way.
+    """
+
+    @classmethod
+    def save_model_weights(cls, model: FullyShardedDataParallel, checkpoint_path: str):
+        """
+        From a FSDP model, save a sliced checkpoint:
+        - create a folder that will contain all parts of the checkpoint
+        - in this folder, save one file for each layer of the model
+        - use model.summon_full_params(recurse=Fase) to summon the parameters
+          to be saved for the duration of the save and discard them afterwards
+          much FSDP does for the forward
+        - save a final checkpoint that contains the list of all parts
+        """
+        rank = dist.get_rank()
+        saved_parameters = {}
+        for path, module in cls._recursive_visit(model):
+            if rank == 0:
+                for param_path, param in module.named_parameters(
+                    prefix=path, recurse=False
+                ):
+                    file_path = cls.save_slice(checkpoint_path, param_path, param)
+                    saved_parameters[param_path] = file_path
+        if rank == 0:
+            checkpoint_list = {
+                "type": CheckpointItemType.slice_list.name,
+                "layers": saved_parameters,
+            }
+            with PathManager.open(checkpoint_path, "wb") as f:
+                torch.save(checkpoint_list, f)
+
+    @classmethod
+    def save_slice(cls, checkpoint_path: str, param_path: str, param) -> str:
+        """
+        Save a slice of the model: a parameter and its associated weights
+        - create a folder in which the slice will live
+        - save the slice in this folder, with a unique name
+        - return the created file name
+        """
+        checkpoint_sub_folder = os.path.splitext(checkpoint_path)[0] + "_layers"
+        os.makedirs(checkpoint_sub_folder, exist_ok=True)
+        hash_name = hashlib.sha1(param_path.encode()).hexdigest()
+        file_path = os.path.join(f"{checkpoint_sub_folder}", f"{hash_name}.torch")
+        file_path = os.path.abspath(file_path)
+        checkpoint_slice = {"type": CheckpointItemType.slice.name, "weight": param}
+        with PathManager.open(file_path, "wb") as f:
+            torch.save(checkpoint_slice, f)
+        return file_path
+
+    @classmethod
+    def init_model_weights(
+        cls, model: FullyShardedDataParallel, checkpoint: Dict[str, Any]
+    ):
+        """
+        Given a checkpoint of type "layer_list", initialize the weights of the
+        model layer by layer, summoning of parameters on the fly to avoid OOM
+        """
+        assert checkpoint["type"] == CheckpointItemType.slice_list.name
+        for path, module in cls._recursive_visit(model):
+            for param_path, param in module.named_parameters(
+                prefix=path, recurse=False
+            ):
+                cls._init_weight_from_slice(param_path, param.data, checkpoint)
+            for buffer_path, buffer in module.named_buffers(prefix=path, recurse=False):
+                cls._init_weight_from_slice(buffer_path, buffer.data, checkpoint)
+
+    @classmethod
+    def _init_weight_from_slice(
+        cls, weight_path: str, weight: torch.Tensor, checkpoint: Dict[str, Any]
+    ):
+        weight_path = cls._clean_path(weight_path)
+        file_name = checkpoint["layers"].get(weight_path, None)
+        assert file_name is not None, f"Could not find buffer: {weight_path}"
+        with PathManager.open(file_name, "rb") as f:
+            layer_checkpoint = torch.load(f)
+        assert layer_checkpoint["type"] == CheckpointItemType.slice.name
+        weight.copy_(layer_checkpoint["weight"])
+
+    @classmethod
+    def _recursive_visit(cls, model: FullyShardedDataParallel):
+        """
+        Visit a FSDP model, summoning parameters on the fly
+        and releasing them as soon as they are not needed
+
+        This replicates the summoning of parameters as done
+        through the forward pass of a FSDP model
+        """
+
+        def visit(path, module):
+            context = null_context()
+            if isinstance(module, FullyShardedDataParallel):
+                context = cls._summon_params(module)
+
+            with context:
+                yield path, module
+                for name, child in module._modules.items():
+                    next_path = path + "." + name if path else name
+                    yield from visit(next_path, child)
+
+        yield from visit("", model)
+
+    @staticmethod
+    @contextlib.contextmanager
+    def _summon_params(module):
+        with module.summon_full_params(recurse=False):
+            yield
+
+    @staticmethod
+    def _clean_path(param_path: str):
+        fsdp_names = {"_fsdp_wrapped_module", "_fpw_module"}
+        return ".".join(
+            [split for split in param_path.split(".") if split not in fsdp_names]
+        )
 
 
 def is_training_finished(cfg: AttrDict, checkpoint_folder: str):
@@ -209,7 +468,11 @@ def get_checkpoint_folder(config: AttrDict):
 
 
 def is_checkpoint_phase(
-    mode_num: int, mode_frequency: int, train_phase_idx: int, num_epochs: int, mode: str
+    mode_num: int,
+    mode_frequency: int,
+    train_phase_idx: int,
+    num_train_phases: int,
+    mode: str,
 ):
     """
     Determines if a checkpoint should be saved on current epoch. If epoch=1, then
@@ -223,7 +486,7 @@ def is_checkpoint_phase(
                         checkpoint at.
         mode_frequency (int): checkpoint frequency - every N iterations or every N epochs/phase
         train_phase_idx (int): the current training phase we are in. Starts from 0
-        num_epochs (int): total number of epochs in training
+        num_train_phases (int): total number of training phases. Usually the same as num_epochs.
 
     Returns:
         checkpointing_phase (bool): whether the model should be checkpointed or not
@@ -232,7 +495,7 @@ def is_checkpoint_phase(
         checkpointing_phase = (mode_num % mode_frequency) == 0
     elif mode == "phase":
         checkpointing_phase = (mode_num % mode_frequency) == 0 or train_phase_idx == (
-            num_epochs - 1
+            num_train_phases - 1
         )
     return checkpointing_phase
 

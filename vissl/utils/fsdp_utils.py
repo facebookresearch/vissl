@@ -6,7 +6,10 @@
 import torch.distributed as dist
 import torch.nn as nn
 from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
-from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
+from fairscale.nn.data_parallel import (
+    FullyShardedDataParallel as FSDP,
+    auto_wrap_bn as fairscale_auto_wrap_bn,
+)
 from vissl.config.attr_dict import AttrDict
 
 
@@ -19,14 +22,9 @@ def fsdp_recursive_reset_lazy_init(fsdp_module: FSDP):
     This function will recursively walk though the sub-FSDP modules and
     call _reset_lazy_init on each of them.
     """
-    to_visit = list(fsdp_module.named_modules())
-    while to_visit:
-        name, module = to_visit.pop()
+    for module in fsdp_module.modules():
         if isinstance(module, FSDP) and module._is_root is not None:
             module._reset_lazy_init()
-        for child_name, child in module.named_modules():
-            if child_name:
-                to_visit.append((name + "." + child_name, child))
 
 
 def get_global_group():
@@ -42,6 +40,16 @@ def get_global_group():
         return get_global_group._global_group
     else:
         return None
+
+
+def fsdp_auto_wrap_bn(module):
+    """
+    Custom Batch Normalisation FSDP auto wrapper which makes
+    sure to use the global group used for all other FSDP wraps
+    """
+    return fairscale_auto_wrap_bn(
+        module, single_rank_pg=False, process_group=get_global_group()
+    )
 
 
 def fsdp_wrapper(module, **kwargs):

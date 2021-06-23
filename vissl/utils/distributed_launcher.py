@@ -16,8 +16,7 @@ import torch
 from fvcore.common.file_io import PathManager
 from vissl.config import AttrDict
 from vissl.data.dataset_catalog import get_data_files
-from vissl.engines.extract_features import extract_main
-from vissl.engines.train import train_main
+from vissl.engines import run_engine
 from vissl.hooks import ClassyHook, default_hook_generator
 from vissl.utils.checkpoint import (
     get_checkpoint_folder,
@@ -181,21 +180,6 @@ def _distributed_worker(
     hook_generator: Callable[[Any], List[ClassyHook]],
 ):
     dist_rank = cfg.DISTRIBUTED.NUM_PROC_PER_NODE * node_id + local_rank
-    if engine_name == "extract_features":
-        process_main = extract_main
-    else:
-
-        def process_main(cfg, dist_run_id, local_rank, node_id):
-            train_main(
-                cfg,
-                dist_run_id,
-                checkpoint_path,
-                checkpoint_folder,
-                local_rank=local_rank,
-                node_id=node_id,
-                hook_generator=hook_generator,
-            )
-
     logging.info(
         f"Spawning process for node_id: {node_id}, local_rank: {local_rank}, "
         f"dist_rank: {dist_rank}, dist_run_id: {dist_run_id}"
@@ -205,7 +189,16 @@ def _distributed_worker(
         logging.info("torch.backends.cudnn.deterministic = True")
         torch.backends.cudnn.deterministic = True
 
-    process_main(cfg, dist_run_id, local_rank=local_rank, node_id=node_id)
+    run_engine(
+        engine_name,
+        cfg,
+        dist_run_id,
+        checkpoint_path,
+        checkpoint_folder,
+        local_rank=local_rank,
+        node_id=node_id,
+        hook_generator=hook_generator,
+    )
 
 
 class _ResumableSlurmJob:
@@ -255,6 +248,7 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
     assert PathManager.exists(
         log_folder
     ), f"Specified config.SLURM.LOG_FOLDER={log_folder} doesn't exist"
+    assert cfg.SLURM.PARTITION, "SLURM.PARTITION must be set when using SLURM"
 
     executor = submitit.AutoExecutor(folder=log_folder)
     timeout_min = cfg.SLURM.TIME_HOURS * 60 + cfg.SLURM.TIME_MINUTES
@@ -274,3 +268,5 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
     trainer = _ResumableSlurmJob(engine_name=engine_name, config=cfg)
     job = executor.submit(trainer)
     print(f"SUBMITTED: {job.job_id}")
+
+    return job

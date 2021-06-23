@@ -1,0 +1,15 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
+      ]

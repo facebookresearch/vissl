@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import lru_cache
@@ -677,3 +678,8 @@ class MemoryGraphCreator:
     def _mask_forward_backward(cls, memory_traces: List[LayerMemoryTrace]):
         mask_forwards = np.array([t.is_forward for t in memory_traces])
         return mask_forwards, ~mask_forwards
+
+
+@contextmanager
+def null_context():
+    yield

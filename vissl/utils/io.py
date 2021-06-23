@@ -51,11 +51,13 @@ def create_file_symlink(file1, file2):
         logging.info(f"Could NOT create symlink. Error: {e}")
 
 
-def save_file(data, filename):
+def save_file(data, filename, append_to_json=True):
     """
     Common i/o utility to handle saving data to various file formats.
     Supported:
         .pkl, .pickle, .npy, .json
+    Specifically for .json, users have the option to either append (default)
+    or rewrite by passing in Boolean value to append_to_json.
     """
     logging.info(f"Saving data to file: {filename}")
     file_ext = os.path.splitext(filename)[1]
@@ -66,9 +68,14 @@ def save_file(data, filename):
         with PathManager.open(filename, "wb") as fopen:
             np.save(fopen, data)
     elif file_ext == ".json":
-        with PathManager.open(filename, "a") as fopen:
-            fopen.write(json.dumps(data, sort_keys=True) + "\n")
-            fopen.flush()
+        if append_to_json:
+            with PathManager.open(filename, "a") as fopen:
+                fopen.write(json.dumps(data, sort_keys=True) + "\n")
+                fopen.flush()
+        else:
+            with PathManager.open(filename, "w") as fopen:
+                fopen.write(json.dumps(data, sort_keys=True) + "\n")
+                fopen.flush()
     elif file_ext == ".yaml":
         with PathManager.open(filename, "w") as fopen:
             dump = yaml.dump(data)
@@ -113,7 +120,10 @@ def load_file(filename, mmap_mode=None):
                 data = np.load(fopen, encoding="latin1")
     elif file_ext == ".json":
         with PathManager.open(filename, "r") as fopen:
-            data = json.loads(fopen)
+            data = json.load(fopen)
+    elif file_ext == ".yaml":
+        with PathManager.open(filename, "r") as fopen:
+            data = yaml.load(fopen, Loader=yaml.FullLoader)
     else:
         raise Exception(f"Reading from {file_ext} is not supported yet")
     return data

@@ -3,10 +3,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import collections
 import logging
 import os
 import random
 import tempfile
+import time
+from functools import partial, wraps
 
 import numpy as np
 import pkg_resources
@@ -308,3 +311,113 @@ class set_torch_seed(object):
 
     def __exit__(self, *exc):
         set_rng_state(self.rng_state)
+
+
+# Credit: https://stackoverflow.com/questions/42521549/retry-function-in-python
+def retry(func=None, exception=Exception, n_tries=5, delay=5, backoff=1, logger=False):
+    """Retry decorator with exponential backoff.
+
+    Parameters
+    ----------
+    func : typing.Callable, optional
+        Callable on which the decorator is applied, by default None
+    exception : Exception or tuple of Exceptions, optional
+        Exception(s) that invoke retry, by default Exception
+    n_tries : int, optional
+        Number of tries before giving up, by default 5
+    delay : int, optional
+        Initial delay between retries in seconds, by default 5
+    backoff : int, optional
+        Backoff multiplier e.g. value of 2 will double the delay, by default 1
+    logger : bool, optional
+        Option to log or print, by default False
+
+    Returns
+    -------
+    typing.Callable
+        Decorated callable that calls itself when exception(s) occur.
+
+    Examples
+    --------
+    >>> import random
+    >>> @retry(exception=Exception, n_tries=4)
+    ... def test_random(text):
+    ...    x = random.random()
+    ...    if x < 0.5:
+    ...        raise Exception("Fail")
+    ...    else:
+    ...        print("Success: ", text)
+    >>> test_random("It works!")
+    """
+
+    if func is None:
+        return partial(
+            retry,
+            exception=exception,
+            n_tries=n_tries,
+            delay=delay,
+            backoff=backoff,
+            logger=logger,
+        )
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        ntries, ndelay = n_tries, delay
+
+        while ntries > 1:
+            try:
+                return func(*args, **kwargs)
+            except exception as e:
+                msg = f"{str(e)}, Retrying in {ndelay} seconds..."
+                if logger:
+                    logging.warning(msg)
+                else:
+                    print(msg)
+                time.sleep(ndelay)
+                ntries -= 1
+                ndelay *= backoff
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+# Credit: https://stackoverflow.com/questions/6027558/flatten-nested-dictionaries-compressing-keys # NOQA
+def flatten_dict(d: dict, parent_key="", sep="_"):
+    """
+    Flattens a dict, delimited with a '_'. For example the input:
+    {
+        'top_1': {
+            'res_5': 100
+        }
+    }
+
+    will return:
+
+    {
+        'top_1_res_5': 100
+    }
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+# Credit: https://stackoverflow.com/questions/7204805/how-to-merge-dictionaries-of-dictionaries
+def recursive_dict_merge(dict1, dict2):
+    """
+    Recursively merges dict2 into dict1
+    """
+    if not isinstance(dict1, dict) or not isinstance(dict2, dict):
+        return dict2
+    for k in dict2:
+        if k in dict1:
+            dict1[k] = recursive_dict_merge(dict1[k], dict2[k])
+        else:
+            dict1[k] = dict2[k]
+    return dict1

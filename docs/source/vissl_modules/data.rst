@@ -249,19 +249,24 @@ VISSL supports benchmarks inspired by the `VTAB <https://arxiv.org/pdf/1910.0486
 
 To run these benchmarks, the following data preparation scripts are mandatory:
 
-- :code:`create_clevr_count_data_files.py`: to create a :code:`disk_filelist` dataset from `CLEVR <https://cs.stanford.edu/people/jcjohns/clevr/>`_ where the goal is to count the number of object in the scene
-- :code:`create_clevr_dist_data_files.py`: to create a :code:`disk_filelist` dataset from `CLEVR <https://cs.stanford.edu/people/jcjohns/clevr/>`_ where the goal is to estimate the distance of the closest object in the scene
-- :code:`create_dsprites_location_data_files.py`: to create a :code:`disk_folder` dataset from `dSprites <https://github.com/deepmind/dsprites-dataset>`_ where the goal is to estimate the x coordinate of the sprite on the scene
-- :code:`create_dsprites_orientation_data_files.py`: to create a :code:`disk_folder` dataset from `dSprites <https://github.com/deepmind/dsprites-dataset>`_ where the goal is to estimate the orientation of the sprite on the scene
-- :code:`create_euro_sat_data_files.py`: to transform the `EUROSAT <https://github.com/phelber/eurosat>`_ dataset to the :code:`disk_folder` format
-- :code:`create_food101_data_files.py`: to transform the `FOOD101 <https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101>`_ dataset to the :code:`disk_folder` format
-- :code:`create_imagenet_ood_data_files.py`: to create test sets in :code:`disk_filelist` format for Imagenet based on `Imagenet-A <https://github.com/hendrycks/natural-adv-examples>`_ and `Imagenet-R <https://github.com/hendrycks/imagenet-r>`_
-- :code:`create_kitti_dist_data_files.py`: to create a :code:`disk_folder` dataset from `KITTI <http://www.cvlibs.net/datasets/kitti/>`_ where the goal is to estimate the distance of the closest car, van or truck
-- :code:`create_patch_camelyon_data_files.py`: to transform the `PatchCamelyon <https://github.com/basveeling/pcam>`_ dataset to the :code:`disk_folder` format
-- :code:`create_small_norb_azimuth_data_files.py` to create a :code:`disk_folder` dataset from `Small NORB <https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/>`_ where the goal is to find the azimuth or the photographed object
-- :code:`create_small_norb_elevation_data_files.py` to create a :code:`disk_folder` dataset from `Small NORB <https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/>`_ where the goal is to predict the elevation in the image
-- :code:`create_sun397_data_files.py` to transform the `SUN397 <https://vision.princeton.edu/projects/2010/SUN/>`_ dataset to the :code:`disk_filelist` format
-- :code:`create_ucf101_data_files.py`: to create a :code:`disk_folder` image action recognition dataset from the video action recognition dataset `UCF101 <https://www.crcv.ucf.edu/data/UCF101.php>`_ by extracting the middle frame
+- :code:`extra_scripts/datasets/create_caltech101_data_files.py`: to transform the `Caltech101 <http://www.vision.caltech.edu/Image_Datasets/Caltech101/>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_clevr_count_data_files.py`: to create a :code:`disk_filelist` dataset from `CLEVR <https://cs.stanford.edu/people/jcjohns/clevr/>`_ where the goal is to count the number of object in the scene
+- :code:`extra_scripts/datasets/create_clevr_dist_data_files.py`: to create a :code:`disk_filelist` dataset from `CLEVR <https://cs.stanford.edu/people/jcjohns/clevr/>`_ where the goal is to estimate the distance of the closest object in the scene
+- :code:`extra_scripts/datasets/create_dsprites_location_data_files.py`: to create a :code:`disk_folder` dataset from `dSprites <https://github.com/deepmind/dsprites-dataset>`_ where the goal is to estimate the x coordinate of the sprite on the scene
+- :code:`extra_scripts/datasets/create_dsprites_orientation_data_files.py`: to create a :code:`disk_folder` dataset from `dSprites <https://github.com/deepmind/dsprites-dataset>`_ where the goal is to estimate the orientation of the sprite on the scene
+- :code:`extra_scripts/datasets/create_dtd_data_files.py`: to transform the `DTD <https://www.robots.ox.ac.uk/~vgg/data/dtd/>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_euro_sat_data_files.py`: to transform the `EUROSAT <https://github.com/phelber/eurosat>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_fgvc_aircraft_data_files.py`: to transform the `FGVC Aircrafts <https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_food101_data_files.py`: to transform the `FOOD101 <https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_gtsrb_data_files.py`: to transform the `GTSRB <https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_imagenet_ood_data_files.py`: to create test sets in :code:`disk_filelist` format for Imagenet based on `Imagenet-A <https://gith`ub.com/hendrycks/natural-adv-examples>`_ and `Imagenet-R <https://github.com/hendrycks/imagenet-r>`_
+- :code:`extra_scripts/datasets/create_kitti_dist_data_files.py`: to create a :code:`disk_folder` dataset from `KITTI <http://www.cvlibs.net/datasets/kitti/>`_ where the goal is to estimate the distance of the closest car, van or truck
+- :code:`extra_scripts/datasets/create_oxford_pets_data_files.py`: to transform the `Oxford Pets <https://www.robots.ox.ac.uk/~vgg/data/pets/>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_patch_camelyon_data_files.py`: to transform the `PatchCamelyon <https://github.com/basveeling/pcam>`_ dataset to the :code:`disk_folder` format
+- :code:`extra_scripts/datasets/create_small_norb_azimuth_data_files.py` to create a :code:`disk_folder` dataset from `Small NORB <https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/>`_ where the goal is to find the azimuth or the photographed object
+- :code:`extra_scripts/datasets/create_small_norb_elevation_data_files.py` to create a :code:`disk_folder` dataset from `Small NORB <https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/>`_ where the goal is to predict the elevation in the image
+- :code:`extra_scripts/datasets/create_sun397_data_files.py` to transform the `SUN397 <https://vision.princeton.edu/projects/2010/SUN/>`_ dataset to the :code:`disk_filelist` format
+- :code:`extra_scripts/datasets/create_ucf101_data_files.py`: to create a :code:`disk_folder` image action recognition dataset from the video action recognition dataset `UCF101 <https://www.crcv.ucf.edu/data/UCF101.php>`_ by extracting the middle frame
 
 You can read more about how to download these datasets and run these scripts from `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_.
 

@@ -5,7 +5,6 @@
 
 import os
 import re
-import shutil
 import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -25,12 +24,11 @@ def in_temporary_directory(enabled: bool = True):
     it at the end of the context
     """
     if enabled:
-        temp_dir = tempfile.mkdtemp()
         old_cwd = os.getcwd()
-        os.chdir(temp_dir)
-        yield temp_dir
-        os.chdir(old_cwd)
-        shutil.rmtree(temp_dir)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+            yield temp_dir
+            os.chdir(old_cwd)
     else:
         yield os.getcwd()
 
@@ -161,9 +159,14 @@ class IntegrationTestLogs:
         log_path = os.path.join(self.run_dir, "log.txt")
         return parse_losses_from_log_file(log_path)
 
-    def get_accuracies(self) -> List[str]:
-        log_path = os.path.join(self.run_dir, "log.txt")
-        return parse_accuracies_from_log_file(log_path)
+    def get_accuracies(self, from_metrics_file: bool = False) -> List[str]:
+        if from_metrics_file:
+            metrics_path = os.path.join(self.run_dir, "metrics.json")
+            with open(metrics_path, "r") as f:
+                return [l.strip() for l in f]
+        else:
+            log_path = os.path.join(self.run_dir, "log.txt")
+            return parse_accuracies_from_log_file(log_path)
 
 
 def run_integration_test(

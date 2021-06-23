@@ -10,19 +10,19 @@ VISSL supports benchmarks inspired by the [VTAB](https://arxiv.org/pdf/1910.0486
 
 To run these benchmarks, the following data preparation scripts are mandatory:
 
-- `create_clevr_count_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to count the number of object in the scene
-- `create_clevr_dist_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to estimate the distance to the closest object in the scene
-- `create_dsprites_location_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the x coordinate of the sprite on the scene
-- `create_dsprites_orientation_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the orientation of the sprite on the scene
-- `create_euro_sat_data_files.py`: to transform the [EUROSAT](https://github.com/phelber/eurosat) dataset to the `disk_folder` format
-- `create_food101_data_files.py`: to transform the [FOOD101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101) dataset to the `disk_folder` format
-- `create_imagenet_ood_data_files.py`: to create test sets in `disk_filelist` format for Imagenet based on [Imagenet-A](https://github.com/hendrycks/natural-adv-examples) and [Imagenet-R](https://github.com/hendrycks/imagenet-r)
-- `create_kitti_dist_data_files.py`: to create a `disk_folder` dataset from [KITTI](http://www.cvlibs.net/datasets/kitti/) where the goal is to estimate the distance of the closest car, van or truck
-- `create_patch_camelyon_data_files.py`: to transform the [PatchCamelyon](https://github.com/basveeling/pcam) dataset to the `disk_folder` format
-- `create_small_norb_azimuth_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to find the azimuth or the photographed object
-- `create_small_norb_elevation_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to predict the elevation in the image
-- `create_sun397_data_files.py` to transform the [SUN397](https://vision.princeton.edu/projects/2010/SUN/) dataset to the `disk_filelist` format
-- `create_ucf101_data_files.py`: to create a `disk_folder` image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
+- `extra_scripts/datasets/create_clevr_count_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to count the number of object in the scene
+- `extra_scripts/datasets/create_clevr_dist_data_files.py`: to create a `disk_filelist` dataset from [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) where the goal is to estimate the distance to the closest object in the scene
+- `extra_scripts/datasets/create_dsprites_location_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the x coordinate of the sprite on the scene
+- `extra_scripts/datasets/create_dsprites_orientation_data_files.py`: to create a `disk_folder` dataset from [dSprites](https://github.com/deepmind/dsprites-dataset) where the goal is to estimate the orientation of the sprite on the scene
+- `extra_scripts/datasets/create_euro_sat_data_files.py`: to transform the [EUROSAT](https://github.com/phelber/eurosat) dataset to the `disk_folder` format
+- `extra_scripts/datasets/create_food101_data_files.py`: to transform the [FOOD101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101) dataset to the `disk_folder` format
+- `extra_scripts/datasets/create_imagenet_ood_data_files.py`: to create test sets in `disk_filelist` format for Imagenet based on [Imagenet-A](https://github.com/hendrycks/natural-adv-examples) and [Imagenet-R](https://github.com/hendrycks/imagenet-r)
+- `extra_scripts/datasets/create_kitti_dist_data_files.py`: to create a `disk_folder` dataset from [KITTI](http://www.cvlibs.net/datasets/kitti/) where the goal is to estimate the distance of the closest car, van or truck
+- `extra_scripts/datasets/create_patch_camelyon_data_files.py`: to transform the [PatchCamelyon](https://github.com/basveeling/pcam) dataset to the `disk_folder` format
+- `extra_scripts/datasets/create_small_norb_azimuth_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to find the azimuth or the photographed object
+- `extra_scripts/datasets/create_small_norb_elevation_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to predict the elevation in the image
+- `extra_scripts/datasets/create_sun397_data_files.py` to transform the [SUN397](https://vision.princeton.edu/projects/2010/SUN/) dataset to the `disk_filelist` format
+- `extra_scripts/datasets/create_ucf101_data_files.py`: to create a `disk_folder` image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
 
 ### Unified data preparation interface
 
@@ -98,7 +98,7 @@ The following sections will describe each of these data preparation scripts in d
 Run the `create_clevr_count_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_clevr_count_data_files.py \
+python extra_scripts/datasets/create_clevr_count_data_files.py \
     -i /path/to/clevr/ \
     -o /output_path/to/clevr_count
     -d
@@ -146,7 +146,7 @@ The resulting folder should have the following structure:
 Run the script where `/path/to/clevr/` is the path of the folder containing the `CLEVR_v1.0` folder:
 
 ```bash
-python extra_scripts/create_clevr_count_data_files.py \
+python extra_scripts/datasets/create_clevr_count_data_files.py \
     -i /path/to/clevr/ \
     -o /output_path/to/clevr_count
 ```
@@ -171,7 +171,7 @@ Once the dataset is prepared and available at `/path/to/clevr_dist`, the last st
 Run the `create_dsprites_location_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_dsprites_location_data_files.py \
+python extra_scripts/datasets/create_dsprites_location_data_files.py \
     -i /path/to/dsprites/ \
     -o /output_path/to/dsprites_loc
     -d
@@ -192,7 +192,7 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 Run the `create_dsprites_orientation_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_dsprites_orientation_data_files.py \
+python extra_scripts/datasets/create_dsprites_orientation_data_files.py \
     -i /path/to/dsprites/ \
     -o /output_path/to/dsprites_orient
     -d
@@ -208,12 +208,54 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 },
 ```
 
+### Preparing the Caltech101 data files
+
+Run the `create_caltech101_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/datasets/create_caltech101_data_files.py \
+    -i /path/to/caltech101/ \
+    -o /output_path/to/caltech101
+    -d
+```
+
+The folder `/output_path/to/caltech101` now contains the Caltech101 `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"caltech101_folder": {
+    "train": ["/output_path/to/caltech101/train", "<ignored>"],
+    "val": ["/output_path/to/caltech101/test", "<ignored>"]
+},
+```
+
+### Preparing the DTD data files
+
+Run the `create_dtd_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/datasets/create_dtd_data_files.py \
+    -i /path/to/dtd/ \
+    -o /output_path/to/dtd
+    -d
+```
+
+The folder `/output_path/to/dtd` now contains the DTD `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"dtd_folder": {
+    "train": ["/output_path/to/dtd/train", "<ignored>"],
+    "val": ["/output_path/to/dtd/test", "<ignored>"]
+},
+```
+
 ### Preparing the EuroSAT data files
 
 Run the `create_euro_sat_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_euro_sat_data_files.py \
+python extra_scripts/datasets/create_euro_sat_data_files.py \
     -i /path/to/euro_sat/ \
     -o /output_path/to/euro_sat
     -d
@@ -234,7 +276,7 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 Run the `create_food101_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_food101_data_files.py \
+python extra_scripts/datasets/create_food101_data_files.py \
     -i /path/to/food101/ \
     -o /output_path/to/food101
     -d
@@ -250,12 +292,55 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 },
 ```
 
+
+### Preparing the FGVC Aircrafts data files
+
+Run the `create_fgvc_aircraft_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/datasets/create_fgvc_aircraft_data_files.py \
+    -i /path/to/aircrafts/ \
+    -o /output_path/to/aircrafts
+    -d
+```
+
+The folder `/output_path/to/aircrafts` now contains the FGVC Aircrafts `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"aircrafts_folder": {
+    "train": ["/output_path/to/aircrafts/trainval", "<ignored>"],
+    "val": ["/output_path/to/aircrafts/test", "<ignored>"]
+},
+```
+
+### Preparing the GTSRB data files
+
+Run the `create_gtsrb_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/datasets/create_gtsrb_data_files.py \
+    -i /path/to/gtsrb/ \
+    -o /output_path/to/gtsrb
+    -d
+```
+
+The folder `/output_path/to/gtsrb` now contains the GTSRB `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"gtsrb_folder": {
+    "train": ["/output_path/to/gtsrb/train", "<ignored>"],
+    "val": ["/output_path/to/gtsrb/test", "<ignored>"]
+},
+```
+
 ### Preparing the Imagenet-A and Imagenet-R data files
 
 Run the `create_imagenet_ood_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_imagenet_ood_data_files.py \
+python extra_scripts/datasets/create_imagenet_ood_data_files.py \
     -i /path/to/input_folder/ \
     -o /path/to/output/
     -d
@@ -288,7 +373,7 @@ The last step is to set these paths in `dataset_catalog.json` and you are good t
 Run the `create_inaturalist2018_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_inaturalist2018_data_files.py \
+python extra_scripts/datasets/create_inaturalist2018_data_files.py \
     -i /path/to/inaturalist2018/ \
     -o /output_path/to/inaturalist2018
     -d
@@ -328,7 +413,7 @@ The resulting folder should have the following structure:
 Run the script where `/path/to/inaturalist2018/` is the path of the folder containing the expanded tars:
 
 ```bash
-python extra_scripts/create_inaturalist2018_data_files.py \
+python extra_scripts/datasets/create_inaturalist2018_data_files.py \
     -i /path/to/inaturalist2018/ \
     -o /output_path/to/inaturalist2018
 ```
@@ -340,7 +425,7 @@ The folder `/output_path/to/inaturalist2018` now contains the inaturalist2018 `d
 Run the `create_kitti_dist_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_kitti_dist_data_files.py \
+python extra_scripts/datasets/create_kitti_dist_data_files.py \
     -i /path/to/kitti/ \
     -o /output_path/to/kitti_distance
     -d
@@ -356,12 +441,55 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 },
 ```
 
+### Preparing the Oxford Flowers data files
+
+Run the `create_oxford_flowers_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/datasets/create_oxford_flowers_data_files.py \
+    -i /path/to/flowers/ \
+    -o /output_path/to/flowers
+    -d
+```
+
+The folder `/output_path/to/flowers` now contains the Oxford Pets `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"flowers_folder": {
+    "train": ["/output_path/to/flowers/train", "<ignored>"],
+    "val": ["/output_path/to/flowers/test", "<ignored>"]
+},
+```
+
+### Preparing the Oxford Pets data files
+
+Run the `create_oxford_pets_data_files.py` script with the `-d` option as follows:
+
+```bash
+python extra_scripts/datasets/create_oxford_pets_data_files.py \
+    -i /path/to/pets/ \
+    -o /output_path/to/pets
+    -d
+```
+
+The folder `/output_path/to/pets` now contains the Oxford Pets `disk_folder` dataset.
+The last step is to set this path in `dataset_catalog.json` and you are good to go:
+
+```
+"oxford_pets_folder": {
+    "train": ["/output_path/to/pets/train", "<ignored>"],
+    "val": ["/output_path/to/pets/test", "<ignored>"]
+},
+```
+
+
 ### Preparing the Patch Camelyon data files
 
 Run the `create_patch_camelyon_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_patch_camelyon_data_files.py \
+python extra_scripts/datasets/create_patch_camelyon_data_files.py \
     -i /path/to/pcam/ \
     -o /output_path/to/pcam
     -d
@@ -382,7 +510,7 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 Run the `create_small_norb_azimuth_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_small_norb_azimuth_data_files.py \
+python extra_scripts/datasets/create_small_norb_azimuth_data_files.py \
     -i /path/to/snorb/ \
     -o /output_path/to/snorb_azimuth
     -d
@@ -403,7 +531,7 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 Run the `create_small_norb_elevation_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_small_norb_elevation_data_files.py \
+python extra_scripts/datasets/create_small_norb_elevation_data_files.py \
     -i /path/to/snorb/ \
     -o /output_path/to/snorb_elevation
     -d
@@ -424,7 +552,7 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 Run the `create_stanford_cars_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_stanford_cars_data_files.py \
+python extra_scripts/datasets/create_stanford_cars_data_files.py \
     -i /path/to/cars/ \
     -o /output_path/to/cars
     -d
@@ -445,7 +573,7 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 Run the `create_sun397_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_sun397_data_files.py \
+python extra_scripts/datasets/create_sun397_data_files.py \
     -i /path/to/sun397/ \
     -o /path/to/sun397/ \
     -d
@@ -469,7 +597,7 @@ The last step is to set this path in `dataset_catalog.json` and you are good to 
 Run the `create_ucf101_data_files.py` script with the `-d` option as follows:
 
 ```bash
-python extra_scripts/create_ucf101_data_files.py \
+python extra_scripts/datasets/create_ucf101_data_files.py \
     -i /path/to/ucf101/ \
     -o /output_path/to/ucf101
     -d
@@ -515,7 +643,7 @@ ucf101/
 Run the following commands (where `/path/to/ucf101` is the path of the folder above):
 
 ```bash
-python extra_scripts/create_ucf101_data_files.py \
+python extra_scripts/datasets/create_ucf101_data_files.py \
     -i /path/to/ucf101/ \
     -o /output_path/to/ucf101
 ```
@@ -531,7 +659,7 @@ The following scripts are optional as VISSL's `dataset_catalog.py` supports read
 ### Preparing COCO data files
 
 ```bash
-python extra_scripts/create_coco_data_files.py \
+python extra_scripts/datasets/create_coco_data_files.py \
     --json_annotations_dir /path/to/coco/annotations/ \
     --output_dir /tmp/vissl/datasets/coco/ \
     --train_imgs_path /path/to/coco/train2014 \
@@ -551,7 +679,7 @@ output_dir='/path/to/my/output/dir/voc2012'
 
 - For VOC2007 dataset:
 ```bash
-python extra_scripts/create_voc_data_files.py \
+python extra_scripts/datasets/create_voc_data_files.py \
     --data_source_dir /path/to/VOC2007/ \
     --output_dir /tmp/vissl/datasets/voc07/
 ```
@@ -559,7 +687,7 @@ python extra_scripts/create_voc_data_files.py \
 - For VOC2012 dataset:
 
 ```bash
-python extra_scripts/create_voc_data_files.py \
+python extra_scripts/datasets/create_voc_data_files.py \
     --data_source_dir /path/to/VOC2012/ \
     --output_dir /tmp/vissl/datasets/voc12/
 ```
@@ -568,19 +696,19 @@ python extra_scripts/create_voc_data_files.py \
 ### Preparing ImageNet and Places{205, 365} data files
 
 ```bash
-python extra_scripts/create_imagenet_data_files.py \
+python extra_scripts/datasets/create_imagenet_data_files.py \
     --data_source_dir /path/to/imagenet_full_size/ \
     --output_dir /tmp/vissl/datasets/imagenet1k/
 ```
 
 ```bash
-python extra_scripts/create_imagenet_data_files.py \
+python extra_scripts/datasets/create_imagenet_data_files.py \
     --data_source_dir /path/to/places205/ \
     --output_dir /tmp/vissl/datasets/places205/
 ```
 
 ```bash
-python extra_scripts/create_imagenet_data_files.py \
+python extra_scripts/datasets/create_imagenet_data_files.py \
     --data_source_dir /path/to/places365/ \
     --output_dir /tmp/vissl/datasets/places365/
 ```
@@ -593,7 +721,7 @@ Hence the labels are of shape 5011 x 20. We generate 5 independent samples (for 
 pick the positive `k` samples and `19 * k` negatives. Rest of the samples are ignored. We perform low-shot image classification on various different layers on the model (AlexNet, ResNet-50). The targets `targets_data_file` is usually obtained by extracting features for a given layer. Below command generates 5 samples for various `k` values:
 
 ```bash
-python extra_scripts/create_voc_low_shot_samples.py \
+python extra_scripts/datasets/create_voc_low_shot_samples.py \
     --targets_data_file /path/to/voc/numpy_targets.npy \
     --output_path /tmp/vissl/datasets/voc07/low_shot/labels/ \
     --k_values "1,2,4,8,16,32,64,96" \
@@ -616,6 +744,27 @@ python extra_scripts/generate_jigsaw_permutations.py \
 ```
 
 <br>
+
+## Converting FSDP checkpoints
+
+VISSL allows to pretrain algorithms such as SwAV with FullyShardedDataParallel (FSDP) instead of DistributedDataParallel (DDP) to reduce the amount of GPU memory used during training and therefore train much bigger models.
+
+FSDP models will save sharded checkpoints (one parameter file for each model shard, i.e. one parameter file for each GPU) instead of consolidated checkpoints (which contain all the weights).
+
+While this allow faster training, it also couples the evaluation with the pre-training by forcing the benchmarking code to use exactly as many GPUs as the pre-training did. In some cases (linear evaluation), we would like to reduce the number of GPUs used during evaluation.
+
+The `convert_sharded_checkpoint.py` script allow to transform sharded training checkpoints, containing parameters and optimizer states, into evaluation checkpoints containing only the parameter of the trunk to evaluate them, and compatible with any number of GPUs.
+
+You can use the script like so:
+
+```
+python extra_scripts/convert_sharded_checkpoint.py \
+    -i path/to/fsdp_checkpoint.torch \
+    -o path/to/eval_checkpoint.torch \
+    -t consolidated
+```
+
+The resulting `eval_checkpoint.torch` will be usable in DDP mode or FSDP mode, with any number of GPU.
 
 ## Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
 We provide scripts to convert VISSL models to [Detectron2](https://github.com/facebookresearch/detectron2) and [ClassyVision](https://github.com/facebookresearch/ClassyVision) compatible models.

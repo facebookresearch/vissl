@@ -22,6 +22,7 @@ VISSL provides reference implementation of a large number of self-supervision ap
    - [SwAV](#SwAV)
    - [MoCoV2](#MoCoV2)
    - [Barlow Twins](#BarlowTwins)
+   - [DINO](#DINO)
 
 ## Torchvision and VISSL
 
@@ -212,3 +213,11 @@ There is some standard deviation in linear results if we run the same eval sever
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
 | [Barlow Twins](https://arxiv.org/abs/2103.03230)   |    RN50 - 300 epochs - 2048 batch-size         |    ImageNet-1K      | 70.75 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/barlow_twins/barlow_twins_32gpus_4node_imagenet1k_300ep_resnet50.torch)
+| [Barlow Twins](https://arxiv.org/abs/2103.03230)   |    RN50 - 1000 epochs - 2048 batch-size         |    ImageNet-1K      | 71.80 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/barlow_twins/barlow_twins_32gpus_4node_imagenet1k_1000ep_resnet50.torch)
+
+### DINO
+
+The model is obtained with [this config](https://github.com/facebookresearch/vissl/blob/master/configs/config/pretrain/dino/dino_16gpus_deits16.yaml).
+| Method | Model | PreTrain dataset | ImageNet k-NN acc. | URL |
+| ------ | ----- | ---------------- | ------------------- | --- |
+| [DINO](https://arxiv.org/abs/)   |    DeiT-S/16 - 300 epochs - 1024 batch-size         |    ImageNet-1K      | 73.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/dino_300ep_deitsmall16/model_final_checkpoint_phase299.torch)

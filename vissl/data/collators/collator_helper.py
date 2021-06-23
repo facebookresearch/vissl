@@ -98,14 +98,9 @@ class MultiDimensionalTensor(object):
         for crop_num in range(num_tensors):
             img = tensor_list[crop_num]
             nested_output_tensor[
-                (crop_num * b) : (crop_num + 1) * b,
-                :,
-                : img.shape[2],
-                : img.shape[3],
+                (crop_num * b) : (crop_num + 1) * b, :, : img.shape[2], : img.shape[3]
             ].copy_(img)
             mask[
-                (crop_num * b) : (crop_num + 1) * b,
-                : img.shape[2],
-                : img.shape[3],
+                (crop_num * b) : (crop_num + 1) * b, : img.shape[2], : img.shape[3]
             ] = False
         return MultiDimensionalTensor(nested_output_tensor, mask, image_sizes)

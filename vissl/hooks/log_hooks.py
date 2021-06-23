@@ -245,6 +245,11 @@ class LogLossLrEtaHook(ClassyHook):
                     "eta": eta_string,
                     "peak_mem(M)": peak_mem_used,
                 }
+
+                if iteration == 1:
+                    # Set max iterations. Currently used in benchmark_suite_scheduler.py
+                    log_data["max_iterations"] = task.max_iteration
+
                 if self.btime_freq and len(batch_times) >= self.btime_freq:
                     rolling_avg_time = (
                         sum(batch_times[-self.btime_freq :]) / self.btime_freq
@@ -386,14 +391,18 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                             of phase or iteration at which checkpointing is being done
         """
         phase_idx = task.phase_idx
-        num_epochs = task.num_epochs
+        # num_train_phases = num_epochs * num_phases_per_epoch
+        # For OSS use, num_train_phases will be equal to num_epochs
+        num_train_phases = task.num_train_phases
 
         # check if we need to checkpoint this phase
         is_checkpointing_phase = is_checkpoint_phase(
-            mode_num, mode_frequency, train_phase_idx, num_epochs, mode
+            mode_num, mode_frequency, train_phase_idx, num_train_phases, mode
         )
         is_final_train_phase = (
-            (train_phase_idx == (num_epochs - 1)) and task.train and mode == "phase"
+            (train_phase_idx == (num_train_phases - 1))
+            and task.train
+            and mode == "phase"
         )
 
         # handle checkpoint:
@@ -486,7 +495,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 save_metrics[metric_key] = meter_value
                 logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
         meter_file = f"{checkpoint_folder}/metrics.json"
-        save_file(save_metrics, meter_file)
+        save_file(save_metrics, meter_file, append_to_json=True)
 
 
 class LogPerfTimeMetricsHook(ClassyHook):

@@ -55,6 +55,14 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "aircrafts_folder": {
+        "train": ["<img_path>", "<unused>"],
+        "val": ["<img_path>", "<unused>"]
+    },
+    "caltech101_folder": {
+        "train": ["<img_path>", "<unused>"],
+        "val": ["<img_path>", "<unused>"]
+    },
     "clevr_count_filelist": {
         "train": ["<path_to_train_images.npy>", "<path_to_train_labels.npy>"],
         "val": ["<path_to_val_images.npy>", "<path_to_val_labels.npy>"]
@@ -71,6 +79,10 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "dtd_folder": {
+        "train": ["<img_path>", "<unused>"],
+        "val": ["<img_path>", "<unused>"]
+    },
     "euro_sat_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
@@ -79,7 +91,19 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "gtsrb_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
     "kitti_dist_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "oxford_flowers_folder": {
+        "train": ["<img_path>", "<lbl_path>"],
+        "val": ["<img_path>", "<lbl_path>"]
+    },
+    "oxford_pets_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },

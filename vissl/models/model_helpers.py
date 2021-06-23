@@ -18,6 +18,7 @@ from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.utils.activation_checkpointing import checkpoint_trunk
 from vissl.utils.misc import is_apex_available
 
+
 # Tuple of classes of BN layers.
 _bn_cls = (nn.BatchNorm2d, torch.nn.modules.batchnorm.SyncBatchNorm)
 
@@ -55,13 +56,11 @@ def is_feature_extractor_model(model_config):
         - trunk is frozen
         - number of features specified for features extraction > 0
     """
-    if (
+    return (
         model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
         and model_config.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
         and len(model_config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP) > 0
-    ):
-        return True
-    return False
+    )
 
 
 def get_trunk_output_feature_names(model_config):

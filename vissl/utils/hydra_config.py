@@ -301,6 +301,17 @@ def infer_losses_config(cfg):
     Each loss has additional set of parameters that can be inferred to ensure smooth
     training in case user forgets to adjust all the parameters.
     """
+    train_transforms = cfg.DATA.TRAIN.TRANSFORMS
+    total_num_crops = next(
+        (
+            transform
+            for transform in train_transforms
+            if transform["name"] == "ImgPilToMultiCrop"
+        ),
+        None,
+    )
+    total_num_crops = total_num_crops["total_num_crops"] if total_num_crops else None
+
     # some inference for the Info-NCE loss.
     if "simclr_info_nce_loss" in cfg.LOSS.name:
         cfg.LOSS[cfg.LOSS.name]["buffer_params"]["world_size"] = (
@@ -323,7 +334,6 @@ def infer_losses_config(cfg):
     if cfg.LOSS.name == "multicrop_simclr_info_nce_loss":
         world_size = cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.world_size
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
-        total_num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
         cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.world_size = world_size
         cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.effective_batch_size = (
             batch_size * world_size
@@ -337,9 +347,7 @@ def infer_losses_config(cfg):
         cfg.LOSS.deepclusterv2_loss.BATCHSIZE_PER_REPLICA = (
             cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         )
-        cfg.LOSS.deepclusterv2_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0][
-            "total_num_crops"
-        ]
+        cfg.LOSS.deepclusterv2_loss.num_crops = total_num_crops
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the SwAV loss.
@@ -356,7 +364,7 @@ def infer_losses_config(cfg):
         )
         cfg.LOSS.swav_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"]
         cfg.LOSS.swav_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
-        cfg.LOSS.swav_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.LOSS.swav_loss.num_crops = total_num_crops
         from vissl.utils.checkpoint import get_checkpoint_folder
 
         cfg.LOSS.swav_loss.output_dir = get_checkpoint_folder(cfg)
@@ -378,9 +386,8 @@ def infer_losses_config(cfg):
         cfg.LOSS.swav_momentum_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][
             -1
         ]
-        cfg.LOSS.swav_momentum_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0][
-            "total_num_crops"
-        ]
+
+        cfg.LOSS.swav_momentum_loss.num_crops = total_num_crops
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
@@ -391,6 +398,15 @@ def infer_losses_config(cfg):
         cfg.LOSS.swav_momentum_loss.queue.local_queue_length = (
             queue_length // world_size
         )
+
+    # some inference for Simdist loss.
+    if cfg.LOSS.name == "dino_loss":
+        assert len(cfg.MODEL.HEAD.PARAMS) == 1
+        assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
+        cfg.LOSS.dino_loss.output_dim = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"][0]
+        cfg.LOSS.dino_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
+
     return cfg
 
 
@@ -551,3 +567,8 @@ def infer_and_assert_hydra_config(cfg):
     # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
     # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
     del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
+
+    if cfg.DATA.TRAIN.BASE_DATASET == "generic_ssl":
+        assert (
+            cfg.DATA.TRAIN.get("TRAIN_PHASES_PER_EPOCH", 1) == 1
+        ), "When using the generic_ssl, we must set TRAIN_PHASES_PER_EPOCH = 1."

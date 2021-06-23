@@ -22,6 +22,7 @@ from vissl.utils.activation_checkpointing import (
 )
 from vissl.utils.misc import is_apex_available
 from vissl.utils.perf_stats import PerfTimer
+from vissl.utils.profiler import record_function
 
 
 if is_apex_available():
@@ -135,7 +136,7 @@ def standard_train_step(task):
 
     with grad_context, ddp_context, torch_amp_context:
         # Forward pass of the model
-        with PerfTimer("forward", perf_stats):
+        with PerfTimer("forward", perf_stats), record_function("forward"):
             if task.enable_manual_gradient_reduction:
                 # Manually sync params and buffers for DDP.
                 manual_sync_params(task.model)
@@ -153,7 +154,7 @@ def standard_train_step(task):
         task.run_hooks(SSLClassyHookFunctions.on_forward.name)
 
         # Compute loss
-        with PerfTimer("loss_compute", perf_stats):
+        with PerfTimer("loss_compute", perf_stats), record_function("loss_compute"):
             local_loss = task.loss(model_output, target)
 
         # Reduce the loss value across all nodes and gpus.
@@ -186,7 +187,7 @@ def standard_train_step(task):
 
     # Run backward now and update the optimizer
     if task.train:
-        with PerfTimer("backward", perf_stats):
+        with PerfTimer("backward", perf_stats), record_function("backward"):
 
             task.optimizer.zero_grad()
             if task.amp_type == AmpType.APEX:
@@ -210,7 +211,7 @@ def standard_train_step(task):
 
         # Stepping the optimizer also updates learning rate, momentum etc
         # according to the schedulers (if any).
-        with PerfTimer("optimizer_step", perf_stats):
+        with PerfTimer("optimizer_step", perf_stats), record_function("optimizer_step"):
             assert task.where < 1.0, (
                 "Optimizer being called with where=1.0. This should not happen "
                 "as where=1.0 means training is already finished. Please debug your "

@@ -9,6 +9,7 @@ from typing import List
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.config import AttrDict
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
+from vissl.hooks.dino_hooks import DINOHook
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
 from vissl.hooks.log_hooks import (  # noqa
     DumpMemoryOnException,
@@ -96,6 +97,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
                 SwAVMomentumNormalizePrototypesHook(),
             ]
         )
+    if cfg.LOSS.name == "dino_loss":
+        hooks.append(DINOHook())
     if cfg.LOSS.name == "deepclusterv2_loss":
         hooks.extend([InitMemoryHook(), ClusterMemoryHook()])
     if cfg.LOSS.name == "moco_loss":

@@ -26,7 +26,7 @@ from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
 from vissl.data.synthetic_dataset import SyntheticImageDataset
 from vissl.data.torchvision_dataset import TorchvisionDataset
-from vissl.utils.misc import setup_multiprocessing_method, set_dataloader_seeds
+from vissl.utils.misc import set_dataloader_seeds, setup_multiprocessing_method
 
 
 __all__ = [
@@ -54,7 +54,7 @@ DATA_SOURCES_WITH_SUBSET_SUPPORT = {
 }
 
 
-def build_dataset(cfg, split):
+def build_dataset(cfg, split, **kwargs):
     """
     Given the user defined config and the dataset split (train/val), build
     the dataset.
@@ -122,9 +122,7 @@ def get_sampler(dataset, dataset_config, sampler_seed=0):
                 seed=sampler_seed,
             )
         else:
-            data_sampler = torch.utils.data.distributed.DistributedSampler(
-                dataset, seed=sampler_seed
-            )
+            data_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
         logging.info("Created the Distributed Sampler....")
         print_sampler_config(data_sampler)
     else:
@@ -140,7 +138,7 @@ def debugging_worker_init_fn(worker_id: int):
     torch.manual_seed(worker_id)
 
 
-def get_loader(
+def build_dataloader(
     dataset: GenericSSLDataset,
     dataset_config: dict,
     num_dataloader_workers: int,
@@ -150,6 +148,7 @@ def get_loader(
     sampler_seed=0,
     get_sampler=get_sampler,
     worker_init_fn=set_dataloader_seeds,
+    **kwargs,
 ):
     """
     Get the dataloader for the given satasets and data split
@@ -199,18 +198,25 @@ def get_loader(
         drop_last=dataset_config["DROP_LAST"],
         worker_init_fn=worker_init_fn,
     )
+    enable_async_gpu_copy = dataset.cfg["DATA"]["ENABLE_ASYNC_GPU_COPY"]
+    dataloader = wrap_dataloader(dataloader, enable_async_gpu_copy, device)
 
-    # If the targeted device is CUDA, set up async device copy:
-    # - makes sure that samples are on device
-    # - overlap the copy with the previous batch computation.
+    return dataloader
+
+
+def wrap_dataloader(dataloader, enable_async_gpu_copy: bool, device: torch.device):
+    """
+    If the targeted device is CUDA, set up async device copy:
+        - makes sure that samples are on device
+        - overlap the copy with the previous batch computation.
+    """
     if device.type == "cuda":
-        if dataset.cfg["DATA"]["ENABLE_ASYNC_GPU_COPY"]:
+        if enable_async_gpu_copy:
             logging.info("Wrapping the dataloader to async device copies")  # NOQA
             dataloader = DataloaderAsyncGPUWrapper(dataloader)
         else:
             logging.info("Wrapping the dataloader to synchronous device copies")  # NOQA
             dataloader = DataloaderSyncGPUWrapper(dataloader)
-
     else:
         logging.warning("Selecting a CPU device")
 

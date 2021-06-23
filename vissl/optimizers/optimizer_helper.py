@@ -12,17 +12,18 @@ from vissl.utils.misc import is_apex_available
 
 _CONV_TYPES = (nn.Conv1d, nn.Conv2d, nn.Conv3d)
 
-_BN_TYPES = (
+_NORM_TYPES = (
     nn.BatchNorm1d,
     nn.BatchNorm2d,
     nn.BatchNorm3d,
     nn.SyncBatchNorm,  # pytorch SyncBN
+    nn.LayerNorm,
 )
 
 if is_apex_available():
     import apex
 
-    _BN_TYPES += (apex.parallel.SyncBatchNorm,)
+    _NORM_TYPES += (apex.parallel.SyncBatchNorm,)
 
 
 def _get_bn_optimizer_params(
@@ -133,6 +134,16 @@ def get_optimizer_param_groups(
             }
         ]
     """
+    if "weight_decay" in optimizer_schedulers:
+        weight_decay_main_config = optimizer_schedulers["weight_decay"]
+    else:
+        weight_decay_main_config = optimizer_config.weight_decay
+    if "weight_decay_head" in optimizer_schedulers:
+        weight_decay_head_main_config = optimizer_schedulers["weight_decay_head"]
+    else:
+        weight_decay_head_main_config = (
+            optimizer_config.head_optimizer_params.weight_decay
+        )
     if optimizer_config.construct_single_param_group_only:
         # If single param_group is asked, we just use the parameters
         # returned from model.parameters(). This is useful in FSDP
@@ -141,7 +152,7 @@ def get_optimizer_param_groups(
             {
                 "params": list(model.parameters()),
                 "lr": optimizer_schedulers["lr"],
-                "weight_decay": optimizer_config.weight_decay,
+                "weight_decay": weight_decay_main_config,
             }
         ]
     # if the different LR, weight decay value for head is not specified, we use the
@@ -161,14 +172,20 @@ def get_optimizer_param_groups(
         if "head" in name and (
             isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES)
         ):
-            head_regularized_params.append(module.weight)
+            # weight normalized linear layers, used in swav_prototypes_head for example,
+            # have "weight_g" and "weight_v" parameters in place of "weight"
+            if hasattr(module, "weight_g"):
+                head_regularized_params.append(module.weight_g)
+                head_regularized_params.append(module.weight_v)
+            else:
+                head_regularized_params.append(module.weight)
             if module.bias is not None:
                 if optimizer_config["regularize_bias"]:
                     head_regularized_params.append(module.bias)
                 else:
                     head_unregularized_params.append(module.bias)
-        # head, BN layer
-        elif "head" in name and isinstance(module, _BN_TYPES):
+        # head, BN/LN layer
+        elif "head" in name and isinstance(module, _NORM_TYPES):
             (
                 head_regularized_params,
                 head_unregularized_params,
@@ -180,14 +197,18 @@ def get_optimizer_param_groups(
             )
         # trunk, Linear/Conv
         elif isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES):
-            trunk_regularized_params.append(module.weight)
+            if hasattr(module, "weight_g"):  # weight_norm linear layers
+                trunk_regularized_params.append(module.weight_g)
+                trunk_regularized_params.append(module.weight_v)
+            else:
+                trunk_regularized_params.append(module.weight)
             if module.bias is not None:
                 if optimizer_config["regularize_bias"]:
                     trunk_regularized_params.append(module.bias)
                 else:
                     trunk_unregularized_params.append(module.bias)
-        # trunk, BN layer
-        elif isinstance(module, _BN_TYPES):
+        # trunk, BN/LN layer
+        elif isinstance(module, _NORM_TYPES):
             (
                 trunk_regularized_params,
                 trunk_unregularized_params,
@@ -268,7 +289,7 @@ def get_optimizer_param_groups(
         {
             "params": trunk_regularized_params,
             "lr": optimizer_schedulers["lr"],
-            "weight_decay": optimizer_config.weight_decay,
+            "weight_decay": weight_decay_main_config,
         },
         {
             "params": trunk_unregularized_params,
@@ -278,7 +299,7 @@ def get_optimizer_param_groups(
         {
             "params": head_regularized_params,
             "lr": optimizer_schedulers["lr_head"],
-            "weight_decay": optimizer_config.head_optimizer_params.weight_decay,
+            "weight_decay": weight_decay_head_main_config,
         },
         {
             "params": head_unregularized_params,
@@ -288,7 +309,11 @@ def get_optimizer_param_groups(
     ]
     if len(regularized_params) > 0:
         param_groups.append(
-            {"params": regularized_params, "lr": optimizer_schedulers["lr"]}
+            {
+                "params": regularized_params,
+                "lr": optimizer_schedulers["lr"],
+                "weight_decay": weight_decay_main_config,
+            }
         )
     if len(unregularized_params) > 0:
         param_groups.append(

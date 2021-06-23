@@ -5,11 +5,7 @@
 
 import io
 import logging
-from typing import (
-    Any,
-    Iterable,
-    Tuple,
-)
+from typing import Any, Iterable, Tuple
 
 import torch
 from classy_vision.generic.distributed_util import get_rank, get_world_size

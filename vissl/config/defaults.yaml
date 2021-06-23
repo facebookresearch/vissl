@@ -159,11 +159,17 @@ config:
   # PROFILING
   # ----------------------------------------------------------------------------------- #
   PROFILING:
-    # How many iterations do we wait before running the profiler
+    # How many iterations do we wait before starting the profiler
     START_ITERATION: 0
+    # How any iterations does the profiler run while not collecting outputs
+    # Data will start to be collected after START_ITERATION + WARMUP_ITERATIONS
+    WARMUP_ITERATIONS: 0
     # How many iterations do we run the profiler for: after this number
     # of iteration is reached the profiling is disabled
     NUM_ITERATIONS: 10
+    # Whether or not to interrupt the training after reaching the last
+    # profiling iteration (after the profiling is done)
+    STOP_TRAINING_AFTER_PROFILING: False
     # Folder where the traces will be generated
     OUTPUT_FOLDER: "."
     # Ranks on which the profiling will be performed
@@ -175,6 +181,17 @@ config:
       # the traces complemented by estimations of the memory usage due to
       # activations and associated activation gradients
       TRACK_BY_LAYER_MEMORY: False
+    # The available options for the runtime profiler
+    RUNTIME_PROFILING:
+      # To enable the runtime profiler
+      USE_PROFILER: False
+      # Whether or not to profile the CPU activities
+      PROFILE_CPU: True
+      # Whether or not to profile the GPU activities
+      PROFILE_GPU: True
+      # To force the use of the legacy autograd profiler even if
+      # the new pytorch profiler based on kineto is available
+      LEGACY_PROFILER: False
 
   # ----------------------------------------------------------------------------------- #
   # DATA
@@ -202,6 +219,9 @@ config:
       REMOVE_IMG_PATH_PREFIX: ""
       # what prefix to replace the old prefix with. Could stay empty too
       NEW_IMG_PATH_PREFIX: ""
+      # Base dataset to use to wrap the datasets defined. The default and only current oss supported
+      # default is the generic_ssl_dataset.
+      BASE_DATASET: "generic_ssl"
       # name of the dataset. Meaningful and used to do lookup in the dataset_catalog.json
       # it has the advantage that user needs to full the dataset_catalog.json once
       # and then simply use the dataset name without having to specify data paths every time.
@@ -361,6 +381,9 @@ config:
         SEED: 0
         IS_BALANCED: False
         SKIP_NUM_SAMPLES: 0
+      # Base dataset to use to wrap the datasets defined. The default and only current oss supported
+      # default is the generic_ssl_dataset.
+      BASE_DATASET: "generic_ssl"
       DATASET_NAMES: ["imagenet1k_folder"]
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: ""
@@ -509,6 +532,9 @@ config:
       mixed_precision: True
       fp32_reduce_scatter: False  # Only makes sense to be True when mixed_precision is True.
       compute_dtype: float32  # Choose "float32" or "float16"
+      bucket_cap_mb: 0
+      clear_autocast_cache: True
+      verbose: True
     # ----------------------------------------------------------------------------------- #
     # Feature evaluation settings
     # ----------------------------------------------------------------------------------- #
@@ -892,6 +918,20 @@ config:
         start_iter: 0
         local_queue_length: 0 # automatically inferred to queue_length // world_size
 
+    # ----------------------------------------------------------------------------------- #
+    # DINO LOSS (Specific to DINO https://arxiv.org/abs/2104.14294)
+    # ----------------------------------------------------------------------------------- #
+    dino_loss:
+      momentum: 0.996
+      student_temp: 0.1
+      teacher_temp_min: 0.04
+      teacher_temp_max: 0.07
+      teacher_temp_warmup_iters: 37500 # 30 epochs
+      crops_for_teacher: [0, 1]
+      ema_center: 0.9
+      normalize_last_layer: true
+      output_dim: 65536  # automatically inferred from model HEAD settings
+
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#
@@ -1151,8 +1191,8 @@ config:
     NAME: "vissl"
     # Comment of the job on SLURM
     COMMENT: "vissl job"
-    # Partition of SLURM on which to run the job
-    PARTITION: "learnfair"
+    # Partition of SLURM on which to run the job. This is a required field if using SLURM.
+    PARTITION: ""
     # Where the logs produced by the SLURM jobs will be output
     LOG_FOLDER: "."
     # Maximum number of hours / minutes needed by the job to complete. Above this limit, the job might be pre-empted.

@@ -7,10 +7,9 @@ from typing import List
 
 import torch
 import torch.nn as nn
-from fairscale.nn.data_parallel import auto_wrap_bn
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
-from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.fsdp_utils import fsdp_auto_wrap_bn, fsdp_wrapper
 
 
 @register_model_head("mlp")
@@ -114,33 +113,23 @@ class MLP(nn.Module):
 
 
 @register_model_head("mlp_fsdp")
-class MLP_FSDP(nn.Module):
-    """
-    A version of the MLP module wrapped with FSDP
-    """
-
-    def __init__(
-        self,
-        model_config: AttrDict,
-        dims: List[int],
-        use_bn: bool = False,
-        use_relu: bool = False,
-        use_dropout: bool = False,
-        use_bias: bool = True,
-        skip_last_layer_relu_bn: bool = True,
-    ):
-        super().__init__()
-        mlp = MLP(
-            model_config,
-            dims,
-            use_bn,
-            use_relu,
-            use_dropout,
-            use_bias,
-            skip_last_layer_relu_bn,
-        )
-        mlp = auto_wrap_bn(mlp, single_rank_pg=False)
-        self.mlp = fsdp_wrapper(mlp, **model_config.FSDP_CONFIG)
-
-    def forward(self, batch: torch.Tensor):
-        return self.mlp(batch)
+def MLP_FSDP(
+    model_config: AttrDict,
+    dims: List[int],
+    use_bn: bool = False,
+    use_relu: bool = False,
+    use_dropout: bool = False,
+    use_bias: bool = True,
+    skip_last_layer_relu_bn: bool = True,
+):
+    mlp = MLP(
+        model_config,
+        dims,
+        use_bn,
+        use_relu,
+        use_dropout,
+        use_bias,
+        skip_last_layer_relu_bn,
+    )
+    mlp = fsdp_auto_wrap_bn(mlp)
+    return fsdp_wrapper(mlp, **model_config.FSDP_CONFIG)

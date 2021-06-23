@@ -23,7 +23,7 @@ class SwAVPrototypesHead(nn.Module):
 
     The projected features are L2 normalized before clustering step.
 
-    Input: 4D torch.tensor of shape (N x C x H x W)
+    Input: 2D torch.tensor of shape (N x C)
 
     Output: List(2D torch.tensor of shape N x num_clusters)
     """
@@ -38,6 +38,8 @@ class SwAVPrototypesHead(nn.Module):
         return_embeddings: bool = True,
         skip_last_bn: bool = True,
         normalize_feats: bool = True,
+        activation_name: str = "ReLU",
+        use_weight_norm_prototypes: bool = False,
     ):
         """
         Args:
@@ -61,6 +63,7 @@ class SwAVPrototypesHead(nn.Module):
 
                         This could be particularly useful when performing full finetuning on
                         hidden layers.
+            use_weight_norm_prototypes (bool): whether to use weight norm module for the prototypes layers.
         """
 
         super().__init__()
@@ -80,7 +83,10 @@ class SwAVPrototypesHead(nn.Module):
                         momentum=model_config.HEAD.BATCHNORM_MOMENTUM,
                     )
                 )
-            layers.append(nn.ReLU(inplace=True))
+            if activation_name == "ReLU":
+                layers.append(nn.ReLU(inplace=True))
+            if activation_name == "GELU":
+                layers.append(nn.GELU())
             last_dim = dim
         self.projection_head = nn.Sequential(*layers)
 
@@ -88,9 +94,11 @@ class SwAVPrototypesHead(nn.Module):
         if len(num_clusters) > 0:
             self.nmb_heads = len(num_clusters)
             for i, k in enumerate(num_clusters):
-                self.add_module(
-                    "prototypes" + str(i), nn.Linear(dims[-1], k, bias=False)
-                )
+                proto = nn.Linear(dims[-1], k, bias=False)
+                if use_weight_norm_prototypes:
+                    proto = nn.utils.weight_norm(proto)
+                    proto.weight_g.data.fill_(1)
+                self.add_module("prototypes" + str(i), proto)
         else:
             self.nmb_heads = 0
         self.return_embeddings = return_embeddings
@@ -113,7 +121,6 @@ class SwAVPrototypesHead(nn.Module):
         if self.nmb_heads > 0:
             for i in range(self.nmb_heads):
                 out.append(getattr(self, "prototypes" + str(i))(batch))
-
         return out
 
 

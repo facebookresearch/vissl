@@ -1,0 +1,22 @@
+{
+    "params": {
+           "evaluation_iter_freq": -1,
+           "evaluation_phase_freq": -1,
+           "evaluate_final_phase": true,
+           "autoload_slurm_evaluator_checkpoint": false,
+           "slurm_evaluator_checkpoint": null,
+           "auto_retry_evaluations": false,
+           "retry_evaluation_job_ids": [],
+           "max_retries": 3,
+           "pytorch_ports": [40050]
+       },
+       "slurm_options": {
+            "NAME": "vissl",
+            "COMMENT": "vissl evaluation job",
+            "CONSTRAINT": "",
+            "TIMEOUT_MIN": 4320,
+            "CPUS_PER_TASK": 8,
+            "MEM_GB": 16,
+            "ADDITIONAL_PARAMETERS": {}
+        }
+}
