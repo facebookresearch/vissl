@@ -359,9 +359,7 @@ class SelfSupervisionTrainer(object):
         for split in self.task.available_splits:
             logging.info(f"Extracting features for partition: {split.lower()}")
             self.task.data_iterator = iter(self.task.dataloaders[split.lower()])
-            features[split.lower()] = self._get_split_features(
-                feat_names, self.cfg, self.task
-            )
+            features[split.lower()] = self._get_split_features(feat_names, self.task)
             logging.info(f"Done getting features for partition: {split.lower()}")
 
         if hasattr(self.task, "data_iterator"):
@@ -372,7 +370,8 @@ class SelfSupervisionTrainer(object):
             gc.collect()
         return features
 
-    def _flatten_features_list(self, features: Dict[str, Any]):
+    @staticmethod
+    def _flatten_features_list(features: Dict[str, Any]):
         assert isinstance(features, list), "features must be of type list"
         is_nested = isinstance(features[0], list)
         if is_nested:
@@ -380,9 +379,7 @@ class SelfSupervisionTrainer(object):
             return flat_features_list
         return features
 
-    def _get_split_features(
-        self, feat_names: List[str], cfg: AttrDict, task: ClassyTask
-    ):
+    def _get_split_features(self, feat_names: List[str], task: ClassyTask):
         task.model.eval()
         logging.info("Model set to eval mode during feature extraction...")
 
