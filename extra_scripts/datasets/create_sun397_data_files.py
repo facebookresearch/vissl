@@ -11,8 +11,8 @@ from typing import Any, List
 
 import numpy as np
 from fvcore.common.file_io import PathManager
-from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
+from vissl.utils.download import download_and_extract_archive
 
 
 @dataclasses.dataclass

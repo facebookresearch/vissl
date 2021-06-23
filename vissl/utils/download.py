@@ -5,6 +5,18 @@
 
 import io
 import os
+import re
+import urllib
+import urllib.error
+import urllib.request
+from typing import Optional
+from urllib.parse import urlparse
+
+from torch.utils.model_zoo import tqdm
+from torchvision.datasets.utils import (
+    check_integrity,
+    extract_archive,
+)
 
 
 def get_redirected_url(url: str):
@@ -71,3 +83,106 @@ def download_google_drive_url(url: str, output_path: str, output_file_name: str)
                     ):
                         file.write(block)
                         progress_bar.update(len(block))
+
+
+def _get_google_drive_file_id(url: str) -> Optional[str]:
+    parts = urlparse(url)
+
+    if re.match(r"(drive|docs)[.]google[.]com", parts.netloc) is None:
+        return None
+
+    match = re.match(r"/file/d/(?P<id>[^/]*)", parts.path)
+    if match is None:
+        return None
+
+    return match.group("id")
+
+
+# These are copied from torchvision, with some minor adjustments for VISSL support.
+def download_url(
+    url: str,
+    root: str,
+    filename: Optional[str] = None,
+    md5: Optional[str] = None,
+) -> None:
+    """Download a file from a url and place it in root.
+
+    Args:
+        url (str): URL to download file from
+        root (str): Directory to place downloaded file in
+        filename (str, optional): Name to save the file under.
+                                  If None, use the basename of the URL.
+        md5 (str, optional): MD5 checksum of the download. If None, do not check
+    """
+    root = os.path.expanduser(root)
+    if not filename:
+        filename = os.path.basename(url)
+    fpath = os.path.join(root, filename)
+
+    os.makedirs(root, exist_ok=True)
+
+    # check if file is already present locally
+    if check_integrity(fpath, md5):
+        print("Using downloaded and verified file: " + fpath)
+        return
+
+    # expand redirect chain if needed
+    url = get_redirected_url(url)
+
+    # check if file is located on Google Drive
+    file_id = _get_google_drive_file_id(url)
+    if file_id is not None:
+        return download_google_drive_url(file_id, root, filename, md5)
+
+    # download the file
+    try:
+        print("Downloading " + url + " to " + fpath)
+        _urlretrieve(url, fpath)
+    except (urllib.error.URLError, IOError) as e:  # type: ignore[attr-defined]
+        if url[:5] == "https":
+            url = url.replace("https:", "http:")
+            print(
+                "Failed download. Trying https -> http instead."
+                " Downloading " + url + " to " + fpath
+            )
+            _urlretrieve(url, fpath)
+        else:
+            raise e
+
+    # check integrity of downloaded file
+    if not check_integrity(fpath, md5):
+        raise RuntimeError("File not found or corrupted.")
+
+
+def _urlretrieve(url: str, filename: str, chunk_size: int = 1024) -> None:
+    with open(filename, "wb") as fh:
+        with urllib.request.urlopen(
+            urllib.request.Request(url, headers={"User-Agent": "vissl"})
+        ) as response:
+            with tqdm(total=response.length) as pbar:
+                for chunk in iter(lambda: response.read(chunk_size), ""):
+                    if not chunk:
+                        break
+                    pbar.update(chunk_size)
+                    fh.write(chunk)
+
+
+def download_and_extract_archive(
+    url: str,
+    download_root: str,
+    extract_root: Optional[str] = None,
+    filename: Optional[str] = None,
+    md5: Optional[str] = None,
+    remove_finished: bool = False,
+) -> None:
+    download_root = os.path.expanduser(download_root)
+    if extract_root is None:
+        extract_root = download_root
+    if not filename:
+        filename = os.path.basename(url)
+
+    download_url(url, download_root, filename, md5)
+
+    archive = os.path.join(download_root, filename)
+    print("Extracting {} to {}".format(archive, extract_root))
+    extract_archive(archive, extract_root, remove_finished)

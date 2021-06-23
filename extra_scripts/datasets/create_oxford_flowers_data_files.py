@@ -9,8 +9,8 @@ import shutil
 
 import numpy as np
 import scipy.io
-from torchvision.datasets.utils import download_and_extract_archive, download_url
 from tqdm import tqdm
+from vissl.utils.download import download_and_extract_archive, download_url
 
 
 def get_argument_parser():
