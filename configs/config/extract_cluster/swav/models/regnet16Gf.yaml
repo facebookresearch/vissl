@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet  # This could be overriden by command line to be regnet_fsdp
+      REGNET:
+        # The following is the same as the model "regnet_y_16gf: from ClassyVision/classy_vision/models/regnet.py
+        depth: 18
+        w_0: 200
+        w_a: 106.23
+        w_m: 2.48
+        group_width: 112
+    HEAD:
+      PARAMS: [
+        ["swav_head",  # This could be override by command line to be swav_head_fsdp
+         {"dims": [3024, 3024, 128], "use_bn": False, "num_clusters": [3000]}],
+      ]

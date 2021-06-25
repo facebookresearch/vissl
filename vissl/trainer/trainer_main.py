@@ -26,6 +26,7 @@ from vissl.config import AttrDict
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
+from vissl.utils.distributed_utils import all_gather_heterogeneous, all_gather_sizes
 from vissl.utils.env import get_machine_local_and_dist_rank
 
 
@@ -333,18 +334,9 @@ class SelfSupervisionTrainer(object):
         assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
 
-        # in case of feature evaluation mode, if we are freezing both trunk and
-        # head, DDP won't work as there are no parameters in the model. Adding
-        # the dummy head will lead to features being not right. So we rather
-        # add the dummy layer to the model and use DDP. We copy the model to
-        # gpu (if using gpus) after the new dummy layer addition.
-        fully_frozen_model = self.task.base_model.is_fully_frozen_model()
-        if fully_frozen_model:
-            self.task.base_model.dummy_layer = torch.nn.Linear(4, 4)
-            if self.task.device.type == "cuda":
-                self.task.base_model = copy_model_to_gpu(self.task.base_model)
+        # Create distributed model
+        self._add_dummy_layer()
         self.task.init_distributed_data_parallel_model()
-
         if is_primary():
             logging.info("Model is:\n {}".format(self.task.model))
 
@@ -362,12 +354,7 @@ class SelfSupervisionTrainer(object):
             features[split.lower()] = self._get_split_features(feat_names, self.task)
             logging.info(f"Done getting features for partition: {split.lower()}")
 
-        if hasattr(self.task, "data_iterator"):
-            del self.task.data_iterator
-            gc.collect()
-        if hasattr(self.task, "dataloaders"):
-            del self.task.dataloaders
-            gc.collect()
+        self._cleanup_task()
         return features
 
     @staticmethod
@@ -425,3 +412,127 @@ class SelfSupervisionTrainer(object):
                 "inds": np.array(list(out_features[layer].keys())),
             }
         return output
+
+    def _add_dummy_layer(self):
+        """
+        In case of feature evaluation mode, if we are freezing both trunk and
+        head, DDP won't work as there are no parameters in the model. Adding
+        the dummy head will lead to features being not right. So we rather
+        add the dummy layer to the model and use DDP. We copy the model to
+        gpu (if using gpus) after the new dummy layer addition.
+        """
+        fully_frozen_model = self.task.base_model.is_fully_frozen_model()
+        if fully_frozen_model:
+            self.task.base_model.dummy_layer = torch.nn.Linear(4, 4)
+            if self.task.device.type == "cuda":
+                self.task.base_model = copy_model_to_gpu(self.task.base_model)
+
+    def _cleanup_task(self):
+        if hasattr(self.task, "data_iterator"):
+            del self.task.data_iterator
+            gc.collect()
+        if hasattr(self.task, "dataloaders"):
+            del self.task.dataloaders
+            gc.collect()
+
+    def extract_clusters(self) -> Dict[str, Dict[int, int]]:
+        """
+        Workflow to extract multi-gpu cluster extraction for pre-trained models
+        based on clusterization (SwAV, DeepCluster, etc).
+
+        The function returns a map from image index to cluster index for the
+        whole dataset for each of the different splits.
+        """
+
+        # Support feature extraction on gpu only.
+        assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
+        self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
+
+        # Assert that the model support extract of clusters
+        error_message = "Extracting clusters is only available for pre-training methods based on clusters"
+        assert self.task.base_model.is_clustering_model(), error_message
+
+        # Create distributed model
+        self._add_dummy_layer()
+        self.task.init_distributed_data_parallel_model()
+        if is_primary():
+            logging.info("Model is:\n {}".format(self.task.model))
+
+        # Compute the cluster assignment on each worker in parallel
+        cluster_assignment = {}
+        for split in self.task.available_splits:
+            msg = f"Extracting cluster assignment for partition: {split}"
+            logging.info(msg)
+            cluster_assignment[split] = self._get_cluster_assignment_for_split(
+                self.task, split
+            )
+            logging.info("Done: " + msg)
+        self._cleanup_task()
+
+        # Merge the cluster assignments and group by cluster
+        return self._merge_cluster_assignments(cluster_assignment)
+
+    def _get_cluster_assignment_for_split(self, task: ClassyTask, split: str):
+        task.model.eval()
+        logging.info("Model set to eval mode during feature extraction...")
+
+        cluster_assignments = {}
+        task.data_iterator = iter(self.task.dataloaders[split.lower()])
+        while True:
+            try:
+                sample = next(task.data_iterator)
+                assert isinstance(sample, dict)
+                assert "data_idx" in sample, "Indices not passed"
+
+                input_sample = {
+                    "images": torch.cat(sample["data"]).cuda(non_blocking=True),
+                    "indices": torch.cat(sample["data_idx"]).cpu().numpy(),
+                }
+
+                with torch.no_grad():
+                    features = task.model(input_sample["images"])
+                    features = features[0]
+                    prototype_score = features[1]
+                    prototype_index = prototype_score.argmax(dim=-1)
+                    num_images = input_sample["indices"].shape[0]
+                    for idx in range(num_images):
+                        image_index = input_sample["indices"][idx]
+                        cluster_assignments[image_index] = prototype_index[idx].item()
+            except StopIteration:
+                break
+        return cluster_assignments
+
+    @staticmethod
+    def _merge_cluster_assignments(
+        rank_cluster_assignment: Dict[str, Dict[int, int]]
+    ) -> Dict[str, Dict[int, int]]:
+        """
+        All gather all the cluster assignments computed by the different workers on
+        separate parts of the dataset and merge them in a single map
+        """
+        merged_cluster_assignments = {}
+        for split in rank_cluster_assignment.keys():
+
+            split_assignments = list(rank_cluster_assignment[split].items())
+            image_indices = [assignment[0] for assignment in split_assignments]
+            image_indices = torch.LongTensor(image_indices).cuda(
+                torch.cuda.current_device()
+            )
+            cluster_indices = [assignment[1] for assignment in split_assignments]
+            cluster_indices = torch.LongTensor(cluster_indices).cuda(
+                torch.cuda.current_device()
+            )
+
+            sizes = all_gather_sizes(image_indices)
+            all_image_indices = all_gather_heterogeneous(sizes, image_indices)
+            all_cluster_indices = all_gather_heterogeneous(sizes, cluster_indices)
+
+            merged_cluster_assignments[split] = {}
+            for image_indices, cluster_indices in zip(
+                all_image_indices, all_cluster_indices
+            ):
+                for image_id, cluster_id in zip(image_indices, cluster_indices):
+                    merged_cluster_assignments[split][
+                        image_id.item()
+                    ] = cluster_id.item()
+        return merged_cluster_assignments

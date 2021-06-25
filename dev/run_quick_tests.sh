@@ -18,6 +18,7 @@ TEST_LIST=(
     "test_state_checkpointing.py"
     "test_layer_memory_tracking.py"
     "test_extract_features.py"
+    "test_extract_cluster.py"
 )
 
 echo "========================================================================"
