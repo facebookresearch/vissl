@@ -10,8 +10,8 @@ from typing import Set
 import numpy as np
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
-from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
+from vissl.utils.download import download_and_extract_archive
 
 
 def get_argument_parser():
