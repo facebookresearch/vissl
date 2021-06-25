@@ -41,6 +41,27 @@ def get_argument_parser():
     return parser
 
 
+def remove_file_name_whitespace(input_path: str):
+    """
+    Remove the whitespace in the file names for better compatibility with PathManager.
+    """
+    # TODO: Is this the right place to put this? Maybe put in own python file?
+    for class_folder_path in os.listdir(input_path):
+        # All necessary folders start with n.
+        if class_folder_path[0] != "n":
+            continue
+
+        absolute_class_folder_path = os.path.join(input_path, class_folder_path)
+        for img_file_name in os.listdir(absolute_class_folder_path):
+            absolute_img_file_name = os.path.join(
+                absolute_class_folder_path, img_file_name
+            )
+            file_path, file_name = os.path.split(absolute_img_file_name)
+
+            new_file_name = os.path.join(file_path, file_name.replace(" ", ""))
+            os.rename(absolute_img_file_name, new_file_name)
+
+
 def download_datasets(root: str):
     """
     Download the Imagenet-A and Imagenet-R dataset archives and expand them
@@ -119,4 +140,5 @@ if __name__ == "__main__":
         input_path = os.path.join(args.input, dataset_name)
         if os.path.exists(input_path):
             output_path = os.path.join(args.output, dataset_name)
+            remove_file_name_whitespace(input_path)
             create_imagenet_test_files(input_path, output_path)
