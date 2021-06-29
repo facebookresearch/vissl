@@ -20,7 +20,6 @@ from vissl.utils.env import (
     set_env_vars,
 )
 from vissl.utils.hydra_config import print_cfg
-from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
@@ -101,33 +100,7 @@ def extract_main(
         logging.info("System config:\n{}".format(collect_env_info()))
 
     trainer = SelfSupervisionTrainer(cfg, dist_run_id)
-    features = trainer.extract()
-
-    for split in features.keys():
-        logging.info(f"============== Split: {split} =======================")
-        for layer_name, layer_features in features[split].items():
-            out_feat_file = os.path.join(
-                checkpoint_folder, f"rank{dist_rank}_{split}_{layer_name}_features.npy"
-            )
-            out_target_file = os.path.join(
-                checkpoint_folder, f"rank{dist_rank}_{split}_{layer_name}_targets.npy"
-            )
-            out_inds_file = os.path.join(
-                checkpoint_folder, f"rank{dist_rank}_{split}_{layer_name}_inds.npy"
-            )
-            feat_shape = layer_features["features"].shape
-            logging.info(
-                f"Saving extracted features of {layer_name} with shape {feat_shape} to: {out_feat_file}"
-            )
-            save_file(layer_features["features"], out_feat_file)
-            logging.info(
-                f"Saving extracted targets of {layer_name} to: {out_target_file}"
-            )
-            save_file(layer_features["targets"], out_target_file)
-            logging.info(
-                f"Saving extracted indices of {layer_name} to: {out_inds_file}"
-            )
-            save_file(layer_features["inds"], out_inds_file)
+    trainer.extract(output_folder=cfg.EXTRACT_FEATURES.OUTPUT_DIR or checkpoint_folder)
 
     logging.info("All Done!")
     # close the logging streams including the filehandlers

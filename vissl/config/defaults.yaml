@@ -1047,6 +1047,20 @@ config:
     construct_single_param_group_only: False
 
   # ----------------------------------------------------------------------------------- #
+  # Options specific to the "extract_feature" engine
+  # ----------------------------------------------------------------------------------- #
+  EXTRACT_FEATURES:
+    # Path where to save the features: if empty, the checkpoint folder
+    # will be used as location where to save the features
+    OUTPUT_DIR: ""
+    # How many features to accumulate before written them on disk:
+    # - if set to 0, the extract_engine engine will dump features
+    #   as soon as they are computed (accumulate none in memory)
+    # - if set to -1, the extract_engine engine will dump features
+    #   at the very end (accumulate all in memory)
+    CHUNK_THRESHOLD: 0
+
+  # ----------------------------------------------------------------------------------- #
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #
   CLUSTERFIT:

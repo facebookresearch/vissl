@@ -28,6 +28,7 @@ from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
 from vissl.utils.distributed_utils import all_gather_heterogeneous, all_gather_sizes
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.io import save_file
 
 
 def build_task(config):
@@ -321,7 +322,7 @@ class SelfSupervisionTrainer(object):
         local_rank, _ = get_machine_local_and_dist_rank()
         logging.info(f"Phase advanced. Rank: {local_rank}")
 
-    def extract(self):
+    def extract(self, output_folder: str) -> None:
         """
         Extract workflow supports multi-gpu feature extraction. Since we are only extracting
         features, only the model is built (and initialized from some model weights file
@@ -347,15 +348,14 @@ class SelfSupervisionTrainer(object):
         if len(feat_names) == 0:
             feat_names = ["heads"]
 
-        features = {}
         for split in self.task.available_splits:
+            logging.info(f"============== Split: {split} =======================")
             logging.info(f"Extracting features for partition: {split.lower()}")
             self.task.data_iterator = iter(self.task.dataloaders[split.lower()])
-            features[split.lower()] = self._get_split_features(feat_names, self.task)
+            self._extract_split_features(feat_names, self.task, split, output_folder)
             logging.info(f"Done getting features for partition: {split.lower()}")
 
         self._cleanup_task()
-        return features
 
     @staticmethod
     def _flatten_features_list(features: Dict[str, Any]):
@@ -366,14 +366,62 @@ class SelfSupervisionTrainer(object):
             return flat_features_list
         return features
 
-    def _get_split_features(self, feat_names: List[str], task: ClassyTask):
+    @staticmethod
+    def _save_extracted_features(
+        features,
+        targets,
+        dist_rank: int,
+        chunk_index: int,
+        split: str,
+        output_folder: str,
+    ):
+
+        output = {}
+        for layer_name in features.keys():
+            indices = sorted(features[layer_name].keys())
+            if len(indices) > 0:
+                output[layer_name] = {
+                    "inds": np.array(indices),
+                    "features": np.array(
+                        [features[layer_name][i] for i in indices]
+                    ).reshape(len(indices), -1),
+                    "targets": np.array([targets[layer_name][i] for i in indices]),
+                }
+
+        for layer_name, layer_features in output.items():
+            out_feat_file = os.path.join(
+                output_folder,
+                f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_{layer_name}_features.npy",
+            )
+            out_target_file = os.path.join(
+                output_folder,
+                f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_{layer_name}_targets.npy",
+            )
+            out_inds_file = os.path.join(
+                output_folder,
+                f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_{layer_name}_inds.npy",
+            )
+            save_file(layer_features["features"], out_feat_file)
+            save_file(layer_features["targets"], out_target_file)
+            save_file(layer_features["inds"], out_inds_file)
+
+    def _extract_split_features(
+        self,
+        feat_names: List[str],
+        task: ClassyTask,
+        split_name: str,
+        output_folder: str,
+    ):
         task.model.eval()
         logging.info("Model set to eval mode during feature extraction...")
+        dist_rank = torch.distributed.get_rank()
 
         out_features, out_targets = {}, {}
-        for layer in feat_names:
-            out_features[layer], out_targets[layer] = {}, {}
+        for feat_name in feat_names:
+            out_features[feat_name], out_targets[feat_name] = {}, {}
 
+        chunk_index = 0
+        feature_buffer_size = 0
         while True:
             try:
                 sample = next(task.data_iterator)
@@ -388,30 +436,45 @@ class SelfSupervisionTrainer(object):
                     features = task.model(input_sample["input"])
                     flat_features_list = self._flatten_features_list(features)
                     num_images = input_sample["inds"].shape[0]
-                    for num, layer in enumerate(feat_names):
+                    feature_buffer_size += num_images
+                    for num, feat_name in enumerate(feat_names):
                         feature = flat_features_list[num].cpu().numpy()
                         targets = input_sample["target"]
+                        logging.info(feat_name)
+                        logging.info(str(feature))
                         for idx in range(num_images):
                             index = input_sample["inds"][idx]
-                            if not (index in out_features[layer]):
-                                out_targets[layer][index] = targets[idx].reshape(-1)
-                                out_features[layer][index] = feature[idx]
-            except StopIteration:
-                break
-        barrier()
+                            out_features[feat_name][index] = feature[idx]
+                            out_targets[feat_name][index] = targets[idx].reshape(-1)
 
-        output = {}
-        for layer in feat_names:
-            out_features[layer] = dict(sorted(out_features[layer].items()))
-            out_targets[layer] = dict(sorted(out_targets[layer].items()))
-            feats = np.array(list(out_features[layer].values()))
-            N = feats.shape[0]
-            output[layer] = {
-                "features": feats.reshape(N, -1),
-                "targets": np.array(list(out_targets[layer].values())),
-                "inds": np.array(list(out_features[layer].keys())),
-            }
-        return output
+                if (
+                    feature_buffer_size
+                    >= self.cfg.EXTRACT_FEATURES.CHUNK_THRESHOLD
+                    >= 0
+                ):
+                    self._save_extracted_features(
+                        features=out_features,
+                        targets=out_targets,
+                        dist_rank=dist_rank,
+                        chunk_index=chunk_index,
+                        split=split_name,
+                        output_folder=output_folder,
+                    )
+                    for layer_name in out_features.keys():
+                        out_features[layer_name].clear()
+                    chunk_index += 1
+                    feature_buffer_size = 0
+
+            except StopIteration:
+                self._save_extracted_features(
+                    features=out_features,
+                    targets=out_targets,
+                    dist_rank=dist_rank,
+                    chunk_index=chunk_index,
+                    split=split_name,
+                    output_folder=output_folder,
+                )
+                break
 
     def _add_dummy_layer(self):
         """

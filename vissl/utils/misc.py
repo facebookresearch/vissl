@@ -7,6 +7,7 @@ import collections
 import logging
 import os
 import random
+import re
 import tempfile
 import time
 from functools import partial, wraps
@@ -182,7 +183,7 @@ def get_indices_sparse(data):
     return [np.unravel_index(row.data, data.shape) for row in M]
 
 
-def merge_features(output_dir, split, layer, cfg):
+def merge_features(input_dir: str, split: str, layer: str):
     """
     For multi-gpu feature extraction, each gpu saves features corresponding to its
     share of the data. We can merge the features across all gpus to get the features
@@ -195,41 +196,57 @@ def merge_features(output_dir, split, layer, cfg):
     ensure the uniqueness and return.
 
     Args:
-        output_dir (str): input path where the features are dumped
+        input_dir (str): input path where the features are dumped
         split (str): whether the features are train or test data features
         layer (str): the features correspond to what layer of the model
-        cfg (AttrDict): the input configuration specified by user
 
     Returns:
         output (Dict): contains features, targets, inds as the keys
     """
     logging.info(f"Merging features: {split} {layer}")
+
+    feature_regex = re.compile(rf"(.*)_{split}_{layer}_features.npy")
+
+    # List all the files that are containing the features for a given
+    # dataset split and a given layer
+    prefixes = []
+    for file_path in PathManager.ls(input_dir):
+        match = feature_regex.match(file_path)
+        if match is not None:
+            prefixes.append(match.group(1))
+
+    # Reassemble each feature shard (dumped by a given rank)
     output_feats, output_targets = {}, {}
-    for local_rank in range(0, cfg.DISTRIBUTED.NUM_PROC_PER_NODE):
-        for node_id in range(0, cfg.DISTRIBUTED.NUM_NODES):
-            dist_rank = cfg.DISTRIBUTED.NUM_PROC_PER_NODE * node_id + local_rank
-            feat_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_features.npy"
-            targets_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_targets.npy"
-            inds_file = f"{output_dir}/rank{dist_rank}_{split}_{layer}_inds.npy"
-            logging.info(f"Loading:\n{feat_file}\n{targets_file}\n{inds_file}")
-            feats = load_file(feat_file)
-            targets = load_file(targets_file)
-            indices = load_file(inds_file)
-            num_samples = feats.shape[0]
-            for idx in range(num_samples):
-                index = indices[idx]
-                if not (index in output_feats):
-                    output_feats[index] = feats[idx]
-                    output_targets[index] = targets[idx]
-    output = {}
-    output_feats = dict(sorted(output_feats.items()))
-    output_targets = dict(sorted(output_targets.items()))
-    feats = np.array(list(output_feats.values()))
-    N = feats.shape[0]
+    for prefix in prefixes:
+        feat_file = os.path.join(
+            input_dir, f"{prefix}_{split}_{layer}_features.npy"
+        )
+        targets_file = os.path.join(
+            input_dir, f"{prefix}_{split}_{layer}_targets.npy"
+        )
+        inds_file = os.path.join(input_dir, f"{prefix}_{split}_{layer}_inds.npy")
+        logging.info(f"Loading:\n{feat_file}\n{targets_file}\n{inds_file}")
+        feats = load_file(feat_file)
+        targets = load_file(targets_file)
+        indices = load_file(inds_file)
+        num_samples = feats.shape[0]
+        for idx in range(num_samples):
+            index = indices[idx]
+            if index not in output_feats:
+                output_feats[index] = feats[idx]
+                output_targets[index] = targets[idx]
+
+    # Sort the entries by sample index
+    indices = sorted(output_targets.keys())
+    features = [output_feats[i] for i in indices]
+    targets = [output_targets[i] for i in indices]
+
+    # Cast the entries as numpy arrays
+    N = len(indices)
     output = {
-        "features": feats.reshape(N, -1),
-        "targets": np.array(list(output_targets.values())),
-        "inds": np.array(list(output_feats.keys())),
+        "features": np.array(features).reshape(N, -1),
+        "targets": np.array(targets),
+        "inds": np.array(indices),
     }
     logging.info(f"Features: {output['features'].shape}")
     logging.info(f"Targets: {output['targets'].shape}")
