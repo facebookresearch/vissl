@@ -218,12 +218,8 @@ def merge_features(input_dir: str, split: str, layer: str):
     # Reassemble each feature shard (dumped by a given rank)
     output_feats, output_targets = {}, {}
     for prefix in prefixes:
-        feat_file = os.path.join(
-            input_dir, f"{prefix}_{split}_{layer}_features.npy"
-        )
-        targets_file = os.path.join(
-            input_dir, f"{prefix}_{split}_{layer}_targets.npy"
-        )
+        feat_file = os.path.join(input_dir, f"{prefix}_{split}_{layer}_features.npy")
+        targets_file = os.path.join(input_dir, f"{prefix}_{split}_{layer}_targets.npy")
         inds_file = os.path.join(input_dir, f"{prefix}_{split}_{layer}_inds.npy")
         logging.info(f"Loading:\n{feat_file}\n{targets_file}\n{inds_file}")
         feats = load_file(feat_file)
