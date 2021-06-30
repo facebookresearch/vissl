@@ -7,6 +7,7 @@ config:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
+      LABEL_TYPE: sample_index
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
