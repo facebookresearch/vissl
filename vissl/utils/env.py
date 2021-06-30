@@ -31,6 +31,15 @@ def set_env_vars(local_rank: int, node_id: int, cfg: AttrDict):
         os.environ["NCCL_SOCKET_NTHREADS"] = str(cfg.DISTRIBUTED.NCCL_SOCKET_NTHREADS)
 
 
+def setup_path_manager():
+    """
+    Registering the right options for the PathManager:
+    Override this function in your build system to
+    support different distributed file system
+    """
+    pass
+
+
 def print_system_env_info(current_env):
     """
     Print information about user system environment where VISSL is running.
