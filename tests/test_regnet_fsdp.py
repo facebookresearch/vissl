@@ -16,7 +16,7 @@ from vissl.models import build_model
 from vissl.optimizers import *  # noqa
 from vissl.utils.fsdp_utils import fsdp_wrapper
 from vissl.utils.hydra_config import convert_to_attrdict
-from vissl.utils.test_utils import init_distributed_on_file, with_temp_files
+from vissl.utils.test_utils import gpu_test, init_distributed_on_file, with_temp_files
 
 
 class TestRegnetFSDP(unittest.TestCase):
@@ -130,7 +130,7 @@ class TestRegnetFSDP(unittest.TestCase):
                 nprocs=2,
             )
 
-    @unittest.skipIf(torch.cuda.device_count() < 2, "Not enough GPUs to run the test")
+    @gpu_test(gpu_count=2)
     def test_regnet_fsdp_convergence_on_swav(self):
         """
         Run SWAV architecture with DDP or with FSDP with or without
@@ -164,7 +164,7 @@ class TestRegnetFSDP(unittest.TestCase):
             self.assertEqual(results[0], results[1], "DDP vs FSDP")
             self.assertEqual(results[1], results[2], "Activation checkpointing")
 
-    @unittest.skipIf(torch.cuda.device_count() < 2, "Not enough GPUs to run the test")
+    @gpu_test(gpu_count=2)
     def test_regnet_fsdp_convergence_on_swav_with_larc(self):
         """
         Run SWAV architecture with DDP or with FSDP with or without
