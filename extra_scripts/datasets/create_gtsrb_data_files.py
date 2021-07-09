@@ -8,8 +8,8 @@ import os
 import shutil
 from typing import List, Tuple
 
-from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
+from vissl.utils.download import download_and_extract_archive
 
 
 def get_argument_parser():
