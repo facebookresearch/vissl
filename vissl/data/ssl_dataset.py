@@ -384,7 +384,10 @@ class GenericSSLDataset(VisslDatasetBase):
                                             data source.
         """
         image_paths = []
-        for source in self.data_objs:
+        for i, source in enumerate(self.data_objs):
+            if not getattr(source, "get_image_paths", 0):
+                msg = f"Cannot retrieve image paths for source {self.data_sources[i]}"
+                raise ValueError(msg)
             image_paths.append(source.get_image_paths())
         return image_paths
 

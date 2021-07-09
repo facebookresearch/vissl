@@ -13,6 +13,8 @@ from vissl.config import AttrDict
 from vissl.engines.engine_registry import Engine, register_engine
 from vissl.hooks import default_hook_generator
 from vissl.trainer import SelfSupervisionTrainer
+from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.cluster_utils import ClusterAssignment, ClusterAssignmentLoader
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import (
     get_machine_local_and_dist_rank,
@@ -24,8 +26,8 @@ from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
 
-@register_engine("extract_features")
-class ExtractFeatureEngine(Engine):
+@register_engine("extract_cluster")
+class ExtractClusterEngine(Engine):
     def run_engine(
         self,
         cfg: AttrDict,
@@ -36,12 +38,12 @@ class ExtractFeatureEngine(Engine):
         node_id: int = 0,
         hook_generator: Callable[[Any], List[ClassyHook]] = default_hook_generator,
     ):
-        extract_main(
+        extract_clusters(
             cfg, dist_run_id, checkpoint_folder, local_rank=local_rank, node_id=node_id
         )
 
 
-def extract_main(
+def extract_clusters(
     cfg: AttrDict,
     dist_run_id: str,
     checkpoint_folder: str,
@@ -49,22 +51,7 @@ def extract_main(
     node_id: int = 0,
 ):
     """
-    Sets up and executes feature extraction workflow per machine.
-
-    Args:
-        cfg (AttrDict): user specified input config that has optimizer, loss, meters etc
-                        settings relevant to the training
-        dist_run_id (str): For multi-gpu training with PyTorch, we have to specify
-                           how the gpus are going to rendezvous. This requires specifying
-                           the communication method: file, tcp and the unique rendezvous
-                           run_id that is specific to 1 run.
-                           We recommend:
-                                1) for 1node: use init_method=tcp and run_id=auto
-                                2) for multi-node, use init_method=tcp and specify
-                                run_id={master_node}:{port}
-        local_rank (int): id of the current device on the machine. If using gpus,
-                        local_rank = gpu number on the current machine
-        node_id (int): id of the current machine. starts from 0. valid for multi-gpu
+    Sets up and executes model visualisation extraction workflow on one node
     """
 
     # setup the environment variables
@@ -99,9 +86,20 @@ def extract_main(
         print_cfg(cfg)
         logging.info("System config:\n{}".format(collect_env_info()))
 
+    # Build the SSL trainer to set up distributed training and then
+    # extract the cluster assignments for all entries in the dataset
     trainer = SelfSupervisionTrainer(cfg, dist_run_id)
-    trainer.extract(output_folder=cfg.EXTRACT_FEATURES.OUTPUT_DIR or checkpoint_folder)
+    cluster_assignments = trainer.extract_clusters()
 
+    # Save the cluster assignments in the output folder
+    if dist_rank == 0:
+        ClusterAssignmentLoader.save_cluster_assignment(
+            output_dir=get_checkpoint_folder(cfg),
+            assignments=ClusterAssignment(
+                config=cfg, cluster_assignments=cluster_assignments
+            ),
+        )
+
+    # close the logging streams including the file handlers
     logging.info("All Done!")
-    # close the logging streams including the filehandlers
     shutdown_logging()

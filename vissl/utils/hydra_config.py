@@ -304,13 +304,12 @@ def infer_losses_config(cfg):
     train_transforms = cfg.DATA.TRAIN.TRANSFORMS
     total_num_crops = next(
         (
-            transform
+            transform["total_num_crops"]
             for transform in train_transforms
-            if transform["name"] == "ImgPilToMultiCrop"
+            if "total_num_crops" in transform
         ),
         None,
     )
-    total_num_crops = total_num_crops["total_num_crops"] if total_num_crops else None
 
     # some inference for the Info-NCE loss.
     if "simclr_info_nce_loss" in cfg.LOSS.name:
@@ -338,7 +337,9 @@ def infer_losses_config(cfg):
         cfg.LOSS.multicrop_simclr_info_nce_loss.buffer_params.effective_batch_size = (
             batch_size * world_size
         )
-        cfg.LOSS.multicrop_simclr_info_nce_loss.num_crops = total_num_crops
+        cfg.LOSS.multicrop_simclr_info_nce_loss.num_crops = (
+            total_num_crops or cfg.LOSS.multicrop_simclr_info_nce_loss.num_crops
+        )
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the DeepCluster-v2 loss.
@@ -347,7 +348,9 @@ def infer_losses_config(cfg):
         cfg.LOSS.deepclusterv2_loss.BATCHSIZE_PER_REPLICA = (
             cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
         )
-        cfg.LOSS.deepclusterv2_loss.num_crops = total_num_crops
+        cfg.LOSS.deepclusterv2_loss.num_crops = (
+            total_num_crops or cfg.LOSS.deepclusterv2_loss.num_crops
+        )
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     # some inference for the SwAV loss.
@@ -364,7 +367,7 @@ def infer_losses_config(cfg):
         )
         cfg.LOSS.swav_loss.num_prototypes = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"]
         cfg.LOSS.swav_loss.embedding_dim = cfg.MODEL.HEAD.PARAMS[0][1]["dims"][-1]
-        cfg.LOSS.swav_loss.num_crops = total_num_crops
+        cfg.LOSS.swav_loss.num_crops = total_num_crops or cfg.LOSS.swav_loss.num_crops
         from vissl.utils.checkpoint import get_checkpoint_folder
 
         cfg.LOSS.swav_loss.output_dir = get_checkpoint_folder(cfg)
@@ -387,7 +390,9 @@ def infer_losses_config(cfg):
             -1
         ]
 
-        cfg.LOSS.swav_momentum_loss.num_crops = total_num_crops
+        cfg.LOSS.swav_momentum_loss.num_crops = (
+            total_num_crops or cfg.LOSS.swav_momentum_loss.num_crops
+        )
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
         world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
         batch_size = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
@@ -404,7 +409,7 @@ def infer_losses_config(cfg):
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
         assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"
         cfg.LOSS.dino_loss.output_dim = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"][0]
-        cfg.LOSS.dino_loss.num_crops = cfg.DATA.TRAIN.TRANSFORMS[0]["total_num_crops"]
+        cfg.LOSS.dino_loss.num_crops = total_num_crops or cfg.LOSS.dino_loss.num_crops
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"
 
     return cfg

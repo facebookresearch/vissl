@@ -1,13 +1,12 @@
 # @package _global_
-engine_name: extract_features
+engine_name: extract_cluster
 config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
-      LABEL_TYPE: sample_index
+      DATASET_NAMES: [imagenette_160_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -20,12 +19,12 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: False
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_DESTINATION_DIR: /tmp/imagenette_160/
       ENABLE_QUEUE_DATASET: False
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
+      DATASET_NAMES: [imagenette_160_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -38,13 +37,21 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: False
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      COPY_DESTINATION_DIR: /tmp/imagenette_160/
       ENABLE_QUEUE_DATASET: False
   MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
     TRUNK:
       NAME: resnet
       RESNETS:
         DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
+      ]
     WEIGHTS_INIT:
       PARAMS_FILE: "specify the model weights"
       STATE_DICT_KEY_NAME: classy_state_dict

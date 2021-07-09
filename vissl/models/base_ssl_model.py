@@ -13,7 +13,7 @@ from classy_vision.models import ClassyModel, register_model
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
-from vissl.models.heads import get_model_head
+from vissl.models.heads import SwAVPrototypesHead, get_model_head
 from vissl.models.model_helpers import (
     get_trunk_output_feature_names,
     is_feature_extractor_model,
@@ -547,6 +547,15 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                 replace_prefix=replace_prefix,
                 append_prefix=append_prefix,
             )
+
+    def is_clustering_model(self):
+        """
+        Whether or not the model is a clustering model
+        (only supports SwAV for the moment)
+        """
+        return len(self.heads) == 1 and any(
+            isinstance(module, SwAVPrototypesHead) for module in self.heads[0].modules()
+        )
 
     @property
     def num_classes(self):

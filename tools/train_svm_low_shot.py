@@ -39,9 +39,9 @@ def train_voc07_low_shot(
     low_shot_trainer = SVMLowShotTrainer(
         cfg["SVM"], layer=layername, output_dir=output_dir
     )
-    train_data = merge_features(output_dir, "train", layername, cfg)
+    train_data = merge_features(output_dir, "train", layername)
     train_features, train_targets = train_data["features"], train_data["targets"]
-    test_data = merge_features(output_dir, "test", layername, cfg)
+    test_data = merge_features(output_dir, "test", layername)
     test_features, test_targets = test_data["features"], test_data["targets"]
     # now we want to create the low-shot samples based on the kind of dataset.
     # We only create low-shot samples for training. We test on the full dataset.
@@ -81,11 +81,11 @@ def train_sample_places_low_shot(
 
     for low_shot_kvalue in k_values:
         checkpoint_dir = f"{output_dir}/sample{sample_num}_k{low_shot_kvalue}"
-        train_data = merge_features(checkpoint_dir, "train", layername, cfg)
+        train_data = merge_features(checkpoint_dir, "train", layername)
         train_features = train_data["features"]
         train_targets = train_data["targets"]
         checkpoint_dir = f"{output_dir}/sample{sample_inds[0]}_k{k_values[0]}"
-        test_data = merge_features(checkpoint_dir, "test", layername, cfg)
+        test_data = merge_features(checkpoint_dir, "test", layername)
         test_features = test_data["features"]
         test_targets = test_data["targets"]
         low_shot_trainer.train(

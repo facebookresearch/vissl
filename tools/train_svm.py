@@ -31,12 +31,12 @@ def train_svm(cfg: AttrDict, output_dir: str, layername: str):
     # train the svm
     logging.info(f"Training SVM for layer: {layername}")
     trainer = SVMTrainer(cfg["SVM"], layer=layername, output_dir=output_dir)
-    train_data = merge_features(output_dir, "train", layername, cfg)
+    train_data = merge_features(output_dir, "train", layername)
     train_features, train_targets = train_data["features"], train_data["targets"]
     trainer.train(train_features, train_targets)
 
     # test the svm
-    test_data = merge_features(output_dir, "test", layername, cfg)
+    test_data = merge_features(output_dir, "test", layername)
     test_features, test_targets = test_data["features"], test_data["targets"]
     trainer.test(test_features, test_targets)
     logging.info("All Done!")

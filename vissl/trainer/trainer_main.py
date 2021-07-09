@@ -26,7 +26,9 @@ from vissl.config import AttrDict
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer.train_steps import get_train_step
+from vissl.utils.distributed_utils import all_gather_heterogeneous, all_gather_sizes
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.io import save_file
 
 
 def build_task(config):
@@ -320,7 +322,7 @@ class SelfSupervisionTrainer(object):
         local_rank, _ = get_machine_local_and_dist_rank()
         logging.info(f"Phase advanced. Rank: {local_rank}")
 
-    def extract(self):
+    def extract(self, output_folder: str) -> None:
         """
         Extract workflow supports multi-gpu feature extraction. Since we are only extracting
         features, only the model is built (and initialized from some model weights file
@@ -333,18 +335,9 @@ class SelfSupervisionTrainer(object):
         assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
 
-        # in case of feature evaluation mode, if we are freezing both trunk and
-        # head, DDP won't work as there are no parameters in the model. Adding
-        # the dummy head will lead to features being not right. So we rather
-        # add the dummy layer to the model and use DDP. We copy the model to
-        # gpu (if using gpus) after the new dummy layer addition.
-        fully_frozen_model = self.task.base_model.is_fully_frozen_model()
-        if fully_frozen_model:
-            self.task.base_model.dummy_layer = torch.nn.Linear(4, 4)
-            if self.task.device.type == "cuda":
-                self.task.base_model = copy_model_to_gpu(self.task.base_model)
+        # Create distributed model
+        self._add_dummy_layer()
         self.task.init_distributed_data_parallel_model()
-
         if is_primary():
             logging.info("Model is:\n {}".format(self.task.model))
 
@@ -355,24 +348,17 @@ class SelfSupervisionTrainer(object):
         if len(feat_names) == 0:
             feat_names = ["heads"]
 
-        features = {}
         for split in self.task.available_splits:
+            logging.info(f"============== Split: {split} =======================")
             logging.info(f"Extracting features for partition: {split.lower()}")
             self.task.data_iterator = iter(self.task.dataloaders[split.lower()])
-            features[split.lower()] = self._get_split_features(
-                feat_names, self.cfg, self.task
-            )
+            self._extract_split_features(feat_names, self.task, split, output_folder)
             logging.info(f"Done getting features for partition: {split.lower()}")
 
-        if hasattr(self.task, "data_iterator"):
-            del self.task.data_iterator
-            gc.collect()
-        if hasattr(self.task, "dataloaders"):
-            del self.task.dataloaders
-            gc.collect()
-        return features
+        self._cleanup_task()
 
-    def _flatten_features_list(self, features: Dict[str, Any]):
+    @staticmethod
+    def _flatten_features_list(features: Dict[str, Any]):
         assert isinstance(features, list), "features must be of type list"
         is_nested = isinstance(features[0], list)
         if is_nested:
@@ -380,16 +366,62 @@ class SelfSupervisionTrainer(object):
             return flat_features_list
         return features
 
-    def _get_split_features(
-        self, feat_names: List[str], cfg: AttrDict, task: ClassyTask
+    @staticmethod
+    def _save_extracted_features(
+        features,
+        targets,
+        dist_rank: int,
+        chunk_index: int,
+        split: str,
+        output_folder: str,
+    ):
+
+        output = {}
+        for layer_name in features.keys():
+            indices = sorted(features[layer_name].keys())
+            if len(indices) > 0:
+                output[layer_name] = {
+                    "inds": np.array(indices),
+                    "features": np.array(
+                        [features[layer_name][i] for i in indices]
+                    ).reshape(len(indices), -1),
+                    "targets": np.array([targets[layer_name][i] for i in indices]),
+                }
+
+        for layer_name, layer_features in output.items():
+            out_feat_file = os.path.join(
+                output_folder,
+                f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_{layer_name}_features.npy",
+            )
+            out_target_file = os.path.join(
+                output_folder,
+                f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_{layer_name}_targets.npy",
+            )
+            out_inds_file = os.path.join(
+                output_folder,
+                f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_{layer_name}_inds.npy",
+            )
+            save_file(layer_features["features"], out_feat_file)
+            save_file(layer_features["targets"], out_target_file)
+            save_file(layer_features["inds"], out_inds_file)
+
+    def _extract_split_features(
+        self,
+        feat_names: List[str],
+        task: ClassyTask,
+        split_name: str,
+        output_folder: str,
     ):
         task.model.eval()
         logging.info("Model set to eval mode during feature extraction...")
+        dist_rank = torch.distributed.get_rank()
 
         out_features, out_targets = {}, {}
-        for layer in feat_names:
-            out_features[layer], out_targets[layer] = {}, {}
+        for feat_name in feat_names:
+            out_features[feat_name], out_targets[feat_name] = {}, {}
 
+        chunk_index = 0
+        feature_buffer_size = 0
         while True:
             try:
                 sample = next(task.data_iterator)
@@ -404,27 +436,164 @@ class SelfSupervisionTrainer(object):
                     features = task.model(input_sample["input"])
                     flat_features_list = self._flatten_features_list(features)
                     num_images = input_sample["inds"].shape[0]
-                    for num, layer in enumerate(feat_names):
+                    feature_buffer_size += num_images
+                    for num, feat_name in enumerate(feat_names):
                         feature = flat_features_list[num].cpu().numpy()
                         targets = input_sample["target"]
                         for idx in range(num_images):
                             index = input_sample["inds"][idx]
-                            if not (index in out_features[layer]):
-                                out_targets[layer][index] = targets[idx].reshape(-1)
-                                out_features[layer][index] = feature[idx]
+                            out_features[feat_name][index] = feature[idx]
+                            out_targets[feat_name][index] = targets[idx].reshape(-1)
+
+                if (
+                    feature_buffer_size
+                    >= self.cfg.EXTRACT_FEATURES.CHUNK_THRESHOLD
+                    >= 0
+                ):
+                    self._save_extracted_features(
+                        features=out_features,
+                        targets=out_targets,
+                        dist_rank=dist_rank,
+                        chunk_index=chunk_index,
+                        split=split_name,
+                        output_folder=output_folder,
+                    )
+                    for layer_name in out_features.keys():
+                        out_features[layer_name].clear()
+                    chunk_index += 1
+                    feature_buffer_size = 0
+
+            except StopIteration:
+                self._save_extracted_features(
+                    features=out_features,
+                    targets=out_targets,
+                    dist_rank=dist_rank,
+                    chunk_index=chunk_index,
+                    split=split_name,
+                    output_folder=output_folder,
+                )
+                break
+
+    def _add_dummy_layer(self):
+        """
+        In case of feature evaluation mode, if we are freezing both trunk and
+        head, DDP won't work as there are no parameters in the model. Adding
+        the dummy head will lead to features being not right. So we rather
+        add the dummy layer to the model and use DDP. We copy the model to
+        gpu (if using gpus) after the new dummy layer addition.
+        """
+        fully_frozen_model = self.task.base_model.is_fully_frozen_model()
+        if fully_frozen_model:
+            self.task.base_model.dummy_layer = torch.nn.Linear(4, 4)
+            if self.task.device.type == "cuda":
+                self.task.base_model = copy_model_to_gpu(self.task.base_model)
+
+    def _cleanup_task(self):
+        if hasattr(self.task, "data_iterator"):
+            del self.task.data_iterator
+            gc.collect()
+        if hasattr(self.task, "dataloaders"):
+            del self.task.dataloaders
+            gc.collect()
+
+    def extract_clusters(self) -> Dict[str, Dict[int, int]]:
+        """
+        Workflow to extract multi-gpu cluster extraction for pre-trained models
+        based on clusterization (SwAV, DeepCluster, etc).
+
+        The function returns a map from image index to cluster index for the
+        whole dataset for each of the different splits.
+        """
+
+        # Support feature extraction on gpu only.
+        assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
+        self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
+
+        # Assert that the model support extract of clusters
+        error_message = "Extracting clusters is only available for pre-training methods based on clusters"
+        assert self.task.base_model.is_clustering_model(), error_message
+
+        # Create distributed model
+        self._add_dummy_layer()
+        self.task.init_distributed_data_parallel_model()
+        if is_primary():
+            logging.info("Model is:\n {}".format(self.task.model))
+
+        # Compute the cluster assignment on each worker in parallel
+        cluster_assignment = {}
+        for split in self.task.available_splits:
+            msg = f"Extracting cluster assignment for partition: {split}"
+            logging.info(msg)
+            cluster_assignment[split] = self._get_cluster_assignment_for_split(
+                self.task, split
+            )
+            logging.info("Done: " + msg)
+        self._cleanup_task()
+
+        # Merge the cluster assignments and group by cluster
+        return self._merge_cluster_assignments(cluster_assignment)
+
+    def _get_cluster_assignment_for_split(self, task: ClassyTask, split: str):
+        task.model.eval()
+        logging.info("Model set to eval mode during feature extraction...")
+
+        cluster_assignments = {}
+        task.data_iterator = iter(self.task.dataloaders[split.lower()])
+        while True:
+            try:
+                sample = next(task.data_iterator)
+                assert isinstance(sample, dict)
+                assert "data_idx" in sample, "Indices not passed"
+
+                input_sample = {
+                    "images": torch.cat(sample["data"]).cuda(non_blocking=True),
+                    "indices": torch.cat(sample["data_idx"]).cpu().numpy(),
+                }
+
+                with torch.no_grad():
+                    features = task.model(input_sample["images"])
+                    features = features[0]
+                    prototype_score = features[1]
+                    prototype_index = prototype_score.argmax(dim=-1)
+                    num_images = input_sample["indices"].shape[0]
+                    for idx in range(num_images):
+                        image_index = input_sample["indices"][idx]
+                        cluster_assignments[image_index] = prototype_index[idx].item()
             except StopIteration:
                 break
-        barrier()
+        return cluster_assignments
 
-        output = {}
-        for layer in feat_names:
-            out_features[layer] = dict(sorted(out_features[layer].items()))
-            out_targets[layer] = dict(sorted(out_targets[layer].items()))
-            feats = np.array(list(out_features[layer].values()))
-            N = feats.shape[0]
-            output[layer] = {
-                "features": feats.reshape(N, -1),
-                "targets": np.array(list(out_targets[layer].values())),
-                "inds": np.array(list(out_features[layer].keys())),
-            }
-        return output
+    @staticmethod
+    def _merge_cluster_assignments(
+        rank_cluster_assignment: Dict[str, Dict[int, int]]
+    ) -> Dict[str, Dict[int, int]]:
+        """
+        All gather all the cluster assignments computed by the different workers on
+        separate parts of the dataset and merge them in a single map
+        """
+        merged_cluster_assignments = {}
+        for split in rank_cluster_assignment.keys():
+
+            split_assignments = list(rank_cluster_assignment[split].items())
+            image_indices = [assignment[0] for assignment in split_assignments]
+            image_indices = torch.LongTensor(image_indices).cuda(
+                torch.cuda.current_device()
+            )
+            cluster_indices = [assignment[1] for assignment in split_assignments]
+            cluster_indices = torch.LongTensor(cluster_indices).cuda(
+                torch.cuda.current_device()
+            )
+
+            sizes = all_gather_sizes(image_indices)
+            all_image_indices = all_gather_heterogeneous(sizes, image_indices)
+            all_cluster_indices = all_gather_heterogeneous(sizes, cluster_indices)
+
+            merged_cluster_assignments[split] = {}
+            for image_indices, cluster_indices in zip(
+                all_image_indices, all_cluster_indices
+            ):
+                for image_id, cluster_id in zip(image_indices, cluster_indices):
+                    merged_cluster_assignments[split][
+                        image_id.item()
+                    ] = cluster_id.item()
+        return merged_cluster_assignments

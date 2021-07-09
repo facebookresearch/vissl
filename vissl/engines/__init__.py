@@ -5,6 +5,7 @@
 
 
 from vissl.engines.engine_registry import register_engine, run_engine  # noqa
+from vissl.engines.extract_cluster import extract_clusters  # noqa
 from vissl.engines.extract_features import extract_main  # noqa
 from vissl.engines.train import train_main  # noqa
 

@@ -33,7 +33,7 @@ def get_data_features_and_images(cfg: AttrDict):
     logging.info("Merging features...")
     # merge the features across all nodes/gpus into one
     feature_data = merge_features(
-        output_dir, split.lower(), cfg.CLUSTERFIT.FEATURES.LAYER_NAME, cfg
+        output_dir, split.lower(), cfg.CLUSTERFIT.FEATURES.LAYER_NAME
     )
 
     logging.info("Getting the image paths...")

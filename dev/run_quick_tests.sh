@@ -13,10 +13,15 @@ SRC_DIR=$(dirname "${SRC_DIR}")
 # -----------------------------------------------------------------------------
 
 TEST_LIST=(
+    "test_extract_cluster.py"
+    "test_extract_features.py"
+    "test_larc_fsdp.py"
+    "test_layer_memory_tracking.py"
+    "test_losses_gpu.py"
     "test_regnet_fsdp.py"
     "test_regnet_fsdp_integration.py"
+    "test_state_checkpoint_conversion.py"
     "test_state_checkpointing.py"
-    "test_layer_memory_tracking.py"
 )
 
 echo "========================================================================"
@@ -26,7 +31,7 @@ echo "========================================================================"
 
 pushd "${SRC_DIR}/tests"
 for test_file in "${TEST_LIST[@]}"; do
-  python -m unittest $test_file || exit
+  python -m unittest "$test_file" || exit
 done
 popd
 
