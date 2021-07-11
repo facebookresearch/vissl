@@ -97,7 +97,7 @@ config:
         lr:
           name: multistep
           values: [0.03, 0.003, 0.0003]
-          #milestones: [80, 120, 160]
+          milestones: [40, 80, 120, 160]
           update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
