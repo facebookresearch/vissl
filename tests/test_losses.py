@@ -8,6 +8,8 @@ import unittest
 from collections import namedtuple
 
 import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
 from classy_vision.generic.distributed_util import set_cpu_device
 from parameterized import parameterized
 from utils import ROOT_LOSS_CONFIGS, SSLHydraConfig
@@ -17,6 +19,7 @@ from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.losses.swav_loss import SwAVCriterion
 from vissl.trainer.train_task import SelfSupervisionTask
 from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.misc import find_free_tcp_port
 
 
 logger = logging.getLogger("__name__")
@@ -97,6 +100,42 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
             next_embeddings = embeddings - embeddings.grad  # gradient descent
             self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
 
+    @staticmethod
+    def worker_fn(gpu_id: int, world_size: int, batch_size: int, port: int):
+        dist.init_process_group(
+            backend="nccl",
+            init_method=f"tcp://0.0.0.0:{port}",
+            world_size=world_size,
+            rank=gpu_id,
+        )
+        criterion = BarlowTwinsCriterion(
+            lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
+        )
+        embeddings = torch.randn(
+            (batch_size, EMBEDDING_DIM), dtype=torch.float32, requires_grad=True
+        ).cuda()
+        criterion(embeddings).backward()
+
+    def test_backward_world_size_1(self):
+        if torch.cuda.device_count() >= 1:
+            port = find_free_tcp_port()
+
+            WORLD_SIZE = 1
+            BATCH_SIZE = 2
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
+
+    def test_backward_world_size_2(self):
+        if torch.cuda.device_count() >= 2:
+            port = find_free_tcp_port()
+
+            WORLD_SIZE = 2
+            BATCH_SIZE = 2
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
+
 
 class TestSimClrCriterion(unittest.TestCase):
     """
@@ -155,6 +194,58 @@ class TestSimClrCriterion(unittest.TestCase):
         with torch.no_grad():
             next_embeddings = embeddings - embeddings.grad  # gradient descent
             self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
+
+    @staticmethod
+    def worker_fn(gpu_id: int, world_size: int, batch_size: int, port: int):
+        dist.init_process_group(
+            backend="nccl",
+            init_method=f"tcp://0.0.0.0:{port}",
+            world_size=world_size,
+            rank=gpu_id,
+        )
+        embeddings = torch.full(
+            size=(batch_size, 3), fill_value=float(gpu_id), requires_grad=True
+        ).cuda(gpu_id)
+        gathered = SimclrInfoNCECriterion.gather_embeddings(embeddings)
+        if world_size == 1:
+            assert gathered.equal(
+                torch.tensor(
+                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], device=f"cuda:{gpu_id}"
+                )
+            )
+        if world_size == 2:
+            assert gathered.equal(
+                torch.tensor(
+                    [
+                        [0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0],
+                        [1.0, 1.0, 1.0],
+                        [1.0, 1.0, 1.0],
+                    ],
+                    device=f"cuda:{gpu_id}",
+                )
+            )
+        assert gathered.requires_grad
+
+    def test_gather_embeddings_word_size_1(self):
+        if torch.cuda.device_count() >= 1:
+            port = find_free_tcp_port()
+
+            WORLD_SIZE = 1
+            BATCH_SIZE = 2
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
+
+    def test_gather_embeddings_word_size_2(self):
+        if torch.cuda.device_count() >= 2:
+            port = find_free_tcp_port()
+
+            WORLD_SIZE = 2
+            BATCH_SIZE = 2
+            mp.spawn(
+                self.worker_fn, args=(WORLD_SIZE, BATCH_SIZE, port), nprocs=WORLD_SIZE
+            )
 
 
 class TestRootConfigsLossesBuild(unittest.TestCase):

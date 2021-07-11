@@ -440,6 +440,8 @@ class SelfSupervisionTrainer(object):
                     for num, feat_name in enumerate(feat_names):
                         feature = flat_features_list[num].cpu().numpy()
                         targets = input_sample["target"]
+                        logging.info(feat_name)
+                        logging.info(str(feature))
                         for idx in range(num_images):
                             index = input_sample["inds"][idx]
                             out_features[feat_name][index] = feature[idx]

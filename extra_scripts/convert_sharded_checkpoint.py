@@ -24,7 +24,7 @@ from fvcore.common.file_io import PathManager
 from hydra.experimental import compose, initialize_config_module
 from vissl.config import AttrDict
 from vissl.utils.checkpoint import CheckpointFormatConverter
-from vissl.utils.env import setup_path_manager
+from vissl.utils.env import set_env_vars
 from vissl.utils.io import makedir
 from vissl.utils.logger import setup_logging, shutdown_logging
 
@@ -60,6 +60,20 @@ def convert_checkpoint(input_path: str, output_path: str, output_type: str):
     shutdown_logging()
 
 
+def setup_pathmanager():
+    """
+    Setup PathManager. A bit hacky -- we use the #set_env_vars method to setup pathmanager
+    and as such we need to create a dummy config, and dummy values for local_rank and node_id.
+    """
+    with initialize_config_module(config_module="vissl.config"):
+        cfg = compose(
+            "defaults",
+            overrides=["config=test/integration_test/quick_swav"],
+        )
+    config = AttrDict(cfg).config
+    set_env_vars(local_rank=0, node_id=0, cfg=config)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", type=str, help="Path to input checkpoint")
@@ -73,6 +87,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    setup_path_manager()
+    setup_pathmanager()
 
     convert_checkpoint(args.input, args.output, args.type)

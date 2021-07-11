@@ -1,0 +1,135 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 1
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  MONITOR_PERF_STATS: True
+  PERF_STAT_FREQUENCY: 10
+  ROLLING_BTIME_FREQ: 5
+  HOOKS:
+    TENSORBOARD_SETUP:
+        USE_TENSORBOARD: True
+        EXPERIMENT_LOG_DIR: "byol_quick"
+        LOG_PARAMS: False
+        FLUSH_EVERY_N_MIN: 20
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 128
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 128
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 0.5
+        - name: ImgPilMultiCropRandomApply
+          transforms:
+            - name: ImgPilGaussianBlur
+              p: 1.0
+              radius_min: 0.1
+              radius_max: 2.0
+          prob: [ 1.0, 0.1 ]
+        - name: ImgPilMultiCropRandomApply
+          transforms:
+            - name: ImgPilRandomSolarize
+              p: 1.0
+          prob: [ 0.0, 0.2 ]
+        - name: ToTensor
+        - name: Normalize
+          mean: [ 0.485, 0.456, 0.406 ]
+          std: [ 0.229, 0.224, 0.225 ]
+      COLLATE_FUNCTION: simclr_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      DROP_LAST: True
+      COPY_DESTINATION_DIR: "/tmp/imagenet1k"
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+        ZERO_INIT_RESIDUAL: True
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 4096], "use_relu": True, "use_bn": True}],
+        ["mlp", {"dims": [4096, 256]}],
+        ["mlp", {"dims": [256, 4096], "use_relu": True, "use_bn": True}],
+        ["mlp", {"dims": [4096, 256]}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+    AMP_PARAMS:
+      USE_AMP: False
+  LOSS:
+    name: byol_loss 
+    byol_loss:
+      embedding_dim: 256
+      momentum: 0.999
+  OPTIMIZER:
+      name: sgd
+      use_larc: True
+      larc_config:
+        clip: False
+        trust_coefficient: 0.001
+        eps: 0.00000001
+      weight_decay: 0.000001
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 500
+      regularize_bn: False
+      regularize_bias: True
+      head_optimizer_params:
+        use_different_lr: False
+        use_different_wd: False
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: false
+            base_value: 0.3
+            base_lr_batch_size: 256
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.6
+              end_value: 4.8
+            - name: cosine_warm_restart
+              start_value: 4.8
+              end_value: 0.0048
+              # wave_type: half
+              # restart_interval_length: 0.5
+              wave_type: full
+              is_adaptive: True
+              restart_interval_length: 0.334
+          interval_scaling: [rescaled, rescaled]
+          update_interval: step
+          lengths: [0.1, 0.9]                 # 100ep
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: False 
+    CHECKPOINT_FREQUENCY: 1
+    OVERWRITE_EXISTING: true
+
+  TENSORBOARD_SETUP:
+      USE_TENSORBOARD: true
