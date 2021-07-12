@@ -59,10 +59,9 @@ config:
   MODEL:
     TRUNK:
       NAME: resnet
-      TRUNK_PARAMS:
-        RESNETS:
-          DEPTH: 50
-          ZERO_INIT_RESIDUAL: True
+      RESNETS:
+        DEPTH: 50
+        ZERO_INIT_RESIDUAL: True
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 4096], "use_relu": True, "use_bn": True}],
@@ -97,8 +96,7 @@ config:
         lr:
           name: multistep
           values: [0.03, 0.003, 0.0003]
-          milestones: [40, 80, 120, 160]
-          num_updates: 90
+          milestones: [120, 160]
           update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
