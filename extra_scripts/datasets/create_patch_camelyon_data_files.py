@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import argparse
+import gzip
 import os
 from collections import OrderedDict
 from typing import NamedTuple
@@ -11,7 +12,7 @@ from typing import NamedTuple
 from PIL import Image
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from vissl.utils.download import download_and_extract_archive
+from vissl.utils.download import download_url
 
 
 try:
@@ -95,7 +96,12 @@ class PatchCamelyon:
         for file, url in self._FILES.values():
             if not os.path.exists(os.path.join(self.input_path, file)):
                 if download:
-                    download_and_extract_archive(url=url, download_root=self.input_path)
+                    filename = os.path.basename(url)
+                    download_url(url=url, root=self.input_path, filename=filename)
+                    from_path = os.path.join(self.input_path, filename)
+                    to_path = from_path.replace(".gz", "")
+                    with gzip.open(from_path, "rb") as rfh, open(to_path, "wb") as wfh:
+                        wfh.write(rfh.read())
                 else:
                     raise ValueError(f"Missing file {file} in {self.input_path}")
 

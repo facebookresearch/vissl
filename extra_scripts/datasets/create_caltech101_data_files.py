@@ -15,6 +15,7 @@ from vissl.utils.download import (
     get_redirected_url,
     to_google_drive_download_url,
 )
+from vissl.utils.io import cleanup_dir
 
 
 def get_argument_parser():
@@ -53,6 +54,7 @@ def download_caltech_101(root: str):
     output_file_name = "101_ObjectCategories.tar.gz"
     url = get_redirected_url(url)
     url = to_google_drive_download_url(url)
+
     download_google_drive_url(
         url=url, output_path=root, output_file_name=output_file_name
     )
@@ -97,6 +99,15 @@ def _add_missing_extension(file_name: str) -> str:
     return file_name
 
 
+def cleanup_unused_files(output_path: str):
+    """
+    Cleanup the unused folders, as the data now exists in the VISSL compatible format.
+    """
+    for file_to_delete in ["101_ObjectCategories", "101_ObjectCategories.tar.gz"]:
+        file_to_delete = os.path.join(output_path, file_to_delete)
+        cleanup_dir(file_to_delete, recursive=True)
+
+
 if __name__ == "__main__":
     """
     Example usage:
@@ -113,3 +124,6 @@ if __name__ == "__main__":
         download_caltech_101(args.input)
     input_path = os.path.join(args.input, "101_ObjectCategories")
     create_caltech_101_disk_folder(input_path=input_path, output_path=args.output)
+
+    if args.download:
+        cleanup_unused_files(args.output)

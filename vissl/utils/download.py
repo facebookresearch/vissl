@@ -17,6 +17,7 @@ from torch.utils.model_zoo import tqdm
 from torchvision.datasets.utils import (
     check_integrity,
     extract_archive,
+    download_file_from_google_drive,
 )
 
 
@@ -147,7 +148,7 @@ def download_url(
     # check if file is located on Google Drive
     file_id = _get_google_drive_file_id(url)
     if file_id is not None:
-        return download_google_drive_url(file_id, root, filename, md5)
+        return download_file_from_google_drive(file_id, root, filename, md5)
 
     # download the file
     try:

@@ -10,6 +10,7 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from vissl.utils.download import download_and_extract_archive
+from vissl.utils.io import cleanup_dir
 
 
 def get_argument_parser():
@@ -112,6 +113,15 @@ def create_food_101_disk_folder(input_path: str, output_path: str):
                 progress_bar.update(1)
 
 
+def cleanup_unused_files(output_path: str):
+    """
+    Cleanup the unused folders, as the data now exists in the VISSL compatible format.
+    """
+    for file_to_delete in ["food-101", "food-101.tar.gz"]:
+        file_to_delete = os.path.join(output_path, file_to_delete)
+        cleanup_dir(file_to_delete, recursive=True)
+
+
 if __name__ == "__main__":
     """
     Example usage:
@@ -125,3 +135,6 @@ if __name__ == "__main__":
         download_dataset(args.input)
     input_path = os.path.join(args.input, "food-101")
     create_food_101_disk_folder(input_path=input_path, output_path=args.output)
+
+    if args.download:
+        cleanup_unused_files(args.output)
