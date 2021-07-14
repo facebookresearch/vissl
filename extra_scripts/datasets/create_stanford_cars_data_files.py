@@ -9,8 +9,9 @@ import shutil
 
 from scipy import io
 from torch.utils.data import DataLoader
-from torchvision.datasets.utils import download_and_extract_archive, download_url
 from tqdm import tqdm
+from vissl.utils.download import download_and_extract_archive, download_url
+from vissl.utils.io import cleanup_dir
 
 
 def get_argument_parser():
@@ -41,7 +42,7 @@ def get_argument_parser():
     return parser
 
 
-STANFORD_URL = "http://imagenet.stanford.edu/internal/car196/"
+STANFORD_URL = "https://ai.stanford.edu/~jkrause/car196/"
 TRAIN_IMAGE_URL = STANFORD_URL + "cars_train.tgz"
 TRAIN_ANNOT_URL = "https://ai.stanford.edu/~jkrause/cars/car_devkit.tgz"
 TEST_IMAGE_URL = STANFORD_URL + "cars_test.tgz"
@@ -87,7 +88,8 @@ class StanfordCars:
         meta_data = io.loadmat(os.path.join(self.root, "devkit/cars_meta.mat"))
         class_names = meta_data["class_names"][0]
         return [
-            "{:03}".format(i) + "_" + class_name[0].replace(" ", "_")
+            # Format class names appropriately for directory creation.
+            "{:03}".format(i) + "_" + class_name[0].replace(" ", "_").replace("/", "_")
             for i, class_name in enumerate(class_names)
         ]
 
@@ -150,6 +152,22 @@ def create_dataset(input_folder: str, output_folder: str):
                 progress_bar.update(1)
 
 
+def cleanup_unused_files(output_path: str):
+    """
+    Cleanup the unused folders, as the data now exists in the VISSL compatible format.
+    """
+    for file_to_delete in [
+        "cars_train",
+        "cars_test",
+        "car_devkit.tgz",
+        "cars_test.tgz",
+        "cars_test_annos_withlabels.mat",
+        "cars_train.tgz",
+    ]:
+        file_to_delete = os.path.join(output_path, file_to_delete)
+        cleanup_dir(file_to_delete, recursive=True)
+
+
 if __name__ == "__main__":
     """
     Example usage:
@@ -162,3 +180,6 @@ if __name__ == "__main__":
     if args.download:
         download_dataset(args.input)
     create_dataset(input_folder=args.input, output_folder=args.output)
+
+    if args.download:
+        cleanup_unused_files(args.output)

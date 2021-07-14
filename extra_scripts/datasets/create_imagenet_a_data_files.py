@@ -9,8 +9,9 @@ import os
 import numpy as np
 import torchvision.datasets as datasets
 from fvcore.common.file_io import PathManager
-from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
+from vissl.utils.download import download_and_extract_archive
+from vissl.utils.io import cleanup_dir
 
 
 def get_argument_parser():
@@ -41,15 +42,33 @@ def get_argument_parser():
     return parser
 
 
+def remove_file_name_whitespace(input_path: str):
+    """
+    Remove the whitespace in the file names for better compatibility with PathManager.
+    """
+    for class_folder_path in os.listdir(input_path):
+        # All necessary folders start with n.
+        if class_folder_path[0] != "n":
+            continue
+
+        absolute_class_folder_path = os.path.join(input_path, class_folder_path)
+        for img_file_name in os.listdir(absolute_class_folder_path):
+            absolute_img_file_name = os.path.join(
+                absolute_class_folder_path, img_file_name
+            )
+            file_path, file_name = os.path.split(absolute_img_file_name)
+
+            new_file_name = os.path.join(file_path, file_name.replace(" ", ""))
+            os.rename(absolute_img_file_name, new_file_name)
+
+
 def download_datasets(root: str):
     """
-    Download the Imagenet-A and Imagenet-R dataset archives and expand them
+    Download the Imagenet-A dataset archives and expand them
     in the folder provided as parameter
     """
     IMAGENET_A_URL = "https://people.eecs.berkeley.edu/~hendrycks/imagenet-a.tar"
-    IMAGENET_R_URL = "https://people.eecs.berkeley.edu/~hendrycks/imagenet-r.tar"
     download_and_extract_archive(url=IMAGENET_A_URL, download_root=root)
-    download_and_extract_archive(url=IMAGENET_R_URL, download_root=root)
 
 
 class ImagenetTargetMapper:
@@ -100,6 +119,14 @@ def create_imagenet_test_files(input_path: str, output_path: str):
     np.save(label_info_out_path, np.array(image_labels))
 
 
+def cleanup_unused_files(output_path: str):
+    """
+    Cleanup the unused folders, as the data now exists in the VISSL compatible format.
+    """
+    file_to_delete = os.path.join(output_path, "imagenet-a.tar")
+    cleanup_dir(file_to_delete)
+
+
 if __name__ == "__main__":
     """
     Example usage:
@@ -115,8 +142,10 @@ if __name__ == "__main__":
     if args.download:
         download_datasets(args.input)
 
-    for dataset_name in ["imagenet-a", "imagenet-r"]:
-        input_path = os.path.join(args.input, dataset_name)
-        if os.path.exists(input_path):
-            output_path = os.path.join(args.output, dataset_name)
-            create_imagenet_test_files(input_path, output_path)
+    input_path = os.path.join(args.input, "imagenet-a")
+    assert PathManager.exists(input_path), "Input data path does not exist"
+    remove_file_name_whitespace(input_path)
+    create_imagenet_test_files(input_path, args.output)
+
+    if args.download:
+        cleanup_unused_files(args.output)
