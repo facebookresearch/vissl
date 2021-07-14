@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["flatten", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet  # This could be overriden by command line to be regnet_fsdp
+      REGNET:
+        # The following is the same as the model "regnet_y_128gf: from ClassyVision/classy_vision/models/regnet.py
+        depth: 27
+        w_0: 456
+        w_a: 160.83
+        w_m: 2.52
+        group_width: 264
