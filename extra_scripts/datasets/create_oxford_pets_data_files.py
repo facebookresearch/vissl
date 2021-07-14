@@ -7,8 +7,9 @@ import argparse
 import os
 import shutil
 
-from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
+from vissl.utils.download import download_and_extract_archive
+from vissl.utils.io import cleanup_dir
 
 
 def get_argument_parser():
@@ -82,6 +83,15 @@ def create_oxford_pets_split(images_path: str, annotations_path: str, output_pat
             )
 
 
+def cleanup_unused_files(output_path: str):
+    """
+    Cleanup the unused folders, as the data now exists in the VISSL compatible format.
+    """
+    for file_to_delete in ["annotations", "images"]:
+        file_to_delete = os.path.join(output_path, file_to_delete)
+        cleanup_dir(file_to_delete, recursive=True)
+
+
 if __name__ == "__main__":
     """
     Example usage:
@@ -97,3 +107,6 @@ if __name__ == "__main__":
     if args.download:
         download_oxford_pets(args.input)
     create_oxford_pets_disk_folder(input_path=args.input, output_path=args.output)
+
+    if args.download:
+        cleanup_unused_files(args.output)

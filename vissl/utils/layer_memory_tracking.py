@@ -57,8 +57,17 @@ class TraceBackwardEvent(NamedTuple):
 
 class LayerMemoryTrace(NamedTuple):
     """
-    Trace event providing the current memory usage
-    at each point during forward and backward
+    Trace event providing the current memory usage at a point
+    occuring during the forward or backward
+
+        module_name: name of the module under processing
+        module_params: size of the module parameters
+        allocated: state of the PyTorch allocated memory
+        reserved: state of the PyTorch reserved memory
+        is_forward: whether the trace was collected during forward
+        all_gathered: memory gathered since last event by FSDP
+        cumul_all_gathered: total amount of memory currently gathered by FSDP
+        event: additional information on the trace
     """
 
     module_name: str
@@ -140,12 +149,53 @@ class ProcessGroupTracker:
 
 class LayerwiseMemoryTracker:
     """
-    Surround a module to get the graph of the memory consumption during
-    the forward and backward, layer by layer, with a breakdown of the
-    memory used of the activations versus the total memory consumption
+    Observe a module to get the graph of the memory consumption during
+    the forward and backward, layer by layer, with:
+    - a breakdown of the memory used (activations memory estimation)
+    - additional details such as amount of data exchanged with all gather
 
-    This class requires the model to be on a CUDA device to track the
-    memory consumption
+    Requires the model to be on a CUDA device to track its memory
+
+    Example usage (no FSDP):
+
+        ```
+        # create your model
+        model = models.resnet50().cuda()
+
+        # monitor the model
+        tracker = LayerwiseMemoryTracker()
+        tracker.monitor(model)
+
+        # Do a forward/backward
+        criterion(model(input), target).backward()
+
+        # show the plots
+        tracker.show_plots()
+
+        # get the detailed traces
+        tracker.memory_traces
+
+        # print a summary
+        print(tracker.summary)
+        ```
+
+    Advanced usage (for FSDP):
+
+        ```
+        # wrap the group used for FSDP
+        group = ProcessGroupTracker(group)
+
+        # use this group when creating FSDP blocks
+        model = FullyShardedDataParallel(model, process_group=group),
+
+        # monitor the model as before
+        tracker = LayerwiseMemoryTracker()
+        tracker.monitor(model)
+
+        # the detailed traces will now contain information
+        # about the amount of all gathered data
+        tracker.memory_traces
+        ```
     """
 
     def __init__(self):
@@ -283,7 +333,7 @@ class LayerwiseMemoryTracker:
         if event == ProcessGroupTrackingEvent.allgather:
             outputs, inputs = args
             output_size = self._get_module_output_size(outputs)
-            self._last_all_gather_memory = output_size
+            self._last_all_gather_memory += output_size
             if self._cumul_all_gather_memory:
                 self._cumul_all_gather_memory[-1] += output_size
 

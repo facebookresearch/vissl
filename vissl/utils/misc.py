@@ -7,7 +7,6 @@ import collections
 import logging
 import os
 import random
-import re
 import tempfile
 import time
 from functools import partial, wraps
@@ -18,7 +17,7 @@ import torch
 import torch.multiprocessing as mp
 from fvcore.common.file_io import PathManager
 from scipy.sparse import csr_matrix
-from vissl.utils.io import load_file
+from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 
 
 def is_fairscale_sharded_available():
@@ -184,70 +183,7 @@ def get_indices_sparse(data):
 
 
 def merge_features(input_dir: str, split: str, layer: str):
-    """
-    For multi-gpu feature extraction, each gpu saves features corresponding to its
-    share of the data. We can merge the features across all gpus to get the features
-    for the full data.
-
-    The features are saved along with the data indexes and label. The data indexes can
-    be used to sort the data and ensure the uniqueness.
-
-    We organize the features, targets corresponding to the data index of each feature,
-    ensure the uniqueness and return.
-
-    Args:
-        input_dir (str): input path where the features are dumped
-        split (str): whether the features are train or test data features
-        layer (str): the features correspond to what layer of the model
-
-    Returns:
-        output (Dict): contains features, targets, inds as the keys
-    """
-    logging.info(f"Merging features: {split} {layer}")
-
-    feature_regex = re.compile(rf"(.*)_{split}_{layer}_features.npy")
-
-    # List all the files that are containing the features for a given
-    # dataset split and a given layer
-    prefixes = []
-    for file_path in PathManager.ls(input_dir):
-        match = feature_regex.match(file_path)
-        if match is not None:
-            prefixes.append(match.group(1))
-
-    # Reassemble each feature shard (dumped by a given rank)
-    output_feats, output_targets = {}, {}
-    for prefix in prefixes:
-        feat_file = os.path.join(input_dir, f"{prefix}_{split}_{layer}_features.npy")
-        targets_file = os.path.join(input_dir, f"{prefix}_{split}_{layer}_targets.npy")
-        inds_file = os.path.join(input_dir, f"{prefix}_{split}_{layer}_inds.npy")
-        logging.info(f"Loading:\n{feat_file}\n{targets_file}\n{inds_file}")
-        feats = load_file(feat_file)
-        targets = load_file(targets_file)
-        indices = load_file(inds_file)
-        num_samples = feats.shape[0]
-        for idx in range(num_samples):
-            index = indices[idx]
-            if index not in output_feats:
-                output_feats[index] = feats[idx]
-                output_targets[index] = targets[idx]
-
-    # Sort the entries by sample index
-    indices = sorted(output_targets.keys())
-    features = [output_feats[i] for i in indices]
-    targets = [output_targets[i] for i in indices]
-
-    # Cast the entries as numpy arrays
-    N = len(indices)
-    output = {
-        "features": np.array(features).reshape(N, -1),
-        "targets": np.array(targets),
-        "inds": np.array(indices),
-    }
-    logging.info(f"Features: {output['features'].shape}")
-    logging.info(f"Targets: {output['targets'].shape}")
-    logging.info(f"Indices: {output['inds'].shape}")
-    return output
+    return ExtractedFeaturesLoader.load_features(input_dir, split, layer)
 
 
 def get_json_catalog_path(default_dataset_catalog_path: str) -> str:
