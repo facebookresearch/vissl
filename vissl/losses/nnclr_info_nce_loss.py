@@ -9,7 +9,7 @@ from classy_vision.generic.distributed_util import get_rank, is_distributed_trai
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
 from vissl.config import AttrDict
-from vissl.utils.distributed_gradients import gather_from_all
+from vissl.utils.distributed_utils import gather_from_all
 from vissl.utils.misc import concat_all_gather
 
 
