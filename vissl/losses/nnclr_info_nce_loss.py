@@ -5,10 +5,11 @@ import pprint
 from typing import Dict
 
 import torch
+from classy_vision.generic.distributed_util import get_rank, is_distributed_training_run
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
 from vissl.config import AttrDict
-from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
+from vissl.utils.distributed_gradients import gather_from_all
 from vissl.utils.misc import concat_all_gather
 
 
@@ -86,7 +87,7 @@ class NNclrInfoNCELoss(ClassyLoss):
             super().load_state_dict(state_dict, *args, **kwargs)
 
 
-class NNclrInfoNCECriterion(SimclrInfoNCECriterion):
+class NNclrInfoNCECriterion(nn.Module):
     """
     The criterion corresponding to the NNCLR loss as defined in the https://arxiv.org/abs/2104.14548 paper.
 
@@ -107,10 +108,16 @@ class NNclrInfoNCECriterion(SimclrInfoNCECriterion):
         temperature: float,
         queue_size: int,
     ):
-        super(NNclrInfoNCECriterion, self).__init__(buffer_params, temperature)
+        super(NNclrInfoNCECriterion, self).__init__()
+
+        self.temperature = temperature
+        self.num_pos = 2
+        self.buffer_params = buffer_params
+        self.dist_rank = get_rank()
 
         self.prediction_head_params = prediction_head_params
         self.queue_size = queue_size
+        self._criterion = torch.nn.CrossEntropyLoss()
 
         # Create the queue
         self.register_buffer(
@@ -164,14 +171,37 @@ class NNclrInfoNCECriterion(SimclrInfoNCECriterion):
             self.queue = self.queue.to(embedding.device)
             self.initialized = True
 
+        if is_distributed_training_run():
+            labels = torch.arange(batch_size // self.num_pos) + self.dist_rank * (
+                batch_size // self.num_pos
+            )
+        else:
+            labels = torch.arange(batch_size // self.num_pos)
+
+        labels = labels.to(embedding.device)
+
         with torch.no_grad():
-            nearest_neighbors = self.queue[
-                torch.cdist(embedding, self.queue, 2).argmin(1)
-            ]
+            nearest_neighbors = self.queue[(embedding @ self.queue.T).argmax(1)]
 
-        predictions_buffer = self.gather_embeddings(self.preds)
+        nn_a, nn_b = torch.split(
+            nearest_neighbors, split_size_or_sections=batch_size // self.num_pos, dim=0,
+        )
 
-        loss = self._info_nce(nearest_neighbors, predictions_buffer)
+        predictions_a, predictions_b = torch.split(
+            self.preds, split_size_or_sections=batch_size // self.num_pos, dim=0,
+        )
+
+        logits_ab = (
+            torch.matmul(nn_a, gather_from_all(predictions_b).T) / self.temperature
+        )
+        logits_ba = (
+            torch.matmul(nn_b, gather_from_all(predictions_a).T) / self.temperature
+        )
+
+        loss = (
+            self._criterion(logits_ab, labels) / 2
+            + self._criterion(logits_ba, labels) / 2
+        )
 
         self._dequeue_and_enqueue(embedding)
 
