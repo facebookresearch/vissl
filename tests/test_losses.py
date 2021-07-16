@@ -204,8 +204,10 @@ class TestCrossEntropyMultipleOutputSingleTargetLoss(unittest.TestCase):
 
     def test_label_smoothing_target_transformation(self):
         target = torch.tensor([0, 1, 2], dtype=torch.int64)
-        smoothed = CrossEntropyMultipleOutputSingleTargetCriterion.apply_label_smoothing(
-            target=target, num_labels=4, label_smoothing=0.1
+        smoothed = (
+            CrossEntropyMultipleOutputSingleTargetCriterion.apply_label_smoothing(
+                target=target, num_labels=4, label_smoothing=0.1
+            )
         )
         expected = torch.tensor(
             [
