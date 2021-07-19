@@ -10,8 +10,8 @@ from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 
 
-@register_transform("MultiLabelTransform")
-class MultiLabelTransform(ClassyTransform):
+@register_transform("OneHotEncode")
+class OneHotEncode(ClassyTransform):
     """
     Prepare labels for multi-output support. That is when a single example has
     more than one label. Currently all that this transform does is one-hot encodes

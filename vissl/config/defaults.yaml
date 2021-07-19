@@ -355,12 +355,6 @@ config:
       # In case of an invalid image, by default a mean image is returned. But using
       # QueueDataset, you can instead return a valid and previously seen image.
       ENABLE_QUEUE_DATASET: False
-      # Whether or not a single example has more than one label.
-      MULTI_LABEL: False
-      # Implementation detail for multi-output, we need to specify the number of classes in
-      # the dataset, as the transformation does not have access to the number of classes.
-      # This can be improved.
-      MULTI_LABEL_NUM_CLASSES: 1000
     TEST:
       # A sampler that cuts the dataset in a deterministic way
       USE_DEBUGGING_SAMPLER: False
@@ -403,12 +397,6 @@ config:
       # In case of an invalid image, by default a mean image is returned. But using
       # QueueDataset, you can instead return a valid and previously seen image.
       ENABLE_QUEUE_DATASET: False
-      # Whether or not a single example has more than one label.
-      MULTI_LABEL: False
-      # Implementation detail for multi-output, we need to specify the number of classes in
-      # the dataset, as the transformation does not have access to the number of classes.
-      # This can be improved.
-      MULTI_LABEL_NUM_CLASSES: 1000
 
   # ----------------------------------------------------------------------------------- #
   # METERS
