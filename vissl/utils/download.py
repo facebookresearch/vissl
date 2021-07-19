@@ -12,13 +12,13 @@ import urllib.request
 from typing import Optional
 from urllib.parse import urlparse
 
-from torch.utils.io import makedir
 from torch.utils.model_zoo import tqdm
 from torchvision.datasets.utils import (
     check_integrity,
     extract_archive,
     download_file_from_google_drive,
 )
+from vissl.utils.io import makedir
 
 
 def get_redirected_url(url: str):
