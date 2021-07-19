@@ -33,6 +33,7 @@
 #        +config/pretrain/simclr/my_sub_folder=my_file_name \
 #        +config.MY_NEW_KEY=MY_VALUE
 defaults:
+  - _self_
   # you must specify the base config you want to run
   - config: ???
 
