@@ -8,15 +8,18 @@ import unittest
 from collections import namedtuple
 
 import torch
+import torch.nn as nn
 from classy_vision.generic.distributed_util import set_cpu_device
-from parameterized import parameterized
-from utils import ROOT_LOSS_CONFIGS, SSLHydraConfig
+from parameterized import param, parameterized
+from vissl.config import AttrDict
 from vissl.losses.barlow_twins_loss import BarlowTwinsCriterion
+from vissl.losses.cross_entropy_multiple_output_single_target import (
+    CrossEntropyMultipleOutputSingleTargetCriterion,
+    CrossEntropyMultipleOutputSingleTargetLoss,
+)
 from vissl.losses.multicrop_simclr_info_nce_loss import MultiCropSimclrInfoNCECriterion
 from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.losses.swav_loss import SwAVCriterion
-from vissl.trainer.train_task import SelfSupervisionTask
-from vissl.utils.hydra_config import convert_to_attrdict
 
 
 logger = logging.getLogger("__name__")
@@ -157,33 +160,106 @@ class TestSimClrCriterion(unittest.TestCase):
             self.assertTrue(criterion(next_embeddings) < criterion(embeddings))
 
 
-class TestRootConfigsLossesBuild(unittest.TestCase):
-    @parameterized.expand(ROOT_LOSS_CONFIGS)
-    def test_loss_build(self, filepath):
-        logger.info(f"Loading {filepath}")
-        cfg = SSLHydraConfig.from_configs(
-            [
-                filepath,
-                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
-            ]
-        )
-        _, config = convert_to_attrdict(cfg.default_cfg)
-        task = SelfSupervisionTask.from_config(config)
-        task.datasets, _ = task.build_datasets()
-        self.assertTrue(task._build_loss(), "failed to build loss")
+class TestCrossEntropyMultipleOutputSingleTargetLoss(unittest.TestCase):
+    @parameterized.expand(
+        [param(batch_size=1, target_count=2), param(batch_size=16, target_count=10)]
+    )
+    def test_single_input_single_target(self, batch_size: int, target_count: int):
+        torch.random.manual_seed(0)
+        logits = torch.randn(size=(batch_size, target_count))
+        target = torch.randint(0, target_count, size=(batch_size,))
 
-    def test_pytorch_loss(self):
-        cfg = SSLHydraConfig.from_configs(
+        ref_criterion = nn.CrossEntropyLoss()
+        criterion = CrossEntropyMultipleOutputSingleTargetCriterion()
+        self.assertEqual(criterion(logits, target), ref_criterion(logits, target))
+
+    @parameterized.expand(
+        [
+            param(batch_size=1, target_count=2, input_count=1),
+            param(batch_size=16, target_count=10, input_count=2),
+        ]
+    )
+    def test_multiple_inputs_single_target(
+        self, batch_size: int, target_count: int, input_count: int
+    ):
+        torch.random.manual_seed(0)
+        logits = [
+            torch.randn(size=(batch_size, target_count)) for _ in range(input_count)
+        ]
+        target = torch.randint(0, target_count, size=(batch_size,))
+
+        ref_criterion = nn.CrossEntropyLoss()
+        ref_loss = sum(ref_criterion(logits[i], target) for i in range(input_count))
+        criterion = CrossEntropyMultipleOutputSingleTargetCriterion()
+        self.assertEqual(criterion(logits, target), ref_loss)
+
+    def test_multiple_targets_for_label_smoothing(self):
+        targets = torch.tensor([[0.8, 0.1, 0.1], [0.1, 0.8, 0.1], [0.1, 0.1, 0.8]])
+        logits = torch.tensor([[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]])
+        criterion = CrossEntropyMultipleOutputSingleTargetCriterion()
+        expected = (
+            (-torch.log(nn.Softmax(dim=-1)(logits)) * targets).sum(dim=1).mean().item()
+        )
+        self.assertAlmostEqual(criterion(logits, targets).item(), expected)
+
+    def test_label_smoothing_target_transformation(self):
+        target = torch.tensor([0, 1, 2], dtype=torch.int64)
+        smoothed = (
+            CrossEntropyMultipleOutputSingleTargetCriterion.apply_label_smoothing(
+                target=target, num_labels=4, label_smoothing=0.1
+            )
+        )
+        expected = torch.tensor(
             [
-                "config=test/integration_test/quick_simclr",
-                "config.LOSS.name=CosineEmbeddingLoss",
-                "+config.LOSS.CosineEmbeddingLoss.margin=1.0",
-                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                [0.9250, 0.0250, 0.0250, 0.0250],
+                [0.0250, 0.9250, 0.0250, 0.0250],
+                [0.0250, 0.0250, 0.9250, 0.0250],
             ]
         )
-        _, config = convert_to_attrdict(cfg.default_cfg)
-        task = SelfSupervisionTask.from_config(config)
-        task.datasets, _ = task.build_datasets()
-        self.assertTrue(task._build_loss(), "failed to build loss")
+        self.assertTrue(torch.allclose(expected, smoothed))
+
+    @parameterized.expand(
+        [param(batch_size=1, target_count=2), param(batch_size=16, target_count=10)]
+    )
+    def test_single_target_label_smoothing(self, batch_size: int, target_count: int):
+        torch.random.manual_seed(0)
+        logits = torch.randn(size=(batch_size, target_count))
+        target = torch.randint(0, target_count, size=(batch_size,))
+
+        # Verify that label smoothing is supported in forward pass
+        criterion = CrossEntropyMultipleOutputSingleTargetCriterion(label_smoothing=0.1)
+        loss = criterion(logits, target)
+        self.assertTrue(loss.item() > 0.0)
+
+    @parameterized.expand(
+        [
+            param(temperature=0.1, normalize_output=False, label_smoothing=0.0),
+            param(temperature=1.0, normalize_output=True, label_smoothing=0.0),
+            param(temperature=2.0, normalize_output=False, label_smoothing=0.5),
+        ]
+    )
+    def test_configuration(
+        self,
+        temperature: float,
+        normalize_output: bool,
+        label_smoothing: float,
+        batch_size: int = 16,
+        target_count: int = 10,
+    ):
+        torch.random.manual_seed(0)
+        logits = torch.randn(size=(batch_size, target_count))
+        target = torch.randint(0, target_count, size=(batch_size,))
+        criterion_ref = CrossEntropyMultipleOutputSingleTargetCriterion(
+            temperature=temperature,
+            normalize_output=normalize_output,
+            label_smoothing=label_smoothing,
+        )
+        config = AttrDict(
+            {
+                "temperature": temperature,
+                "normalize_output": normalize_output,
+                "label_smoothing": label_smoothing,
+            }
+        )
+        criterion = CrossEntropyMultipleOutputSingleTargetLoss(config)
+        self.assertEqual(criterion(logits, target), criterion_ref(logits, target))
