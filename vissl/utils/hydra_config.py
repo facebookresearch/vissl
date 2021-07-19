@@ -577,15 +577,3 @@ def infer_and_assert_hydra_config(cfg):
         assert (
             cfg.DATA.TRAIN.get("TRAIN_PHASES_PER_EPOCH", 1) == 1
         ), "When using the generic_ssl, we must set TRAIN_PHASES_PER_EPOCH = 1."
-
-    # Implementation detail. Add the MultiLabelTransform with the number of classes. This will
-    # one-hot encode all the labels before passing to the loss/accuracy meter.
-    for split in ["TRAIN", "TEST"]:
-        dataset_config = cfg.DATA[split]
-        if dataset_config.MULTI_LABEL:
-            transform = {
-                "name": "MultiLabelTransform",
-                "num_classes": dataset_config.MULTI_LABEL_NUM_CLASSES,
-            }
-
-            dataset_config.TRANSFORMS.insert(0, transform)
