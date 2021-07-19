@@ -154,11 +154,10 @@ class UpdateTrainIterationNumHook(ClassyHook):
 
     def on_forward(self, task: "tasks.ClassyTask") -> None:
         """
-        Called each time forward pass is triggered. We update the number of batches
-        we have seen. This is useful for debugging.
+        Called each time forward pass is triggered.
+        We update the current iteration.
         """
-        phase_type = "train" if task.train else "test"
-        if phase_type == "train":
+        if task.train:
             task.iteration += 1
 
 
