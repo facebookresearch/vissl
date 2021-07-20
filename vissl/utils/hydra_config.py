@@ -87,7 +87,12 @@ def print_cfg(cfg):
     """
     logging.info("Training with config:")
     if isinstance(cfg, DictConfig):
-        logging.info(cfg.pretty())
+        if hasattr(cfg, "pretty"):
+            # Backward compatibility
+            logging.info(cfg.pretty())
+        else:
+            # Newest version of OmegaConf
+            logging.info(OmegaConf.to_yaml(cfg))
     else:
         logging.info(pprint.pformat(cfg))
 
