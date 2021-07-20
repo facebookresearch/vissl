@@ -373,7 +373,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         task: "tasks.ClassyTask",
         mode_frequency: int,
         mode_num: int,
-        mode: str = "phase"
+        mode: str = "phase",
     ):
         """
         Checkpoint model. Can be called in 3 possible scenarios:
