@@ -90,10 +90,13 @@ config:
       regularize_bias: False
       param_schedulers:
         lr:
-          name: cosine
-          start_value: 0.05   # LR for batch size 256
-          end_value: 0.0000
-          update_interval: epoch
+        auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.2
+        name: cosine
+        start_value: 0.05   # LR for batch size 64
+        end_value: 0.000001
+        # update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
