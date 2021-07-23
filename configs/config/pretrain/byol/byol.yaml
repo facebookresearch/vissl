@@ -4,7 +4,7 @@ config:
   LOG_FREQUENCY: 10
   TEST_ONLY: False
   TEST_MODEL: False
-  SEED_VALUE: 0
+  SEED_VALUE: 1337
   MULTI_PROCESSING_METHOD: forkserver
   HOOKS:
     PERF_STATS:
@@ -94,9 +94,9 @@ config:
       regularize_bias: False
       param_schedulers:
         lr:
-          name: multistep
-          values: [0.05, 0.005, 0.0005]
-          milestones: [120, 160]
+          name: cosine
+          start_value: 0.05   # LR for batch size 256
+          end_value: 0.0000
           update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
