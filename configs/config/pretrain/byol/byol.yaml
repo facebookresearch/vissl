@@ -80,12 +80,8 @@ config:
         embedding_dim: 256
         momentum: 0.999
   OPTIMIZER:
-      name: sgd
-      use_larc: True
-      larc_config:
-        clip: False
-        trust_coefficient: 0.001
-        eps: 0.00000001
+      name: lars
+      trust_coefficient: 0.001
       weight_decay: 1.5e-6
       momentum: 0.9
       nesterov: False
