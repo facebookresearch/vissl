@@ -90,9 +90,6 @@ config:
       regularize_bias: False
       param_schedulers:
         lr:
-          auto_lr_scaling:
-          auto_scale: true
-          base_value: 0.2
           name: cosine
           start_value: 0.05   # LR for batch size 64
           end_value: 0.000001
