@@ -20,7 +20,7 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 128
+      BATCHSIZE_PER_REPLICA: 64
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgReplicatePil
@@ -95,7 +95,7 @@ config:
       param_schedulers:
         lr:
           name: multistep
-          values: [0.03, 0.003, 0.0003]
+          values: [0.05, 0.005, 0.0005]
           milestones: [120, 160]
           update_interval: epoch
   DISTRIBUTED:
