@@ -93,7 +93,7 @@ config:
           name: cosine
           start_value: 0.05   # LR for batch size 64
           end_value: 0.000001
-        # update_interval: epoch
+          update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
