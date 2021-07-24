@@ -88,14 +88,18 @@ config:
       regularize_bias: False
       param_schedulers:
         lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.2
+            base_lr_batch_size: 256
           name: composite
           schedulers:
             - name: linear
-              start_value: 0.000001
+              start_value: 0.002
               end_value: 0.2
             - name: cosine
               start_value: 0.2
-              end_value: 0.000001
+              end_value: 0.000002
           interval_scaling: [rescaled, fixed]
           update_interval: epoch
           lengths: [.0334, 0.9666]     
