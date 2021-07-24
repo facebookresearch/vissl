@@ -1,5 +1,7 @@
 # @package _global_
 config:
+  MAX_ITER: 312785 # int(1000. * Training set length / 4096) , here set according to ImageNet ILSVRC-2012 dataset
+  WARMUP_ITERS: 3128 # int(10. * Training set length / 4096) , here set according to ImageNet ILSVRC-2012 dataset
   VERBOSE: False
   LOG_FREQUENCY: 10
   TEST_ONLY: False
