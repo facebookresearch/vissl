@@ -359,7 +359,7 @@ class SelfSupervisionTask(ClassificationTask):
         be installed.
         """
         optimizer_config = self.config["OPTIMIZER"]
-        if optimizer_config.use_larc:
+        if optimizer_config.use_larc and optimizer_config.name != "sgd_fsdp":
             assert is_apex_available(), "Apex must be available to use LARC"
         optim = build_optimizer(optimizer_config)
         return optim

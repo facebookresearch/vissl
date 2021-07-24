@@ -19,7 +19,7 @@ _TRANSFORMS_WITH_COPIES = [
     "ImgPilToMultiCrop",
 ]
 _TRANSFORMS_WITH_GROUPING = ["ImgPilMultiCropRandomApply"]
-_TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH = []
+_TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH = ["OneHotEncode"]
 
 DEFAULT_TRANSFORM_TYPES = {
     "TRANSFORMS_WITH_LABELS": _TRANSFORMS_WITH_LABELS,
@@ -150,10 +150,7 @@ class SSLTransformsWrapper(ClassyTransform):
         Apply each transform on the specified indices of each entry in
         the input sample or batch.
         """
-        if (
-            self.transform_receives_entire_batch
-            and self._is_overwrite_entire_batch_transform()
-        ):
+        if self._is_overwrite_entire_batch_transform():
             # Transform the entire batch. This is currently only used for hive dataset.
             batch_or_img = self.transform(batch_or_img)
         elif self.transform_receives_entire_batch:

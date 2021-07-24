@@ -21,8 +21,6 @@ import enum
 import os
 
 from fvcore.common.file_io import PathManager
-from hydra.experimental import compose, initialize_config_module
-from vissl.config import AttrDict
 from vissl.utils.checkpoint import CheckpointFormatConverter
 from vissl.utils.env import set_env_vars
 from vissl.utils.io import makedir

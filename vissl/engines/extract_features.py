@@ -62,6 +62,9 @@ def extract_main(
                                 1) for 1node: use init_method=tcp and run_id=auto
                                 2) for multi-node, use init_method=tcp and specify
                                 run_id={master_node}:{port}
+        checkpoint_folder (str): what directory to use for checkpointing. This folder
+                                 will be used to output the extracted features as well
+                                 in case config.EXTRACT_FEATURES.OUTPUT_DIR is not set
         local_rank (int): id of the current device on the machine. If using gpus,
                         local_rank = gpu number on the current machine
         node_id (int): id of the current machine. starts from 0. valid for multi-gpu

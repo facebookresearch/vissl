@@ -321,7 +321,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             logging.info(f"Infinite Model output or NaN at iteration={task.iteration}.")
             self._checkpoint_model(
                 task,
-                task.train_phase_idx,
                 mode_frequency=1,
                 mode_num=task.iteration,
                 mode="iteration",
@@ -349,7 +348,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         if checkpoint_frequency > 0:
             self._checkpoint_model(
                 task,
-                task.train_phase_idx,
                 mode_frequency=checkpoint_frequency,
                 mode_num=task.iteration,
                 mode="iteration",
@@ -365,14 +363,17 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         checkpoint_frequency = task.config["CHECKPOINT"]["CHECKPOINT_FREQUENCY"]
         self._checkpoint_model(
             task,
-            task.train_phase_idx,
             mode_frequency=checkpoint_frequency,
-            mode_num=task.phase_idx,
+            mode_num=task.train_phase_idx,
             mode="phase",
         )
 
     def _checkpoint_model(
-        self, task, train_phase_idx, mode_frequency, mode_num, mode="phase"
+        self,
+        task: "tasks.ClassyTask",
+        mode_frequency: int,
+        mode_num: int,
+        mode: str = "phase",
     ):
         """
         Checkpoint model. Can be called in 3 possible scenarios:
@@ -391,6 +392,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                             of phase or iteration at which checkpointing is being done
         """
         phase_idx = task.phase_idx
+        train_phase_idx = task.train_phase_idx
         # num_train_phases = num_epochs * num_phases_per_epoch
         # For OSS use, num_train_phases will be equal to num_epochs
         num_train_phases = task.num_train_phases

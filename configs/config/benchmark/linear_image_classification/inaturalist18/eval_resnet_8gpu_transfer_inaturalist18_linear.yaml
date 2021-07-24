@@ -13,9 +13,9 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 8
     TRAIN:
-      DATA_SOURCES: [everstore]
+      DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [inaturalist2018_everstore]
+      DATASET_NAMES: [inaturalist2018_filelist]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop
@@ -29,9 +29,9 @@ config:
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/inaturalist2018/
     TEST:
-      DATA_SOURCES: [everstore]
+      DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [inaturalist2018_everstore]
+      DATASET_NAMES: [inaturalist2018_filelist]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -63,6 +63,7 @@ config:
         ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
         ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
         ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+        ["res5avg", ["Identity", []]],
       ]
     TRUNK:
       NAME: resnet
@@ -75,6 +76,7 @@ config:
         ["eval_mlp", {"in_channels": 512, "dims": [8192, 8142]}],
         ["eval_mlp", {"in_channels": 1024, "dims": [9216, 8142]}],
         ["eval_mlp", {"in_channels": 2048, "dims": [8192, 8142]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 8142]}],
       ]
     WEIGHTS_INIT:
       PARAMS_FILE: "specify the model weights"

@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import List, Union
+from typing import List, Optional, Union
 
 import torch
 import torch.nn.functional as F
@@ -29,60 +29,33 @@ class SmoothCrossEntropy(torch.nn.modules.CrossEntropyLoss):
             )
 
 
-@register_loss("cross_entropy_multiple_output_single_target")
-class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
+class CrossEntropyMultipleOutputSingleTargetCriterion(nn.Module):
     """
-    Intializer for the sum cross-entropy loss. For a single
-    tensor, this is equivalent to the cross-entropy loss. For a
-    list of tensors, this computes the sum of the cross-entropy
-    losses for each tensor in the list against the target. Can accommodate
-    target vectors, e.g. smoothed labels.
+    Sum cross entropy loss:
+    - For a single tensor, this is equivalent to the cross-entropy loss.
+    - For a list of tensors, this computes the sum of the cross-entropy
+    losses for each tensor in the list against the target.
 
-    Config params:
-        weight: weight of sample, optional
-        ignore_index: sample should be ignored for loss, optional
-        reduction: specifies reduction to apply to the output, optional
-        temperature: specify temperature for softmax. Default 1.0
+    Can accommodate target vectors, e.g. smoothed labels.
     """
 
-    def __init__(self, loss_config: AttrDict):
-        super(CrossEntropyMultipleOutputSingleTargetLoss, self).__init__()
-        self._weight = None
-        self._ignore_index = -1
+    def __init__(
+        self,
+        temperature: float = 1.0,
+        weight: Optional[torch.Tensor] = None,
+        ignore_index: int = -100,
+        normalize_output: bool = False,
+        label_smoothing: float = 0.0,
+    ):
+        super().__init__()
+        assert 0.0 <= label_smoothing <= 1.0
+
+        self._weight = weight
+        self._ignore_index = ignore_index
         self._losses = torch.nn.modules.ModuleList([])
-        self._normalize_output = False
-        self._temperature = loss_config["temperature"]
-        if "weight" in loss_config:
-            self._weight = loss_config["weight"]
-        if "ignore_index" in loss_config:
-            self._ignore_index = loss_config["ignore_index"]
-        if "normalize_output" in loss_config:
-            self._normalize_output = loss_config["normalize_output"]
-
-    @classmethod
-    def from_config(cls, loss_config: AttrDict):
-        """
-        Instantiates CrossEntropyMultipleOutputSingleTargetLoss from configuration.
-
-        Args:
-            loss_config: configuration for the loss
-
-        Returns:
-            CrossEntropyMultipleOutputSingleTargetLoss instance.
-        """
-        return cls(loss_config)
-
-    def _create_loss_function(self):
-        copy_to_gpu = is_on_gpu(self._losses)
-        # Instantiating CrossEntropyMultipleOutputSingleTargetLoss, which
-        # internally uses SmoothCrossEntropy loss to accommodate label smoothing,
-        # but defaults to vanilla cross-entropy if provided single-target labels.
-        self._losses.append(
-            SmoothCrossEntropy(weight=self._weight, ignore_index=self._ignore_index)
-        )
-        if copy_to_gpu:
-            self._losses.cuda()
-        return self
+        self._normalize_output = normalize_output
+        self._temperature = temperature
+        self._label_smoothing = label_smoothing
 
     def forward(
         self, output: Union[torch.Tensor, List[torch.Tensor]], target: torch.Tensor
@@ -99,16 +72,101 @@ class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
         assert torch.is_tensor(target), "Target should be a tensor. Got Type {}".format(
             type(target)
         )
+
         loss = 0
-        for idx, pred in enumerate(output):
-            normalized_pred = pred
-            if self._normalize_output:
-                normalized_pred = nn.functional.normalize(pred, dim=1, p=2)
+        for i, pred in enumerate(output):
+            if i >= len(self._losses):
+                self._losses.append(self._create_loss_function())
 
             assert (
                 target.max().item() < pred.shape[1]
             ), f"pred.shape[1]={pred.shape[1]} and target.max().item()={target.max().item()}"
-            if idx >= len(self._losses):
-                self._create_loss_function()
-            loss += self._losses[idx](normalized_pred / self._temperature, target)
+
+            if self._normalize_output:
+                pred = nn.functional.normalize(pred, dim=1, p=2)
+
+            if self._label_smoothing > 0.0:
+                target = self.apply_label_smoothing(
+                    target,
+                    num_labels=pred.shape[1],
+                    label_smoothing=self._label_smoothing,
+                )
+
+            loss += self._losses[i](pred / self._temperature, target)
         return loss
+
+    def _create_loss_function(self):
+        copy_to_gpu = is_on_gpu(self._losses)
+        criterion = SmoothCrossEntropy(
+            weight=self._weight, ignore_index=self._ignore_index
+        )
+        return criterion.cuda() if copy_to_gpu else criterion
+
+    @staticmethod
+    def apply_label_smoothing(
+        target: torch.Tensor, num_labels: int, label_smoothing: float
+    ):
+        batch_size = target.shape[0]
+        smoothed_targets = torch.full(
+            size=(batch_size, num_labels),
+            fill_value=label_smoothing / num_labels,
+            device=target.device,
+        )
+        one_hot = torch.nn.functional.one_hot(target, num_classes=num_labels)
+        smoothed_targets += (1 - label_smoothing) * one_hot
+        return smoothed_targets
+
+
+@register_loss("cross_entropy_multiple_output_single_target")
+class CrossEntropyMultipleOutputSingleTargetLoss(ClassyLoss):
+    """
+    Initializer for the sum cross-entropy loss. For a single
+    tensor, this is equivalent to the cross-entropy loss. For a
+    list of tensors, this computes the sum of the cross-entropy
+    losses for each tensor in the list against the target. Can accommodate
+    target vectors, e.g. smoothed labels.
+
+    Config params:
+        weight: weight of sample, optional
+        ignore_index: sample should be ignored for loss, optional
+        reduction: specifies reduction to apply to the output, optional
+        temperature: specify temperature for softmax. Default 1.0
+        label_smoothing: specific a label smoothing factor between 0.0 and 1.0 (default is 0.0)
+    """
+
+    def __init__(self, loss_config: AttrDict):
+        super(CrossEntropyMultipleOutputSingleTargetLoss, self).__init__()
+        self._temperature = loss_config["temperature"]
+        self._weight = loss_config.get("weight", None)
+        self._ignore_index = loss_config.get("ignore_index", -1)
+        self._normalize_output = loss_config.get("normalize_output", False)
+        self._label_smoothing = loss_config.get("label_smoothing", 0.0)
+        self.criterion = CrossEntropyMultipleOutputSingleTargetCriterion(
+            weight=self._weight,
+            temperature=self._temperature,
+            ignore_index=self._ignore_index,
+            normalize_output=self._normalize_output,
+            label_smoothing=self._label_smoothing,
+        )
+
+    @classmethod
+    def from_config(cls, loss_config: AttrDict):
+        """
+        Instantiates CrossEntropyMultipleOutputSingleTargetLoss from configuration.
+
+        Args:
+            loss_config: configuration for the loss
+
+        Returns:
+            CrossEntropyMultipleOutputSingleTargetLoss instance.
+        """
+        return cls(loss_config)
+
+    def forward(
+        self, output: Union[torch.Tensor, List[torch.Tensor]], target: torch.Tensor
+    ):
+        """
+        For each output and single target, loss is calculated.
+        The returned loss value is the sum loss across all outputs.
+        """
+        return self.criterion(output, target)

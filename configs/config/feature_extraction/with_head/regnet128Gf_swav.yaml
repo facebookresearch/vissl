@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: regnet  # This could be overriden by command line to be regnet_fsdp
+      REGNET:
+        # The following is the same as the model "regnet_y_128gf: from ClassyVision/classy_vision/models/regnet.py
+        depth: 27
+        w_0: 456
+        w_a: 160.83
+        w_m: 2.52
+        group_width: 264
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [7392, 7392, 128], "use_bn": False, "num_clusters": [3000]}],
+      ]

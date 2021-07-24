@@ -45,7 +45,7 @@ class ImgPilToMultiCrop(ClassyTransform):
         - (total_num_crops=2, num_crops=[1, 1],
            size_crops=[224, 96], crop_scales=[(0.14, 1.), (0.05, 0.14)])
            Extracts 2 crops total of size 224x224 and 96x96
-        - (total_num_crops=2, num_crops=[1, 2],
+        - (total_num_crops=3, num_crops=[1, 2],
            size_crops=[224, 96], crop_scales=[(0.14, 1.), (0.05, 0.14)])
            Extracts 3 crops total: 1 of size 224x224 and 2 of size 96x96
         """
