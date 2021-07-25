@@ -67,7 +67,9 @@ config:
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 4096], "use_relu": True, "use_bn": True}],
-        ["mlp", {"dims": [4096, 256]}]
+        ["mlp", {"dims": [4096, 256]}],
+        ["mlp", {"dims": [256, 4096], "use_relu": True, "use_bn": True}],
+        ["mlp", {"dims": [4096, 256]}],
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
