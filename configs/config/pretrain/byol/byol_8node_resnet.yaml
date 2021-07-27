@@ -42,7 +42,7 @@ config:
         - name: ImgPilMultiCropRandomApply
           transforms:
             - name: ImgPilRandomSolarize
-              p: 1
+              p: 1.0
           prob: [ 0.0, 0.2 ]
         - name: ToTensor
         - name: Normalize
