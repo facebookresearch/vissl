@@ -22,7 +22,7 @@ class ImgPilColorDistortion(ClassyTransform):
     """
 
     def __init__(self, strength , brightness=0.8 , contrast=0.8 , saturation=0.8, 
-                    hue=0.2,color_jitter_probability=0.8,grayscale_probability=0.2 ):
+                    hue=0.2,color_jitter_probability=0.8,grayscale_probability=0.2):
         """
         Args:
             strength (float): A number used to quantify the strength of the
@@ -41,6 +41,7 @@ class ImgPilColorDistortion(ClassyTransform):
             grayscale_probability (float): A floating point number used to 
                             quantify to apply randomly convert image to grayscale with 
                             the assigned probability. Default value is 0.2.
+            This function follows the Pytorch documentation: https://pytorch.org/vision/stable/transforms.html
         """
         self.strength = strength
         self.brightness = brightness
