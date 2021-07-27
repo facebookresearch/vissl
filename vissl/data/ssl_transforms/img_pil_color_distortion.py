@@ -56,8 +56,8 @@ class ImgPilColorDistortion(ClassyTransform):
             self.saturation * self.strength,
             self.hue * self.strength,
         )
-        self.rnd_color_jitter = pth_transforms.RandomApply([self.color_jitter], self.color_jitter_probability)
-        self.rnd_gray = pth_transforms.RandomGrayscale(self.grayscale_probability)
+        self.rnd_color_jitter = pth_transforms.RandomApply([self.color_jitter], p=self.color_jitter_probability)
+        self.rnd_gray = pth_transforms.RandomGrayscale(p=self.grayscale_probability)
         self.transforms = pth_transforms.Compose([self.rnd_color_jitter, self.rnd_gray])
 
     def __call__(self, image):

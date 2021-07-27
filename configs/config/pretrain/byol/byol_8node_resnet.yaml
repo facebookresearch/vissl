@@ -31,7 +31,8 @@ config:
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
-          strength: 0.2
+          strength: 0.5
+          saturation: 0.4 
         - name: ImgPilMultiCropRandomApply
           transforms:
             - name: ImgPilGaussianBlur
