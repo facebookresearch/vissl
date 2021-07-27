@@ -1,9 +1,7 @@
 # @package _global_
 config:
-  MAX_ITER: 312785 # int(1000. * Training set length / 4096) , here set according to ImageNet ILSVRC-2012 dataset
-  WARMUP_ITERS: 3128 # int(10. * Training set length / 4096) , here set according to ImageNet ILSVRC-2012 dataset
   VERBOSE: False
-  LOG_FREQUENCY: 10
+  LOG_FREQUENCY: 200
   TEST_ONLY: False
   TEST_MODEL: False
   SEED_VALUE: 1337
@@ -29,21 +27,22 @@ config:
           num_times: 2
         - name: RandomResizedCrop
           size: 224
+          interpolation: 3
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
-          strength: 0.5
+          strength: 0.2
         - name: ImgPilMultiCropRandomApply
           transforms:
             - name: ImgPilGaussianBlur
-              p: 0.5
+              p: 1
               radius_min: 0.1
               radius_max: 2.0
           prob: [ 1.0, 0.1 ]
         - name: ImgPilMultiCropRandomApply
           transforms:
             - name: ImgPilRandomSolarize
-              p: 0.2
+              p: 1
           prob: [ 0.0, 0.2 ]
         - name: ToTensor
         - name: Normalize
@@ -80,7 +79,7 @@ config:
       name: byol_loss
       byol_loss:
         embedding_dim: 256
-        momentum: 0.999
+        momentum: 0.99
   OPTIMIZER:
       name: lars
       trust_coefficient: 0.001
@@ -89,7 +88,7 @@ config:
       nesterov: False
       num_epochs: 300
       regularize_bn: False
-      regularize_bias: False
+      regularize_bias: True
       param_schedulers:
         lr:
           auto_lr_scaling:
@@ -106,10 +105,10 @@ config:
               end_value: 0.000002
           interval_scaling: [rescaled, fixed]
           update_interval: epoch
-          lengths: [.0334, 0.9666]     
+          lengths: [0.0334, 0.9666]     
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 1
+    NUM_NODES: 8
     NUM_PROC_PER_NODE: 8
     INIT_METHOD: tcp
     RUN_ID: auto
@@ -117,5 +116,5 @@ config:
     DEVICE: gpu
   CHECKPOINT:
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 5
+    CHECKPOINT_FREQUENCY: 10
     CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations
