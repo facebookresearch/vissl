@@ -1264,6 +1264,10 @@ config:
     GEM_POOL_POWER: 4.0
     # valid only if we are training whitening on the whitening dataset
     WHITEN_IMG_LIST: ""
+    # Whether or not to crop the query images with the given bounded boxes.
+    # Relevant for Oxford, Paris, ROxford, and RParis datasets.
+    CROP_QUERY_BBX: True
+
 
   # ----------------------------------------------------------------------------------- #
   # K-NEAREST NEIGHBOR (benchmark)

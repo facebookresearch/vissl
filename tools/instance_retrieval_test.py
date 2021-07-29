@@ -262,7 +262,11 @@ def get_queries_features(
         if idx % LOG_FREQUENCY == 0:
             logging.info(f"Eval Query: {idx}"),
         q_fname_in = eval_dataset.get_query_filename(idx)
-        roi = eval_dataset.get_query_roi(idx)
+        roi = (
+            eval_dataset.get_query_roi(idx)
+            if cfg.IMG_RETRIEVAL.CROP_QUERY_BBX
+            else None
+        )
         q_fname_out = f"{q_fname_out_dir}/{idx}.npy"
         if PathManager.exists(q_fname_out):
             query_feature = load_file(q_fname_out)
@@ -368,9 +372,10 @@ def instance_retrieval_test(args, cfg):
     eval_binary_path = cfg.IMG_RETRIEVAL.EVAL_BINARY_PATH
     root_dataset_path = cfg.IMG_RETRIEVAL.DATASET_PATH
     save_results = cfg.IMG_RETRIEVAL.SAVE_RESULTS
+    debug_mode = cfg.IMG_RETRIEVAL.DEBUG_MODE
 
     temp_dir = f"{cfg.IMG_RETRIEVAL.TEMP_DIR}/{str(uuid.uuid4())}"
-    if save_results:
+    if save_results and not debug_mode:
         temp_dir = os.path.join(get_checkpoint_folder(cfg), "features")
 
     logging.info(f"Temp directory: {temp_dir}")
@@ -487,6 +492,14 @@ def instance_retrieval_test(args, cfg):
         cleanup_dir(temp_dir)
 
     logging.info("All done!!")
+
+
+def validate_config(config: AttrDict):
+    assert config.SPATIAL_LEVELS > 0, "Spatial levels must be greater than 0."
+    if config.FEATS_PROCESSING_TYPE == "rmac":
+        assert (
+            config.SHOULD_TRAIN_PCA_OR_WHITENING
+        ), "PCA Whitening is built-in to the RMAC algorithm and is required"
 
 
 def main(args: Namespace, config: AttrDict):
