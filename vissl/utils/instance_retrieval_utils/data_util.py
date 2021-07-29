@@ -286,7 +286,7 @@ class RevisitedInstanceRetrievalDataset:
     ready to be used in the code for retrieval evaluations.
     """
 
-    def __init__(self, dataset: str, dir_main: str):
+    def __init__(self, dataset: str, dir_main: str, num_samples=None):
         # Credits: https://github.com/filipradenovic/revisitop/blob/master/python/dataset.py#L6     # NOQA
 
         self.DATASETS = ["roxford5k", "rparis6k"]
@@ -307,7 +307,16 @@ class RevisitedInstanceRetrievalDataset:
         cfg["nq"] = len(cfg["qimlist"])
 
         cfg["dataset"] = dataset
+
         self.cfg = cfg
+
+        self.N_images = self.cfg["n"]
+        self.N_queries = self.cfg["nq"]
+
+        if num_samples is not None:
+            self.N_queries = min(self.N_queries, num_samples)
+            self.N_images = min(self.N_images, num_samples)
+
         logging.info(
             f"Dataset: {dataset}, images: {self.get_num_images()}, "
             f"queries: {self.get_num_query_images()}"
@@ -329,13 +338,13 @@ class RevisitedInstanceRetrievalDataset:
         """
         Number of images in the dataset
         """
-        return self.cfg["n"]
+        return self.N_images
 
     def get_num_query_images(self):
         """
         Number of query images in the dataset
         """
-        return self.cfg["nq"]
+        return self.N_queries
 
     def get_query_roi(self, i: int):
         """
@@ -363,6 +372,7 @@ class RevisitedInstanceRetrievalDataset:
             g["ok"] = np.concatenate([gnd[i]["easy"]])
             g["junk"] = np.concatenate([gnd[i]["junk"], gnd[i]["hard"]])
             gnd_t.append(g)
+
         mapE, apsE, mprE, prsE = compute_map(ranks, gnd_t, ks)
 
         # search for easy & hard
@@ -400,6 +410,16 @@ class RevisitedInstanceRetrievalDataset:
                 np.around(mprH * 100, decimals=2),
             )
         )
+
+        return {
+            "mAP": {"e": mapE, "m": mapM, "h": mapH},
+            "mp@k": {
+                "k": ks,
+                "e": mprE.tolist(),
+                "m": mprM.tolist(),
+                "h": mprH.tolist(),
+            },
+        }
 
 
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
@@ -486,8 +506,10 @@ class InstanceRetrievalImageLoader:
         # (https://github.com/python-pillow/Pillow/issues/835)
         with PathManager.open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
+
         if roi is not None:
-            im_resized = img.crop(roi)
+            img = img.crop(roi)
+
         im_resized, _ = self.apply_img_transform(img)
         return im_resized
 

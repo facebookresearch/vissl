@@ -50,7 +50,6 @@ class PCA(object):
         self.DVt = self.DVt.cuda()
 
     def apply(self, X):
-        logging.info("Applying PCA...")
         X = X - self.mean
         num = torch.mm(self.DVt, X.transpose(0, 1)).transpose(0, 1)
         return num
@@ -65,6 +64,6 @@ def train_and_save_pca(features, n_pca, pca_out_fname):
     pca = PCA(n_pca)
     pca.fit(features)
     logging.info(f"Saving PCA features to: {pca_out_fname}")
-    save_file(pca, pca_out_fname)
+    save_file(pca, pca_out_fname, log=False)
     logging.info(f"Saved PCA features to: {pca_out_fname}")
     return pca
