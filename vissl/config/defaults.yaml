@@ -1253,6 +1253,9 @@ config:
     EVAL_BINARY_PATH: ""
     # Path to a temporary directory to store features and scores
     TEMP_DIR: "/tmp/instance_retrieval/"
+    # Whether or not to save the results (metrics, rankings, similarity scores, and features)
+    # to the config.CHECKPOINT.DIR.
+    SAVE_RESULTS: False
     # Whether to apply PCA/whitening or not
     SHOULD_TRAIN_PCA_OR_WHITENING: True
     # gem | rmac | l2_norm
