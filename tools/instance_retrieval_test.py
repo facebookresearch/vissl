@@ -80,18 +80,6 @@ def build_retrieval_model(cfg):
     return model
 
 
-def gem_pool_and_save_features(features, p, add_bias, gem_out_fname):
-    if PathManager.exists(gem_out_fname):
-        logging.info("Loading train GeM features...")
-        features = load_file(gem_out_fname)
-    else:
-        logging.info(f"GeM pooling features: {features.shape}")
-        features = l2n(gem(features, p=p, add_bias=True))
-        save_file(features, gem_out_fname, log=False)
-        logging.info(f"Saved GeM features to: {gem_out_fname}")
-    return features
-
-
 def get_train_features(
     cfg,
     temp_dir,
@@ -114,9 +102,9 @@ def get_train_features(
         else:
             fname_in = train_dataset.get_filename(i)
             if is_revisited_dataset(train_dataset_name):
-                img = image_helper.load_and_prepare_revisited_image(fname_in)
+                img = image_helper.load_and_prepare_revisited_image(fname_in, roi=None)
             elif is_whiten_dataset(train_dataset_name):
-                img = image_helper.load_and_prepare_whitening_image(fname_in)
+                img = image_helper.load_and_prepare_whitening_image(fname_in, roi=None)
             else:
                 img = image_helper.load_and_prepare_image(fname_in, roi=None)
             v = torch.autograd.Variable(img.unsqueeze(0))
@@ -130,8 +118,17 @@ def get_train_features(
             elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "l2_norm":
                 # we simply L2 normalize the features otherwise
                 descriptors = F.normalize(activation_map, p=2, dim=0)
+            elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
+                descriptors = l2n(
+                    gem(
+                        activation_map,
+                        p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+                        add_bias=False,
+                    )
+                )
             else:
                 descriptors = activation_map
+
             save_file(descriptors.data.numpy(), fname_out, log=False)
             train_features.append(descriptors.data.numpy())
 
@@ -143,15 +140,6 @@ def get_train_features(
     for i in range(num_images):
         process_train_image(i, out_dir)
 
-    if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-        gem_out_fname = f"{out_dir}/{train_dataset_name}_GeM.npy"
-        train_features = torch.tensor(np.concatenate(train_features))
-        train_features = gem_pool_and_save_features(
-            train_features,
-            p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-            add_bias=True,
-            gem_out_fname=gem_out_fname,
-        )
     train_features = np.vstack([x.reshape(-1, x.shape[-1]) for x in train_features])
     logging.info(f"Train features size: {train_features.shape}")
     return train_features
@@ -187,6 +175,21 @@ def process_eval_image(
     elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "l2_norm":
         # we simply L2 normalize the features otherwise
         descriptors = F.normalize(activation_map, p=2, dim=0)
+        # Optionally apply pca.
+        if pca:
+            pca.apply(descriptors)
+
+    elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
+        descriptors = l2n(
+            gem(
+                activation_map,
+                p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+                add_bias=False,
+            )
+        )
+        # Optionally apply pca.
+        if pca:
+            pca.apply(descriptors)
     else:
         descriptors = activation_map
     save_file(descriptors.data.numpy(), fname_out, log=False)
@@ -231,17 +234,6 @@ def get_dataset_features(
             )
         features_dataset.append(db_feature)
 
-    if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-        # GeM pool the features and apply the PCA
-        gem_out_fname = f"{db_fname_out_dir}/{eval_dataset_name}_GeM.npy"
-        features_dataset = torch.tensor(np.concatenate(features_dataset))
-        features_dataset = gem_pool_and_save_features(
-            features_dataset,
-            p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-            add_bias=True,
-            gem_out_fname=gem_out_fname,
-        )
-        features_dataset = pca.apply(features_dataset)
     features_dataset = np.vstack(features_dataset)
     logging.info(f"Dataset Features Size: {features_dataset.shape}")
     return features_dataset
@@ -288,17 +280,6 @@ def get_queries_features(
             )
         features_queries.append(query_feature)
 
-    if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-        # GeM pool the features and apply the PCA
-        gem_out_fname = f"{q_fname_out_dir}/{eval_dataset_name}_GeM.npy"
-        features_queries = torch.tensor(np.concatenate(features_queries))
-        features_queries = gem_pool_and_save_features(
-            features_queries,
-            p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-            add_bias=True,
-            gem_out_fname=gem_out_fname,
-        )
-        features_queries = pca.apply(features_queries)
     features_queries = np.vstack(features_queries)
     logging.info(f"Queries Features Size: {features_queries.shape}")
     return features_queries
