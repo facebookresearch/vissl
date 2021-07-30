@@ -18,8 +18,8 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
       BATCHSIZE_PER_REPLICA: 64
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
@@ -32,7 +32,7 @@ config:
           p: 0.5
         - name: ImgPilColorDistortion
           strength: 0.5
-          saturation: 0.4 
+          saturation: 0.4
         - name: ImgPilMultiCropRandomApply
           transforms:
             - name: ImgPilGaussianBlur
@@ -99,14 +99,14 @@ config:
           name: composite
           schedulers:
             - name: linear
-              start_value: 0.002
-              end_value: 0.2
+              start_value: 0.0
+              end_value: 0.2 # Automatically rescaled if needed
             - name: cosine
-              start_value: 0.2
-              end_value: 0.000002
-          interval_scaling: [rescaled, fixed]
-          update_interval: epoch
-          lengths: [0.0334, 0.9666]     
+              start_value: 0.2 # Automatically rescaled if needed
+              end_value: 0.000002 # Automatically rescaled if needed
+          update_interval: step
+          interval_scaling: [rescaled, rescaled]
+          lengths: [0.0334, 0.9666] # 10ep
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 8
