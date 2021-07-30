@@ -121,9 +121,6 @@ class SelfSupervisionTrainer(object):
                 world_size=distributed_world_size,
                 rank=self.distributed_rank,
             )
-            # perform a dummy all-reduce to initialize the NCCL communicator
-            if torch.cuda.is_available() and (self.cfg.DISTRIBUTED.BACKEND == "nccl"):
-                dist.all_reduce(torch.zeros(1).cuda())
         else:
             logging.warning(
                 "Torch distributed has already been initialized, \
@@ -139,6 +136,9 @@ class SelfSupervisionTrainer(object):
         )
         if use_gpu:
             set_cuda_device_index(self.local_rank)
+            # perform a dummy all-reduce to initialize the NCCL communicator
+            if torch.cuda.is_available() and (self.cfg.DISTRIBUTED.BACKEND == "nccl"):
+                dist.all_reduce(torch.zeros(1).cuda())
         else:
             set_cpu_device()
 
