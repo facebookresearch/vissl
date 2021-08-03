@@ -71,11 +71,11 @@ def save_file(data, filename, append_to_json=True):
         if append_to_json:
             with PathManager.open(filename, "r+") as fopen:
                 file_data = json.load(fopen)
-                with PathManager.open(filename, "w") as fopen:
-                    file_data.update(data)
-                    fopen.write(json.dumps(file_data, sort_keys=True) + "\n")
-                    file.flush()
-                    file.seek(0)
+            with PathManager.open(filename, "w") as fopen:
+                file_data.update(data)
+                fopen.write(json.dumps(file_data, sort_keys=True) + "\n")
+                fopen.flush()
+                fopen.seek(0)
         else:
             with PathManager.open(filename, "w") as fopen:
                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
