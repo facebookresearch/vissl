@@ -69,7 +69,9 @@ def save_file(data, filename, append_to_json=True):
             np.save(fopen, data)
     elif file_ext == ".json":
         if append_to_json:
-            with PathManager.open(filename, "a") as fopen:
+            with PathManager.open(filename, "w") as fopen:
+                open_object=json.load(fopen)
+                open_object.append(data)
                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
                 fopen.flush()
         else:
