@@ -50,6 +50,12 @@ def create_file_symlink(file1, file2):
     except Exception as e:
         logging.info(f"Could NOT create symlink. Error: {e}")
 
+def Merge(dict1, dict2):
+    """
+    Utility function for save_file function to append dictionaries.
+    """
+    return(dict2.update(dict1))
+
 
 def save_file(data, filename, append_to_json=True):
     """
@@ -69,11 +75,13 @@ def save_file(data, filename, append_to_json=True):
             np.save(fopen, data)
     elif file_ext == ".json":
         if append_to_json:
-            with PathManager.open(filename, "w") as fopen:
-                open_object=json.load(fopen)
-                open_object.append(data)
-                fopen.write(json.dumps(data, sort_keys=True) + "\n")
-                fopen.flush()
+            with PathManager.open(filename, "r+") as fopen:
+                file_data = json.load(fopen)
+                with PathManager.open(filename, "w") as fopen:
+                    Merge(data,file_data)
+                    fopen.write(json.dumps(file_data, sort_keys=True) + "\n")
+                    file.flush()
+                    file.seek(0)
         else:
             with PathManager.open(filename, "w") as fopen:
                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
