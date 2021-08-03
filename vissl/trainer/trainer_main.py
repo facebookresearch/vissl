@@ -375,16 +375,13 @@ class SelfSupervisionTrainer(object):
         split: str,
         output_folder: str,
     ):
-
         output = {}
         for layer_name in features.keys():
             indices = sorted(features[layer_name].keys())
             if len(indices) > 0:
                 output[layer_name] = {
                     "inds": np.array(indices),
-                    "features": np.array(
-                        [features[layer_name][i] for i in indices]
-                    ).reshape(len(indices), -1),
+                    "features": np.array([features[layer_name][i] for i in indices]),
                     "targets": np.array([targets[layer_name][i] for i in indices]),
                 }
 

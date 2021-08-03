@@ -102,7 +102,9 @@ class ExtractedFeaturesLoader:
         )
 
     @classmethod
-    def load_features(cls, input_dir: str, split: str, layer: str):
+    def load_features(
+        cls, input_dir: str, split: str, layer: str, flatten_features: bool = False
+    ):
         """
         Merge the features across all GPUs to get the features for the full data.
 
@@ -110,6 +112,7 @@ class ExtractedFeaturesLoader:
             input_dir (str): input path where the features are dumped
             split (str): whether the features are train or test data features
             layer (str): the features correspond to what layer of the model
+            flatten_features (bool): whether or not to flatten the features
 
         Returns:
             output (Dict): contains features, targets, inds as the keys
@@ -130,16 +133,18 @@ class ExtractedFeaturesLoader:
                 output_targets[index] = shard_content.targets[idx]
 
         # Sort the entries by sample index
-        indices = sorted(output_targets.keys())
-        features = [output_feats[i] for i in indices]
-        targets = [output_targets[i] for i in indices]
+        indices = np.array(sorted(output_targets.keys()))
+        features = np.array([output_feats[i] for i in indices])
+        targets = np.array([output_targets[i] for i in indices])
 
-        # Cast the entries as numpy arrays
+        # Return the outputs
         N = len(indices)
+        if flatten_features:
+            features = features.reshape(N, -1)
         output = {
-            "features": np.array(features).reshape(N, -1),
-            "targets": np.array(targets),
-            "inds": np.array(indices),
+            "features": features,
+            "targets": targets,
+            "inds": indices,
         }
         logging.info(f"Features: {output['features'].shape}")
         logging.info(f"Targets: {output['targets'].shape}")
@@ -148,7 +153,13 @@ class ExtractedFeaturesLoader:
 
     @classmethod
     def sample_features(
-        cls, input_dir: str, split: str, layer: str, num_samples: int, seed: int
+        cls,
+        input_dir: str,
+        split: str,
+        layer: str,
+        num_samples: int,
+        seed: int,
+        flatten_features: bool = False,
     ):
         """
         This function sample N features across all GPUs in an optimized way, using
@@ -165,13 +176,19 @@ class ExtractedFeaturesLoader:
             layer (str): the features correspond to what layer of the model
             num_samples (int): how many features to sample, if negative load everything
             seed (int): the random seed used for sampling
+            flatten_features (bool): whether or not to flatten the features
 
         Returns:
             output (Dict): contains features, targets, inds as the keys
         """
 
         if num_samples < 0:
-            return cls.load_features(input_dir=input_dir, split=split, layer=layer)
+            return cls.load_features(
+                input_dir=input_dir,
+                split=split,
+                layer=layer,
+                flatten_features=flatten_features,
+            )
 
         features = []
         targets = []
@@ -216,12 +233,10 @@ class ExtractedFeaturesLoader:
         targets = targets[sorted_indices]
 
         # Return the output
-        N = len(indices)
-        output = {
-            "features": features.reshape(N, -1),
-            "targets": targets,
-            "inds": indices,
-        }
+        if flatten_features:
+            N = len(indices)
+            features = features.reshape(N, -1)
+        output = {"features": features, "targets": targets, "inds": indices}
         logging.info(f"Features: {output['features'].shape}")
         logging.info(f"Targets: {output['targets'].shape}")
         logging.info(f"Indices: {output['inds'].shape}")
