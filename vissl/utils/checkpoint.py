@@ -20,7 +20,7 @@ from fairscale.nn import FullyShardedDataParallel
 from fvcore.common.file_io import PathManager
 from vissl.config import AttrDict
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.io import create_file_symlink, makedir
+from vissl.utils.io import abspath, create_file_symlink, makedir
 from vissl.utils.layer_memory_tracking import null_context
 
 
@@ -353,10 +353,10 @@ class SlicedCheckpointLoader:
         - return the created file name
         """
         checkpoint_sub_folder = os.path.splitext(checkpoint_path)[0] + "_layers"
-        os.makedirs(checkpoint_sub_folder, exist_ok=True)
+        makedir(checkpoint_sub_folder)
         hash_name = hashlib.sha1(param_path.encode()).hexdigest()
-        file_path = os.path.join(f"{checkpoint_sub_folder}", f"{hash_name}.torch")
-        file_path = os.path.abspath(file_path)
+        file_path = os.path.join(checkpoint_sub_folder, f"{hash_name}.torch")
+        file_path = abspath(file_path)
         checkpoint_slice = {"type": CheckpointItemType.slice.name, "weight": param}
         with PathManager.open(file_path, "wb") as f:
             torch.save(checkpoint_slice, f)
