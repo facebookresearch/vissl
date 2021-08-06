@@ -503,6 +503,7 @@ config:
       # a dedicated FSDP wrapping: the number provided here is the number of
       # parameters that serves as threshold to decide if a layer is "big"
       AUTO_WRAP_THRESHOLD: 0
+      AMP_TYPE: "01"
       # Parameters of fairscale FSDP
       flatten_parameters: True
       mixed_precision: True
