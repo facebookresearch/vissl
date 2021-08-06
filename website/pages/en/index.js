@@ -168,7 +168,7 @@ conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex viss
           },
           {
             content:
-              'Reproducible reference implementation of SOTA self-supervision approaches (like SimCLR, MoCo, PIRL, SwAV etc) and their components that can we reused. Also supports supervised trainings.',
+              'Reproducible reference implementation of SOTA self-supervision approaches (like SimCLR, MoCo, PIRL, SwAV etc) and their components that can be reused. Also supports supervised trainings.',
             image: `${baseUrl}img/ssl_approaches.svg`,
             imageAlign: 'top',
             title: 'SOTA Self-Supervision methods',
