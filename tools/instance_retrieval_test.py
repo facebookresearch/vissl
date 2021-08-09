@@ -6,13 +6,11 @@
 import logging
 import os
 import sys
-import uuid
 from argparse import Namespace
 from typing import Any, List
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 import torchvision
 from classy_vision.generic.util import copy_model_to_gpu, load_checkpoint
 from fvcore.common.file_io import PathManager
@@ -92,7 +90,7 @@ def get_train_features(
 ):
     train_features = []
 
-    def process_train_image(i, out_dir):
+    def process_train_image(i, out_dir, verbose=False):
         if i % LOG_FREQUENCY == 0:
             logging.info(f"Train Image: {i}"),
 
@@ -115,23 +113,34 @@ def get_train_features(
             vc = v.cuda()
             # the model output is a list always.
             activation_map = model(vc)[0].cpu()
+
+            if verbose:
+                print(f"Train Image raw activation map shape: { activation_map.shape }")
+
             # once we have the features,
             # we can perform: rmac | gem pooling | l2 norm
             if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
-                descriptors = get_rmac_descriptors(activation_map, spatial_levels)
-            elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "l2_norm":
-                # we simply L2 normalize the features otherwise
-                descriptors = F.normalize(activation_map, p=2, dim=0)
+                descriptors = get_rmac_descriptors(
+                    activation_map,
+                    spatial_levels,
+                    normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
+                )
             elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-                descriptors = l2n(
-                    gem(
-                        activation_map,
-                        p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-                        add_bias=False,
-                    )
+                descriptors = gem(
+                    activation_map,
+                    p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+                    add_bias=True,
                 )
             else:
                 descriptors = activation_map
+
+            # Optionally l2 normalize the features.
+            if (
+                cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
+                and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
+            ):
+                # RMAC performs normalization within the algorithm, hence we skip it here.
+                descriptors = l2n(descriptors, dim=1)
 
             if fname_out:
                 save_file(descriptors.data.numpy(), fname_out, verbose=False)
@@ -146,7 +155,7 @@ def get_train_features(
 
     logging.info(f"Getting features for train images: {num_images}")
     for i in range(num_images):
-        process_train_image(i, out_dir)
+        process_train_image(i, out_dir, verbose=(i == 0))
 
     train_features = np.vstack([x.reshape(-1, x.shape[-1]) for x in train_features])
     logging.info(f"Train features size: {train_features.shape}")
@@ -163,6 +172,7 @@ def process_eval_image(
     model,
     pca,
     eval_dataset_name,
+    verbose=False,
 ):
     if is_revisited_dataset(eval_dataset_name):
         img = image_helper.load_and_prepare_revisited_image(fname_in, roi=roi)
@@ -176,29 +186,38 @@ def process_eval_image(
     # the model output is a list always.
     activation_map = model(vc)[0].cpu()
 
+    if verbose:
+        print(f"Eval image raw activation map shape: { activation_map.shape }")
+
     # process the features: rmac | l2 norm
     if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
-        descriptors = get_rmac_descriptors(activation_map, spatial_levels, pca=pca)
-    elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "l2_norm":
-        # we simply L2 normalize the features otherwise
-        descriptors = F.normalize(activation_map, p=2, dim=0)
-        # Optionally apply pca.
-        if pca:
-            descriptors = pca.apply(descriptors)
-
-    elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-        descriptors = l2n(
-            gem(
-                activation_map,
-                p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-                add_bias=True,
-            )
+        descriptors = get_rmac_descriptors(
+            activation_map,
+            spatial_levels,
+            pca=pca,
+            normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
         )
-        # Optionally apply pca.
-        if pca:
-            descriptors = pca.apply(descriptors)
+    elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
+        descriptors = gem(
+            activation_map,
+            p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+            add_bias=True,
+        )
     else:
         descriptors = activation_map
+
+    # Optionally l2 normalize the features.
+    if (
+        cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
+        and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
+    ):
+        # RMAC performs normalization within the algorithm, hence we skip it here.
+        descriptors = l2n(descriptors, dim=1)
+
+    # Optionally apply pca.
+    if pca and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac":
+        # RMAC performs pca within the algorithm, hence we skip it here.
+        descriptors = pca.apply(descriptors)
 
     if fname_out:
         save_file(descriptors.data.numpy(), fname_out, verbose=False)
@@ -248,6 +267,7 @@ def get_dataset_features(
                 model,
                 pca,
                 eval_dataset_name,
+                verbose=(idx == 0),
             )
         features_dataset.append(db_feature)
 
@@ -286,6 +306,7 @@ def get_queries_features(
         if idx % LOG_FREQUENCY == 0:
             logging.info(f"Eval Query: {idx}"),
         q_fname_in = eval_dataset.get_query_filename(idx)
+        # Optionally crop the query by the region-of-interest (ROI).
         roi = (
             eval_dataset.get_query_roi(idx)
             if cfg.IMG_RETRIEVAL.CROP_QUERY_ROI
@@ -309,6 +330,7 @@ def get_queries_features(
                 model,
                 pca,
                 eval_dataset_name,
+                verbose=(idx == 0),
             )
         features_queries.append(query_feature)
 
@@ -345,7 +367,7 @@ def get_transforms(cfg, dataset_name):
 def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_path):
     # We only create the train dataset if we need PCA or whitening training.
     # Otherwise not.
-    if cfg.IMG_RETRIEVAL.SHOULD_TRAIN_PCA_OR_WHITENING:
+    if cfg.IMG_RETRIEVAL.TRAIN_PCA_WHITENING:
         train_data_path = f"{root_dataset_path}/{train_dataset_name}"
         assert PathManager.exists(train_data_path), f"Unknown path: {train_data_path}"
 
@@ -444,7 +466,7 @@ def instance_retrieval_test(args, cfg):
     ############################################################################
     # Step 2: Extract the features for the train dataset, calculate PCA or
     # whitening and save
-    if cfg.IMG_RETRIEVAL.SHOULD_TRAIN_PCA_OR_WHITENING:
+    if cfg.IMG_RETRIEVAL.TRAIN_PCA_WHITENING:
         logging.info("Extracting training features...")
         # the features are already processed based on type: rmac | GeM | l2 norm
         train_features = get_train_features(
@@ -551,7 +573,7 @@ def validate_and_infer_config(config: AttrDict):
     ), "Spatial levels must be greater than 0."
     if config.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
         assert (
-            config.IMG_RETRIEVAL.SHOULD_TRAIN_PCA_OR_WHITENING
+            config.IMG_RETRIEVAL.TRAIN_PCA_WHITENING
         ), "PCA Whitening is built-in to the RMAC algorithm and is required"
 
     return config
