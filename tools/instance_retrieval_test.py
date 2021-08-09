@@ -286,7 +286,11 @@ def get_queries_features(
         if idx % LOG_FREQUENCY == 0:
             logging.info(f"Eval Query: {idx}"),
         q_fname_in = eval_dataset.get_query_filename(idx)
-        roi = eval_dataset.get_query_roi(idx)
+        roi = (
+            eval_dataset.get_query_roi(idx)
+            if cfg.IMG_RETRIEVAL.CROP_QUERY_ROI
+            else None
+        )
 
         q_fname_out = None
         if q_fname_out_dir:
@@ -507,21 +511,21 @@ def instance_retrieval_test(args, cfg):
     ############################################################################
     # Step 6: save results and cleanup the temp directory
     if cfg.IMG_RETRIEVAL.SAVE_RETRIEVAL_RANKINGS_SCORES:
+        checkpoint_folder = get_checkpoint_folder(cfg)
+
         # Save the rankings
         sim = sim.T
         ranks = np.argsort(-sim, axis=0)
-        save_file(
-            ranks.T.tolist(), os.path.join(get_checkpoint_folder(cfg), "rankings.json")
-        )
+        save_file(ranks.T.tolist(), os.path.join(checkpoint_folder, "rankings.json"))
 
         # Save the similarity scores
         save_file(
             sim.tolist(),
-            os.path.join(get_checkpoint_folder(cfg), "similarity_scores.json"),
+            os.path.join(checkpoint_folder, "similarity_scores.json"),
         )
 
         # Save the result metrics
-        save_file(results, os.path.join(get_checkpoint_folder(cfg), "metrics.json"))
+        save_file(results, os.path.join(checkpoint_folder, "metrics.json"))
 
     logging.info("All done!!")
 
@@ -541,6 +545,14 @@ def validate_and_infer_config(config: AttrDict):
     if config.IMG_RETRIEVAL.EVAL_DATASET_NAME in ["OXFORD", "PARIS"]:
         # InstanceRetrievalDataset#score requires the features to be saved.
         config.IMG_RETRIEVAL.SAVE_FEATURES = True
+
+    assert (
+        config.IMG_RETRIEVAL.SPATIAL_LEVELS > 0
+    ), "Spatial levels must be greater than 0."
+    if config.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
+        assert (
+            config.IMG_RETRIEVAL.SHOULD_TRAIN_PCA_OR_WHITENING
+        ), "PCA Whitening is built-in to the RMAC algorithm and is required"
 
     return config
 
