@@ -485,12 +485,13 @@ class InstanceRetrievalImageLoader:
         """
         # Read image, get aspect ratio, and resize such as the largest side equals S
         with PathManager.open(fname, "rb") as f:
-            im = Image.open(f).convert(mode="RGB")
-        im_resized, ratio = self.apply_img_transform(im)
+            img = Image.open(f).convert(mode="RGB")
+        im_resized, ratio = self.apply_img_transform(img)
         # If there is a roi, adapt the roi to the new size and crop. Do not rescale
         # the image once again
         if roi is not None:
             # ROI format is (xmin,ymin,xmax,ymax)
+            roi = np.array(roi)
             roi = np.round(roi * ratio).astype(np.int32)
             im_resized = im_resized[:, roi[1] : roi[3], roi[0] : roi[2]]
         return im_resized
@@ -507,10 +508,14 @@ class InstanceRetrievalImageLoader:
         with PathManager.open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
 
+        im_resized, ratio = self.apply_img_transform(img)
+        # If there is a roi, adapt the roi to the new size and crop. Do not rescale
+        # the image once again
         if roi is not None:
-            img = img.crop(roi)
-
-        im_resized, _ = self.apply_img_transform(img)
+            # ROI format is (xmin,ymin,xmax,ymax)
+            roi = np.array(roi)
+            roi = np.round(roi * ratio).astype(np.int32)
+            im_resized = im_resized[:, roi[1] : roi[3], roi[0] : roi[2]]
         return im_resized
 
 
