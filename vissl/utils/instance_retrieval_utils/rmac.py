@@ -81,7 +81,7 @@ def get_rmac_region_coordinates(H, W, L):
 
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
 # Adapted by: Priya Goyal (prigoyal@fb.com)
-def get_rmac_descriptors(features, rmac_levels, pca=None):
+def get_rmac_descriptors(features, rmac_levels, pca=None, normalize=True):
     """
     RMAC descriptors. Coordinates are retrieved following Tolias et al.
     L2 normalize the descriptors and optionally apply PCA on the descriptors
@@ -104,7 +104,10 @@ def get_rmac_descriptors(features, rmac_levels, pca=None):
 
     rmac_descriptors = torch.cat(rmac_descriptors, 1)
 
-    rmac_descriptors = normalize_L2(rmac_descriptors, 2)
+    if normalize:
+        # Can optionally skip normalization -- not recommended.
+        # the original RMAC paper normalizes.
+        rmac_descriptors = normalize_L2(rmac_descriptors, 2)
 
     if pca is None:
         return rmac_descriptors
@@ -112,10 +115,14 @@ def get_rmac_descriptors(features, rmac_levels, pca=None):
     # PCA + whitening
     npca = pca.n_components
     rmac_descriptors = pca.apply(rmac_descriptors.view(nr * nim, nc))
-    rmac_descriptors = normalize_L2(rmac_descriptors, 1)
+
+    if normalize:
+        rmac_descriptors = normalize_L2(rmac_descriptors, 1)
+
     rmac_descriptors = rmac_descriptors.view(nim, nr, npca)
 
     # Sum aggregation and L2-normalization
     rmac_descriptors = torch.sum(rmac_descriptors, 1)
-    rmac_descriptors = normalize_L2(rmac_descriptors, 1)
+    if normalize:
+        rmac_descriptors = normalize_L2(rmac_descriptors, 1)
     return rmac_descriptors
