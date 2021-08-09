@@ -1272,7 +1272,10 @@ config:
     NUM_QUERY_SAMPLES: -1
     # Number of database samples to use. -1 uses all the samples in the dataset.
     NUM_DATABASE_SAMPLES: -1
-
+    # Whether or not to crop the query images with the given region of interests --
+    # Relevant for Oxford, Paris, ROxford, and RParis datasets.
+    # Our experiments with RN-50/rmac show that ROI cropping degrades performance.
+    CROP_QUERY_ROI: False
 
   # ----------------------------------------------------------------------------------- #
   # K-NEAREST NEIGHBOR (benchmark)
