@@ -1257,10 +1257,10 @@ config:
     # Whether or not to save the features that were extracted
     SAVE_FEATURES: False
     # Whether to apply PCA/whitening or not
-    SHOULD_TRAIN_PCA_OR_WHITENING: True
+    TRAIN_PCA_WHITENING: True
     # gem | rmac | l2_norm
     FEATS_PROCESSING_TYPE: ""
-    # valid only for GeM pooling of features
+    # valid only for GeM pooling of features. Note that GEM_POOL_POWER=1 equates to average pooling.
     GEM_POOL_POWER: 4.0
     # valid only if we are training whitening on the whitening dataset
     WHITEN_IMG_LIST: ""
@@ -1276,6 +1276,10 @@ config:
     # Relevant for Oxford, Paris, ROxford, and RParis datasets.
     # Our experiments with RN-50/rmac show that ROI cropping degrades performance.
     CROP_QUERY_ROI: False
+    # Whether or not to apply L2 norm after the features have been post-processed.
+    # Normalization is heavily recommended based on experiments run.
+    NORMALIZE_FEATURES: True
+
 
   # ----------------------------------------------------------------------------------- #
   # K-NEAREST NEIGHBOR (benchmark)
