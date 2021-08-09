@@ -1252,8 +1252,10 @@ config:
     EVAL_DATASET_NAME: "Paris"
     # Path to the compute_ap binary to evaluate Oxford / Paris
     EVAL_BINARY_PATH: ""
-    # Path to a temporary directory to store features and scores
-    TEMP_DIR: "/tmp/instance_retrieval/"
+    # Whether or not to save the retrieval ranking scores (metrics, rankings, similarity scores)
+    SAVE_RETRIEVAL_RANKINGS_SCORES: True
+    # Whether or not to save the features that were extracted
+    SAVE_FEATURES: False
     # Whether to apply PCA/whitening or not
     SHOULD_TRAIN_PCA_OR_WHITENING: True
     # gem | rmac | l2_norm
@@ -1262,6 +1264,15 @@ config:
     GEM_POOL_POWER: 4.0
     # valid only if we are training whitening on the whitening dataset
     WHITEN_IMG_LIST: ""
+    # Sets data limits for the number of training, query, and database samples.
+    DEBUG_MODE: False
+    # Number of training samples to use. -1 uses all the samples in the dataset.
+    NUM_TRAINING_SAMPLES: -1
+    # Number of query samples to use. -1 uses all the samples in the dataset.
+    NUM_QUERY_SAMPLES: -1
+    # Number of database samples to use. -1 uses all the samples in the dataset.
+    NUM_DATABASE_SAMPLES: -1
+
 
   # ----------------------------------------------------------------------------------- #
   # K-NEAREST NEIGHBOR (benchmark)

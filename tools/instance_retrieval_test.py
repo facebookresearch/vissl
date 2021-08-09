@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import os
 import sys
 import uuid
 from argparse import Namespace
@@ -13,12 +14,15 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision
-from classy_vision.generic.util import copy_model_to_gpu
+from classy_vision.generic.util import copy_model_to_gpu, load_checkpoint
 from fvcore.common.file_io import PathManager
 from hydra.experimental import compose, initialize_config_module
 from vissl.config import AttrDict
 from vissl.models import build_model
-from vissl.utils.checkpoint import init_model_from_consolidated_weights
+from vissl.utils.checkpoint import (
+    init_model_from_consolidated_weights,
+    get_checkpoint_folder,
+)
 from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.instance_retrieval_utils.data_util import (
@@ -36,7 +40,7 @@ from vissl.utils.instance_retrieval_utils.data_util import (
 )
 from vissl.utils.instance_retrieval_utils.pca import load_pca, train_and_save_pca
 from vissl.utils.instance_retrieval_utils.rmac import get_rmac_descriptors
-from vissl.utils.io import cleanup_dir, load_file, makedir, save_file
+from vissl.utils.io import load_file, makedir, save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 
 
@@ -53,7 +57,7 @@ def build_retrieval_model(cfg):
     if PathManager.exists(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
         init_weights_path = cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE
         logging.info(f"Initializing model from: {init_weights_path}")
-        weights = torch.load(init_weights_path, map_location=torch.device("cuda"))
+        weights = load_checkpoint(init_weights_path, device=torch.device("cuda"))
         skip_layers = cfg.MODEL.WEIGHTS_INIT.get("SKIP_LAYERS", [])
         replace_prefix = cfg.MODEL.WEIGHTS_INIT.get("REMOVE_PREFIX", None)
         append_prefix = cfg.MODEL.WEIGHTS_INIT.get("APPEND_PREFIX", None)
@@ -77,14 +81,16 @@ def build_retrieval_model(cfg):
 
 
 def gem_pool_and_save_features(features, p, add_bias, gem_out_fname):
-    if PathManager.exists(gem_out_fname):
+    if gem_out_fname and PathManager.exists(gem_out_fname):
         logging.info("Loading train GeM features...")
         features = load_file(gem_out_fname)
     else:
         logging.info(f"GeM pooling features: {features.shape}")
         features = l2n(gem(features, p=p, add_bias=True))
-        save_file(features, gem_out_fname)
-        logging.info(f"Saved GeM features to: {gem_out_fname}")
+
+        if gem_out_fname:
+            save_file(features, gem_out_fname, verbose=False)
+            logging.info(f"Saved GeM features to: {gem_out_fname}")
     return features
 
 
@@ -103,8 +109,12 @@ def get_train_features(
     def process_train_image(i, out_dir):
         if i % LOG_FREQUENCY == 0:
             logging.info(f"Train Image: {i}"),
-        fname_out = f"{out_dir}/{i}.npy"
-        if PathManager.exists(fname_out):
+
+        fname_out = None
+        if out_dir:
+            fname_out = f"{out_dir}/{i}.npy"
+
+        if fname_out and PathManager.exists(fname_out):
             feat = load_file(fname_out)
             train_features.append(feat)
         else:
@@ -123,19 +133,33 @@ def get_train_features(
             # we can perform: rmac | gem pooling | l2 norm
             if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
                 descriptors = get_rmac_descriptors(activation_map, spatial_levels)
+            elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "l2_norm":
+                # we simply L2 normalize the features otherwise
+                descriptors = F.normalize(activation_map, p=2, dim=0)
             else:
                 descriptors = activation_map
-            save_file(descriptors.data.numpy(), fname_out)
+
+            if fname_out:
+                save_file(descriptors.data.numpy(), fname_out, verbose=False)
             train_features.append(descriptors.data.numpy())
 
     num_images = train_dataset.get_num_images()
-    out_dir = f"{temp_dir}/{train_dataset_name}_S{resize_img}_features_train"
-    makedir(out_dir)
+
+    out_dir = None
+    if temp_dir:
+        out_dir = f"{temp_dir}/{train_dataset_name}_S{resize_img}_features_train"
+        makedir(out_dir)
+
+    logging.info(f"Getting features for train images: {num_images}")
     for i in range(num_images):
         process_train_image(i, out_dir)
 
     if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-        gem_out_fname = f"{out_dir}/{train_dataset_name}_GeM.npy"
+
+        gem_out_fname = None
+        if out_dir:
+            gem_out_fname = f"{out_dir}/{train_dataset_name}_GeM.npy"
+
         train_features = torch.tensor(np.concatenate(train_features))
         train_features = gem_pool_and_save_features(
             train_features,
@@ -165,10 +189,12 @@ def process_eval_image(
         img = image_helper.load_and_prepare_instre_image(fname_in)
     else:
         img = image_helper.load_and_prepare_image(fname_in, roi=roi)
+
     v = torch.autograd.Variable(img.unsqueeze(0))
     vc = v.cuda()
     # the model output is a list always.
     activation_map = model(vc)[0].cpu()
+
     # process the features: rmac | l2 norm
     if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
         descriptors = get_rmac_descriptors(activation_map, spatial_levels, pca=pca)
@@ -177,7 +203,9 @@ def process_eval_image(
         descriptors = F.normalize(activation_map, p=2, dim=0)
     else:
         descriptors = activation_map
-    save_file(descriptors.data.numpy(), fname_out)
+
+    if fname_out:
+        save_file(descriptors.data.numpy(), fname_out, verbose=False)
     return descriptors.data.numpy()
 
 
@@ -195,15 +223,23 @@ def get_dataset_features(
     features_dataset = []
     num_images = eval_dataset.get_num_images()
     logging.info(f"Getting features for dataset images: {num_images}")
-    db_fname_out_dir = "{}/{}_S{}_db".format(temp_dir, eval_dataset_name, resize_img)
+
+    db_fname_out_dir = None
+    if temp_dir:
+        db_fname_out_dir = f"{temp_dir}/{eval_dataset_name}_S{resize_img}_db"
+
     makedir(db_fname_out_dir)
 
     for idx in range(num_images):
         if idx % LOG_FREQUENCY == 0:
             logging.info(f"Eval Dataset Image: {idx}"),
         db_fname_in = eval_dataset.get_filename(idx)
-        db_fname_out = f"{db_fname_out_dir}/{idx}.npy"
-        if PathManager.exists(db_fname_out):
+
+        db_fname_out = None
+        if db_fname_out_dir:
+            db_fname_out = f"{db_fname_out_dir}/{idx}.npy"
+
+        if db_fname_out and PathManager.exists(db_fname_out):
             db_feature = load_file(db_fname_out)
         else:
             db_feature = process_eval_image(
@@ -221,7 +257,9 @@ def get_dataset_features(
 
     if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
         # GeM pool the features and apply the PCA
-        gem_out_fname = f"{db_fname_out_dir}/{eval_dataset_name}_GeM.npy"
+        gem_out_fname = None
+        if db_fname_out_dir:
+            gem_out_fname = f"{db_fname_out_dir}/{eval_dataset_name}_GeM.npy"
         features_dataset = torch.tensor(np.concatenate(features_dataset))
         features_dataset = gem_pool_and_save_features(
             features_dataset,
@@ -231,7 +269,7 @@ def get_dataset_features(
         )
         features_dataset = pca.apply(features_dataset)
     features_dataset = np.vstack(features_dataset)
-    logging.info(f"features dataset: {features_dataset.shape}")
+    logging.info(f"Dataset Features Size: {features_dataset.shape}")
     return features_dataset
 
 
@@ -248,19 +286,30 @@ def get_queries_features(
 ):
     features_queries = []
     num_queries = eval_dataset.get_num_query_images()
-    if cfg.IMG_RETRIEVAL.DEBUG_MODE:
-        num_queries = 50
+
+    num_queries = (
+        num_queries
+        if cfg.IMG_RETRIEVAL.NUM_QUERY_SAMPLES == -1
+        else cfg.IMG_RETRIEVAL.NUM_QUERY_SAMPLES
+    )
+
     logging.info(f"Getting features for queries: {num_queries}")
-    q_fname_out_dir = "{}/{}_S{}_q".format(temp_dir, eval_dataset_name, resize_img)
-    makedir(q_fname_out_dir)
+    q_fname_out_dir = None
+    if q_fname_out_dir:
+        q_fname_out_dir = f"{temp_dir}/{eval_dataset_name}_S{resize_img}_q"
+        makedir(q_fname_out_dir)
 
     for idx in range(num_queries):
         if idx % LOG_FREQUENCY == 0:
             logging.info(f"Eval Query: {idx}"),
         q_fname_in = eval_dataset.get_query_filename(idx)
         roi = eval_dataset.get_query_roi(idx)
-        q_fname_out = f"{q_fname_out_dir}/{idx}.npy"
-        if PathManager.exists(q_fname_out):
+
+        q_fname_out = None
+        if q_fname_out_dir:
+            q_fname_out = f"{q_fname_out_dir}/{idx}.npy"
+
+        if q_fname_out and PathManager.exists(q_fname_out):
             query_feature = load_file(q_fname_out)
         else:
             query_feature = process_eval_image(
@@ -278,7 +327,9 @@ def get_queries_features(
 
     if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
         # GeM pool the features and apply the PCA
-        gem_out_fname = f"{q_fname_out_dir}/{eval_dataset_name}_GeM.npy"
+        gem_out_fname = None
+        if q_fname_out_dir:
+            gem_out_fname = f"{q_fname_out_dir}/{eval_dataset_name}_GeM.npy"
         features_queries = torch.tensor(np.concatenate(features_queries))
         features_queries = gem_pool_and_save_features(
             features_queries,
@@ -288,7 +339,7 @@ def get_queries_features(
         )
         features_queries = pca.apply(features_queries)
     features_queries = np.vstack(features_queries)
-    logging.info(f"features queries: {features_queries.shape}")
+    logging.info(f"Queries Features Size: {features_queries.shape}")
     return features_queries
 
 
@@ -324,11 +375,15 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
         train_data_path = f"{root_dataset_path}/{train_dataset_name}"
         assert PathManager.exists(train_data_path), f"Unknown path: {train_data_path}"
 
-        num_samples = 10 if cfg.IMG_RETRIEVAL.DEBUG_MODE else None
+        num_samples = (
+            None
+            if cfg.IMG_RETRIEVAL.NUM_TRAINING_SAMPLES == -1
+            else cfg.IMG_RETRIEVAL.NUM_TRAINING_SAMPLES
+        )
 
         if is_revisited_dataset(train_dataset_name):
             train_dataset = RevisitedInstanceRetrievalDataset(
-                train_dataset_name, root_dataset_path
+                train_dataset_name, root_dataset_path, num_samples=num_samples
             )
         elif is_whiten_dataset(train_dataset_name):
             train_dataset = WhiteningTrainingImageDataset(
@@ -349,11 +404,15 @@ def get_eval_dataset(cfg, root_dataset_path, eval_dataset_name, eval_binary_path
     eval_data_path = f"{root_dataset_path}/{eval_dataset_name}"
     assert PathManager.exists(eval_data_path), f"Unknown path: {eval_data_path}"
 
-    num_samples = 20 if cfg.IMG_RETRIEVAL.DEBUG_MODE else None
+    num_samples = (
+        None
+        if cfg.IMG_RETRIEVAL.NUM_DATABASE_SAMPLES == -1
+        else cfg.IMG_RETRIEVAL.NUM_DATABASE_SAMPLES
+    )
 
     if is_revisited_dataset(eval_dataset_name):
         eval_dataset = RevisitedInstanceRetrievalDataset(
-            eval_dataset_name, root_dataset_path
+            eval_dataset_name, root_dataset_path, num_samples=num_samples
         )
     elif is_instre_dataset(eval_dataset_name):
         eval_dataset = InstreDataset(eval_data_path, num_samples=num_samples)
@@ -374,8 +433,12 @@ def instance_retrieval_test(args, cfg):
     resize_img = cfg.IMG_RETRIEVAL.RESIZE_IMG
     eval_binary_path = cfg.IMG_RETRIEVAL.EVAL_BINARY_PATH
     root_dataset_path = cfg.IMG_RETRIEVAL.DATASET_PATH
-    temp_dir = f"{cfg.IMG_RETRIEVAL.TEMP_DIR}/{str(uuid.uuid4())}"
-    logging.info(f"Temp directory: {temp_dir}")
+    save_features = cfg.IMG_RETRIEVAL.SAVE_FEATURES
+
+    temp_dir = None
+    if save_features:
+        temp_dir = os.path.join(get_checkpoint_folder(cfg), "features")
+        logging.info(f"Temp directory: {temp_dir}")
 
     ############################################################################
     # Step 1: Prepare the train/eval datasets, create model and load weights
@@ -422,8 +485,11 @@ def instance_retrieval_test(args, cfg):
         )
         ########################################################################
         # Train PCA on the train features
-        pca_out_fname = f"{temp_dir}/{train_dataset_name}_S{resize_img}_PCA.pickle"
-        if PathManager.exists(pca_out_fname):
+        pca_out_fname = None
+        if temp_dir:
+
+            pca_out_fname = f"{temp_dir}/{train_dataset_name}_S{resize_img}_PCA.pickle"
+        if pca_out_fname and PathManager.exists(pca_out_fname):
             logging.info("Loading PCA...")
             pca = load_pca(pca_out_fname)
         else:
@@ -462,29 +528,64 @@ def instance_retrieval_test(args, cfg):
     )
 
     ############################################################################
-    # Step 5: Compute similarity and score
+    # Step 5: Compute similarity, score, and save results
     logging.info("Calculating similarity and score...")
     sim = features_queries.dot(features_dataset.T)
     logging.info(f"Similarity tensor: {sim.shape}")
-    eval_dataset.score(sim, temp_dir)
+    results = eval_dataset.score(sim, temp_dir)
 
     ############################################################################
-    # Step 6: cleanup the temp directory
-    logging.info(f"Cleaning up temp directory: {temp_dir}")
-    cleanup_dir(temp_dir)
+    # Step 6: save results and cleanup the temp directory
+    if cfg.IMG_RETRIEVAL.SAVE_RETRIEVAL_RANKINGS_SCORES:
+        # Save the rankings
+        sim = sim.T
+        ranks = np.argsort(-sim, axis=0)
+        save_file(
+            ranks.T.tolist(), os.path.join(get_checkpoint_folder(cfg), "rankings.json")
+        )
+
+        # Save the similarity scores
+        save_file(
+            sim.tolist(),
+            os.path.join(get_checkpoint_folder(cfg), "similarity_scores.json"),
+        )
+
+        # Save the result metrics
+        save_file(results, os.path.join(get_checkpoint_folder(cfg), "metrics.json"))
 
     logging.info("All done!!")
 
 
+def validate_and_infer_config(config: AttrDict):
+    if config.IMG_RETRIEVAL.DEBUG_MODE:
+        # Set data limits for the number of training, query, and database samples.
+        if config.IMG_RETRIEVAL.NUM_TRAINING_SAMPLES == -1:
+            config.IMG_RETRIEVAL.NUM_TRAINING_SAMPLES = 10
+
+        if config.IMG_RETRIEVAL.NUM_QUERY_SAMPLES == -1:
+            config.IMG_RETRIEVAL.NUM_QUERY_SAMPLES = 10
+
+        if config.IMG_RETRIEVAL.NUM_DATABASE_SAMPLES == -1:
+            config.IMG_RETRIEVAL.NUM_DATABASE_SAMPLES = 50
+
+    if config.IMG_RETRIEVAL.EVAL_DATASET_NAME in ["OXFORD", "PARIS"]:
+        # InstanceRetrievalDataset#score requires the features to be saved.
+        config.IMG_RETRIEVAL.SAVE_FEATURES = True
+
+    return config
+
+
 def main(args: Namespace, config: AttrDict):
+    config = validate_and_infer_config(config)
+    # setup the environment variables
+    set_env_vars(local_rank=0, node_id=0, cfg=config)
+
     # setup the logging
-    setup_logging(__name__)
+    checkpoint_folder = get_checkpoint_folder(config)
+    setup_logging(__name__, output_dir=checkpoint_folder)
 
     # print the config
     print_cfg(config)
-
-    # setup the environment variables
-    set_env_vars(local_rank=0, node_id=0, cfg=config)
 
     instance_retrieval_test(args, config)
     # close the logging streams including the filehandlers
