@@ -83,13 +83,13 @@ class BYOLHook(ClassyHook):
         # Restore an hypothetical checkpoint, else random initialize 
         if task.loss.checkpoint is not None:
             task.loss.load_state_dict(task.loss.checkpoint)
-        # else:
-        #     logging.info("Copying model parameters")
-        #     for param_q, param_k in zip(
-        #         task.base_model.parameters(), task.loss.target_network.parameters()
-        #     ):
-        #         param_k.data.copy_(param_q.data)
-        #         param_k.requires_grad = False
+        else:
+            logging.info("Copying model parameters")
+            for param_q, param_k in zip(
+                task.base_model.parameters(), task.loss.target_network.parameters()
+            ):
+                param_k.data.copy_(param_q.data)
+                param_k.requires_grad = False
 
     def _update_momentum_coefficient(self, task: tasks.ClassyTask) -> None:
         """
