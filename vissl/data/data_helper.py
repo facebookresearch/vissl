@@ -110,7 +110,7 @@ class StatefulDistributedSampler(DistributedSampler):
             batch_size (int): batch size we want the sampler to sample
             seed (int): Seed for the torch generator.
         """
-        super().__init__(dataset, shuffle=False, seed=seed)
+        super().__init__(dataset, shuffle=False)
 
         self.start_iter = 0
         self.batch_size = batch_size

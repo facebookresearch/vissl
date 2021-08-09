@@ -54,6 +54,7 @@ config:
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DROP_LAST: True
+      USE_DEBUGGING_SAMPLER: False
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   METERS:
@@ -66,10 +67,8 @@ config:
         ZERO_INIT_RESIDUAL: True
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 4096], "use_relu": True, "use_bn": True}],
-        ["mlp", {"dims": [4096, 256]}],
-        ["mlp", {"dims": [256, 4096], "use_relu": True, "use_bn": True}],
-        ["mlp", {"dims": [4096, 256]}],
+        ["mlp", {"dims": [2048, 4096, 256], "use_relu": True, "use_bn": True}],
+        ["mlp", {"dims": [256, 4096, 256], "use_relu": True, "use_bn": True}]
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
@@ -80,7 +79,7 @@ config:
       name: byol_loss
       byol_loss:
         embedding_dim: 256
-        momentum: 0.99
+        momentum: 0.996
   OPTIMIZER:
       name: lars
       trust_coefficient: 0.001
