@@ -24,6 +24,8 @@ from vissl.utils.checkpoint import (
 from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
 from vissl.utils.instance_retrieval_utils.data_util import (
+    CopyDaysDataset,
+    GenericInstanceRetrievalDataset,
     InstanceRetrievalDataset,
     InstanceRetrievalImageLoader,
     InstreDataset,
@@ -31,6 +33,8 @@ from vissl.utils.instance_retrieval_utils.data_util import (
     RevisitedInstanceRetrievalDataset,
     WhiteningTrainingImageDataset,
     gem,
+    is_copdays_dataset,
+    is_oxford_paris_dataset,
     is_instre_dataset,
     is_revisited_dataset,
     is_whiten_dataset,
@@ -40,10 +44,14 @@ from vissl.utils.instance_retrieval_utils.pca import load_pca, train_and_save_pc
 from vissl.utils.instance_retrieval_utils.rmac import get_rmac_descriptors
 from vissl.utils.io import load_file, makedir, save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
+from vissl.utils.perf_stats import PerfStats, PerfTimer
 
 
 # frequency at which we log the image number being processed.
 LOG_FREQUENCY = 100
+
+# Setup perf timer.
+PERF_STATS = PerfStats()
 
 
 def build_retrieval_model(cfg):
@@ -102,45 +110,55 @@ def get_train_features(
             feat = load_file(fname_out)
             train_features.append(feat)
         else:
-            fname_in = train_dataset.get_filename(i)
-            if is_revisited_dataset(train_dataset_name):
-                img = image_helper.load_and_prepare_revisited_image(fname_in, roi=None)
-            elif is_whiten_dataset(train_dataset_name):
-                img = image_helper.load_and_prepare_whitening_image(fname_in)
-            else:
-                img = image_helper.load_and_prepare_image(fname_in, roi=None)
-            v = torch.autograd.Variable(img.unsqueeze(0))
-            vc = v.cuda()
-            # the model output is a list always.
-            activation_map = model(vc)[0].cpu()
+            with PerfTimer("read_sample", PERF_STATS):
+                fname_in = train_dataset.get_filename(i)
+                if is_revisited_dataset(train_dataset_name):
+                    img = image_helper.load_and_prepare_revisited_image(
+                        fname_in, roi=None
+                    )
+                elif is_whiten_dataset(train_dataset_name):
+                    img = image_helper.load_and_prepare_whitening_image(fname_in)
+                else:
+                    img = image_helper.load_and_prepare_image(fname_in, roi=None)
+
+                v = torch.autograd.Variable(img.unsqueeze(0))
+
+            with PerfTimer("extract_features", PERF_STATS):
+                vc = v.cuda()
+                # the model output is a list always.
+                activation_map = model(vc)[0].cpu()
 
             if verbose:
                 print(f"Train Image raw activation map shape: { activation_map.shape }")
 
-            # once we have the features,
-            # we can perform: rmac | gem pooling | l2 norm
-            if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
-                descriptors = get_rmac_descriptors(
-                    activation_map,
-                    spatial_levels,
-                    normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
-                )
-            elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-                descriptors = gem(
-                    activation_map,
-                    p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-                    add_bias=True,
-                )
-            else:
-                descriptors = activation_map
+            with PerfTimer("post_process_features", PERF_STATS):
+                logging.info(f"activation_map size: { activation_map.shape }")
+                logging.info(f"index: { i }")
+                logging.info(f"fname: { fname_in }")
+                # once we have the features,
+                # we can perform: rmac | gem pooling | l2 norm
+                if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
+                    descriptors = get_rmac_descriptors(
+                        activation_map,
+                        spatial_levels,
+                        normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
+                    )
+                elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
+                    descriptors = gem(
+                        activation_map,
+                        p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+                        add_bias=True,
+                    )
+                else:
+                    descriptors = activation_map
 
-            # Optionally l2 normalize the features.
-            if (
-                cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
-                and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
-            ):
-                # RMAC performs normalization within the algorithm, hence we skip it here.
-                descriptors = l2n(descriptors, dim=1)
+                # Optionally l2 normalize the features.
+                if (
+                    cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
+                    and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
+                ):
+                    # RMAC performs normalization within the algorithm, hence we skip it here.
+                    descriptors = l2n(descriptors, dim=1)
 
             if fname_out:
                 save_file(descriptors.data.numpy(), fname_out, verbose=False)
@@ -174,50 +192,57 @@ def process_eval_image(
     eval_dataset_name,
     verbose=False,
 ):
-    if is_revisited_dataset(eval_dataset_name):
-        img = image_helper.load_and_prepare_revisited_image(fname_in, roi=roi)
-    elif is_instre_dataset(eval_dataset_name):
-        img = image_helper.load_and_prepare_instre_image(fname_in)
-    else:
-        img = image_helper.load_and_prepare_image(fname_in, roi=roi)
+    with PerfTimer("read_sample", PERF_STATS):
+        if is_revisited_dataset(eval_dataset_name):
+            img = image_helper.load_and_prepare_revisited_image(fname_in, roi=roi)
+        elif is_instre_dataset(eval_dataset_name):
+            img = image_helper.load_and_prepare_instre_image(fname_in)
+        else:
+            img = image_helper.load_and_prepare_image(fname_in, roi=roi)
 
-    v = torch.autograd.Variable(img.unsqueeze(0))
-    vc = v.cuda()
-    # the model output is a list always.
-    activation_map = model(vc)[0].cpu()
+        v = torch.autograd.Variable(img.unsqueeze(0))
+        vc = v.cuda()
+
+    with PerfTimer("extract_features", PERF_STATS):
+        # the model output is a list always.
+        activation_map = model(vc)[0].cpu()
 
     if verbose:
         print(f"Eval image raw activation map shape: { activation_map.shape }")
 
-    # process the features: rmac | l2 norm
-    if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
-        descriptors = get_rmac_descriptors(
-            activation_map,
-            spatial_levels,
-            pca=pca,
-            normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
-        )
-    elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-        descriptors = gem(
-            activation_map,
-            p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-            add_bias=True,
-        )
-    else:
-        descriptors = activation_map
+    with PerfTimer("post_process_features", PERF_STATS):
+        logging.info(f"activation_map size: { activation_map.shape }")
+        logging.info(f"fname: { fname_in }")
 
-    # Optionally l2 normalize the features.
-    if (
-        cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
-        and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
-    ):
-        # RMAC performs normalization within the algorithm, hence we skip it here.
-        descriptors = l2n(descriptors, dim=1)
+        # process the features: rmac | l2 norm
+        if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
+            descriptors = get_rmac_descriptors(
+                activation_map,
+                spatial_levels,
+                pca=pca,
+                normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
+            )
+        elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
+            descriptors = gem(
+                activation_map,
+                p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+                add_bias=True,
+            )
+        else:
+            descriptors = activation_map
 
-    # Optionally apply pca.
-    if pca and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac":
-        # RMAC performs pca within the algorithm, hence we skip it here.
-        descriptors = pca.apply(descriptors)
+        # Optionally l2 normalize the features.
+        if (
+            cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
+            and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
+        ):
+            # RMAC performs normalization within the algorithm, hence we skip it here.
+            descriptors = l2n(descriptors, dim=1)
+
+        # Optionally apply pca.
+        if pca and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac":
+            # RMAC performs pca within the algorithm, hence we skip it here.
+            descriptors = pca.apply(descriptors)
 
     if fname_out:
         save_file(descriptors.data.numpy(), fname_out, verbose=False)
@@ -387,9 +412,20 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
                 cfg.IMG_RETRIEVAL.WHITEN_IMG_LIST,
                 num_samples=num_samples,
             )
-        else:
+        elif is_copdays_dataset(train_dataset_name):
+            train_dataset = CopyDaysDataset(
+                data_path=train_data_path,
+                num_samples=num_samples,
+                use_distractors=cfg.IMG_RETRIEVAL.USE_DISTRACTORS,
+            )
+        elif is_oxford_paris_dataset(train_dataset_name):
             train_dataset = InstanceRetrievalDataset(
                 train_data_path, eval_binary_path, num_samples=num_samples
+            )
+        else:
+            train_dataset = GenericInstanceRetrievalDataset(
+                train_data_path,
+                num_samples=num_samples,
             )
     else:
         train_dataset = None
@@ -412,6 +448,12 @@ def get_eval_dataset(cfg, root_dataset_path, eval_dataset_name, eval_binary_path
         )
     elif is_instre_dataset(eval_dataset_name):
         eval_dataset = InstreDataset(eval_data_path, num_samples=num_samples)
+    elif is_copdays_dataset(eval_dataset_name):
+        eval_dataset = CopyDaysDataset(
+            data_path=eval_data_path,
+            num_samples=num_samples,
+            use_distractors=cfg.IMG_RETRIEVAL.USE_DISTRACTORS,
+        )
     else:
         eval_dataset = InstanceRetrievalDataset(
             eval_data_path, eval_binary_path, num_samples=num_samples
@@ -469,16 +511,17 @@ def instance_retrieval_test(args, cfg):
     if cfg.IMG_RETRIEVAL.TRAIN_PCA_WHITENING:
         logging.info("Extracting training features...")
         # the features are already processed based on type: rmac | GeM | l2 norm
-        train_features = get_train_features(
-            cfg,
-            temp_dir,
-            train_dataset_name,
-            resize_img,
-            spatial_levels,
-            image_helper,
-            train_dataset,
-            model,
-        )
+        with PerfTimer("get_train_features", PERF_STATS):
+            train_features = get_train_features(
+                cfg,
+                temp_dir,
+                train_dataset_name,
+                resize_img,
+                spatial_levels,
+                image_helper,
+                train_dataset,
+                model,
+            )
         ########################################################################
         # Train PCA on the train features
         pca_out_fname = None
@@ -498,37 +541,41 @@ def instance_retrieval_test(args, cfg):
 
     ############################################################################
     # Step 4: Extract db_features and q_features for the eval dataset
-    logging.info("Extracting Queries features...")
-    features_queries = get_queries_features(
-        cfg,
-        temp_dir,
-        eval_dataset_name,
-        resize_img,
-        spatial_levels,
-        image_helper,
-        eval_dataset,
-        model,
-        pca,
-    )
-    logging.info("Extracting Dataset features...")
-    features_dataset = get_dataset_features(
-        cfg,
-        temp_dir,
-        eval_dataset_name,
-        resize_img,
-        spatial_levels,
-        image_helper,
-        eval_dataset,
-        model,
-        pca,
-    )
+    with PerfTimer("get_query_features", PERF_STATS):
+        logging.info("Extracting Queries features...")
+        features_queries = get_queries_features(
+            cfg,
+            temp_dir,
+            eval_dataset_name,
+            resize_img,
+            spatial_levels,
+            image_helper,
+            eval_dataset,
+            model,
+            pca,
+        )
+
+    with PerfTimer("get_dataset_features", PERF_STATS):
+        logging.info("Extracting Dataset features...")
+        features_dataset = get_dataset_features(
+            cfg,
+            temp_dir,
+            eval_dataset_name,
+            resize_img,
+            spatial_levels,
+            image_helper,
+            eval_dataset,
+            model,
+            pca,
+        )
 
     ############################################################################
     # Step 5: Compute similarity, score, and save results
-    logging.info("Calculating similarity and score...")
-    sim = features_queries.dot(features_dataset.T)
-    logging.info(f"Similarity tensor: {sim.shape}")
-    results = eval_dataset.score(sim, temp_dir)
+    with PerfTimer("scoring_results", PERF_STATS):
+        logging.info("Calculating similarity and score...")
+        sim = features_queries.dot(features_dataset.T)
+        logging.info(f"Similarity tensor: {sim.shape}")
+        results = eval_dataset.score(sim, temp_dir)
 
     ############################################################################
     # Step 6: save results and cleanup the temp directory
@@ -545,9 +592,12 @@ def instance_retrieval_test(args, cfg):
             sim.tolist(),
             os.path.join(checkpoint_folder, "similarity_scores.json"),
         )
-
         # Save the result metrics
-        save_file(results, os.path.join(checkpoint_folder, "metrics.json"))
+        save_file(
+            results,
+            os.path.join(checkpoint_folder, "metrics.json"),
+            append_to_json=False,
+        )
 
     logging.info("All done!!")
 
@@ -592,6 +642,8 @@ def main(args: Namespace, config: AttrDict):
     print_cfg(config)
 
     instance_retrieval_test(args, config)
+    logging.info(f"Performance time breakdow:\n{PERF_STATS.report_str()}")
+
     # close the logging streams including the filehandlers
     shutdown_logging()
 
