@@ -32,7 +32,7 @@ config:
           p: 0.5
         - name: ImgPilColorDistortion
           strength: 0.5
-          #saturation: 0.4
+          saturation: 0.4
         - name: ImgPilMultiCropRandomApply
           transforms:
             - name: ImgPilGaussianBlur
@@ -79,7 +79,7 @@ config:
       name: byol_loss
       byol_loss:
         embedding_dim: 256
-        momentum: 0.996
+        momentum: 0.99
   OPTIMIZER:
       name: lars
       trust_coefficient: 0.001
@@ -98,7 +98,7 @@ config:
           name: composite
           schedulers:
             - name: linear
-              start_value: 0.0
+              start_value: 0.00001
               end_value: 0.3 # Automatically rescaled if needed
             - name: cosine
               start_value: 0.3 # Automatically rescaled if needed
