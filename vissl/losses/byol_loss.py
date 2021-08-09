@@ -18,7 +18,8 @@ _BYOLLossConfig = namedtuple(
 
 def regression_loss(x, y):
     normed_x, normed_y = F.normalize(x, dim=1), F.normalize(y, dim=1)
-    return torch.sum((normed_x - normed_y).pow(2), dim=1)
+    return 2 - 2 * (normed_x * normed_y).sum(dim=1) 
+    
 
 
 class BYOLLossConfig(_BYOLLossConfig):

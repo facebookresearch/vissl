@@ -32,7 +32,7 @@ config:
           p: 0.5
         - name: ImgPilColorDistortion
           strength: 0.5
-          saturation: 0.4
+          #saturation: 0.4
         - name: ImgPilMultiCropRandomApply
           transforms:
             - name: ImgPilGaussianBlur
@@ -84,7 +84,7 @@ config:
   OPTIMIZER:
       name: lars
       trust_coefficient: 0.001
-      weight_decay: 1.5e-6
+      weight_decay: 1.0e-6
       momentum: 0.9
       nesterov: False
       num_epochs: 300
@@ -94,16 +94,16 @@ config:
         lr:
           auto_lr_scaling:
             auto_scale: true
-            base_value: 0.2
+            base_value: 0.3
             base_lr_batch_size: 256
           name: composite
           schedulers:
             - name: linear
               start_value: 0.0
-              end_value: 0.2 # Automatically rescaled if needed
+              end_value: 0.3 # Automatically rescaled if needed
             - name: cosine
-              start_value: 0.2 # Automatically rescaled if needed
-              end_value: 0.000002 # Automatically rescaled if needed
+              start_value: 0.3 # Automatically rescaled if needed
+              end_value: 0.000003 # Automatically rescaled if needed
           update_interval: step
           interval_scaling: [rescaled, rescaled]
           lengths: [0.0334, 0.9666] # 10ep
