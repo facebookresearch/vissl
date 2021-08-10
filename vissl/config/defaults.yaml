@@ -503,6 +503,7 @@ config:
       # a dedicated FSDP wrapping: the number provided here is the number of
       # parameters that serves as threshold to decide if a layer is "big"
       AUTO_WRAP_THRESHOLD: 0
+      AMP_TYPE: "01"
       # Parameters of fairscale FSDP
       flatten_parameters: True
       mixed_precision: True
@@ -1251,16 +1252,34 @@ config:
     EVAL_DATASET_NAME: "Paris"
     # Path to the compute_ap binary to evaluate Oxford / Paris
     EVAL_BINARY_PATH: ""
-    # Path to a temporary directory to store features and scores
-    TEMP_DIR: "/tmp/instance_retrieval/"
+    # Whether or not to save the retrieval ranking scores (metrics, rankings, similarity scores)
+    SAVE_RETRIEVAL_RANKINGS_SCORES: True
+    # Whether or not to save the features that were extracted
+    SAVE_FEATURES: False
     # Whether to apply PCA/whitening or not
-    SHOULD_TRAIN_PCA_OR_WHITENING: True
+    TRAIN_PCA_WHITENING: True
     # gem | rmac | l2_norm
     FEATS_PROCESSING_TYPE: ""
-    # valid only for GeM pooling of features
+    # valid only for GeM pooling of features. Note that GEM_POOL_POWER=1 equates to average pooling.
     GEM_POOL_POWER: 4.0
     # valid only if we are training whitening on the whitening dataset
     WHITEN_IMG_LIST: ""
+    # Sets data limits for the number of training, query, and database samples.
+    DEBUG_MODE: False
+    # Number of training samples to use. -1 uses all the samples in the dataset.
+    NUM_TRAINING_SAMPLES: -1
+    # Number of query samples to use. -1 uses all the samples in the dataset.
+    NUM_QUERY_SAMPLES: -1
+    # Number of database samples to use. -1 uses all the samples in the dataset.
+    NUM_DATABASE_SAMPLES: -1
+    # Whether or not to crop the query images with the given region of interests --
+    # Relevant for Oxford, Paris, ROxford, and RParis datasets.
+    # Our experiments with RN-50/rmac show that ROI cropping degrades performance.
+    CROP_QUERY_ROI: False
+    # Whether or not to apply L2 norm after the features have been post-processed.
+    # Normalization is heavily recommended based on experiments run.
+    NORMALIZE_FEATURES: True
+
 
   # ----------------------------------------------------------------------------------- #
   # K-NEAREST NEIGHBOR (benchmark)

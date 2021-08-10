@@ -543,12 +543,22 @@ def infer_and_assert_hydra_config(cfg):
         # Inference of optimizer configuration
         if cfg["OPTIMIZER"]["use_larc"]:
             cfg["OPTIMIZER"]["name"] = "sgd_fsdp"
+            # if using LARC, we set the flatten_params=False so that we can
+            # compute the right params groups
+            cfg["MODEL"]["FSDP_CONFIG"]["flatten_parameters"] = False
 
         # AMP based inference
         if cfg["MODEL"]["AMP_PARAMS"]["USE_AMP"]:
             cfg["MODEL"]["AMP_PARAMS"]["AMP_TYPE"] = "pytorch"
             cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = True
-            cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = True
+            # setup the compute_dtype and fp32_reduce_scatter
+            # based on whether O1 or O2 is desired
+            if cfg.MODEL.FSDP_CONFIG["AMP_TYPE"] == "O1":
+                cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
+                cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = True
+            elif cfg.MODEL.FSDP_CONFIG["AMP_TYPE"] == "O2":
+                cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float16"
+                cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
         else:
             # if not using AMP, we can't use mixed_precision as it requires PyTorch AMP
             cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = False
@@ -577,6 +587,8 @@ def infer_and_assert_hydra_config(cfg):
     # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
     # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
     del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
+    del cfg.MODEL.FSDP_CONFIG["AMP_TYPE"]
+    logging.info(f"Using the FSDP config: {cfg.MODEL.FSDP_CONFIG}")
 
     if cfg.DATA.TRAIN.BASE_DATASET == "generic_ssl":
         assert (

@@ -99,14 +99,17 @@ def compute_map(ranks, gnd, kappas):
     """
 
     map = 0.0
-    nq = len(gnd)  # number of queries
+    nq = ranks.shape[-1]  # number of queries
     aps = np.zeros(nq)
     pr = np.zeros(len(kappas))
     prs = np.zeros((nq, len(kappas)))
     nempty = 0
-
     for i in np.arange(nq):
         qgnd = np.array(gnd[i]["ok"])
+
+        # Remove pos database queries that are not in the prediction.
+        # this is only used in DEBUG_MODE where we limit the number of db images.
+        qgnd = qgnd[qgnd < ranks.shape[0]]
 
         # no positive images, skip from the average
         if qgnd.shape[0] == 0:
@@ -114,9 +117,15 @@ def compute_map(ranks, gnd, kappas):
             prs[i, :] = float("nan")
             nempty += 1
             continue
+            print(f"Skipping: {i}")
 
         try:
             qgndj = np.array(gnd[i]["junk"])
+
+            # Remove junk database queries that are not in the prediction.
+            # this is only used in DEBUG_MODE where we limit the number of db images.
+            qgndj = qgndj[qgndj < ranks.shape[0]]
+
         except Exception:
             qgndj = np.empty(0)
 
