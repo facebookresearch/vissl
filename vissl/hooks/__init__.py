@@ -29,6 +29,7 @@ from vissl.hooks.state_update_hooks import (  # noqa
     SetDataSamplerEpochHook,
     SSLModelComplexityHook,
 )
+from vissl.hooks.byol_hooks import BYOLHook  # noqa
 from vissl.hooks.swav_hooks import NormalizePrototypesHook  # noqa
 from vissl.hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
 from vissl.hooks.swav_momentum_hooks import (
@@ -112,12 +113,10 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             else None
         )
         hooks.append(LogPerfTimeMetricsHook(perf_stat_freq))
-<<<<<<< HEAD
 
     # add the loss hooks based on the loss being used
     hooks = add_loss_hooks(hooks, cfg.LOSS, cfg)
 
-=======
     if cfg.LOSS.name == "swav_loss":
         hooks.extend([SwAVUpdateQueueScoresHook(), NormalizePrototypesHook()])
     if cfg.LOSS.name == "swav_momentum_loss":
@@ -150,7 +149,6 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
                 )
             ]
         )
->>>>>>> a2397cb (Add BYOL implementation)
     if cfg.HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
     if cfg.HOOKS.LOG_GPU_STATS:
