@@ -85,6 +85,14 @@ def add_loss_hooks(hooks, loss_cfg, cfg):
                 )
             ]
         )
+    if cfg.LOSS.name == "byol_loss":
+        hooks.extend(
+            [
+                BYOLHook(
+                    cfg.LOSS["byol_loss"]["momentum"],
+                )
+            ]
+        )
     return hooks
 
 
