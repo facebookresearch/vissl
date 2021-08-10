@@ -84,7 +84,7 @@ def cleanup_folders(output_path: str):
     """
     for file_to_delete in ["dtd", "dtd-r1.0.1.tar.gz"]:
         file_to_delete = os.path.join(output_path, file_to_delete)
-        cleanup_dir(file_to_delete, recursive=True)
+        cleanup_dir(file_to_delete)
 
 
 if __name__ == "__main__":
