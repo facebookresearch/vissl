@@ -1,0 +1,57 @@
+# @package _global_
+config:
+  DISTRIBUTED:
+    NUM_PROC_PER_NODE: 1
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: false
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res5", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    WEIGHTS_INIT:
+      ############################# OSS model ####################################
+      PARAMS_FILE: <your model weights>
+      STATE_DICT_KEY_NAME: classy_state_dict
+      ############ example settings for torchvision model rn50 ###################
+      # PARAMS_FILE: https://download.pytorch.org/models/resnet50-19c8e357.pth
+      # STATE_DICT_KEY_NAME: ""
+      # APPEND_PREFIX: "trunk.base_model._feature_blocks."
+  IMG_RETRIEVAL:
+    ############################# Dataset Information #############################
+    # With RN50 trained supervised on Imagenet1k, we expect: (e: 85.87 / m: 69.31 / h: 45.12)
+    TRAIN_DATASET_NAME: roxford5k
+    EVAL_DATASET_NAME: rparis6k
+    DATASET_PATH: <enter dataset path>
+    # Number of training samples to use. -1 uses all the samples in the dataset.
+    NUM_TRAINING_SAMPLES: -1
+    # Number of query samples to use. -1 uses all the samples in the dataset.
+    NUM_QUERY_SAMPLES: -1
+    # Number of database samples to use. -1 uses all the samples in the dataset.
+    NUM_DATABASE_SAMPLES: -1
+    # Experiments w/ RN-50 have shown that cropping the bbx degrades performance.
+    # Sets data limits for the number of training, query, and database samples.
+    DEBUG_MODE: False
+    ############################# Feature Processing Hypers #############################
+    RESIZE_IMG: 1024
+    TRAIN_PCA_WHITENING: True
+    # rmac has yielded the best results.
+    FEATS_PROCESSING_TYPE: rmac
+    SPATIAL_LEVELS: 3
+    # valid only for GeM pooling of features
+    GEM_POOL_POWER: 4.0
+    # RN50 - res4
+    # N_PCA: 1024
+    # RN50 - res5
+    N_PCA: 2048
+    # Whether or not to crop the region of interest.
+    CROP_QUERY_ROI: False
+    # Whether or not to apply L2 norm after the features have been post-processed.
+    # Normalization is heavily recommended based on experiments run.
+    NORMALIZE_FEATURES: True
