@@ -51,13 +51,16 @@ def create_file_symlink(file1, file2):
         logging.info(f"Could NOT create symlink. Error: {e}")
 
 
-def save_file(data, filename, append_to_json=True, verbose=True):
+def save_file(data, filename, append_to_json=False, verbose=True):
     """
     Common i/o utility to handle saving data to various file formats.
     Supported:
         .pkl, .pickle, .npy, .json
     Specifically for .json, users have the option to either append (default)
     or rewrite by passing in Boolean value to append_to_json.
+    save_file is used to populate metrics.json and dataset_catalog.json.
+    In metrics.json we add new line delimated json objects while in 
+    dataset_catalog.json we add to the same json object.
     """
     if verbose:
         logging.info(f"Saving data to file: {filename}")
