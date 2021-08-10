@@ -65,22 +65,27 @@ class BYOLLoss(ClassyLoss):
         """
         return cls(config)
 
-    def forward(self, query: torch.Tensor, *args, **kwargs) -> torch.Tensor:
+    def forward(self, online_network_prediction: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         """
         Given the encoder queries, the key and the queue of the previous queries,
         compute the cross entropy loss for this batch
 
         Args:
             query: output of the encoder given the current batch
+            online_network_prediction: online model output. this is a prediction of the
+            target network output.
 
         Returns:
             loss
         """
+
         # Split data
-        online_view1, online_view2 = torch.chunk(query, 2, 0)
+        online_view1, online_view2 = torch.chunk(online_network_prediction, 2, 0)
         target_view1, target_view2 = torch.chunk(self.target_embs.detach(), 2, 0)
 
-        # Compute losses 
+        # TESTED: Views are received correctly.
+
+        # Compute losses
         loss1 = regression_loss(online_view1, target_view2)
         loss2 = regression_loss(online_view2, target_view1)
         loss = (loss1 + loss2).mean()
