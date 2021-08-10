@@ -3,15 +3,15 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, Any
+from typing import Union, List, Dict
 
 import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 
 
-@register_transform("MultiLabelTransform")
-class MultiLabelTransform(ClassyTransform):
+@register_transform("OneHotEncode")
+class OneHotEncode(ClassyTransform):
     """
     Prepare labels for multi-output support. That is when a single example has
     more than one label. Currently all that this transform does is one-hot encodes
@@ -28,19 +28,23 @@ class MultiLabelTransform(ClassyTransform):
 
         self.num_classes = num_classes
 
-    def __call__(self, batch: Dict[str, Any]):
+    def __call__(
+        self, data: Union[List[Dict[str, List[List[int]]]], Dict[str, List[List[int]]]]
+    ):
         """
         Args:
-            batch (Dict[Str, Any]). Where batch["label"] is an array of tensors of ints.
-            E.g. batch["label"] == [tensor([1, 2]), tensor([0])], means that the first
-            example has labels 1 and 2 and second example has label 0.
+            data (Union[List[Dict[str, List[List[int]]]], Dict[str, List[List[int]]]]). E.g:
+                data = {"label": [[0]]}
         """
-        # One hot encode the labels.
-        for sample in batch:
-            for idx, labels in enumerate(sample["label"]):
-                sample["label"][idx] = self._one_hot_encode(labels)
+        # Handle case where data is a single example or an entire batch.
+        data_list = data if isinstance(data, list) else [data]
 
-        return batch
+        # One hot encode the labels.
+        for sample in data_list:
+            for idx, labels in enumerate(sample["label"]):
+                sample["label"][idx] = self._one_hot_encode(torch.tensor(labels))
+
+        return data
 
     def _one_hot_encode(self, labels):
         # Create tensor of dim (num_classes).

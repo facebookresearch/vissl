@@ -121,9 +121,6 @@ class SelfSupervisionTrainer(object):
                 world_size=distributed_world_size,
                 rank=self.distributed_rank,
             )
-            # perform a dummy all-reduce to initialize the NCCL communicator
-            if torch.cuda.is_available() and (self.cfg.DISTRIBUTED.BACKEND == "nccl"):
-                dist.all_reduce(torch.zeros(1).cuda())
         else:
             logging.warning(
                 "Torch distributed has already been initialized, \
@@ -139,6 +136,9 @@ class SelfSupervisionTrainer(object):
         )
         if use_gpu:
             set_cuda_device_index(self.local_rank)
+            # perform a dummy all-reduce to initialize the NCCL communicator
+            if torch.cuda.is_available() and (self.cfg.DISTRIBUTED.BACKEND == "nccl"):
+                dist.all_reduce(torch.zeros(1).cuda())
         else:
             set_cpu_device()
 
@@ -375,16 +375,13 @@ class SelfSupervisionTrainer(object):
         split: str,
         output_folder: str,
     ):
-
         output = {}
         for layer_name in features.keys():
             indices = sorted(features[layer_name].keys())
             if len(indices) > 0:
                 output[layer_name] = {
                     "inds": np.array(indices),
-                    "features": np.array(
-                        [features[layer_name][i] for i in indices]
-                    ).reshape(len(indices), -1),
+                    "features": np.array([features[layer_name][i] for i in indices]),
                     "targets": np.array([targets[layer_name][i] for i in indices]),
                 }
 

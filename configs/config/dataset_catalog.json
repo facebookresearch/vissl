@@ -131,6 +131,10 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "kinetics700_frames_folder": {
+        "train": ["<img_path>", "<ignore>"],
+        "val": ["<img_path>", "<ignore>"]
+    },
     "voc2007_folder": {
         "train": ["<root_folder>", "<root_folder>"],
         "val": ["<root_folder>", "<root_folder>"]

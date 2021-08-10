@@ -9,6 +9,7 @@ import unittest
 
 import torch
 from hydra.experimental import compose, initialize_config_module
+from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 from vissl.utils.hydra_config import convert_to_attrdict
 from vissl.utils.misc import merge_features
 from vissl.utils.test_utils import (
@@ -50,7 +51,7 @@ class TestExtractClusterWorkflow(unittest.TestCase):
         return config
 
     @staticmethod
-    def _create_extract_features_config(checkpoint_path: str, num_gpu: int = 2):
+    def _create_extract_features_config_head(checkpoint_path: str, num_gpu: int = 2):
         with initialize_config_module(config_module="vissl.config"):
             cfg = compose(
                 "defaults",
@@ -65,21 +66,36 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                     "config.DATA.TRAIN.DATA_LIMIT=40",
                     "config.DATA.TEST.DATA_LIMIT=20",
                     "config.SEED_VALUE=0",
-                    "config.MODEL.AMP_PARAMS.USE_AMP=False",
-                    "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
-                    "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
-                    "config.LOSS.swav_loss.epsilon=0.03",
-                    "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
-                    "config.MODEL.FSDP_CONFIG.mixed_precision=False",
-                    "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
-                    "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
                     f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                    "config.LOG_FREQUENCY=1",
                     "config.OPTIMIZER.construct_single_param_group_only=True",
                     "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
                     "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
-                    "config.OPTIMIZER.use_larc=False",
+                ],
+            )
+        args, config = convert_to_attrdict(cfg)
+        return config
+
+    @staticmethod
+    def _create_extract_features_config_trunk(checkpoint_path: str, num_gpu: int = 2):
+        with initialize_config_module(config_module="vissl.config"):
+            cfg = compose(
+                "defaults",
+                overrides=[
+                    "config=feature_extraction/extract_resnet_in1k_8gpu",
+                    "+config/feature_extraction/trunk_only=rn50_layers",
+                    f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
+                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                    "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                    "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                    "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                    "config.DATA.TRAIN.DATA_LIMIT=40",
+                    "config.DATA.TEST.DATA_LIMIT=20",
+                    "config.SEED_VALUE=0",
+                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+                    "config.OPTIMIZER.construct_single_param_group_only=True",
+                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                    "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
+                    "config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False",
                 ],
             )
         args, config = convert_to_attrdict(cfg)
@@ -99,7 +115,7 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                 # Run the extract engine in a separate directory to check that
                 # it is correctly able to output the feature in a another dir
                 with in_temporary_directory():
-                    extract_config = self._create_extract_features_config(
+                    extract_config = self._create_extract_features_config_head(
                         checkpoint_path=os.path.join(pretrain_dir, "checkpoint.torch")
                     )
                     extract_config.EXTRACT_FEATURES.OUTPUT_DIR = extract_dir
@@ -129,3 +145,66 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                 self.assertEqual(test_feat["features"].shape, torch.Size([20, 128]))
                 self.assertEqual(test_feat["targets"].shape, torch.Size([20, 1]))
                 self.assertEqual(test_feat["inds"].shape, torch.Size([20]))
+
+                # Run the extract engine this time for the features of the trunk
+                with in_temporary_directory():
+                    extract_config = self._create_extract_features_config_trunk(
+                        checkpoint_path=os.path.join(pretrain_dir, "checkpoint.torch")
+                    )
+                    extract_config.EXTRACT_FEATURES.OUTPUT_DIR = extract_dir
+                    run_integration_test(extract_config, engine_name="extract_features")
+
+                # Verify that we can merge the features back without flattening them
+                train_feat = merge_features(extract_dir, "train", "res5")
+                self.assertEqual(
+                    train_feat["features"].shape, torch.Size([40, 2048, 2, 2])
+                )
+                self.assertEqual(train_feat["targets"].shape, torch.Size([40, 1]))
+                self.assertEqual(train_feat["inds"].shape, torch.Size([40]))
+
+                # Verify that we can merge the features back without flattening them (second approach)
+                train_feat = ExtractedFeaturesLoader.load_features(
+                    extract_dir, "train", "res5"
+                )
+                self.assertEqual(
+                    train_feat["features"].shape, torch.Size([40, 2048, 2, 2])
+                )
+
+                # Verify that we can merge the features back but flattened
+                train_feat = ExtractedFeaturesLoader.load_features(
+                    extract_dir, "train", "res5", flatten_features=True
+                )
+                self.assertEqual(
+                    train_feat["features"].shape, torch.Size([40, 2048 * 2 * 2])
+                )
+                self.assertEqual(train_feat["targets"].shape, torch.Size([40, 1]))
+                self.assertEqual(train_feat["inds"].shape, torch.Size([40]))
+
+                # Verify that we can sample the features (unflattened)
+                train_feat = ExtractedFeaturesLoader.sample_features(
+                    input_dir=extract_dir,
+                    split="train",
+                    layer="res5",
+                    num_samples=10,
+                    seed=0,
+                )
+                self.assertEqual(
+                    train_feat["features"].shape, torch.Size([10, 2048, 2, 2])
+                )
+                self.assertEqual(train_feat["targets"].shape, torch.Size([10, 1]))
+                self.assertEqual(train_feat["inds"].shape, torch.Size([10]))
+
+                # Verify that we can sample the features (flattened)
+                train_feat = ExtractedFeaturesLoader.sample_features(
+                    input_dir=extract_dir,
+                    split="train",
+                    layer="res5",
+                    num_samples=10,
+                    seed=0,
+                    flatten_features=True,
+                )
+                self.assertEqual(
+                    train_feat["features"].shape, torch.Size([10, 2048 * 2 * 2])
+                )
+                self.assertEqual(train_feat["targets"].shape, torch.Size([10, 1]))
+                self.assertEqual(train_feat["inds"].shape, torch.Size([10]))

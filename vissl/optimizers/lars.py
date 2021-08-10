@@ -87,7 +87,7 @@ class _LARS(optim.Optimizer):
             "weight_decay": weight_decay,
             "momentum": momentum,
             "eta": eta,
-            "exclude": self._exclude_bias_and_norm if exclude_bias_and_norm else None,
+            "exclude": exclude_bias_and_norm,
         }
         super().__init__(params, defaults)
 
@@ -106,7 +106,7 @@ class _LARS(optim.Optimizer):
 
                 dp = dp.add(p, alpha=g["weight_decay"])
 
-                if g["exclude"] is None or not g["exclude"](p):
+                if not g["exclude"] or not self._exclude_bias_and_norm(p):
                     param_norm = torch.norm(p)
                     update_norm = torch.norm(dp)
 
