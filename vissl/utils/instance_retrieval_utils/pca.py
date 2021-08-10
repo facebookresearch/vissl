@@ -69,7 +69,7 @@ def train_and_save_pca(features, n_pca, pca_out_fname):
 
     if pca_out_fname:
         logging.info(f"Saving PCA features to: {pca_out_fname}")
-        save_file(pca, pca_out_fname, log=False)
+        save_file(pca, pca_out_fname, verbose=False)
         logging.info(f"Saved PCA features to: {pca_out_fname}")
 
     return pca

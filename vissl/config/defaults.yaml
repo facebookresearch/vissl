@@ -1279,6 +1279,8 @@ config:
     # Whether or not to apply L2 norm after the features have been post-processed.
     # Normalization is heavily recommended based on experiments run.
     NORMALIZE_FEATURES: True
+    # Whether or not to use distractor images.
+    USE_DISTRACTORS: False
 
 
   # ----------------------------------------------------------------------------------- #
