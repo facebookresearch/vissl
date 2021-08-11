@@ -4,11 +4,9 @@ import logging
 
 import torch
 from classy_vision import tasks
-from classy_vision.generic.distributed_util import is_distributed_training_run
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.models import build_model
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.misc import concat_all_gather
 
 class BYOLHook(ClassyHook):
     """
