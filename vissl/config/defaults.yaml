@@ -1065,15 +1065,32 @@ config:
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
   # ----------------------------------------------------------------------------------- #
   CLUSTERFIT:
+    # Where to write down the resulting artifacts (dataset based on cluster fit)
+    OUTPUT_DIR: "."
+    # How many iterations to use for the clustering algorighm (example: k-means)
+    NUM_ITER: 50
+    # How many clusters to create
     NUM_CLUSTERS: 16000
-    # currently we only support faiss backend for clustering.
+    # How many features to consider to find the clusters where "-1" means that the
+    # full dataset is used to compute the centroids
+    DATA_LIMIT: -1
+    # Parameters used for the sampling in case DATA_LIMIT >= 0
+    DATA_LIMIT_SAMPLING:
+      SEED: 0
+    # We only support "faiss" backend for clustering
     CLUSTER_BACKEND: "faiss"
-    # how many iterations to use for faiss
-    N_ITER: 50
+    # Where to find the extracted features and whether or not we should extract them
     FEATURES:
+      EXTRACT: False
+      PATH: "."
       DATA_PARTITION: "TRAIN"
+      TEST_PARTITION: "TEST"
       DATASET_NAME: ""
       LAYER_NAME: ""
+      # Whether or not to apply dimensionality reduction to the extract features
+      # * if 0, dimensionality reduction is disabled
+      # * if > 0, define the number of target dimensions of PCA
+      DIMENSIONALITY_REDUCTION: 0
 
   # ----------------------------------------------------------------------------------- #
   # TRAINER (define your train step)

@@ -14,7 +14,7 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]  # npy file containing the cluster labels
-      DATASET_NAMES: [imagenet1k_clusters_rotnetin1k]
+      DATASET_NAMES: [imagenet1k_clusters]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop

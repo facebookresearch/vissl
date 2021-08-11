@@ -1,18 +1,35 @@
 # @package _global_
 config:
-  # must set the TEST_MODEL to false if we don't want to extract features on TEST
-  TEST_MODEL: False
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
       DATA_SOURCES: [disk_folder]
-      LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
+      LABEL_TYPE: sample_index
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
           size: 256
-        - name: RandomCrop
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+    TEST:
+      # ClusterFit will also create a test set in which each sample is
+      # associated to its closest centroid, with the centroids being
+      # computed based on the TRAIN set samples
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      LABEL_TYPE: sample_index
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
           size: 224
         - name: ToTensor
         - name: Normalize
@@ -35,9 +52,7 @@ config:
         DEPTH: 50
     WEIGHTS_INIT:
       PARAMS_FILE: "specify weights to use for clustering."
-      STATE_DICT_KEY_NAME: classy_state_dict
       SKIP_LAYERS: ["num_batches_tracked", "heads"]
-      # REMOVE_PREFIX: "trunk."
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
@@ -46,10 +61,15 @@ config:
   CHECKPOINT:
     DIR: .
   CLUSTERFIT:
+    OUTPUT_DIR: "."
     NUM_CLUSTERS: 16000
     CLUSTER_BACKEND: faiss
-    N_ITER: 50
+    NUM_ITER: 50
     FEATURES:
+      EXTRACT: False
+      PATH: "."
       DATA_PARTITION: TRAIN
+      TEST_PARTITION: TEST
       DATASET_NAME: imagenet1k
       LAYER_NAME: res5
+      DIMENSIONALITY_REDUCTION: 0

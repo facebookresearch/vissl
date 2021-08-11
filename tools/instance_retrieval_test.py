@@ -18,8 +18,8 @@ from hydra.experimental import compose, initialize_config_module
 from vissl.config import AttrDict
 from vissl.models import build_model
 from vissl.utils.checkpoint import (
-    init_model_from_consolidated_weights,
     get_checkpoint_folder,
+    init_model_from_consolidated_weights,
 )
 from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
@@ -34,16 +34,16 @@ from vissl.utils.instance_retrieval_utils.data_util import (
     WhiteningTrainingImageDataset,
     gem,
     is_copdays_dataset,
-    is_oxford_paris_dataset,
     is_instre_dataset,
+    is_oxford_paris_dataset,
     is_revisited_dataset,
     is_whiten_dataset,
     l2n,
 )
-from vissl.utils.instance_retrieval_utils.pca import load_pca, train_and_save_pca
 from vissl.utils.instance_retrieval_utils.rmac import get_rmac_descriptors
 from vissl.utils.io import load_file, makedir, save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
+from vissl.utils.pca import load_pca, train_and_save_pca
 from vissl.utils.perf_stats import PerfStats, PerfTimer
 
 
@@ -224,9 +224,7 @@ def process_eval_image(
             )
         elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
             descriptors = gem(
-                activation_map,
-                p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
-                add_bias=True,
+                activation_map, p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER, add_bias=True
             )
         else:
             descriptors = activation_map
@@ -424,8 +422,7 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
             )
         else:
             train_dataset = GenericInstanceRetrievalDataset(
-                train_data_path,
-                num_samples=num_samples,
+                train_data_path, num_samples=num_samples
             )
     else:
         train_dataset = None
@@ -589,8 +586,7 @@ def instance_retrieval_test(args, cfg):
 
         # Save the similarity scores
         save_file(
-            sim.tolist(),
-            os.path.join(checkpoint_folder, "similarity_scores.json"),
+            sim.tolist(), os.path.join(checkpoint_folder, "similarity_scores.json")
         )
         # Save the result metrics
         save_file(

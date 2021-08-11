@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+from typing import Union
 
 import numpy as np
 import torch
@@ -11,15 +12,18 @@ from vissl.utils.io import load_file, save_file
 
 
 # Credits: https://github.com/facebookresearch/deepcluster/blob/master/eval_retrieval.py    # NOQA
-class PCA(object):
+class PCA:
     """
     Fits and applies PCA whitening
     """
 
-    def __init__(self, n_components):
+    def __init__(self, n_components: int):
         self.n_components = n_components
 
-    def fit(self, X):
+    def fit(self, X: Union[np.ndarray, torch.Tensor]):
+        if isinstance(X, torch.Tensor):
+            X = X.numpy()
+
         mean = X.mean(axis=0)
         X -= mean
         self.mean = torch.from_numpy(mean).view(1, -1)
@@ -31,7 +35,6 @@ class PCA(object):
         if n_0 > 0:
             logging.info(f"{n_0} / {d.size} singular values are 0")
             d[d < eps] = eps
-        totenergy = d.sum()
         if self.n_components > 0:
             # if we want to retain all components, n_components = -1
             idx = np.argsort(d)[::-1][: self.n_components]
@@ -40,8 +43,6 @@ class PCA(object):
         d = d[idx]
         V = V[:, idx]
 
-        logging.info("keeping {} % of the energy".format((d.sum() / totenergy * 100.0)))
-
         D = np.diag(1.0 / np.sqrt(d))
         self.DVt = torch.from_numpy(np.dot(D, V.T))
 
@@ -49,10 +50,22 @@ class PCA(object):
         self.mean = self.mean.cuda()
         self.DVt = self.DVt.cuda()
 
-    def apply(self, X):
+    def apply(self, X: Union[np.ndarray, torch.Tensor]):
+        input_is_numpy = False
+        if not isinstance(X, torch.Tensor):
+            X = torch.from_numpy(X)
+            input_is_numpy = True
+
         X = X - self.mean
         num = torch.mm(self.DVt, X.transpose(0, 1)).transpose(0, 1)
-        return num
+        return num.numpy() if input_is_numpy else num
+
+    def transform(self, X: Union[np.ndarray, torch.Tensor]):
+        return self.apply(X)
+
+    def fit_transform(self, X: Union[np.ndarray, torch.Tensor]):
+        self.fit(X)
+        return self.transform(X)
 
 
 def load_pca(pca_out_fname):
