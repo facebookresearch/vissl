@@ -21,8 +21,8 @@ class ImgPilColorDistortion(ClassyTransform):
     randomly convert the image to grayscale.
     """
 
-    def __init__(self, strength , brightness=0.8 , contrast=0.8 , saturation=0.8,
-                    hue=0.2,color_jitter_probability=0.8,grayscale_probability=0.2):
+    def __init__(self, strength, brightness=0.8, contrast=0.8, saturation=0.8,
+                    hue=0.2, color_jitter_probability=0.8, grayscale_probability=0.2):
         """
         Args:
             strength (float): A number used to quantify the strength of the

@@ -38,7 +38,10 @@ class BYOLLoss(ClassyLoss):
     This is the loss proposed in BYOL
     - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
     This class wraps functions which computes
-    - loss
+    - loss : BYOL uses contrastive loss which is the difference in
+            l2-normalized Online network's prediction and Target
+            network's projections or cosine similarity between the two.
+            In this implementation we have used Cosine similarity.
     - restores loss from checkpoints.
 
     Config params:
@@ -67,8 +70,13 @@ class BYOLLoss(ClassyLoss):
 
     def forward(self, online_network_prediction: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         """
+        In this function, the Online Network receives the tensor as input after projection
+        and they make predictions on the output of the target network’s projection,
+        The similarity between the two is computed and then a mean of it is used to
+        update the parameters of both the networks to reduce loss.
+
         Given the encoder queries, the key and the queue of the previous queries,
-        compute the cross entropy loss for this batch
+        compute the cross entropy loss for this batch.
 
         Args:
             query: output of the encoder given the current batch
