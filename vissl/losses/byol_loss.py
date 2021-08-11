@@ -1,6 +1,4 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-
-
 import logging
 import pprint
 from collections import namedtuple
@@ -17,6 +15,12 @@ _BYOLLossConfig = namedtuple(
 )
 
 def regression_loss(x, y):
+    """
+    This function is used for computing loss between the prediction 
+    from the Online network and projection from the target network.
+    We can either use L2 normalized Root mean squared or
+    Cosine similarity. This implementation uses Cosine similarity.
+    """
     normed_x, normed_y = F.normalize(x, dim=1), F.normalize(y, dim=1)
     return torch.sum((normed_x - normed_y).pow(2), dim=1)
 
@@ -34,12 +38,9 @@ class BYOLLossConfig(_BYOLLossConfig):
 @register_loss("byol_loss")
 class BYOLLoss(ClassyLoss):
     """
-    TODO: change description
-
-    This is the loss which was proposed in the "Momentum Contrast
-    for Unsupervised Visual Representation Learning" paper, from Kaiming He et al.
-    See http://arxiv.org/abs/1911.05722 for details
-    and https://github.com/facebookresearch/moco for a reference implementation, reused here
+    This is the loss proposed in BYOL 
+    - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
+    This function computes the loss and restores loss from checkpoints.
 
     Config params:
         embedding_dim (int): head output output dimension
@@ -53,7 +54,7 @@ class BYOLLoss(ClassyLoss):
         self.checkpoint = None
 
     @classmethod
-    def from_config(cls, config: BYOLLossConfig):
+    def from_config(cls, config: BYOLLossConfig) -> "BYOLLoss":
         """
         Instantiates BYOLLoss from configuration.
 
@@ -96,7 +97,7 @@ class BYOLLoss(ClassyLoss):
         repr_dict = {"name": self._get_name()}
         return pprint.pformat(repr_dict, indent=2)
 
-    def load_state_dict(self, state_dict, *args, **kwargs):
+    def load_state_dict(self, state_dict, *args, **kwargs) -> None:
         """
         Restore the loss state given a checkpoint
 
