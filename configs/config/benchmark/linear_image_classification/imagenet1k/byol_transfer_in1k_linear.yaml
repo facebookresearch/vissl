@@ -1,4 +1,6 @@
 # @package _global_
+# BYOL:Bootstrap Your Own Latent - https://arxiv.org/abs/2006.07733
+# Configuration based on BYOL paper - Appendix C -- C.1
 config:
   VERBOSE: True
   LOG_FREQUENCY: 200

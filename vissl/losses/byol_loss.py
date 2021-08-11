@@ -41,7 +41,9 @@ class BYOLLoss(ClassyLoss):
     """
     This is the loss proposed in BYOL 
     - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
-    This function computes the loss and restores loss from checkpoints.
+    This class wraps functions which computes
+    - loss
+    - restores loss from checkpoints.
 
     Config params:
         embedding_dim (int): head output output dimension
