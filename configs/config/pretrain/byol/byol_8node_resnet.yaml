@@ -1,10 +1,12 @@
 # @package _global_
+# BYOL: Bootstrap Your Own Latent - https://arxiv.org/pdf/2006.07733.pdf
+# Official BYOL implementation - https://github.com/deepmind/deepmind-research/blob/master/byol
 config:
   VERBOSE: False
   LOG_FREQUENCY: 200
   TEST_ONLY: False
   TEST_MODEL: False
-  SEED_VALUE: 1337
+  SEED_VALUE: 1337  # BYOL Paper - Page 33 - Appendix J.1
   MULTI_PROCESSING_METHOD: forkserver
   HOOKS:
     PERF_STATS:
@@ -21,8 +23,8 @@ config:
       DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k_filelist]
       BATCHSIZE_PER_REPLICA: 64
-      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
-      TRANSFORMS:
+      LABEL_TYPE: sample_index    # Just an implementation detail. Label isn't used
+      TRANSFORMS:                 # BYOL Paper - Page 16 - Appendix B
         - name: ImgReplicatePil
           num_times: 2
         - name: RandomResizedCrop
@@ -59,13 +61,13 @@ config:
     TRAIN_STEP_NAME: standard_train_step
   METERS:
     name: ""
-  MODEL:
+  MODEL:    # BYOL Paper - Page 5 - 3.3 Implementation details -- Architecture
     TRUNK:
       NAME: resnet
       RESNETS:
         DEPTH: 50
         ZERO_INIT_RESIDUAL: True
-    HEAD:
+    HEAD:     
       PARAMS: [
         ["mlp", {"dims": [2048, 4096, 256], "use_relu": True, "use_bn": True}],
         ["mlp", {"dims": [256, 4096, 256], "use_relu": True, "use_bn": True}]
@@ -75,12 +77,12 @@ config:
       SYNC_BN_TYPE: pytorch
     AMP_PARAMS:
       USE_AMP: False
-  LOSS:
+  LOSS:        # BYOL Paper - Page 33 - Appendix J.1
       name: byol_loss
       byol_loss:
         embedding_dim: 256
         momentum: 0.99
-  OPTIMIZER:
+  OPTIMIZER:   # from official BYOL implementation, deepmind-research/byol/configs/byol.py
       name: lars
       trust_coefficient: 0.001
       weight_decay: 1.0e-6
