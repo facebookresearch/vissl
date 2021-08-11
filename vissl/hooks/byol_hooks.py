@@ -10,12 +10,12 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 
 class BYOLHook(ClassyHook):
     """
-    BYOL - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
-    is based on Contrastive learning, this hook
-    creates a target network with architecture similar to
-    Online network but without the projector head and parameters
-    an exponential moving average of the online network's parameters,
-    these two networks interact and learn from each other.
+   BYOL - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
+   is based on Contrastive learning. This hook
+   creates a target network with the same architecture
+   as the main online network, but without the projection head.
+   The online network does not participate in backpropogation,
+   but instead is an exponential moving average of the online network.
     """
 
     on_start = ClassyHook._noop
@@ -30,7 +30,7 @@ class BYOLHook(ClassyHook):
     @staticmethod
     def cosine_decay(training_iter, max_iters, initial_value)  -> float:
         """
-        For a given starting value, this fucntion anneals the learning
+        For a given starting value, this function anneals the learning
         rate.
         """
         training_iter = min(training_iter, max_iters)
@@ -48,9 +48,8 @@ class BYOLHook(ClassyHook):
     def _build_byol_target_network(self, task: tasks.ClassyTask) -> None:
         """
         Creates a "Target Network" which has the same architecture as the
-        Online Network but without the projector head and its network parameters
+        Online Network but without the projection head. Its network parameters
         are a lagging exponential moving average of the online model's parameters.
-
         """
         # Create the encoder, which will slowly track the model
         logging.info(
