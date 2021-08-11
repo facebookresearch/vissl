@@ -16,7 +16,7 @@ class BYOLHook(ClassyHook):
     is based on Contrastive learning, this hook
     creates a target network with architecture similar to
     Online network but without the projector head and parameters
-    an expoential moving average of the online network's parameters,
+    an exponential moving average of the online network's parameters,
     these two networks interact and learn from each other.
     """
 
@@ -127,8 +127,6 @@ class BYOLHook(ClassyHook):
         # Update the target model
         if task.loss.target_network is None:
             self._build_byol_target_network(task)
-            # TODO: Do we need this or this is an artifact from moco_hooks.py?
-            self.is_distributed = is_distributed_training_run()
         else:
             self._update_target_network(task)
 
