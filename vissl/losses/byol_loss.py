@@ -6,9 +6,6 @@ from collections import namedtuple
 import torch
 import torch.nn.functional as F
 from classy_vision.losses import ClassyLoss, register_loss
-from torch import nn
-from vissl.utils.misc import concat_all_gather
-
 
 _BYOLLossConfig = namedtuple(
     "_BYOLLossConfig", ["embedding_dim", "momentum"]
@@ -16,7 +13,7 @@ _BYOLLossConfig = namedtuple(
 
 def regression_loss(x, y):
     """
-    This function is used for computing loss between the prediction 
+    This function is used for computing loss between the prediction
     from the Online network and projection from the target network.
     We can either use L2 normalized Root mean squared or
     Cosine similarity. This implementation uses Cosine similarity.
@@ -39,7 +36,7 @@ class BYOLLossConfig(_BYOLLossConfig):
 @register_loss("byol_loss")
 class BYOLLoss(ClassyLoss):
     """
-    This is the loss proposed in BYOL 
+    This is the loss proposed in BYOL
     - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
     This class wraps functions which computes
     - loss

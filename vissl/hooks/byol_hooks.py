@@ -4,11 +4,9 @@ import logging
 
 import torch
 from classy_vision import tasks
-from classy_vision.generic.distributed_util import is_distributed_training_run
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.models import build_model
 from vissl.utils.env import get_machine_local_and_dist_rank
-from vissl.utils.misc import concat_all_gather
 
 class BYOLHook(ClassyHook):
     """
@@ -94,7 +92,7 @@ class BYOLHook(ClassyHook):
         if self.total_iters is None:
 
             self.total_iters = task.max_iteration
-            logging.info(f"{self.total_iters} total iters") 
+            logging.info(f"{self.total_iters} total iters")
         training_iteration = task.iteration
         self.momentum = self.target_ema(training_iteration, self.base_momentum, self.total_iters)
 
@@ -118,8 +116,8 @@ class BYOLHook(ClassyHook):
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
         """
-        Creates a target network needed for Contrastive learning 
-        on which BYOL is based. It then updates the target network's 
+        Creates a target network needed for Contrastive learning
+        on which BYOL is based. It then updates the target network's
         parameters based on the online network's parameters.
         This function also computer and saves target embeddings,
         which need be can be used for further downstream tasks.
