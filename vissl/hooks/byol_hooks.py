@@ -10,21 +10,14 @@ from vissl.models import build_model
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.misc import concat_all_gather
 
-
-
-
 class BYOLHook(ClassyHook):
     """
-    TODO: Update description
-
-    This hook corresponds to the loss proposed in the "Momentum Contrast
-    for Unsupervised Visual Representation Learning" paper, from Kaiming He et al.
-    See http://arxiv.org/abs/1911.05722 for details
-    and https://github.com/facebookresearch/moco for a reference implementation,
-    reused here.
-
-    Called after every forward pass to update the momentum encoder. At the beginning
-    of training i.e. after 1st forward call, the encoder is contructed and updated.
+    BYOL - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
+    is based on Contrastive learning, this hook
+    creates a target network with architecture similar to
+    Online network but without the projector head and parameters
+    an expoential moving average of the online network's parameters,
+    these two networks interact and learn from each other.
     """
 
     on_start = ClassyHook._noop
@@ -36,31 +29,30 @@ class BYOLHook(ClassyHook):
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
 
-    def __init__(self, base_momentum: float, shuffle_batch: bool = True):
-        super().__init__()
-        self.base_momentum = base_momentum
-        self.is_distributed = False
-
-        self.momentum = None
-        self.inv_momentum = None
-        self.total_iters = None
-
     @staticmethod
-    def cosine_decay(training_iter, max_iters, initial_value):
-        # TODO: Why do we need this min statement?
+    def cosine_decay(training_iter, max_iters, initial_value)  -> float:
+        """
+        For a given starting value, this fucntion anneals the learning
+        rate.
+        """
         training_iter = min(training_iter, max_iters)
         cosine_decay_value = 0.5 * (1 + math.cos(math.pi * training_iter / max_iters))
         return initial_value * cosine_decay_value
 
     @staticmethod
-    def target_ema(training_iter, base_ema, max_iters):
+    def target_ema(training_iter, base_ema, max_iters) -> float:
+        """
+        Updates Exponential Moving average of the Target Network.
+        """
         decay = BYOLHook.cosine_decay(training_iter, max_iters, 1.)
         return 1. - (1. - base_ema) * decay
 
     def _build_byol_target_network(self, task: tasks.ClassyTask) -> None:
         """
-        Create the model replica called the target. This will slowly track
-        the online model.
+        Creates a "Target Network" which has the same architecture as the
+        Online Network but without the projector head and its network parameters
+        are a lagging exponential moving average of the online model's parameters.
+
         """
         # Create the encoder, which will slowly track the model
         logging.info(
@@ -74,7 +66,7 @@ class BYOLHook(ClassyHook):
             target_model_config, task.config["OPTIMIZER"]
         )
 
-        # TESTED: Target Network and other network is properly created.
+        # TESTED: Target Network and Online network are properly created.
         # TODO: Check SyncBatchNorm settings (low prior)
 
         task.loss.target_network.to(task.device)
@@ -126,12 +118,11 @@ class BYOLHook(ClassyHook):
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
         """
-        - Update the target model.
-        - Compute the key reusing the updated moco-encoder. If we use the
-          batch shuffling, the perform global shuffling of the batch
-          and then run the moco encoder to compute the features.
-          We unshuffle the computer features and use the features
-          as "key" in computing the moco loss.
+        Creates a target network needed for Contrastive learning 
+        on which BYOL is based. It then updates the target network's 
+        parameters based on the online network's parameters.
+        This function also computer and saves target embeddings,
+        which need be can be used for further downstream tasks.
         """
         self._update_momentum_coefficient(task)
 
