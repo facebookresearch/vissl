@@ -229,7 +229,7 @@ class LogLossLrEtaHook(ClassyHook):
 
                 eta_secs = avg_time * (task.max_iteration - iteration)
                 eta_string = str(datetime.timedelta(seconds=int(eta_secs)))
-                if isinstance(task.optimizer.options_view.lr, set):
+                if isinstance(task.optimizer.options_view.lr, (set, list)):
                     lr_val = list(task.optimizer.options_view.lr)
                 else:
                     lr_val = round(task.optimizer.options_view.lr, 5)

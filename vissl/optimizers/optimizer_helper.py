@@ -4,9 +4,12 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, List
+from typing import Any, List, Dict
 
 import torch.nn as nn
+from fvcore.common.param_scheduler import ParamScheduler
+
+from vissl.config import AttrDict
 from vissl.utils.misc import is_apex_available
 
 
@@ -27,7 +30,10 @@ if is_apex_available():
 
 
 def _get_bn_optimizer_params(
-    module, regularized_params, unregularized_params, optimizer_config
+    module: nn.Module,
+    regularized_params: List[nn.Parameter],
+    unregularized_params: List[nn.Parameter],
+    optimizer_config: AttrDict,
 ):
     """
     Given the (Sync)BatchNorm module in the model, we separate the module params
@@ -49,11 +55,9 @@ def _get_bn_optimizer_params(
 
 def _filter_trainable(param_list: List[Any]) -> List[Any]:
     """
-    Keep on the trainable parameters of the model and return the list of
-    trainable params.
+    Keep on the trainable parameters of the model.
     """
-    # Keep only the trainable params
-    return list(filter(lambda x: x.requires_grad, param_list))
+    return [x for x in param_list if x.requires_grad]
 
 
 def _assign_regularized_params(
@@ -76,11 +80,12 @@ def _assign_regularized_params(
     """
     indices_to_remove_from_regularized = []
     indices_to_remove_from_new_unregularized = []
+
     # Iterate through new parameters to unregularize
     for unreg_param_ind, new_unreg_param in enumerate(parameters_to_unregularize):
         # Iterate through list of regularized parameters
         for reg_param_ind, reg_param in enumerate(regularized_param_list):
-            # Note any matchess
+            # Note any matches
             if reg_param is new_unreg_param:
                 indices_to_remove_from_regularized.append(reg_param_ind)
         if unregularized_param_list:
@@ -89,9 +94,10 @@ def _assign_regularized_params(
                 # Note any matches
                 if unreg_param is new_unreg_param:
                     indices_to_remove_from_new_unregularized.append(unreg_param_ind)
-    indices_to_remove_from_regularized.sort(reverse=True)
+
     # Iterate through indices to remove from list regularized params and
     # remove them
+    indices_to_remove_from_regularized.sort(reverse=True)
     for i in indices_to_remove_from_regularized:
         del regularized_param_list[i]
     if unregularized_param_list:
@@ -104,7 +110,10 @@ def _assign_regularized_params(
 
 
 def get_optimizer_param_groups(
-    model, model_config, optimizer_config, optimizer_schedulers
+    model: nn.Module,
+    model_config: AttrDict,
+    optimizer_config: AttrDict,
+    optimizer_schedulers: Dict[str, ParamScheduler],
 ):
     """
     Go through all the layers, sort out which parameters should be regularized,
@@ -138,12 +147,14 @@ def get_optimizer_param_groups(
         weight_decay_main_config = optimizer_schedulers["weight_decay"]
     else:
         weight_decay_main_config = optimizer_config.weight_decay
+
     if "weight_decay_head" in optimizer_schedulers:
         weight_decay_head_main_config = optimizer_schedulers["weight_decay_head"]
     else:
         weight_decay_head_main_config = (
             optimizer_config.head_optimizer_params.weight_decay
         )
+
     if optimizer_config.construct_single_param_group_only:
         # If single param_group is asked, we just use the parameters
         # returned from model.parameters(). This is useful in FSDP
@@ -155,19 +166,22 @@ def get_optimizer_param_groups(
                 "weight_decay": weight_decay_main_config,
             }
         ]
+
     # if the different LR, weight decay value for head is not specified, we use the
     # same LR/wd as trunk.
     if not optimizer_config.head_optimizer_params.use_different_lr:
         assert "lr_head" in optimizer_schedulers
 
-    # we create 4 params groups: trunk regularized, trunk unregularized, head
-    # regularized and head unregularized. Unregularized can contain BN layers.
+    # we create 6 params groups:
+    # - trunk vs head vs other
+    # - regularized or un-regularized
+    # Un-regularized can contain BN layers.
     trunk_regularized_params, trunk_unregularized_params = [], []
     head_regularized_params, head_unregularized_params = [], []
-    # for anything else
-    regularized_params = []
-    unregularized_params = []
+    regularized_params, unregularized_params = [], []
+
     for name, module in model.named_modules():
+
         # head, Linear/Conv layer
         if "head" in name and (
             isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES)
@@ -184,6 +198,7 @@ def get_optimizer_param_groups(
                     head_regularized_params.append(module.bias)
                 else:
                     head_unregularized_params.append(module.bias)
+
         # head, BN/LN layer
         elif "head" in name and isinstance(module, _NORM_TYPES):
             (
@@ -195,6 +210,7 @@ def get_optimizer_param_groups(
                 head_unregularized_params,
                 optimizer_config,
             )
+
         # trunk, Linear/Conv
         elif isinstance(module, nn.Linear) or isinstance(module, _CONV_TYPES):
             if hasattr(module, "weight_g"):  # weight_norm linear layers
@@ -207,6 +223,7 @@ def get_optimizer_param_groups(
                     trunk_regularized_params.append(module.bias)
                 else:
                     trunk_unregularized_params.append(module.bias)
+
         # trunk, BN/LN layer
         elif isinstance(module, _NORM_TYPES):
             (

@@ -1,0 +1,19 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: anynet
+        depths: [2, 4, 11, 1]
+        widths: [224, 448, 1232, 3024]
+        group_widths: [112, 112, 112, 112]
+        bottleneck_multipliers: [1.0, 1.0, 1.0, 1.0]
+        strides: [2, 2, 2, 2]
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [3024, 1000]}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
