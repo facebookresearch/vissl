@@ -153,7 +153,7 @@ jobs:
       # Cache the vissl_venv directory that contains dependencies
       - restore_cache:
           keys:
-            - v4-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+            - v5-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
@@ -163,7 +163,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v4-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+          key: v5-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl
 
@@ -196,7 +196,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v4-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+            - v5-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
@@ -211,7 +211,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v4-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+          key: v5-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl
 

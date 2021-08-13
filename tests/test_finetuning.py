@@ -7,21 +7,24 @@ import unittest
 
 from classy_vision.optim import build_optimizer_schedulers
 from hydra.experimental import compose, initialize_config_module
+from vissl.config import AttrDict
 from vissl.models import build_model
 from vissl.optimizers import get_optimizer_param_groups
+from vissl.utils.checkpoint import CheckpointFormatConverter
 from vissl.utils.hydra_config import convert_to_attrdict
 from vissl.utils.test_utils import (
     gpu_test,
     in_temporary_directory,
-    init_distributed_on_file,
     run_integration_test,
-    with_temp_files,
+    spawn_distributed_test,
 )
 
 
 class TestFineTuning(unittest.TestCase):
     @staticmethod
-    def _create_pretraining_config(num_gpu: int = 2, with_fsdp: bool = False):
+    def _create_pretraining_config(
+        num_gpu: int = 2, with_fsdp: bool = False, fsdp_flatten_parameters: bool = False
+    ):
         with initialize_config_module(config_module="vissl.config"):
             cfg = compose(
                 "defaults",
@@ -44,6 +47,8 @@ class TestFineTuning(unittest.TestCase):
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
             config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head_fsdp"
             config.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
+            config.MODEL.FSDP_CONFIG.flatten_parameters = fsdp_flatten_parameters
+            config.MODEL.FSDP_CONFIG.mixed_precision = False
         else:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
             config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head"
@@ -56,6 +61,7 @@ class TestFineTuning(unittest.TestCase):
         regularize_bias: bool = False,
         construct_single_param_group_only: bool = False,
         with_fsdp: bool = False,
+        fsdp_flatten_parameters: bool = False,
     ):
         with initialize_config_module(config_module="vissl.config"):
             cfg = compose(
@@ -89,10 +95,99 @@ class TestFineTuning(unittest.TestCase):
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
             config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp_fsdp"
             config.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
+            config.MODEL.FSDP_CONFIG.flatten_parameters = fsdp_flatten_parameters
+            config.MODEL.FSDP_CONFIG.mixed_precision = False
         else:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
             config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp"
         return config
+
+    @staticmethod
+    def _expected_finetuning_param_groups(
+        construct_single_param_group_only: bool = False, sharding_factor: int = 1
+    ):
+        if construct_single_param_group_only:
+            return [
+                {
+                    "params_count": 138,
+                    "params_numel": 83_590_140 // sharding_factor,
+                    "start_lr": 0.04,
+                    "end_lr": 0.0004,
+                    "weight_decay": 0.0001,
+                }
+            ]
+        else:
+            return [
+                {
+                    "params_count": 95,
+                    "params_numel": 80_419_552 // sharding_factor,
+                    "start_lr": 0.04,
+                    "end_lr": 0.0004,
+                    "weight_decay": 0.0001,
+                },
+                {
+                    "params_count": 154,
+                    "params_numel": 145_588 // sharding_factor,
+                    "start_lr": 0.04,
+                    "end_lr": 0.0004,
+                    "weight_decay": 0.0,
+                },
+                {
+                    # Params for linear layer matrix
+                    "params_count": 1,
+                    "params_numel": 3024 * 1000 // sharding_factor,
+                    "start_lr": 0.4,
+                    "end_lr": 0.004,
+                    "weight_decay": 1e-6,
+                },
+                {
+                    # Params for linear layer biases
+                    "params_count": 1,
+                    "params_numel": 1000 // sharding_factor,
+                    "start_lr": 0.4,
+                    "end_lr": 0.004,
+                    "weight_decay": 0.0,
+                },
+            ]
+
+    @staticmethod
+    def _compute_param_groups(finetune_config: AttrDict):
+        """
+        Take a configuration and compute the parameter groups
+        for this configuration
+        """
+        optimizer_schedulers = build_optimizer_schedulers(finetune_config["OPTIMIZER"])
+        base_model = build_model(finetune_config["MODEL"], finetune_config["OPTIMIZER"])
+        return get_optimizer_param_groups(
+            model=base_model,
+            model_config=finetune_config["MODEL"],
+            optimizer_config=finetune_config["OPTIMIZER"],
+            optimizer_schedulers=optimizer_schedulers,
+        )
+
+    @staticmethod
+    def _assert_equal(a, b):
+        if a != b:
+            raise AssertionError(f"Expected {a} == {b}")
+
+    @classmethod
+    def _check_valid_param_groups(cls, expected_param_groups, param_groups):
+        for i, param_group in enumerate(param_groups):
+            numel = sum(p.numel() for p in param_group["params"])
+            cls._assert_equal(set(param_group.keys()), {"params", "lr", "weight_decay"})
+            cls._assert_equal(
+                len(param_group["params"]), expected_param_groups[i]["params_count"]
+            )
+            cls._assert_equal(numel, expected_param_groups[i]["params_numel"])
+            cls._assert_equal(
+                param_group["lr"]._start_value, expected_param_groups[i]["start_lr"]
+            )
+            cls._assert_equal(
+                param_group["lr"]._end_value, expected_param_groups[i]["end_lr"]
+            )
+            cls._assert_equal(
+                param_group["weight_decay"], expected_param_groups[i]["weight_decay"]
+            )
 
     @gpu_test(gpu_count=1)
     def test_get_optimizer_param_groups(self):
@@ -101,99 +196,58 @@ class TestFineTuning(unittest.TestCase):
             construct_single_param_group_only=False,
             regularize_bias=False,
         )
-        optimizer_schedulers = build_optimizer_schedulers(finetune_config["OPTIMIZER"])
-        base_model = build_model(finetune_config["MODEL"], finetune_config["OPTIMIZER"])
-        param_groups = get_optimizer_param_groups(
-            model=base_model,
-            model_config=finetune_config["MODEL"],
-            optimizer_config=finetune_config["OPTIMIZER"],
-            optimizer_schedulers=optimizer_schedulers,
+        expected_param_groups = self._expected_finetuning_param_groups(
+            construct_single_param_group_only=False
+        )
+        param_groups = self._compute_param_groups(finetune_config)
+        self._check_valid_param_groups(expected_param_groups, param_groups)
+
+    @staticmethod
+    def _test_get_optimizer_param_groups_fsdp_single_group_worker(gpu_id: int):
+        finetune_config = TestFineTuning._create_finetuning_config(
+            checkpoint_path="",
+            construct_single_param_group_only=True,
+            regularize_bias=False,
+            with_fsdp=True,
+            fsdp_flatten_parameters=True,
+        )
+        expected_param_groups = TestFineTuning._expected_finetuning_param_groups(
+            construct_single_param_group_only=True, sharding_factor=2
+        )
+        param_groups = TestFineTuning._compute_param_groups(finetune_config)
+        TestFineTuning._check_valid_param_groups(expected_param_groups, param_groups)
+
+    @gpu_test(gpu_count=2)
+    def test_get_optimizer_param_groups_fsdp_single_group(self):
+        spawn_distributed_test(
+            gpu_count=2,
+            worker_fn=self._test_get_optimizer_param_groups_fsdp_single_group_worker,
         )
 
-        expected_param_groups = [
-            {
-                "params_count": 95,
-                "params_numel": 80_419_552,
-                "start_lr": 0.04,
-                "end_lr": 0.0004,
-                "weight_decay": 0.0001,
-            },
-            {
-                "params_count": 154,
-                "params_numel": 145_588,
-                "start_lr": 0.04,
-                "end_lr": 0.0004,
-                "weight_decay": 0.0,
-            },
-            {
-                # Params for linear layer matrix
-                "params_count": 1,
-                "params_numel": 3024 * 1000,
-                "start_lr": 0.4,
-                "end_lr": 0.004,
-                "weight_decay": 1e-6,
-            },
-            {
-                # Params for linear layer biases
-                "params_count": 1,
-                "params_numel": 1000,
-                "start_lr": 0.4,
-                "end_lr": 0.004,
-                "weight_decay": 0.0,
-            },
-        ]
+    @staticmethod
+    def _test_get_optimizer_param_groups_fsdp_worker(gpu_id: int):
+        finetune_config = TestFineTuning._create_finetuning_config(
+            checkpoint_path="",
+            construct_single_param_group_only=False,
+            regularize_bias=False,
+            with_fsdp=True,
+            fsdp_flatten_parameters=False,
+        )
+        expected_param_groups = TestFineTuning._expected_finetuning_param_groups(
+            construct_single_param_group_only=False, sharding_factor=2
+        )
+        param_groups = TestFineTuning._compute_param_groups(finetune_config)
+        TestFineTuning._check_valid_param_groups(expected_param_groups, param_groups)
 
-        for i, param_group in enumerate(param_groups):
-            numel = sum(p.numel() for p in param_group["params"])
-            self.assertEqual(set(param_group.keys()), {"params", "lr", "weight_decay"})
-            self.assertEqual(
-                len(param_group["params"]), expected_param_groups[i]["params_count"]
-            )
-            self.assertEqual(numel, expected_param_groups[i]["params_numel"])
-            self.assertEqual(
-                param_group["lr"]._start_value, expected_param_groups[i]["start_lr"]
-            )
-            self.assertEqual(
-                param_group["lr"]._end_value, expected_param_groups[i]["end_lr"]
-            )
-            self.assertEqual(
-                param_group["weight_decay"], expected_param_groups[i]["weight_decay"]
-            )
-
-    @gpu_test(gpu_count=1)
-    def test_get_optimizer_param_groups_fsdp_single_group(self):
-        with with_temp_files(count=1) as sync_file:
-            init_distributed_on_file(world_size=1, gpu_id=0, sync_file=sync_file)
-
-            finetune_config = self._create_finetuning_config(
-                checkpoint_path="",
-                construct_single_param_group_only=True,
-                regularize_bias=False,
-                with_fsdp=True,
-            )
-            optimizer_schedulers = build_optimizer_schedulers(
-                finetune_config["OPTIMIZER"]
-            )
-            base_model = build_model(
-                finetune_config["MODEL"], finetune_config["OPTIMIZER"]
-            )
-            param_groups = get_optimizer_param_groups(
-                model=base_model,
-                model_config=finetune_config["MODEL"],
-                optimizer_config=finetune_config["OPTIMIZER"],
-                optimizer_schedulers=optimizer_schedulers,
-            )
-
-            expected_param_groups = [{"param_numel": 83590140}]
-
-            for i, param_group in enumerate(param_groups):
-                numel = sum(p.numel() for p in param_group["params"])
-                self.assertEqual(expected_param_groups[i]["param_numel"], numel)
+    @gpu_test(gpu_count=2)
+    def test_get_optimizer_param_groups_fsdp(self):
+        spawn_distributed_test(
+            gpu_count=2, worker_fn=self._test_get_optimizer_param_groups_fsdp_worker
+        )
 
     @gpu_test(gpu_count=2)
     def test_fine_tuning_end_to_end(self):
         with in_temporary_directory() as pretrain_dir:
-
             # Run a pre-training to have some weights to being with
             pretrain_config = self._create_pretraining_config()
             run_integration_test(pretrain_config)
@@ -205,6 +259,34 @@ class TestFineTuning(unittest.TestCase):
                     checkpoint_path,
                     construct_single_param_group_only=False,
                     regularize_bias=False,
+                )
+                result = run_integration_test(finetune_config)
+                accuracies = result.get_accuracies(from_metrics_file=True)
+                self.assertEqual(4, len(accuracies))
+
+    @gpu_test(gpu_count=2)
+    def test_fine_tuning_end_to_end_fsdp(self):
+        with in_temporary_directory() as pretrain_dir:
+            # Run a pre-training to have some weights to being with
+            pretrain_config = self._create_pretraining_config(
+                with_fsdp=True, fsdp_flatten_parameters=True
+            )
+            run_integration_test(pretrain_config)
+            sharded_checkpoint_path = os.path.join(pretrain_dir, "checkpoint.torch")
+            sliced_checkpoint_path = os.path.join(pretrain_dir, "sliced.torch")
+            CheckpointFormatConverter.sharded_to_sliced_checkpoint(
+                input_checkpoint_path=sharded_checkpoint_path,
+                output_checkpoint_path=sliced_checkpoint_path,
+            )
+
+            # Create a separate directly in which to run the fine-tuning
+            with in_temporary_directory():
+                finetune_config = self._create_finetuning_config(
+                    sliced_checkpoint_path,
+                    construct_single_param_group_only=False,
+                    regularize_bias=False,
+                    with_fsdp=True,
+                    fsdp_flatten_parameters=False,
                 )
                 result = run_integration_test(finetune_config)
                 accuracies = result.get_accuracies(from_metrics_file=True)
