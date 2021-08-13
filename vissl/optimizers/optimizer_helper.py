@@ -8,7 +8,6 @@ from typing import Any, List, Dict
 
 import torch.nn as nn
 from fvcore.common.param_scheduler import ParamScheduler
-
 from vissl.config import AttrDict
 from vissl.utils.misc import is_apex_available
 
