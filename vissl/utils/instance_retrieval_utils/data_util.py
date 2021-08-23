@@ -8,6 +8,7 @@ import math
 import os
 import subprocess
 from collections import OrderedDict
+from typing import List
 
 import numpy as np
 import scipy.io
@@ -87,6 +88,42 @@ def flatten(x: torch.Tensor, keepdims: bool = False):
         for _ in range(y.dim(), x.dim()):
             y = y.unsqueeze(-1)
     return y
+
+
+def get_average_gem(
+    activation_maps: List[torch.Tensor],
+    p: int = 3,
+    eps: float = 1e-6,
+    clamp: bool = True,
+    add_bias: bool = False,
+    keepdims: bool = False,
+):
+    """
+    Average Gem pooling of list of tensors. See #gem below for more information.
+
+    Returns:
+        x (torch.Tensor): Gem pooled tensor
+    """
+    gem_average = None
+
+    for activation_map in activation_maps:
+        gem_descriptors = gem(
+            activation_map,
+            p,
+            eps,
+            clamp,
+            add_bias,
+            keepdims,
+        )
+
+        if gem_average is None:
+            gem_average = gem_descriptors
+        else:
+            gem_average += gem_descriptors
+
+    gem_average = gem_average / len(activation_maps)
+
+    return gem_average
 
 
 # Credits: Matthijs Douze

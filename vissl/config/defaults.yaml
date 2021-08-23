@@ -1276,6 +1276,8 @@ config:
     NUM_DATABASE_SAMPLES: -1
     # Whether or not to use distractor images.
     USE_DISTRACTORS: False
+    # When multiscale=True, 3 different scales of the image are extracted.
+    MULTISCALE: False
     ######################## Features Processing Hypers #######################
     # Resize larger side of image to RESIZE_IMG pixels (e.g. 800)
     RESIZE_IMG: 1024
@@ -1301,6 +1303,7 @@ config:
     SAVE_RETRIEVAL_RANKINGS_SCORES: True
     # Whether or not to save the features that were extracted
     SAVE_FEATURES: False
+
 
   # ----------------------------------------------------------------------------------- #
   # K-NEAREST NEIGHBOR (benchmark)
