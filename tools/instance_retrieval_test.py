@@ -132,9 +132,6 @@ def get_train_features(
                 print(f"Train Image raw activation map shape: { activation_map.shape }")
 
             with PerfTimer("post_process_features", PERF_STATS):
-                logging.info(f"activation_map size: { activation_map.shape }")
-                logging.info(f"index: { i }")
-                logging.info(f"fname: { fname_in }")
                 # once we have the features,
                 # we can perform: rmac | gem pooling | l2 norm
                 if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
@@ -211,9 +208,6 @@ def process_eval_image(
         print(f"Eval image raw activation map shape: { activation_map.shape }")
 
     with PerfTimer("post_process_features", PERF_STATS):
-        logging.info(f"activation_map size: { activation_map.shape }")
-        logging.info(f"fname: { fname_in }")
-
         # process the features: rmac | l2 norm
         if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
             descriptors = get_rmac_descriptors(
