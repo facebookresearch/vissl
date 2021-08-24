@@ -177,6 +177,7 @@ def get_train_features(
                     cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
                     and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
                 ):
+                    print(f"DESCRIPTORS SHAPE: {descriptors.shape}")
                     # RMAC performs normalization within the algorithm, hence we skip it here.
                     descriptors = l2n(descriptors, dim=1)
 
@@ -255,6 +256,7 @@ def process_eval_image(
             and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
         ):
             # RMAC performs normalization within the algorithm, hence we skip it here.
+            print(f"DESCRIPTORS SHAPE: {descriptors.shape}")
             descriptors = l2n(descriptors, dim=1)
 
         # Optionally apply pca.
@@ -590,7 +592,21 @@ def instance_retrieval_test(args, cfg):
     # Step 5: Compute similarity, score, and save results
     with PerfTimer("scoring_results", PERF_STATS):
         logging.info("Calculating similarity and score...")
-        sim = features_queries.dot(features_dataset.T)
+
+        if cfg.IMG_RETRIEVAL.SIMILARITY_MEASURE == "cosine_similarity":
+            sim = features_queries.dot(features_dataset.T)
+        elif cfg.IMG_RETRIEVAL.SIMILARITY_MEASURE == "l2":
+            # Compute l2 distance between rows of features_queries and features_dataset.
+            sx = np.sum(features_queries ** 2, axis=1, keepdims=True)
+            sy = np.sum(features_dataset ** 2, axis=1, keepdims=True)
+
+            sim = -np.sqrt(-2 * features_queries.dot(features_dataset.T) + sx + sy.T)
+        else:
+            logging.info(
+                f"IMG_RETRIEVAL.SIMILARITY_MEASURE: {cfg.IMG_RETRIEVAL.SIMILARITY_MEASURE} is not supported."  # NOQA
+            )
+            raise
+
         logging.info(f"Similarity tensor: {sim.shape}")
         results = eval_dataset.score(sim, temp_dir)
 
