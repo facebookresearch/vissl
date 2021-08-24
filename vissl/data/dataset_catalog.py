@@ -278,7 +278,9 @@ def get_data_files(split, dataset_config):
         # otherwise retrieve from the cataloag based on the dataset name
         else:
             data_info = VisslDatasetCatalog.get(data_names[idx])
-            assert len(data_info[data_split]) > 0, "data paths list is empty"
+            assert (
+                len(data_info[data_split]) > 0
+            ), f"data paths list for split: { data_split } is empty"
             check_data_exists(
                 data_info[data_split][0]
             ), f"Some data files dont exist: {data_info[data_split][0]}"
