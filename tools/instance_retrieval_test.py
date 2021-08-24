@@ -145,7 +145,7 @@ def get_train_features(
                     img = image_helper.load_and_prepare_image(fname_in, roi=None)
 
             with PerfTimer("extract_features", PERF_STATS):
-                img_scalings = cfg.IMG_RETRIEVAL.IMG_SCALINGSS or [1]
+                img_scalings = cfg.IMG_RETRIEVAL.IMG_SCALINGS or [1]
                 activation_maps = extract_activation_maps(img, model, img_scalings)
 
             if verbose:
@@ -658,8 +658,8 @@ def validate_and_infer_config(config: AttrDict):
             config.IMG_RETRIEVAL.TRAIN_PCA_WHITENING
         ), "PCA Whitening is built-in to the RMAC algorithm and is required"
         assert (
-            not config.IMG_RETRIEVAL.IMG_SCALINGS
-        ), "img_scalings is incompatible with the rmac algorithm."
+            len(config.IMG_RETRIEVAL.IMG_SCALINGS) == 1
+        ), "Rmac does not support multiple img_scalings."
 
     return config
 
