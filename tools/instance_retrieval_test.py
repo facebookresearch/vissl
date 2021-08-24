@@ -22,7 +22,11 @@ from vissl.utils.checkpoint import (
     init_model_from_consolidated_weights,
 )
 from vissl.utils.env import set_env_vars
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available, print_cfg
+from vissl.utils.hydra_config import (
+    convert_to_attrdict,
+    is_hydra_available,
+    print_cfg,
+)
 from vissl.utils.instance_retrieval_utils.data_util import (
     CopyDaysDataset,
     GenericInstanceRetrievalDataset,
@@ -32,7 +36,7 @@ from vissl.utils.instance_retrieval_utils.data_util import (
     MultigrainResize,
     RevisitedInstanceRetrievalDataset,
     WhiteningTrainingImageDataset,
-    gem,
+    get_average_gem,
     is_copdays_dataset,
     is_instre_dataset,
     is_oxford_paris_dataset,
@@ -86,6 +90,25 @@ def build_retrieval_model(cfg):
     return model
 
 
+# Adapted from Dino by Mathilde Caron: https://github.com/facebookresearch/dino/blob/ba9edd18db78a99193005ef991e04d63984b25a8/utils.py#L795 # NOQA
+def extract_activation_maps(img, model, img_scalings):
+    activation_maps = []
+
+    for scale in img_scalings:
+        # Reshape image.
+        inp = img.unsqueeze(0)
+
+        # Scale image. If scale == 1, this is a no-op.
+        inp = torch.nn.functional.interpolate(
+            inp, scale_factor=scale, mode="bilinear", align_corners=False
+        )
+        vc = inp.cuda()
+        feats = model(vc)[0].cpu()
+        activation_maps.append(feats)
+
+    return activation_maps
+
+
 def get_train_features(
     cfg,
     temp_dir,
@@ -121,33 +144,33 @@ def get_train_features(
                 else:
                     img = image_helper.load_and_prepare_image(fname_in, roi=None)
 
-                v = torch.autograd.Variable(img.unsqueeze(0))
-
             with PerfTimer("extract_features", PERF_STATS):
-                vc = v.cuda()
-                # the model output is a list always.
-                activation_map = model(vc)[0].cpu()
+                img_scalings = cfg.IMG_RETRIEVAL.IMG_SCALINGSS or [1]
+                activation_maps = extract_activation_maps(img, model, img_scalings)
 
             if verbose:
-                print(f"Train Image raw activation map shape: { activation_map.shape }")
+                print(
+                    f"Example train Image raw activation map shape: { activation_maps[0].shape }"  # NOQA
+                )
 
             with PerfTimer("post_process_features", PERF_STATS):
                 # once we have the features,
                 # we can perform: rmac | gem pooling | l2 norm
                 if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
                     descriptors = get_rmac_descriptors(
-                        activation_map,
+                        activation_maps[0],
                         spatial_levels,
                         normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
                     )
                 elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-                    descriptors = gem(
-                        activation_map,
+                    descriptors = get_average_gem(
+                        activation_maps,
                         p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
                         add_bias=True,
                     )
                 else:
-                    descriptors = activation_map
+                    descriptors = torch.mean(torch.stack(activation_maps), dim=0)
+                    descriptors = descriptors.reshape(descriptors.shape[0], -1)
 
                 # Optionally l2 normalize the features.
                 if (
@@ -197,31 +220,34 @@ def process_eval_image(
         else:
             img = image_helper.load_and_prepare_image(fname_in, roi=roi)
 
-        v = torch.autograd.Variable(img.unsqueeze(0))
-        vc = v.cuda()
-
     with PerfTimer("extract_features", PERF_STATS):
         # the model output is a list always.
-        activation_map = model(vc)[0].cpu()
+        img_scalings = cfg.IMG_RETRIEVAL.IMG_SCALINGS or [1]
+        activation_maps = extract_activation_maps(img, model, img_scalings)
 
     if verbose:
-        print(f"Eval image raw activation map shape: { activation_map.shape }")
+        print(
+            f"Example eval image raw activation map shape: { activation_maps[0].shape }"  # NOQA
+        )
 
     with PerfTimer("post_process_features", PERF_STATS):
         # process the features: rmac | l2 norm
         if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
             descriptors = get_rmac_descriptors(
-                activation_map,
+                activation_maps[0],
                 spatial_levels,
                 pca=pca,
                 normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
             )
         elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
-            descriptors = gem(
-                activation_map, p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER, add_bias=True
+            descriptors = get_average_gem(
+                activation_maps,
+                p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+                add_bias=True,
             )
         else:
-            descriptors = activation_map
+            descriptors = torch.mean(torch.stack(activation_maps), dim=0)
+            descriptors = descriptors.reshape(descriptors.shape[0], -1)
 
         # Optionally l2 normalize the features.
         if (
@@ -615,6 +641,9 @@ def validate_and_infer_config(config: AttrDict):
         assert (
             config.IMG_RETRIEVAL.TRAIN_PCA_WHITENING
         ), "PCA Whitening is built-in to the RMAC algorithm and is required"
+        assert (
+            not config.IMG_RETRIEVAL.IMG_SCALINGS
+        ), "img_scalings is incompatible with the rmac algorithm."
 
     return config
 
