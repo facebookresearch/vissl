@@ -6,23 +6,38 @@
 import unittest
 from typing import List
 
-from hydra.core.global_hydra import GlobalHydra
-from hydra.experimental import compose, initialize_config_module
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 
 
 class TestUtilsHydraConfig(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        if GlobalHydra.instance().is_initialized():
-            GlobalHydra.instance().clear()
-        initialize_config_module(config_module="vissl.config")
-
     @staticmethod
     def _create_config(overrides: List[str]):
-        cfg = compose("defaults", overrides=overrides)
-        args, config = convert_to_attrdict(cfg)
+        cfg = compose_hydra_configuration(overrides)
+        args, config = convert_to_attrdict(cfg, dump_config=False)
         return config
+
+    def test_composition_order(self):
+        """
+        Following Hydra 1.1 update, the composition order is modified:
+        https://hydra.cc/docs/upgrades/1.0_to_1.1/default_composition_order/
+
+        This test verifies that the composition order is working on
+        the hydra version installed by the user.
+        """
+
+        # Create a pre-training configuration for SwAV and
+        # ensure that the composition was done correctly
+        config = self._create_config(
+            [
+                "config=test/integration_test/quick_swav",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
+            ]
+        )
+        self.assertEqual("swav_loss", config.LOSS.name)
+        self.assertEqual(2, config.DISTRIBUTED.NUM_PROC_PER_NODE)
 
     def test_inference_of_fsdp_settings_for_swav_pretraining(self):
         overrides = [

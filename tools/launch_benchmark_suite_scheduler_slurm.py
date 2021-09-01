@@ -10,7 +10,7 @@ import submitit
 from fvcore.common.file_io import PathManager
 from vissl.config.attr_dict import AttrDict
 from vissl.utils.benchmark_suite_scheduler import BenchmarkSuiteScheduler
-from vissl.utils.hydra_config import is_hydra_available
+from vissl.utils.hydra_config import assert_hydra_dependency
 from vissl.utils.io import load_file
 from vissl.utils.misc import recursive_dict_merge
 from vissl.utils.slurm import is_submitit_available
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     python -u "./vissl/engines/benchmark_suite_scheduler.py" \
         "/path/to/benchmark_suite_scheduler_example.json"
     """
-    assert is_hydra_available(), "Make sure to install hydra"
+    assert_hydra_dependency()
 
     assert (
         is_submitit_available()

@@ -17,7 +17,6 @@ from typing import Any, List, Optional
 import numpy as np
 import torch
 from fvcore.common.file_io import PathManager
-from hydra.experimental import compose, initialize_config_module
 from vissl.config import AttrDict
 from vissl.data import build_dataset
 from vissl.hooks import default_hook_generator
@@ -25,7 +24,7 @@ from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.distributed_launcher import launch_distributed
 from vissl.utils.env import set_env_vars, setup_path_manager
 from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import is_faiss_available, set_seeds
@@ -221,8 +220,7 @@ def main(args: Namespace, cfg: AttrDict):
 
 
 def hydra_main(overrides: List[Any]):
-    with initialize_config_module(config_module="vissl.config"):
-        cfg = compose("defaults", overrides=overrides)
+    cfg = compose_hydra_configuration(overrides)
     args, config = convert_to_attrdict(cfg)
     main(args, config)
 
@@ -244,5 +242,4 @@ if __name__ == "__main__":
     ```
     """
     overrides = sys.argv[1:]
-    assert is_hydra_available(), "Make sure to install hydra"
     hydra_main(overrides=overrides)

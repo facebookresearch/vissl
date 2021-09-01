@@ -14,7 +14,6 @@ import torch
 import torchvision
 from classy_vision.generic.util import copy_model_to_gpu, load_checkpoint
 from fvcore.common.file_io import PathManager
-from hydra.experimental import compose, initialize_config_module
 from vissl.config import AttrDict
 from vissl.models import build_model
 from vissl.utils.checkpoint import (
@@ -23,8 +22,8 @@ from vissl.utils.checkpoint import (
 )
 from vissl.utils.env import set_env_vars
 from vissl.utils.hydra_config import (
+    compose_hydra_configuration,
     convert_to_attrdict,
-    is_hydra_available,
     print_cfg,
 )
 from vissl.utils.instance_retrieval_utils.data_util import (
@@ -668,13 +667,11 @@ def main(args: Namespace, config: AttrDict):
 
 
 def hydra_main(overrides: List[Any]):
-    with initialize_config_module(config_module="vissl.config"):
-        cfg = compose("defaults", overrides=overrides)
+    cfg = compose_hydra_configuration(overrides)
     args, config = convert_to_attrdict(cfg)
     main(args, config)
 
 
 if __name__ == "__main__":
     overrides = sys.argv[1:]
-    assert is_hydra_available(), "Make sure to install hydra"
     hydra_main(overrides=overrides)

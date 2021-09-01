@@ -3,7 +3,7 @@
 cython==0.29.22
 fairscale@https://github.com/facebookresearch/fairscale/tarball/df7db85cef7f9c30a5b821007754b96eb1f977b6
 fvcore==0.1.3.post20210317
-hydra-core==1.0.6
+hydra-core==1.0.7
 numpy==1.19.5
 parameterized==0.7.4
 scikit-learn==0.24.1
