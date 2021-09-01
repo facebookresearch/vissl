@@ -4,7 +4,7 @@
 
 ## What's New
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
-- **[July 2021]**: [Fully Sharded Data Parallel](https://github.com/facebookresearch/fairscale/pull/413) integrated in VISSL and announced in [blog](https://engineering.fb.com/2021/07/15/open-source/fsdp/).
+- **[August 2021]**: Instance Retrieval benchmark implemented and [available](https://github.com/facebookresearch/vissl/pull/394) in VISSL.
 - **[May 2021]**: [DINO: Emerging Properties in Self-Supervised Vision Transformers](https://arxiv.org/pdf/2104.14294.pdf) code released.
 - **[May 2021]**: VISSL relicensed under [MIT License](LICENSE).
 - **[May 2021]**: [Barlow Twins: Self-Supervised Learning via Redundancy Reduction](https://arxiv.org/abs/2103.03230) code released.
