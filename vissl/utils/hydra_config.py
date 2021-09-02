@@ -6,7 +6,7 @@
 import logging
 import pprint
 import sys
-from typing import Any, List
+from typing import Any, List, Tuple
 
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -21,7 +21,9 @@ def save_attrdict_to_disk(cfg: AttrDict):
     save_file(cfg.to_dict(), yaml_output_file)
 
 
-def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
+def convert_to_attrdict(
+    cfg: DictConfig, cmdline_args: List[Any] = None, dump_config: bool = True
+):
     """
     Given the user input Hydra Config, and some command line input options
     to override the config file:
@@ -52,7 +54,8 @@ def convert_to_attrdict(cfg: DictConfig, cmdline_args: List[Any] = None):
     # assert the config and infer
     config = cfg.config
     infer_and_assert_hydra_config(config)
-    save_attrdict_to_disk(config)
+    if dump_config:
+        save_attrdict_to_disk(config)
     convert_fsdp_dtypes(config)
     return cfg, config
 
@@ -79,6 +82,45 @@ def is_hydra_available():
     except ImportError:
         hydra_available = False
     return hydra_available
+
+
+def get_hydra_version() -> Tuple[int, ...]:
+    import hydra
+
+    return tuple(int(x) for x in hydra.__version__.split("."))
+
+
+def assert_hydra_dependency():
+    """
+    Check if Hydra is available. Simply python import to test.
+    Also verifies whether the version is up to date.
+    """
+    min_hydra_version = (1, 0, 7)
+    min_hydra_version_str = ".".join(str(x) for x in min_hydra_version)
+    install_command = f"pip install hydra-core=={min_hydra_version_str}"
+    assert is_hydra_available(), f"Make sure to install Hydra: {install_command}"
+    upgrade_message = f"Please upgrade Hydra: {install_command}"
+    assert get_hydra_version() >= min_hydra_version, upgrade_message
+
+
+def compose_hydra_configuration(overrides: List[str]):
+    """
+    Transform the list of overrides provided on the command line
+    to an actual VISSL configuration by merging these overrides
+    with the defaults configuration of VISSL
+    """
+    assert_hydra_dependency()
+
+    # Backward compatibility with previous hydra versions:
+    # In Hydra 1.1 and above, the compose API is not experimental anymore
+    if get_hydra_version() >= (1, 1, 0):
+        from hydra import initialize_config_module, compose
+    else:
+        from hydra.experimental import initialize_config_module, compose
+
+    # Compose the overrides with "vissl/config/defaults.yaml"
+    with initialize_config_module(config_module="vissl.config"):
+        return compose("defaults", overrides=overrides)
 
 
 def print_cfg(cfg):
