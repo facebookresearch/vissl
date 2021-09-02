@@ -8,9 +8,8 @@ import os
 import unittest
 
 import torch
-from hydra.experimental import compose, initialize_config_module
 from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.misc import merge_features
 from vissl.utils.test_utils import (
     gpu_test,
@@ -22,82 +21,75 @@ from vissl.utils.test_utils import (
 class TestExtractClusterWorkflow(unittest.TestCase):
     @staticmethod
     def _create_pretraining_config(num_gpu: int = 2):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=test/integration_test/quick_swav",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.DATA_LIMIT=40",
-                    "config.SEED_VALUE=0",
-                    "config.MODEL.AMP_PARAMS.USE_AMP=False",
-                    "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
-                    "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
-                    "config.LOSS.swav_loss.epsilon=0.03",
-                    "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
-                    "config.MODEL.FSDP_CONFIG.mixed_precision=False",
-                    "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
-                    "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
-                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                    "config.LOG_FREQUENCY=1",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.OPTIMIZER.use_larc=False",
-                ],
-            )
-
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_swav",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.SEED_VALUE=0",
+                "config.MODEL.AMP_PARAMS.USE_AMP=False",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.LOSS.swav_loss.epsilon=0.03",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.MODEL.FSDP_CONFIG.mixed_precision=False",
+                "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
+                "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
+                f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+                "config.LOG_FREQUENCY=1",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.OPTIMIZER.use_larc=False",
+            ]
+        )
         args, config = convert_to_attrdict(cfg)
         return config
 
     @staticmethod
     def _create_extract_features_config_head(checkpoint_path: str, num_gpu: int = 2):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=feature_extraction/extract_resnet_in1k_8gpu",
-                    "+config/feature_extraction/with_head=rn50_swav",
-                    f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TEST.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.DATA_LIMIT=40",
-                    "config.DATA.TEST.DATA_LIMIT=20",
-                    "config.SEED_VALUE=0",
-                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=feature_extraction/extract_resnet_in1k_8gpu",
+                "+config/feature_extraction/with_head=rn50_swav",
+                f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.DATA.TEST.DATA_LIMIT=20",
+                "config.SEED_VALUE=0",
+                f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
+            ]
+        )
         args, config = convert_to_attrdict(cfg)
         return config
 
     @staticmethod
     def _create_extract_features_config_trunk(checkpoint_path: str, num_gpu: int = 2):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=feature_extraction/extract_resnet_in1k_8gpu",
-                    "+config/feature_extraction/trunk_only=rn50_layers",
-                    f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TEST.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.DATA_LIMIT=40",
-                    "config.DATA.TEST.DATA_LIMIT=20",
-                    "config.SEED_VALUE=0",
-                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
-                    "config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=feature_extraction/extract_resnet_in1k_8gpu",
+                "+config/feature_extraction/trunk_only=rn50_layers",
+                f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.DATA.TEST.DATA_LIMIT=20",
+                "config.SEED_VALUE=0",
+                f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
+                "config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False",
+            ],
+        )
         args, config = convert_to_attrdict(cfg)
         return config
 
@@ -162,7 +154,8 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                 self.assertEqual(train_feat["targets"].shape, torch.Size([40, 1]))
                 self.assertEqual(train_feat["inds"].shape, torch.Size([40]))
 
-                # Verify that we can merge the features back without flattening them (second approach)
+                # Verify that we can merge the features back without
+                # flattening them (second approach)
                 train_feat = ExtractedFeaturesLoader.load_features(
                     extract_dir, "train", "res5"
                 )

@@ -9,8 +9,8 @@ import sys
 from typing import Any, List
 
 import pkg_resources
-from hydra.experimental import compose, initialize_config_module
 from omegaconf import OmegaConf
+from vissl.utils.hydra_config import compose_hydra_configuration
 
 
 logger = logging.getLogger("vissl")
@@ -93,15 +93,13 @@ UNIT_TEST_CONFIGS = create_valid_input(
     list_config_files("config/test/cpu_test", exclude_folders=None)
 )
 
-initialize_config_module(config_module="vissl.config")
-
 
 class SSLHydraConfig(object):
     def __init__(self, overrides: List[Any] = None):
         self.overrides = []
         if overrides is not None and len(overrides) > 0:
             self.overrides.extend(overrides)
-        cfg = compose(config_name="defaults", overrides=self.overrides)
+        cfg = compose_hydra_configuration(self.overrides)
         self.default_cfg = cfg
 
     @classmethod

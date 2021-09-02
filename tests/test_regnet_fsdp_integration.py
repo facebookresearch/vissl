@@ -6,9 +6,8 @@ import os
 import unittest
 
 import torch
-from hydra.experimental import compose, initialize_config_module
 from vissl.utils.checkpoint import CheckpointFormatConverter
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.test_utils import (
     gpu_test,
     in_temporary_directory,
@@ -29,29 +28,27 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         with_mixed_precision: bool,
         auto_wrap_threshold: int,
     ):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=test/integration_test/quick_swav_2crops",
-                    "+config/test/integration_test/models=swav_regnet_fsdp",
-                    "config.SEED_VALUE=0",
-                    "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
-                    "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
-                    "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
-                    "config.LOSS.swav_loss.epsilon=0.03",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.DATA.TRAIN.DATA_LIMIT=32",
-                    "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
-                    "config.OPTIMIZER.use_larc=False",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                    "config.LOG_FREQUENCY=1",
-                    "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
-                    "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_swav_2crops",
+                "+config/test/integration_test/models=swav_regnet_fsdp",
+                "config.SEED_VALUE=0",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.LOSS.swav_loss.epsilon=0.03",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TRAIN.DATA_LIMIT=32",
+                "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
+                "config.OPTIMIZER.use_larc=False",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.LOG_FREQUENCY=1",
+                "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
+                "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
+            ]
+        )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
@@ -74,33 +71,31 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
     def _create_linear_evaluation_config(
         self, with_fsdp: bool, with_mixed_precision: bool, auto_wrap_threshold: int
     ):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=test/integration_test/quick_eval_in1k_linear",
-                    "+config/test/integration_test/models=eval_regnet_fsdp",
-                    "config.SEED_VALUE=0",
-                    "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
-                    "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
-                    "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.DATA.TRAIN.DATA_LIMIT=32",
-                    "config.DATA.TEST.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TEST.BATCHSIZE_PER_REPLICA=4",
-                    "config.DATA.TEST.DATA_LIMIT=32",
-                    "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
-                    "config.OPTIMIZER.use_larc=False",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                    "config.LOG_FREQUENCY=1",
-                    "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
-                    "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_eval_in1k_linear",
+                "+config/test/integration_test/models=eval_regnet_fsdp",
+                "config.SEED_VALUE=0",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TRAIN.DATA_LIMIT=32",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.DATA_LIMIT=32",
+                "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
+                "config.OPTIMIZER.use_larc=False",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.LOG_FREQUENCY=1",
+                "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
+                "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
+            ]
+        )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"

@@ -11,7 +11,6 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.optim as optim
-from hydra.experimental import compose, initialize_config_module
 from vissl.models import build_model
 from vissl.utils.checkpoint import (
     CheckpointFormatConverter,
@@ -19,7 +18,7 @@ from vissl.utils.checkpoint import (
     CheckpointWriter,
 )
 from vissl.utils.fsdp_utils import fsdp_wrapper
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.test_utils import (
     gpu_test,
     in_temporary_directory,
@@ -31,23 +30,21 @@ from vissl.utils.test_utils import (
 class TestCheckpointConversion(unittest.TestCase):
     @staticmethod
     def _create_fsdp_model_config(with_fsdp: bool):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=test/integration_test/quick_swav",
-                    "+config/pretrain/swav/models=regnet16Gf",
-                    "config.SEED_VALUE=0",
-                    "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
-                    "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.LOSS.swav_loss.epsilon=0.03",
-                    "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
-                    "config.MODEL.FSDP_CONFIG.mixed_precision=False",
-                    "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
-                    "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_swav",
+                "+config/pretrain/swav/models=regnet16Gf",
+                "config.SEED_VALUE=0",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.LOSS.swav_loss.epsilon=0.03",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.MODEL.FSDP_CONFIG.mixed_precision=False",
+                "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
+                "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+            ],
+        )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
