@@ -555,7 +555,7 @@ class SelfSupervisionTrainer(object):
                     num_images = input_sample["indices"].shape[0]
                     for idx in range(num_images):
                         image_index = input_sample["indices"][idx]
-                        cluster_assignments[image_index] = prototype_index[idx].item()
+                        cluster_assignments[image_index] = prototype_index.item()
             except StopIteration:
                 break
         return cluster_assignments
