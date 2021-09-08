@@ -101,6 +101,7 @@ def extract_activation_maps(img, model, img_scalings):
         inp = torch.nn.functional.interpolate(
             inp, scale_factor=scale, mode="bilinear", align_corners=False
         )
+
         vc = inp.cuda()
         feats = model(vc)[0].cpu()
         activation_maps.append(feats)
@@ -411,6 +412,7 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
     # Otherwise not.
     if cfg.IMG_RETRIEVAL.TRAIN_PCA_WHITENING:
         train_data_path = f"{root_dataset_path}/{train_dataset_name}"
+
         assert PathManager.exists(train_data_path), f"Unknown path: {train_data_path}"
 
         num_samples = (
@@ -446,6 +448,16 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
     else:
         train_dataset = None
     return train_dataset
+
+
+def compute_l2_distance_matrix(features_queries, features_dataset):
+    """
+    Computes the l2 distance of every query to every database image.
+    """
+    sx = np.sum(features_queries ** 2, axis=1, keepdims=True)
+    sy = np.sum(features_dataset ** 2, axis=1, keepdims=True)
+
+    return np.sqrt(-2 * features_queries.dot(features_dataset.T) + sx + sy.T)
 
 
 def get_eval_dataset(cfg, root_dataset_path, eval_dataset_name, eval_binary_path):
@@ -589,7 +601,14 @@ def instance_retrieval_test(args, cfg):
     # Step 5: Compute similarity, score, and save results
     with PerfTimer("scoring_results", PERF_STATS):
         logging.info("Calculating similarity and score...")
-        sim = features_queries.dot(features_dataset.T)
+
+        if cfg.IMG_RETRIEVAL.SIMILARITY_MEASURE == "cosine_similarity":
+            sim = features_queries.dot(features_dataset.T)
+        elif cfg.IMG_RETRIEVAL.SIMILARITY_MEASURE == "l2":
+            sim = -compute_l2_distance_matrix(features_queries, features_dataset)
+        else:
+            raise ValueError(f"{ cfg.IMG_RETRIEVAL.SIMILARITY_MEASURE } not supported.")
+
         logging.info(f"Similarity tensor: {sim.shape}")
         results = eval_dataset.score(sim, temp_dir)
 
@@ -643,6 +662,8 @@ def validate_and_infer_config(config: AttrDict):
         assert (
             len(config.IMG_RETRIEVAL.IMG_SCALINGS) == 1
         ), "Multiple image scalings is not compatible with the rmac algorithm."
+
+    assert config.IMG_RETRIEVAL.SIMILARITY_MEASURE in ["cosine_similarity", "l2"]
 
     return config
 

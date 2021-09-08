@@ -1,0 +1,11 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 27
+        w_0: 640
+        w_a: 230.83
+        w_m: 2.53
+        group_width: 373

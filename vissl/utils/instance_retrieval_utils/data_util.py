@@ -335,10 +335,7 @@ class RevisitedInstanceRetrievalDataset:
         dataset = dataset.lower()
         assert is_revisited_dataset(dataset), f"Unknown dataset: {dataset}!"
 
-        # loading imlist, qimlist, and gnd, in cfg as a dict
-        gnd_fname = f"{dir_main}/{dataset}/gnd_{dataset}.pkl"
-        cfg = load_file(gnd_fname)
-        cfg["gnd_fname"] = gnd_fname
+        cfg = self.load_config(dir_main, dataset)
         cfg["ext"] = ".jpg"
         cfg["qext"] = ".jpg"
 
@@ -351,7 +348,6 @@ class RevisitedInstanceRetrievalDataset:
         cfg["dataset"] = dataset
 
         self.cfg = cfg
-
         self.N_images = self.cfg["n"]
         self.N_queries = self.cfg["nq"]
 
@@ -363,6 +359,14 @@ class RevisitedInstanceRetrievalDataset:
             f"Dataset: {dataset}, images: {self.get_num_images()}, "
             f"queries: {self.get_num_query_images()}"
         )
+
+    def load_config(self, dir_main, dataset):
+        # loading imlist, qimlist, and gnd, in cfg as a dict
+        gnd_fname = f"{dir_main}/{dataset}/gnd_{dataset}.pkl"
+        cfg = load_file(gnd_fname)
+        cfg["gnd_fname"] = gnd_fname
+
+        return cfg
 
     def get_filename(self, i: int):
         """
@@ -547,6 +551,7 @@ class InstanceRetrievalImageLoader:
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         # open path as file to avoid ResourceWarning
         # (https://github.com/python-pillow/Pillow/issues/835)
+
         with PathManager.open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
 

@@ -1281,6 +1281,8 @@ config:
     # image scale and averaged. Default is [1], meaning that only the full
     # image is processed.
     IMG_SCALINGS: [1]
+    # valid options are cosine_similarity (suggested) and l2.
+    SIMILARITY_MEASURE: cosine_similarity
     ######################## Features Processing Hypers #######################
     # Resize larger side of image to RESIZE_IMG pixels (e.g. 800)
     RESIZE_IMG: 1024
