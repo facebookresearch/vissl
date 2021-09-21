@@ -113,7 +113,7 @@ To add a new trunk (a new architecture like vision transformers, etc.), follow t
             return output
 
 - **Step2**: Inform VISSL about the parameters of the trunk. Register the params with VISSL Configuration by adding the params in
-  `VISSL defaults.yaml <https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml>`_ as follows:
+  `VISSL defaults.yaml <https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml>`_ as follows:
 
 .. code-block:: yaml
 

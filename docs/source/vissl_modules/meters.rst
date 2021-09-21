@@ -2,7 +2,7 @@ Using Meters
 ===============================
 
 VISSL supports PyTorch meters and implements some custom meters that like Mean Average Precision meter. Meters in VISSL support single target multiple outputs. This is especially useful and relvant during evaluation of self-supervised models where we want to calculate feature
-quality of several layers of the model. See all the `VISSL custom meters here <https://github.com/facebookresearch/vissl/tree/master/vissl/meters>`_.
+quality of several layers of the model. See all the `VISSL custom meters here <https://github.com/facebookresearch/vissl/tree/main/vissl/meters>`_.
 
 To use a certain meter, users need to simply set :code:`METERS.name=<my_meter_name>` and set the parameter values that meter requires.
 

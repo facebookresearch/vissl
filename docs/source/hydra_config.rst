@@ -5,7 +5,7 @@ YAML Configuration system
 VISSL uses `Hydra <https://github.com/facebookresearch/hydra>`_ for configuration management. The configuration files are simple YAML files.
 Hydra provides flexible yet powerful configuration system.
 
-- Users can create configs for only a specific component of their training (for example: using different datasets) and overwrite a master configuration setting for that specific component. This way, Hydra allows reusability of configs.
+- Users can create configs for only a specific component of their training (for example: using different datasets) and overwrite a main configuration setting for that specific component. This way, Hydra allows reusability of configs.
 - Hydra also allows to modify the configuration values from command line and
 - Hydra also offers an intuitive solution to adding new keys to a configuration.
 
@@ -14,14 +14,14 @@ The usage looks like:
 .. code-block:: bash
 
     python <binary-name>.py config=<yaml_config path>/<yaml_config_file_name>
-    
-**All the parameters and settings VISSL supports**: you can see all the settings in `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml>`_.
+
+**All the parameters and settings VISSL supports**: you can see all the settings in `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml>`_.
 
 
 Detecting new configuration directories in Hydra
 ------------------------------------------------------
 
-VISSL provides configuration files `here <https://github.com/facebookresearch/vissl/tree/master/configs>`_ and uses the Hydra Plugin `VisslPlugin <https://github.com/facebookresearch/vissl/blob/master/hydra_plugins/vissl_plugin/vissl_plugin.py>`_
+VISSL provides configuration files `here <https://github.com/facebookresearch/vissl/tree/main/configs>`_ and uses the Hydra Plugin `VisslPlugin <https://github.com/facebookresearch/vissl/blob/main/hydra_plugins/vissl_plugin/vissl_plugin.py>`_
 to automatically search for the :code:`configs` folder in VISSL.
 
 If users want to create their own configuration directories and not use the :code:`configs` directory provided by VISSL, then users must
@@ -42,7 +42,7 @@ For example, to train SwAV model on 8-nodes (32-gpu) with VISSL:
 
     python tools/run_distributed_engines.py config=pretrain/swav/swav_8node_resnet
 
-where :code:`swav_8node_resnet.yaml` is a master configuration file for SwAV training and exists at :code:`vissl/configs/config/pretrain/swav/swav_8node_resnet.yaml`.
+where :code:`swav_8node_resnet.yaml` is a main configuration file for SwAV training and exists at :code:`vissl/configs/config/pretrain/swav/swav_8node_resnet.yaml`.
 
 
 How to add configuration files for new SSL approaches

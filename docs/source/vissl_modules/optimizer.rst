@@ -1,7 +1,7 @@
 Using Optimizers
 ===============================
 
-VISSL support all PyTorch optimizers (SGD, Adam etc) and `ClassyVision optimizers <https://github.com/facebookresearch/ClassyVision/tree/master/classy_vision/optim>`_.
+VISSL support all PyTorch optimizers (SGD, Adam etc) and `ClassyVision optimizers <https://github.com/facebookresearch/ClassyVision/tree/main/classy_vision/optim>`_.
 
 
 Creating Optimizers
@@ -67,8 +67,8 @@ VISSL supports the LARC implementation from `NVIDIA's Apex LARC <https://github.
 Creating LR Schedulers
 --------------------------
 
-Users can use different types of Learning rate schedules for the training of their models. We closely follow the `LR schedulers supported by ClassyVision <https://github.com/facebookresearch/ClassyVision/tree/master/classy_vision/optim/param_scheduler>`_ and also custom
-`learning rate schedules in VISSL <https://github.com/facebookresearch/vissl/tree/master/vissl/optimizers/param_scheduler>`_.
+Users can use different types of Learning rate schedules for the training of their models. We closely follow the `LR schedulers supported by ClassyVision <https://github.com/facebookresearch/ClassyVision/tree/main/classy_vision/optim/param_scheduler>`_ and also custom
+`learning rate schedules in VISSL <https://github.com/facebookresearch/vissl/tree/main/vissl/optimizers/param_scheduler>`_.
 
 How to set learning rate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

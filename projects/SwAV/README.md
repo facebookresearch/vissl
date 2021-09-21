@@ -10,7 +10,7 @@ Mathilde Caron, Ishan Misra, Julien Mairal, Priya Goyal, Piotr Bojanowski, Arman
 </div>
 
 In this repository, we implement SwAV in VISSL.
-To train a model, use the configs specified [here](https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/swav).
+To train a model, use the configs specified [here](https://github.com/facebookresearch/vissl/tree/main/configs/config/pretrain/swav).
 
 # Model Zoo
 

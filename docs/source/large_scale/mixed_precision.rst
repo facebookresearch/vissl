@@ -25,4 +25,4 @@ Using Apex
 In order to use Apex, VISSL provides :code:`anaconda` and :code:`pip` packages of Apex (compiled with Optimzed C++ extensions/CUDA kernels). The Apex
 packages are provided for all versions of :code:`CUDA (9.2, 10.0, 10.1, 10.2, 11.0), PyTorch >= 1.4 and Python >=3.6 and <=3.9`.
 
-Follow VISSL's instructions to `install apex in pip <https://github.com/facebookresearch/vissl/blob/master/INSTALL.md#step-2-install-pytorch-opencv-and-apex-pip>`_ and instructions to `install apex in conda <https://github.com/facebookresearch/vissl/blob/master/INSTALL.md#step-3-install-apex-conda>`_.
+Follow VISSL's instructions to `install apex in pip <https://github.com/facebookresearch/vissl/blob/main/INSTALL.md#step-2-install-pytorch-opencv-and-apex-pip>`_ and instructions to `install apex in conda <https://github.com/facebookresearch/vissl/blob/main/INSTALL.md#step-3-install-apex-conda>`_.

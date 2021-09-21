@@ -6,5 +6,5 @@ This folder contain helpful utility functions that are useful for building model
 
 Environment info can be collected using the following command:
 ```
-wget -nc -q https://github.com/facebookresearch/vissl/raw/master/vissl/utils/collect_env.py && python collect_env.py
+wget -nc -q https://github.com/facebookresearch/vissl/raw/main/vissl/utils/collect_env.py && python collect_env.py
 ```

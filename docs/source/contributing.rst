@@ -33,18 +33,18 @@ factors into consideration:
 
 When sending a PR, please do:
 
-1. Fork the repo and create your branch from :code:`master`.
+1. Fork the repo and create your branch from :code:`main`.
 2. If a PR contains multiple orthogonal changes, split it to several PRs.
 3. If you've added code that should be tested, add tests.
 4. If you've changed APIs, update the documentation.
-5. Ensure the test suite passes. Follow `cpu test instructions <https://github.com/facebookresearch/vissl/blob/master/tests/README.md>`_ and `integration tests <https://github.com/facebookresearch/vissl/blob/master/dev/run_quick_tests.sh>`_.
+5. Ensure the test suite passes. Follow `cpu test instructions <https://github.com/facebookresearch/vissl/blob/main/tests/README.md>`_ and `integration tests <https://github.com/facebookresearch/vissl/blob/main/dev/run_quick_tests.sh>`_.
 6. Make sure your code follows our coding practices (see next section).
 7. If you haven't already, complete the Contributor License Agreement ("CLA").
 
 Coding Style
 ------------------------
 
-Please follow `our coding practices <https://github.com/facebookresearch/vissl/blob/master/dev/README.md#practices-for-coding-quality>`_ and choose either option to properly format your code before submitting PRs.
+Please follow `our coding practices <https://github.com/facebookresearch/vissl/blob/main/dev/README.md#practices-for-coding-quality>`_ and choose either option to properly format your code before submitting PRs.
 
 Contributor License Agreement ("CLA")
 ------------------------------------------------
@@ -56,4 +56,4 @@ Complete your CLA `here <https://code.facebook.com/cla>`_.
 License
 ------------------------
 By contributing to ssl_framework, you agree that your contributions will be licensed
-under the `LICENSE <https://github.com/facebookresearch/vissl/blob/master/LICENSE>`_ file in the root directory of this source tree.
+under the `LICENSE <https://github.com/facebookresearch/vissl/blob/main/LICENSE>`_ file in the root directory of this source tree.

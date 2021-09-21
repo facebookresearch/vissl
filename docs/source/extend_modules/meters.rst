@@ -108,7 +108,7 @@ VISSL allows adding new meters easily. Follow the steps below to add a new loss:
 
 
 - **Step2**: Register the meter and meter params with VISSL Configuration. Add the params that the meter takes in
-  `VISSL defaults.yaml <https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml>`_ as follows:
+  `VISSL defaults.yaml <https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml>`_ as follows:
 
 .. code-block:: yaml
 

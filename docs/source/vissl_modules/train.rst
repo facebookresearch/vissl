@@ -13,7 +13,7 @@ The main entry point for any training or feature extraction workflows in VISSL i
 
 - Setup the distributed training. VISSL support both GPU and CPU only training.
 
-  - (1) Initialize the :code:`torch.distributed.init_process_group` if the distributed is not already initialized. The init_method, backend are specified by user in the yaml config file. See `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml>`_ for description on how to set :code:`init_method`, :code:`backend`.
+  - (1) Initialize the :code:`torch.distributed.init_process_group` if the distributed is not already initialized. The init_method, backend are specified by user in the yaml config file. See `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml>`_ for description on how to set :code:`init_method`, :code:`backend`.
 
   - (2) We also set the global cuda device index using torch.cuda.set_device or cpu device
 

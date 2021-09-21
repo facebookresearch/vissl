@@ -3,7 +3,7 @@ Compatibility with Other Libraries
 
 - VISSL provides several helpful scripts to convert VISSL models to models that are compatible with other libraries like `Detectron2 <https://github.com/facebookresearch/detectron2>`_ and `ClassyVision <https://github.com/facebookresearch/ClassyVision>`_ compatible models.
 - VISSL also provides scripts to convert models from other sources like `Caffe2 models <https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md>`_ in the `paper <https://arxiv.org/abs/1905.01235>`_ to VISSL compatible models.
-- `TorchVision <https://github.com/pytorch/vision/tree/master/torchvision/models>`_ models are directly compatible with VISSL and don't require any conversion.
+- `TorchVision <https://github.com/pytorch/vision/tree/main/torchvision/models>`_ models are directly compatible with VISSL and don't require any conversion.
 
 Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
 ---------------------------------------------------------------

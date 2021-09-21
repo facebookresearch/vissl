@@ -10,7 +10,7 @@ A lost of the low shot transfer benchmarks listed below are directly inspired fr
 Benchmark: Caltech-101
 ---------------------------
 
-The configuration for low shot (1000 samples) fine-tuning on Caltech-101 provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/caltech101>`_ .
+The configuration for low shot (1000 samples) fine-tuning on Caltech-101 provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/caltech101>`_ .
 
 .. code-block:: bash
 
@@ -20,13 +20,13 @@ The configuration for low shot (1000 samples) fine-tuning on Caltech-101 provide
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-A script to automatically prepare the data for Caltech-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Caltech-101 is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: CIFAR-100
 ---------------------------
 
-The configuration for low shot (1000 samples) fine-tuning on CIFAR-100 provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/cifar100>`_ .
+The configuration for low shot (1000 samples) fine-tuning on CIFAR-100 provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/cifar100>`_ .
 
 .. code-block:: bash
 
@@ -46,7 +46,7 @@ The CLEVR benchmarks evaluate the understanding of the structure of a 3D scene b
 - CLEVR/Dist: estimating the distance to the closest object in the scene
 
 The configurations for low shot (1000 samples) fine-tuning on CLEVR are available under the
-`clever_count <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/clever_count>`_ and `clevr_dist <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/clevr_dist>`_ folders.
+`clever_count <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/clever_count>`_ and `clevr_dist <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/clevr_dist>`_ folders.
 
 .. code-block:: bash
 
@@ -62,7 +62,7 @@ The configurations for low shot (1000 samples) fine-tuning on CLEVR are availabl
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-Scripts to automatically prepare the data for the CLEVR benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+Scripts to automatically prepare the data for the CLEVR benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: dSprites
@@ -74,7 +74,7 @@ The dSprites benchmarks evaluate the understanding of the positional information
 - dSprites/orientation: estimating the orientation of a sprite
 
 The configurations for low shot (1000 samples) fine-tuning on dSprites
-are provided under the `dsprites_loc <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/dsprites_loc>`_ and `dsprites_orient <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/dsprites_orient>`_ folders.
+are provided under the `dsprites_loc <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/dsprites_loc>`_ and `dsprites_orient <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/dsprites_orient>`_ folders.
 
 .. code-block:: bash
 
@@ -90,13 +90,13 @@ are provided under the `dsprites_loc <https://github.com/facebookresearch/vissl/
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-Scripts to automatically prepare the data for the dSprites benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+Scripts to automatically prepare the data for the dSprites benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Describable Textures
 --------------------------------
 
-The configuration for low shot (1000 samples) fine-tuning on DTD is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/dtd>`_ .
+The configuration for low shot (1000 samples) fine-tuning on DTD is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/dtd>`_ .
 
 .. code-block:: bash
 
@@ -106,7 +106,7 @@ The configuration for low shot (1000 samples) fine-tuning on DTD is provided `he
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-A script to automatically prepare the data for DTD is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for DTD is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: EuroSAT
@@ -114,7 +114,7 @@ Benchmark: EuroSAT
 
 The EuroSAT benchmark evaluates the classification performance on a specialized task (satellite imaging).
 The configuration for low shot (1000 samples) fine-tuning on EuroSAT
-is provided under the `euro_sat <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/euro_sat>`_ folder.
+is provided under the `euro_sat <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/euro_sat>`_ folder.
 
 .. code-block:: bash
 
@@ -124,7 +124,7 @@ is provided under the `euro_sat <https://github.com/facebookresearch/vissl/tree/
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-A script to automatically prepare the data for EuroSAT is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for EuroSAT is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: KITTI/Dist
@@ -132,7 +132,7 @@ Benchmark: KITTI/Dist
 
 The KITTI/Dist benchmark evaluates the transfer of a pre-trained model to a distance estimation task in a self-driving environment.
 The configuration for low shot (1000 samples) fine-tuning on KITTI/Dist
-is provided under the `kitti_dist <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/kitti_dist>`_ folder.
+is provided under the `kitti_dist <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/kitti_dist>`_ folder.
 
 .. code-block:: bash
 
@@ -142,13 +142,13 @@ is provided under the `kitti_dist <https://github.com/facebookresearch/vissl/tre
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-A script to automatically prepare the data for KITTI/Dist is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for KITTI/Dist is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Oxford Flowers
 ---------------------------
 
-The configuration for low shot (1000 samples) fine-tuning on Oxford Flowers is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/oxford_flowers>`_ .
+The configuration for low shot (1000 samples) fine-tuning on Oxford Flowers is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/oxford_flowers>`_ .
 
 .. code-block:: bash
 
@@ -158,13 +158,13 @@ The configuration for low shot (1000 samples) fine-tuning on Oxford Flowers is p
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-A script to automatically prepare the data for Oxford Flowers is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Oxford Flowers is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Oxford Pets
 ---------------------------
 
-The configuration for low shot (1000 samples) fine-tuning on Oxford Pets is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/oxford_pets>`_ .
+The configuration for low shot (1000 samples) fine-tuning on Oxford Pets is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/oxford_pets>`_ .
 
 .. code-block:: bash
 
@@ -174,7 +174,7 @@ The configuration for low shot (1000 samples) fine-tuning on Oxford Pets is prov
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-A script to automatically prepare the data for Oxford Pets is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Oxford Pets is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Patch Camelyon
@@ -182,7 +182,7 @@ Benchmark: Patch Camelyon
 
 The Patch Camelyon (PCAM) benchmark evaluates the classification performance on a specialized task (medical task).
 The configuration for low shot (1000 samples) fine-tuning on PCAM
-is provided under the `pcam <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/pcam>`_ folder.
+is provided under the `pcam <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/pcam>`_ folder.
 
 .. code-block:: bash
 
@@ -192,7 +192,7 @@ is provided under the `pcam <https://github.com/facebookresearch/vissl/tree/mast
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-A script to automatically prepare the data for Patch Camelyon is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Patch Camelyon is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Small NORB
@@ -204,7 +204,7 @@ The Small NORB benchmarks evaluate the understanding of the structure of a 3D sc
 - snorb/elevation: estimating the elevation of the image
 
 The configurations for low shot (1000 samples) fine-tuning on Small NORB
-are provided under the `small_norb_azimuth <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/small_norb_azimuth>`_ and `small_norb_elevation <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/small_norb_elevation>`_ folders.
+are provided under the `small_norb_azimuth <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/small_norb_azimuth>`_ and `small_norb_elevation <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/small_norb_elevation>`_ folders.
 
 .. code-block:: bash
 
@@ -220,13 +220,13 @@ are provided under the `small_norb_azimuth <https://github.com/facebookresearch/
 
 For fine-tuning on the full dataset, just add this option to the command line :code:`config.DATA.TRAIN.DATA_LIMIT=-1`.
 
-Scripts to automatically prepare the data for the Small NORB benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+Scripts to automatically prepare the data for the Small NORB benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: SUN397
 -----------------------
 
-The configuration for low shot (1000 samples) fine-tuning on SUN397 is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/sun397>`_ .
+The configuration for low shot (1000 samples) fine-tuning on SUN397 is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/sun397>`_ .
 
 .. code-block:: bash
 
@@ -240,7 +240,7 @@ For fine-tuning on the full dataset, just add this option to the command line :c
 Benchmark: SVHN
 -----------------------
 
-The configuration for low shot (1000 samples) fine-tuning on SVHN is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/low_shot_transfer/svhn>`_ .
+The configuration for low shot (1000 samples) fine-tuning on SVHN is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/low_shot_transfer/svhn>`_ .
 
 .. code-block:: bash
 
