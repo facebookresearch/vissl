@@ -8,4 +8,4 @@ of their own, we recommend the following steps.
 
 - **Step2**: Import your new :code:`MyNewDataLoader` in :code:`vissl/data/__init__.py` and extend the function :code:`get_loader(...)` to use your :code:`MyNewDataLoader`. To control this from configuration file, we recommend users to add some config file options in :code:`vissl/defaults.yaml` file under :code:`DATA.TRAIN.dataloader_name`.
 
-We welcome PRs following our `Contributing guidelines <https://github.com/facebookresearch/vissl/blob/master/.github/CONTRIBUTING.md>`_.
+We welcome PRs following our `Contributing guidelines <https://github.com/facebookresearch/vissl/blob/main/.github/CONTRIBUTING.md>`_.

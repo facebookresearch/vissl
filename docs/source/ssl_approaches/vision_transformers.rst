@@ -344,7 +344,7 @@ Other important factors related to training include:
 
 Pre-trained models
 --------------------
-Pre-trained models will eventually be available in `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/master/MODEL_ZOO.md>`_
+Pre-trained models will eventually be available in `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/main/MODEL_ZOO.md>`_
 
 Citations
 ---------
@@ -387,5 +387,3 @@ Citations
           archivePrefix={arXiv},
           primaryClass={cs.CV}
     }
-
-

@@ -103,4 +103,4 @@ python3 run_distributed_engines.py \
     config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true
 ```
 
-Explore **all the parameters and settings VISSL supports** in [VISSL defaults.yaml file](https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml)
+Explore **all the parameters and settings VISSL supports** in [VISSL defaults.yaml file](https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml)

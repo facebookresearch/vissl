@@ -33,7 +33,7 @@ Train on SLURM cluster
 
 VISSL supports SLURM by default for training models. VISSL code automatically detects if the training environment is SLURM based on SLURM environment variables like :code:`SLURM_NODEID`, :code:`SLURMD_NODENAME`, :code:`SLURM_STEP_NODELIST`.
 
-VISSL also provides a helper bash script `dev/launch_slurm.sh <https://github.com/facebookresearch/vissl/blob/master/dev/launch_slurm.sh>`_ that allows launching a given training on SLURM.
+VISSL also provides a helper bash script `dev/launch_slurm.sh <https://github.com/facebookresearch/vissl/blob/main/dev/launch_slurm.sh>`_ that allows launching a given training on SLURM.
 This script uses the content of the configuration to allocate the right number of nodes and GPUs on SLURM.
 
 More precisely, the number of nodes and GPU by node to allocate is driven by the usual DISTRIBUTED training configuration:

@@ -28,7 +28,7 @@ please tell us the expected behavior.
 
 Provide your environment information using the following command:
 ```
-wget -nc -q https://github.com/facebookresearch/vissl/raw/master/vissl/utils/collect_env.py && python collect_env.py
+wget -nc -q https://github.com/facebookresearch/vissl/raw/main/vissl/utils/collect_env.py && python collect_env.py
 ```
 
 ## When to expect Triage

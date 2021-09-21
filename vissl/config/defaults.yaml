@@ -94,7 +94,7 @@ config:
       PERF_STAT_FREQUENCY: -1
       # if we want to print the rolling average batch time, set the value below to number of
       # training iterations over which we want to print average. The average is printed for
-      # master gpu.
+      # primary gpu.
       ROLLING_BTIME_FREQ: -1
 
     # ----------------------------------------------------------------------------------- #

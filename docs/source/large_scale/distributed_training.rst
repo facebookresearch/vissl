@@ -108,4 +108,4 @@ Using SLURM
 =============
 
 Please follow the documentation
-`here <https://github.com/facebookresearch/vissl/blob/master/docs/source/train_resource_setup.rst#train-on-slurm-cluster>`_
+`here <https://github.com/facebookresearch/vissl/blob/main/docs/source/train_resource_setup.rst#train-on-slurm-cluster>`_

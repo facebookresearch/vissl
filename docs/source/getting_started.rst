@@ -11,7 +11,7 @@ We provide a quick overview for training SimCLR self-supervised model on 1-gpu w
 
 Install VISSL
 ------------------
-For installation, please follow our `installation instructions <https://github.com/facebookresearch/vissl/blob/master/INSTALL.md>`_.
+For installation, please follow our `installation instructions <https://github.com/facebookresearch/vissl/blob/main/INSTALL.md>`_.
 
 Setup dataset
 --------------------------

@@ -37,7 +37,7 @@ MODEL:
     WA: 147.48
     WM: 2.4
     GROUP_W: 328
-    SE_R: 0.25  # RegNetY https://github.com/facebookresearch/ClassyVision/blob/master/classy_vision/models/regnet.py#L758
+    SE_R: 0.25  # RegNetY https://github.com/facebookresearch/ClassyVision/blob/main/classy_vision/models/regnet.py#L758
     NORM: "SyncBN"
   FPN:
     IN_FEATURES: ["s1", "s2", "s3", "s4"]

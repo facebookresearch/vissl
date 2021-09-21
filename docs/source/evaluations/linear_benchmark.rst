@@ -4,7 +4,7 @@ Benchmark: Linear Image Classification
 VISSL provides a standardized benchmark suite to evaluate the feature representation quality of self-supervised pretrained models. A popular
 evaluation protocol is to freeze the model traink and train linear classifiers on several layers of the model on some target datasets (like ImageNet-1k, Places205, VOC07, iNaturalist2018).
 In VISSL, we support all the linear evals on all the datasets. We also provide standard set of hyperparams for various approaches
-in order to reproduce the model performance in SSL literature. For reproducibility, see `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/master/MODEL_ZOO.md>`_.
+in order to reproduce the model performance in SSL literature. For reproducibility, see `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/main/MODEL_ZOO.md>`_.
 
 .. note::
 
@@ -129,7 +129,7 @@ Benchmark: ImageNet-1k
 ---------------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/imagenet1k>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/imagenet1k>`_ .
 
 .. code-block:: bash
 
@@ -142,7 +142,7 @@ Benchmark: Places205
 ---------------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/places205>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/places205>`_ .
 
 .. code-block:: bash
 
@@ -155,7 +155,7 @@ Benchmark: iNaturalist2018
 ---------------------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/inaturalist18>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/inaturalist18>`_ .
 
 .. code-block:: bash
 
@@ -163,13 +163,13 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/inaturalist18/eval_resnet_8gpu_transfer_inaturalist18_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for iNaturalist2018 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for iNaturalist2018 is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 Benchmark: CIFAR-10
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/cifar10>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/cifar10>`_ .
 
 .. code-block:: bash
 
@@ -182,7 +182,7 @@ Benchmark: CIFAR-100
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/cifar100>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/cifar100>`_ .
 
 .. code-block:: bash
 
@@ -195,7 +195,7 @@ Benchmark: MNIST
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/mnist>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/mnist>`_ .
 
 .. code-block:: bash
 
@@ -208,7 +208,7 @@ Benchmark: STL-10
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/stl10>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/stl10>`_ .
 
 .. code-block:: bash
 
@@ -221,7 +221,7 @@ Benchmark: SVHN
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/svhn>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/svhn>`_ .
 
 .. code-block:: bash
 
@@ -234,7 +234,7 @@ Benchmark: Caltech-101
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/caltech101>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/caltech101>`_ .
 
 .. code-block:: bash
 
@@ -242,14 +242,14 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/caltech101/eval_resnet_8gpu_transfer_caltech101_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for Caltech-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Caltech-101 is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Describable Textures
 --------------------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/dtd>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/dtd>`_ .
 
 .. code-block:: bash
 
@@ -257,14 +257,14 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/dtd/eval_resnet_8gpu_transfer_dtd_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for DTD is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for DTD is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: FGVC Aircrafts
 ---------------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/aircrafts>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/aircrafts>`_ .
 
 .. code-block:: bash
 
@@ -272,14 +272,14 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/aircrafts/eval_resnet_8gpu_transfer_aircrafts_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for FGVC Aircrafts is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for FGVC Aircrafts is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: FOOD-101
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/food101>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/food101>`_ .
 
 .. code-block:: bash
 
@@ -287,14 +287,14 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/food101/eval_resnet_8gpu_transfer_food101_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for FOOD-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for FOOD-101 is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: GTSRB
 -----------------------
 
 The configuration setting for the German Traffic Sign Recognition Benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/gtsrb>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/gtsrb>`_ .
 
 .. code-block:: bash
 
@@ -302,14 +302,14 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/gtsrb/eval_resnet_8gpu_transfer_gtsrb_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for GTSRB is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for GTSRB is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Oxford Flowers
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/oxford_flowers>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/oxford_flowers>`_ .
 
 .. code-block:: bash
 
@@ -317,14 +317,14 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/oxford_flowers/eval_resnet_8gpu_transfer_oxford_flowers_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for Oxford Flowers is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Oxford Flowers is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Oxford Pets
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/oxford_pets>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/oxford_pets>`_ .
 
 .. code-block:: bash
 
@@ -332,14 +332,14 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/oxford_pets/eval_resnet_8gpu_transfer_oxford_pets_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for Oxford Pets is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Oxford Pets is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: SUN397
 -----------------------
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/sun397>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/sun397>`_ .
 
 .. code-block:: bash
 
@@ -347,7 +347,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/sun397/eval_resnet_8gpu_transfer_sun397_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for SUN397 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for SUN397 is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: UCF-101
@@ -356,7 +356,7 @@ Benchmark: UCF-101
 The UCF-101 benchmark evaluates the classification performance on human actions from a single image (the middle frame of the UCF101 dataset).
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/ucf101>`_.
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/ucf101>`_.
 
 .. code-block:: bash
 
@@ -364,7 +364,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/ucf101/eval_resnet_8gpu_transfer_ucf101_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for UCF-101 is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_. This script will handle the transformation from videos to images by extracting the middle frame of each of the videos.
+A script to automatically prepare the data for UCF-101 is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_. This script will handle the transformation from videos to images by extracting the middle frame of each of the videos.
 
 
 Benchmark: EuroSAT
@@ -373,7 +373,7 @@ Benchmark: EuroSAT
 The EuroSAT benchmark evaluates the classification performance on a specialized task (satellite imaging).
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/euro_sat>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/euro_sat>`_ .
 
 .. code-block:: bash
 
@@ -381,7 +381,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/euro_sat/eval_resnet_8gpu_transfer_euro_sat_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for EuroSAT is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for EuroSAT is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Patch Camelyon
@@ -390,7 +390,7 @@ Benchmark: Patch Camelyon
 The Patch Camelyon (PCAM) benchmark evaluates the classification performance on a specialized task (medical task).
 
 The configuration setting for this benchmark
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/pcam>`_ .
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/pcam>`_ .
 
 .. code-block:: bash
 
@@ -398,7 +398,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/pcam/eval_resnet_8gpu_transfer_pcam_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-A script to automatically prepare the data for Patch Camelyon is available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+A script to automatically prepare the data for Patch Camelyon is available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: CLEVR
@@ -410,7 +410,7 @@ The CLEVR benchmarks evaluate the understanding of the structure of a 3D scene b
 - CLEVR/Dist: estimating the distance to the closest object in the scene
 
 The configuration setting for these benchmarks
-is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/clever_count>`_ and `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/clevr_dist>`_.
+is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/clever_count>`_ and `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/clevr_dist>`_.
 
 .. code-block:: bash
 
@@ -424,7 +424,7 @@ is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs
       config=benchmark/linear_image_classification/clevr_dist/eval_resnet_8gpu_transfer_clevr_dist_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-Scripts to automatically prepare the data for the CLEVR benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+Scripts to automatically prepare the data for the CLEVR benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: dSprites
@@ -436,7 +436,7 @@ The dSprites benchmarks evaluate the understanding of the positional information
 - dSprites/orientation: estimating the orientation of a sprite
 
 The configuration setting for these benchmarks
-is provided under the `dsprites <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/dsprites>`_ folder.
+is provided under the `dsprites <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/dsprites>`_ folder.
 
 .. code-block:: bash
 
@@ -450,14 +450,14 @@ is provided under the `dsprites <https://github.com/facebookresearch/vissl/tree/
       config=benchmark/linear_image_classification/dsprites/eval_resnet_8gpu_transfer_dsprites_orient_linear \
       config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
 
-Scripts to automatically prepare the data for the dSprites benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_.
+Scripts to automatically prepare the data for the dSprites benchmarks are available `here <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_.
 
 
 Benchmark: Linear SVM on VOC07
 ---------------------------------
 
 VISSL provides :code:`train_svm.py` tool that will first extract features and then train/test SVMs on these features.
-The configuration setting for this benchmark is provided `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/linear_image_classification/voc07>`_ .
+The configuration setting for this benchmark is provided `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/linear_image_classification/voc07>`_ .
 
 .. code-block:: bash
 

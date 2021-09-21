@@ -1,6 +1,6 @@
 # VISSL Datasets
 
-VISSL allows reading data from multiple sources and in multiple formats. For example: users can specify a data folder path or users can specify the paths to files (.npy) that contain the array of image paths. VISSL uses a `dataset_catalog.json` that stores information about the datasets and how to obtain them. A dataset can be used by accessing [DatasetCatalog](https://github.com/facebookresearch/vissl/tree/master/vissl/data/dataset_catalog.json)
+VISSL allows reading data from multiple sources and in multiple formats. For example: users can specify a data folder path or users can specify the paths to files (.npy) that contain the array of image paths. VISSL uses a `dataset_catalog.json` that stores information about the datasets and how to obtain them. A dataset can be used by accessing [DatasetCatalog](https://github.com/facebookresearch/vissl/tree/main/vissl/data/dataset_catalog.json)
 for its data.
 
 ## Expected dataset structure for ImageNet, Places205, Places365
@@ -167,7 +167,7 @@ To run these benchmarks, the following data preparation scripts are mandatory:
 - `extra_scripts/datasets/create_small_norb_elevation_data_files.py` to create a `disk_folder` dataset from [Small NORB](https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/) where the goal is to predict the elevation in the image
 - `extra_scripts/datasets/create_ucf101_data_files.py`: to create a `disk_folder` image action recognition dataset from the video action recognition dataset [UCF101](https://www.crcv.ucf.edu/data/UCF101.php) by extracting the middle frame
 
-You can read more about how to download these datasets and run these scripts from [here](https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md).
+You can read more about how to download these datasets and run these scripts from [here](https://github.com/facebookresearch/vissl/blob/main/extra_scripts/README.md).
 
 After data preparation, the output folders are compatible with the `disk_folder` layout or `disk_filelist` layout.
 
@@ -177,7 +177,7 @@ e.g. "imagenet1k_folder") to a `dict` which contains:
 1. mapping of various data splits (train, test, val) to the data source (path on the disk whether a folder path or a filelist)
 2. source of the data (`disk_filelist` | `disk_folder` | `torchvision_dataset`)
     - `disk_folder`: this is simply the root folder path to the downloaded data.
-    - `disk_filelist`: These are numpy files: (1) file containing images information (2) file containing corresponding labels for images. We provide [scripts](https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md) that can be used to prepare these two files for a dataset of choice.
+    - `disk_filelist`: These are numpy files: (1) file containing images information (2) file containing corresponding labels for images. We provide [scripts](https://github.com/facebookresearch/vissl/blob/main/extra_scripts/README.md) that can be used to prepare these two files for a dataset of choice.
     - `torchvision_dataset`: the root folder path to the torchvision dowloaded dataset. As of now, the supported datasets are: CIFAR-10, CIFAR-100, MNIST and STL-10.
 
 The purpose of having this catalog is to make it easy to choose different datasets,

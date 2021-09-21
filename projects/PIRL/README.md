@@ -11,7 +11,7 @@ Ishan Misra, Laurens van der Maaten
 
 
 # Training
-All the model configs used for training models are found under the `configs/config/pretrain/pirl` directory [here](https://github.com/facebookresearch/vissl/tree/master/configs/config/pretrain/pirl).
+All the model configs used for training models are found under the `configs/config/pretrain/pirl` directory [here](https://github.com/facebookresearch/vissl/tree/main/configs/config/pretrain/pirl).
 
 For example, to train a ResNet-50 model used in the PIRL paper, you can run
 

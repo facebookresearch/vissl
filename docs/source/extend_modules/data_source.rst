@@ -58,10 +58,10 @@ Once a :code:`disk_filelist` dataset is made available at path :code:`/path/to/d
           DATASET_NAMES: [my_dataset_filelist]
           ...
 
-Some examples of scripts transforming existing data sources to the :code:`disk_filelist` format can be found in the `extra_script <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_ folder.
+Some examples of scripts transforming existing data sources to the :code:`disk_filelist` format can be found in the `extra_script <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_ folder.
 For example, :code:`create_clever_count_data_files.py` creates a new classification dataset from the `CLEVR <https://cs.stanford.edu/people/jcjohns/clevr/>`_ dataset, in which the goal is to count the number of object in the scene.
 
-Please refer to the documentation available `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_ to get more information all the available data preparation scripts.
+Please refer to the documentation available `here <https://github.com/facebookresearch/vissl/blob/main/extra_scripts/README.md>`_ to get more information all the available data preparation scripts.
 
 
 Transforming to a disk_folder format
@@ -121,10 +121,10 @@ Once a :code:`disk_folder` dataset is made available at path :code:`/path/to/dat
           DATASET_NAMES: [my_dataset_folder]
           ...
 
-Some examples of scripts transforming existing data sources to the :code:`disk_folder` format can be found in the `extra_script <https://github.com/facebookresearch/vissl/tree/master/extra_scripts>`_ folder.
+Some examples of scripts transforming existing data sources to the :code:`disk_folder` format can be found in the `extra_script <https://github.com/facebookresearch/vissl/tree/main/extra_scripts>`_ folder.
 For example, :code:`create_ucf101_data_files.py`: creates an image action recognition dataset from the video action recognition dataset `UCF101 <https://www.crcv.ucf.edu/data/UCF101.php>`_ by extracting the middle frame of each video.
 
-Please refer to the documentation available `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_ to get more information all the available data preparation scripts.
+Please refer to the documentation available `here <https://github.com/facebookresearch/vissl/blob/main/extra_scripts/README.md>`_ to get more information all the available data preparation scripts.
 
 Adding a new type of data source
 ------------------------------------

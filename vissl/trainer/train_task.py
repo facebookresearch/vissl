@@ -648,7 +648,9 @@ class SelfSupervisionTask(ClassificationTask):
         """
         broadcast_buffers = self.config["DISTRIBUTED"]["BROADCAST_BUFFERS"]
         if broadcast_buffers:
-            logging.info("Broadcast model BN buffers from master on every forward pass")
+            logging.info(
+                "Broadcast model BN buffers from primary on every forward pass"
+            )
             broadcast_buffers_enum_mode = BroadcastBuffersMode.FORWARD_PASS
             self.set_distributed_options(
                 broadcast_buffers_mode=broadcast_buffers_enum_mode

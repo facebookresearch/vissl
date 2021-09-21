@@ -473,7 +473,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
 
     def _print_and_save_meters(self, task, train_phase_idx):
         """
-        Executed only on master gpu at the end of each epoch. Computes the
+        Executed only on primary gpu at the end of each epoch. Computes the
         meters and logs the metrics to the json file and to logger streams
         (stdout, file).
         """

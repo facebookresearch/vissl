@@ -56,7 +56,7 @@ VISSL allows adding new losses easily. Follow the steps below to add a new loss:
 
 
 - **Step2**: Register the loss and loss params with VISSL Configuration. Add the params that the loss takes in
-  `VISSL defaults.yaml <https://github.com/facebookresearch/vissl/blob/master/vissl/config/defaults.yaml>`_ as follows:
+  `VISSL defaults.yaml <https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml>`_ as follows:
 
 .. code-block:: yaml
 
