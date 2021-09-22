@@ -4,6 +4,7 @@
 
 ## What's New
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
+- **[Sept 2021]**: VISSL master branch renamed to main in this [PR](https://github.com/facebookresearch/vissl/pull/425) in VISSL.
 - **[August 2021]**: Instance Retrieval benchmark implemented and [available](https://github.com/facebookresearch/vissl/pull/394) in VISSL.
 - **[May 2021]**: [DINO: Emerging Properties in Self-Supervised Vision Transformers](https://arxiv.org/pdf/2104.14294.pdf) code released.
 - **[May 2021]**: VISSL relicensed under [MIT License](LICENSE).
