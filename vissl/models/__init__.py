@@ -10,7 +10,48 @@ Here we create all the custom models required for SSL.
 from pathlib import Path
 
 from classy_vision.generic.registry_utils import import_all_modules
-from classy_vision.models import MODEL_REGISTRY
+from vissl.models.model_helpers import (  # noqa
+    convert_sync_bn,
+    is_feature_extractor_model,
+)
+
+
+MODEL_REGISTRY = {}
+MODEL_NAMES = set()
+
+
+def register_model(name):
+    """
+    Registers Self-Supervision Model.
+
+    This decorator allows VISSL to add custom models, even if the
+    model itself is not part of VISSL. To use it, apply this decorator
+    to a model class, like this:
+
+    .. code-block:: python
+
+        @register_model('my_model_name')
+        def my_model_name():
+            ...
+
+    To get a model from a configuration file, see :func:`get_model`.
+    """
+
+    def register_model_fn(func):
+        if name in MODEL_REGISTRY:
+            raise ValueError("Cannot register duplicate model ({})".format(name))
+
+        if func.__name__ in MODEL_NAMES:
+            raise ValueError(
+                "Cannot register task with duplicate model name ({})".format(
+                    func.__name__
+                )
+            )
+        MODEL_REGISTRY[name] = func
+        MODEL_NAMES.add(func.__name__)
+        return func
+
+    return register_model_fn
 
 
 def get_model(model_name: str):
@@ -31,12 +72,6 @@ def build_model(model_config, optimizer_config):
     model_name = model_config.NAME
     model_cls = get_model(model_name)
     return model_cls(model_config, optimizer_config)
-
-
-from vissl.models.model_helpers import (  # noqa
-    convert_sync_bn,
-    is_feature_extractor_model,
-)
 
 
 # automatically import any Python files in the models/ directory

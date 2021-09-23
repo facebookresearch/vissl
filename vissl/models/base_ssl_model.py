@@ -9,10 +9,11 @@ from typing import Any, Dict
 
 import torch
 import torch.nn as nn
-from classy_vision.models import ClassyModel, register_model
+from classy_vision.models import ClassyModel
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
+from vissl.models import register_model
 from vissl.models.heads import SwAVPrototypesHead, get_model_head
 from vissl.models.model_helpers import (
     get_trunk_output_feature_names,

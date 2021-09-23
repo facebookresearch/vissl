@@ -3,7 +3,7 @@ Building Models
 
 The model in VISSL is split into :code:`trunk` that computes features and :code:`head` that computes outputs (projections, classifications etc).
 
-VISSL supports several types of Heads and several types of trunks. Overall, the following use cases are supported by VISSL models:
+VISSL supports several types of Heads and several types of trunks. VISSL implements a default model :code:`BaseSSLMultiInputOutputModel` which supports the following use cases:
 
 - Model producing single output as in standard supervised ImageNet training
 
@@ -19,6 +19,7 @@ VISSL supports several types of Heads and several types of trunks. Overall, the 
 
 - Model that is completely frozen and features are extracted.
 
+Users can also implement their own model and specify the model name in :code:`MODEL.NAME`.
 
 Trunks
 -------------
