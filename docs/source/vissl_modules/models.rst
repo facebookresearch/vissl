@@ -49,7 +49,7 @@ Examples of trunks:
           # use this so we set the default as 2.
           LAYER4_STRIDE: 2
 
-- **Using RegNets trunk**: We follow `RegNets defined in ClassyVision directly <https://github.com/facebookresearch/ClassyVision/blob/master/classy_vision/models/regnet.py>`_ and users can either use a pre-defined ClassyVision RegNet config or define their own.
+- **Using RegNets trunk**: We follow `RegNets defined in ClassyVision directly <https://github.com/facebookresearch/ClassyVision/blob/main/classy_vision/models/regnet.py>`_ and users can either use a pre-defined ClassyVision RegNet config or define their own.
 
   - for example, to create a new RegNet config for RegNet-256Gf model (1.3B params):
 

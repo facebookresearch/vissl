@@ -33,6 +33,7 @@
 #        +config/pretrain/simclr/my_sub_folder=my_file_name \
 #        +config.MY_NEW_KEY=MY_VALUE
 defaults:
+  - _self_
   # you must specify the base config you want to run
   - config: ???
 
@@ -93,7 +94,7 @@ config:
       PERF_STAT_FREQUENCY: -1
       # if we want to print the rolling average batch time, set the value below to number of
       # training iterations over which we want to print average. The average is printed for
-      # master gpu.
+      # primary gpu.
       ROLLING_BTIME_FREQ: -1
 
     # ----------------------------------------------------------------------------------- #
@@ -1282,6 +1283,8 @@ config:
     # image scale and averaged. Default is [1], meaning that only the full
     # image is processed.
     IMG_SCALINGS: [1]
+    # valid options are cosine_similarity (suggested) and l2.
+    SIMILARITY_MEASURE: cosine_similarity
     ######################## Features Processing Hypers #######################
     # Resize larger side of image to RESIZE_IMG pixels (e.g. 800)
     RESIZE_IMG: 1024

@@ -14,10 +14,9 @@ from typing import List
 
 import submitit
 from fvcore.common.file_io import PathManager
-from hydra.experimental import compose, initialize_config_module
 from vissl.config.attr_dict import AttrDict
 from vissl.utils.distributed_launcher import launch_distributed_on_slurm
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.io import load_file, makedir
 from vissl.utils.misc import flatten_dict, retry
 
@@ -608,11 +607,9 @@ class BenchmarkSuiteScheduler:
             "checkpoints",
         )
 
-    def _generate_config(self, config):
+    def _generate_config(self, overrides: List[str]):
         """
         Generate AttrDict config from a config YAML file and overrides.
         """
-        with initialize_config_module(config_module="vissl.config"):
-            config = compose("defaults", overrides=config)
-
-        return convert_to_attrdict(config)
+        cfg = compose_hydra_configuration(overrides)
+        return convert_to_attrdict(cfg)

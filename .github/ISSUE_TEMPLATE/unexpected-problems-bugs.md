@@ -38,9 +38,9 @@ Only in one of the two conditions, we will help with it:
 
 Provide your environment information using the following command:
 ```
-wget -nc -q https://github.com/facebookresearch/vissl/raw/master/vissl/utils/collect_env.py && python collect_env.py
+wget -nc -q https://github.com/facebookresearch/vissl/raw/main/vissl/utils/collect_env.py && python collect_env.py
 ```
 
 If your issue looks like an installation issue / environment issue,
 please first try to solve it with the instructions in
-https://github.com/facebookresearch/vissl/tree/master/docs
+https://github.com/facebookresearch/vissl/tree/main/docs

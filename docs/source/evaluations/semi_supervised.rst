@@ -2,7 +2,7 @@ Benchmark task: Full finetuning on Imagenet 1% , 10% subsets
 ====================================================================
 
 Evaluating a self-supervised pre-trained model on the target dataset which represents 1% or 10% of Imagenet dataset has become a very common evaluation criterion. VISSL provides
-the benchmark settings for this benchmark `here <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/semi_supervised/imagenet1k>`_.
+the benchmark settings for this benchmark `here <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/semi_supervised/imagenet1k>`_.
 
 
 1% and 10% Data subsets
@@ -13,7 +13,7 @@ Users can use the :code:`DATA.TRAIN.DATA_SOURCES=[disk_filelist]` to load the im
 Users should also extract the labels out from these datasets using the :code:`image_id` of each image.
 
 Once the user has the valid image and labels files (.npy), users should set the dataset paths in
-`VISSL dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/master/configs/config/dataset_catalog.json>`_ for the datasets
+`VISSL dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/main/configs/config/dataset_catalog.json>`_ for the datasets
 :code:`google-imagenet1k-per01` and :code:`google-imagenet1k-per10`
 
 

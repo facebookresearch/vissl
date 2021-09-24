@@ -6,12 +6,11 @@ import os
 import unittest
 
 from classy_vision.optim import build_optimizer_schedulers
-from hydra.experimental import compose, initialize_config_module
 from vissl.config import AttrDict
 from vissl.models import build_model
 from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.checkpoint import CheckpointFormatConverter
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.test_utils import (
     gpu_test,
     in_temporary_directory,
@@ -25,23 +24,20 @@ class TestFineTuning(unittest.TestCase):
     def _create_pretraining_config(
         num_gpu: int = 2, with_fsdp: bool = False, fsdp_flatten_parameters: bool = False
     ):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=test/integration_test/quick_swav",
-                    "+config/test/integration_test/models=swav_regnet_fsdp",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.DATA_LIMIT=40",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.SEED_VALUE=0",
-                    "config.LOSS.swav_loss.epsilon=0.03",
-                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                    "config.LOG_FREQUENCY=1",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                ],
-            )
-
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_swav",
+                "+config/test/integration_test/models=swav_regnet_fsdp",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.SEED_VALUE=0",
+                "config.LOSS.swav_loss.epsilon=0.03",
+                f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+                "config.LOG_FREQUENCY=1",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+            ],
+        )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
@@ -63,33 +59,31 @@ class TestFineTuning(unittest.TestCase):
         with_fsdp: bool = False,
         fsdp_flatten_parameters: bool = False,
     ):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=test/integration_test/quick_eval_finetune_in1k",
-                    "+config/test/integration_test/models=finetune_regnet_fsdp",
-                    f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TEST.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.DATA_LIMIT=40",
-                    "config.DATA.TEST.DATA_LIMIT=20",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
-                    "config.SEED_VALUE=0",
-                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                    "config.LOG_FREQUENCY=1",
-                    "config.OPTIMIZER.num_epochs=2",
-                    "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.base_value=0.01",
-                    "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.base_lr_batch_size=2",
-                    "config.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.base_value=0.1",
-                    "config.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.base_lr_batch_size=2",
-                    f"config.OPTIMIZER.regularize_bias={regularize_bias}",
-                    f"config.OPTIMIZER.construct_single_param_group_only={construct_single_param_group_only}",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_eval_finetune_in1k",
+                "+config/test/integration_test/models=finetune_regnet_fsdp",
+                f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.DATA.TEST.DATA_LIMIT=20",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
+                "config.SEED_VALUE=0",
+                f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+                "config.LOG_FREQUENCY=1",
+                "config.OPTIMIZER.num_epochs=2",
+                "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.base_value=0.01",
+                "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.base_lr_batch_size=2",
+                "config.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.base_value=0.1",
+                "config.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.base_lr_batch_size=2",
+                f"config.OPTIMIZER.regularize_bias={regularize_bias}",
+                f"config.OPTIMIZER.construct_single_param_group_only={construct_single_param_group_only}",
+            ]
+        )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"

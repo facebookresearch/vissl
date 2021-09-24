@@ -112,7 +112,7 @@ or 1gpu, the changes required are:
 
 Pre-trained models
 --------------------
-See `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/master/MODEL_ZOO.md>`_ for the PyTorch pre-trained models with
+See `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/main/MODEL_ZOO.md>`_ for the PyTorch pre-trained models with
 VISSL using RotNet approach and the benchmarks.
 
 
@@ -122,7 +122,7 @@ Citation
 .. code-block:: none
 
     @misc{yan2019clusterfit,
-      title={ClusterFit: Improving Generalization of Visual Representations}, 
+      title={ClusterFit: Improving Generalization of Visual Representations},
       author={Xueting Yan and Ishan Misra and Abhinav Gupta and Deepti Ghadiyaram and Dhruv Mahajan},
       year={2019},
       eprint={1912.03330},

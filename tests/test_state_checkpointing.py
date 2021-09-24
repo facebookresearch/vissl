@@ -6,10 +6,9 @@
 import os
 import unittest
 
-from hydra.experimental import compose, initialize_config_module
 from vissl.config.attr_dict import AttrDict
 from vissl.utils.checkpoint import CheckpointFormatConverter
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.test_utils import (
     gpu_test,
     in_temporary_directory,
@@ -25,33 +24,31 @@ class TestStateCheckpointing(unittest.TestCase):
 
     @staticmethod
     def _create_pretraining_config(with_fsdp: bool, num_gpu: int = 2):
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=test/integration_test/quick_swav",
-                    "+config/pretrain/swav/models=regnet16Gf",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.DATA_LIMIT=40",
-                    "config.SEED_VALUE=0",
-                    "config.MODEL.AMP_PARAMS.USE_AMP=False",
-                    "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
-                    "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
-                    "config.LOSS.swav_loss.epsilon=0.03",
-                    "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
-                    "config.MODEL.FSDP_CONFIG.mixed_precision=False",
-                    "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
-                    "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
-                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                    "config.LOG_FREQUENCY=1",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.OPTIMIZER.use_larc=False",
-                    "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
-                    "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_swav",
+                "+config/pretrain/swav/models=regnet16Gf",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.SEED_VALUE=0",
+                "config.MODEL.AMP_PARAMS.USE_AMP=False",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.LOSS.swav_loss.epsilon=0.03",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.MODEL.FSDP_CONFIG.mixed_precision=False",
+                "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
+                "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
+                f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+                "config.LOG_FREQUENCY=1",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.OPTIMIZER.use_larc=False",
+                "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
+                "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
+            ],
+        )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
@@ -120,44 +117,42 @@ class TestStateCheckpointing(unittest.TestCase):
         else:
             head_config = "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_mlp"
 
-        with initialize_config_module(config_module="vissl.config"):
-            cfg = compose(
-                "defaults",
-                overrides=[
-                    "config=debugging/benchmark/linear_image_classification/eval_resnet_8gpu_transfer_imagenette_160",
-                    head_config,
-                    f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
-                    "config.SEED_VALUE=2",
-                    "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
-                    "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
-                    "config.OPTIMIZER.num_epochs=1",
-                    "config.OPTIMIZER.param_schedulers.lr.lengths=[0.1, 0.9]",
-                    "config.OPTIMIZER.param_schedulers.lr.name=cosine",
-                    "config.LOSS.swav_loss.epsilon=0.03",
-                    "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TEST.DATA_SOURCES=[synthetic]",
-                    "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
-                    "config.DATA.TRAIN.DATA_LIMIT=40",
-                    "config.DATA.TEST.DATA_LIMIT=16",
-                    "config.DISTRIBUTED.NCCL_DEBUG=False",
-                    "config.MODEL.AMP_PARAMS.USE_AMP=false",
-                    "config.MODEL.FSDP_CONFIG.mixed_precision=false",
-                    "config.OPTIMIZER.use_larc=false",
-                    "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",  # This is critical
-                    "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
-                    "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
-                    "config.DATA.TEST.USE_DEBUGGING_SAMPLER=True",
-                    "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
-                    "config.DATA.TEST.BATCHSIZE_PER_REPLICA=4",
-                    "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
-                    "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=false",
-                    "config.OPTIMIZER.construct_single_param_group_only=True",
-                    "config.OPTIMIZER.num_epochs=2",
-                    "config.DISTRIBUTED.NUM_NODES=1",
-                    f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
-                ],
-            )
+        cfg = compose_hydra_configuration(
+            [
+                "config=debugging/benchmark/linear_image_classification/eval_resnet_8gpu_transfer_imagenette_160",
+                head_config,
+                f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
+                "config.SEED_VALUE=2",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.OPTIMIZER.num_epochs=1",
+                "config.OPTIMIZER.param_schedulers.lr.lengths=[0.1, 0.9]",
+                "config.OPTIMIZER.param_schedulers.lr.name=cosine",
+                "config.LOSS.swav_loss.epsilon=0.03",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.DATA_LIMIT=40",
+                "config.DATA.TEST.DATA_LIMIT=16",
+                "config.DISTRIBUTED.NCCL_DEBUG=False",
+                "config.MODEL.AMP_PARAMS.USE_AMP=false",
+                "config.MODEL.FSDP_CONFIG.mixed_precision=false",
+                "config.OPTIMIZER.use_larc=false",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",  # This is critical
+                "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
+                "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
+                "config.DATA.TEST.USE_DEBUGGING_SAMPLER=True",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=4",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=false",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.OPTIMIZER.num_epochs=2",
+                "config.DISTRIBUTED.NUM_NODES=1",
+                f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
+            ]
+        )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"

@@ -12,12 +12,11 @@ Supports SLURM as an option. Set config.SLURM.USE_SLURM=true to use slurm.
 import sys
 from typing import Any, List
 
-from hydra.experimental import compose, initialize_config_module
 from vissl.utils.distributed_launcher import (
     launch_distributed,
     launch_distributed_on_slurm,
 )
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.slurm import is_submitit_available
 
 
@@ -31,8 +30,7 @@ def hydra_main(overrides: List[Any]):
     ######################################################################################
 
     print(f"####### overrides: {overrides}")
-    with initialize_config_module(config_module="vissl.config"):
-        cfg = compose("defaults", overrides=overrides)
+    cfg = compose_hydra_configuration(overrides)
     args, config = convert_to_attrdict(cfg)
 
     if config.SLURM.USE_SLURM:
@@ -56,6 +54,5 @@ if __name__ == "__main__":
     `python tools/run_distributed_engines.py config=test/integration_test/quick_simclr`
     """
     overrides = sys.argv[1:]
-    assert is_hydra_available(), "Make sure to install hydra"
     overrides.append("hydra.verbose=true")
     hydra_main(overrides=overrides)

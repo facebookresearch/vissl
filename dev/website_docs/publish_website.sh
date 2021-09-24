@@ -20,11 +20,11 @@ WORK_DIR=$(mktemp -d)
 cd "${WORK_DIR}" || exit
 echo "${WORK_DIR}"
 
-# Clone both master & gh-pages branches
-git clone https://github.com/facebookresearch/vissl.git vissl-master
+# Clone both main & gh-pages branches
+git clone https://github.com/facebookresearch/vissl.git vissl-main
 git clone --branch gh-pages https://github.com/facebookresearch/vissl.git vissl-gh-pages
 
-cd vissl-master/website || exit
+cd vissl-main/website || exit
 
 # Build site, tagged with "latest" version; baseUrl set to /versions/latest/
 yarn
@@ -37,7 +37,7 @@ cd "${WORK_DIR}" || exit
 rm -rf vissl-gh-pages/*
 touch vissl-gh-pages/CNAME
 echo "vissl.ai" > vissl-gh-pages/CNAME
-mv vissl-master/website/build/vissl/* vissl-gh-pages/
+mv vissl-main/website/build/vissl/* vissl-gh-pages/
 
 cd vissl-gh-pages || exit
 git add .

@@ -7,7 +7,7 @@ This benchmark requires only initializing the model and no other settings in :co
 Benchmark: ImageNet-1k
 ---------------------------
 
-The configuration for full fine-tuning on Imagenet is available in `benchmark/fulltune/imagenet1k <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/fulltune/imagenet1k>`_ and can be run as follows:
+The configuration for full fine-tuning on Imagenet is available in `benchmark/fulltune/imagenet1k <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/fulltune/imagenet1k>`_ and can be run as follows:
 
 
 .. code-block:: bash
@@ -36,7 +36,7 @@ Configurations for fine-tuning on a sub-set of Imagenet are also available and c
 Benchmark: Places205
 ---------------------------
 
-The configuration for full fine-tuning on Places205 is available in `benchmark/fulltune/places205 <https://github.com/facebookresearch/vissl/tree/master/configs/config/benchmark/fulltune/places205>`_ and can be run as follows:
+The configuration for full fine-tuning on Places205 is available in `benchmark/fulltune/places205 <https://github.com/facebookresearch/vissl/tree/main/configs/config/benchmark/fulltune/places205>`_ and can be run as follows:
 
 
 .. code-block:: bash

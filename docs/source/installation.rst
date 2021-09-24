@@ -122,9 +122,9 @@ Install from source in PIP environment
     # install vissl dependencies
     pip install --progress-bar off -r requirements.txt
     pip install opencv-python
-    # update classy vision install to current master
+    # update classy vision install to current main branch
     pip uninstall -y classy_vision
-    pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
+    pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
     # install vissl dev mode (e stands for editable)
     pip install -e ".[dev]"
     # verify installation
@@ -136,7 +136,7 @@ Install from source in Conda environment
 
 - **Step 1: Create Conda environment**
 
-If you don't have anaconda, `run this bash scrip to install conda <https://github.com/facebookresearch/vissl/blob/master/docker/common/install_conda.sh>`_.
+If you don't have anaconda, `run this bash scrip to install conda <https://github.com/facebookresearch/vissl/blob/main/docker/common/install_conda.sh>`_.
 
 .. code-block:: bash
 

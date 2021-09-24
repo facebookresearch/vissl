@@ -10,10 +10,9 @@ from typing import List
 import torch
 import tqdm
 from fvcore.common.timer import Timer
-from hydra.experimental import compose, initialize_config_module
 from vissl.config import AttrDict
 from vissl.data import build_dataloader, build_dataset
-from vissl.utils.hydra_config import convert_to_attrdict, is_hydra_available
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.logger import setup_logging
 
 
@@ -87,8 +86,7 @@ def benchmark_data(cfg: AttrDict, split: str = "train"):
 
 def hydra_main(overrides: List[str]):
     print(f"####### overrides: {overrides}")
-    with initialize_config_module(config_module="vissl.config"):
-        cfg = compose("defaults", overrides=overrides)
+    cfg = compose_hydra_configuration(overrides)
     setup_logging(__name__)
     args, config = convert_to_attrdict(cfg)
     benchmark_data(config)
@@ -96,6 +94,5 @@ def hydra_main(overrides: List[str]):
 
 if __name__ == "__main__":
     overrides = sys.argv[1:]
-    assert is_hydra_available(), "Make sure to install hydra"
     overrides.append("hydra.verbose=true")
     hydra_main(overrides=overrides)

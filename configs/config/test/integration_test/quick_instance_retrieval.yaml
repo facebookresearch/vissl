@@ -1,0 +1,56 @@
+# @package _global_
+config:
+  DISTRIBUTED:
+    NUM_PROC_PER_NODE: 1
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: false
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res4", ["Identity", []]]
+      ]
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    WEIGHTS_INIT:
+      ############################# OSS model ####################################
+      PARAMS_FILE: manifold://ssl_framework/tree/qduval/vissl/supervised_rn50_phase105.torch
+      STATE_DICT_KEY_NAME: classy_state_dict
+      ############ example settings for torchvision model rn50 ###################
+      # PARAMS_FILE: https://download.pytorch.org/models/resnet50-19c8e357.pth
+      # STATE_DICT_KEY_NAME: ""
+      # APPEND_PREFIX: "trunk.base_model._feature_blocks."
+  IMG_RETRIEVAL:
+    ############################# Dataset Information ####################################
+    TRAIN_DATASET_NAME: rparis6k
+    EVAL_DATASET_NAME: roxford5k
+    DATASET_PATH: manifold://ssl_framework/tree/datasets
+    # Number of training samples to use. -1 uses all the samples in the dataset.
+    NUM_TRAINING_SAMPLES: -1
+    # Number of query samples to use. -1 uses all the samples in the dataset.
+    NUM_QUERY_SAMPLES: -1
+    # Number of database samples to use. -1 uses all the samples in the dataset.
+    NUM_DATABASE_SAMPLES: -1
+    # Sets data limits for the number of training, query, and database samples.
+    DEBUG_MODE: True
+    ############################# Data Processing Hypers ####################################
+    # TODO: Check if this is correct
+    RESIZE_IMG: 224
+    TRAIN_PCA_WHITENING: True
+    N_PCA: 1024
+    FEATS_PROCESSING_TYPE: rmac  # l2 norm not recommended
+    SPATIAL_LEVELS: 3
+    # RN50 - res5
+    # N_PCA: 2048
+    # valid only for GeM pooling of features
+    GEM_POOL_POWER: 4.0
+    # Experiments w/ RN-50 have shown that cropping the bbx degrades performance.
+    CROP_QUERY_ROI: False
+    # Whether or not to apply L2 norm after the features have been post-processed.
+    # Normalization is heavily recommended based on experiments run.
+    NORMALIZE_FEATURES: True
+    # Whether or not to use distractor images.
+    USE_DISTRACTORS: True
