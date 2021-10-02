@@ -3,11 +3,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from torch.utils.data import Dataset
-
 import numpy as np
-from vissl.data.data_helper import get_mean_image
 from PIL import Image, ImageFilter
+from torch.utils.data import Dataset
+from vissl.data.data_helper import get_mean_image
 
 
 class SyntheticImageDataset(Dataset):
@@ -66,7 +65,9 @@ class SyntheticImageDataset(Dataset):
         rng = np.random.RandomState(seed)
         noise_size = crop_size // 16
         gaussian_kernel_radius = rng.randint(noise_size // 2, noise_size * 2)
-        img = Image.fromarray((255 * rng.rand(noise_size, noise_size, 3)).astype(np.uint8))
+        img = Image.fromarray(
+            (255 * rng.rand(noise_size, noise_size, 3)).astype(np.uint8)
+        )
         img = img.resize((crop_size, crop_size))
         img = img.filter(ImageFilter.GaussianBlur(radius=gaussian_kernel_radius))
         return img
