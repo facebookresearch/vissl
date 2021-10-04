@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 """
-Full credits: https://github.com/facebookresearch/moco/blob/master/detection/train_net.py  # NOQA
+Full credits: https://github.com/facebookresearch/moco/blob/main/detection/train_net.py  # NOQA
 """
 
 

@@ -31,17 +31,17 @@ VISSL is designed to be extensible so that it's easy to extend any modular compo
 
 When sending a PR, please do:
 
-1. Fork the repo and create your branch from `master`.
+1. Fork the repo and create your branch from `main`.
 2. If a PR contains multiple orthogonal changes, split it to several PRs.
 3. If you've added code that should be tested, add tests.
 4. If you've changed APIs, update the documentation.
-5. Ensure the test suite passes. Follow [cpu test instructions](https://github.com/facebookresearch/vissl/blob/master/tests/README.md) and [integration tests][https://github.com/facebookresearch/vissl/blob/master/dev/run_quick_tests.sh].
+5. Ensure the test suite passes. Follow [cpu test instructions](https://github.com/facebookresearch/vissl/blob/main/tests/README.md) and [integration tests][https://github.com/facebookresearch/vissl/blob/main/dev/run_quick_tests.sh].
 6. Make sure your code follows our coding practices (see next section).
 7. If you haven't already, complete the Contributor License Agreement ("CLA").
 
 ## Coding Style
 
-Please follow [our coding practices](https://github.com/facebookresearch/vissl/blob/master/dev/README.md#practices-for-coding-quality) and choose either option to properly format your code before submitting PRs.
+Please follow [our coding practices](https://github.com/facebookresearch/vissl/blob/main/dev/README.md#practices-for-coding-quality) and choose either option to properly format your code before submitting PRs.
 
 ## Contributor License Agreement ("CLA")
 In order to accept your pull request, we need you to submit a CLA. You only need

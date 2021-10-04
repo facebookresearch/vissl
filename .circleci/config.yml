@@ -59,7 +59,7 @@ install_classy_vision: &install_classy_vision
       working_directory: ~/
       command: |
         pip uninstall -y classy_vision
-        pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/master
+        pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
 
 setupcuda: &setupcuda
   run:

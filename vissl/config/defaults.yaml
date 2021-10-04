@@ -94,7 +94,7 @@ config:
       PERF_STAT_FREQUENCY: -1
       # if we want to print the rolling average batch time, set the value below to number of
       # training iterations over which we want to print average. The average is printed for
-      # master gpu.
+      # primary gpu.
       ROLLING_BTIME_FREQ: -1
 
     # ----------------------------------------------------------------------------------- #
@@ -255,6 +255,10 @@ config:
       # we allow using a queue to capture the valid and seen images if users prefer to
       # not use the gray images during training. See `ENABLE_QUEUE_DATASET` option below.
       DEFAULT_GRAY_IMG_SIZE: 224
+      # if the image generated are synthetic images, whether or not we want to
+      # generate gray images or random images (only makes an effect if the
+      # data source is synthetic)
+      RANDOM_SYNTHETIC_IMAGES: False
       # number of unique samples in minibatch per gpu (or per device)
       BATCHSIZE_PER_REPLICA: 256
       # list of data transforms to apply on the data
@@ -373,6 +377,7 @@ config:
       LABEL_PATHS: []
       MMAP_MODE: True
       DEFAULT_GRAY_IMG_SIZE: 224
+      RANDOM_SYNTHETIC_IMAGES: False
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
@@ -1281,6 +1286,8 @@ config:
     # image scale and averaged. Default is [1], meaning that only the full
     # image is processed.
     IMG_SCALINGS: [1]
+    # valid options are cosine_similarity (suggested) and l2.
+    SIMILARITY_MEASURE: cosine_similarity
     ######################## Features Processing Hypers #######################
     # Resize larger side of image to RESIZE_IMG pixels (e.g. 800)
     RESIZE_IMG: 1024

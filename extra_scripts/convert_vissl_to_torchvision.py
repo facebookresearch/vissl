@@ -54,7 +54,10 @@ def convert_and_save_model(args, replace_prefix):
     logger.info(f"Converted model. Number of params: {len(converted_model.keys())}")
 
     # save the state
-    output_filename = f"converted_vissl_{args.output_name}.torch"
+    if args.output_name.endswith(".torch"):
+        output_filename = f"converted_vissl_{args.output_name}"
+    else:
+        output_filename = f"converted_vissl_{args.output_name}.torch"
     output_model_filepath = f"{args.output_dir}/{output_filename}"
     logger.info(f"Saving model: {output_model_filepath}")
     torch.save(converted_model, output_model_filepath)

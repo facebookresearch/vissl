@@ -255,7 +255,7 @@ or 1gpu, the changes required are:
 
 Pre-trained models
 --------------------
-See `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/master/MODEL_ZOO.md>`_ for the PyTorch pre-trained models with
+See `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/main/MODEL_ZOO.md>`_ for the PyTorch pre-trained models with
 SwAV using DeepClusterV2 approach and the benchmarks.
 
 

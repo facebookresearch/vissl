@@ -20,7 +20,7 @@ from vissl.data import AirstoreDataset, GenericSSLDataset
 class SSLModelComplexityHook(ClassyHook):
     """
     Logs the number of paramaters, forward pass FLOPs and activations of the model.
-    Adapted from: https://github.com/facebookresearch/ClassyVision/blob/master/classy_vision/hooks/model_complexity_hook.py#L20    # NOQA
+    Adapted from: https://github.com/facebookresearch/ClassyVision/blob/main/classy_vision/hooks/model_complexity_hook.py#L20    # NOQA
     """
 
     on_phase_start = ClassyHook._noop

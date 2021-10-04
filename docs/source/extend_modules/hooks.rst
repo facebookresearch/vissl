@@ -34,7 +34,7 @@ Users can add new hooks by following the steps below:
     class MyAwesomeNewHook(ClassyHook):
         """
         Logs the number of paramaters, forward pass FLOPs and activations of the model.
-        Adapted from: https://github.com/facebookresearch/ClassyVision/blob/master/classy_vision/hooks/model_complexity_hook.py#L20    # NOQA
+        Adapted from: https://github.com/facebookresearch/ClassyVision/blob/main/classy_vision/hooks/model_complexity_hook.py#L20    # NOQA
         """
 
         # define all the functions that your hook should execute. If the hook

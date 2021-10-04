@@ -12,14 +12,14 @@ Reading data from several sources
 ------------------------------------------
 
 VISSL allows reading data from multiple sources (disk, etc) and in multiple formats (a folder path, a :code:`.npy` file, or torchvision datasets).
-The `GenericSSLDataset <https://github.com/facebookresearch/vissl/blob/master/vissl/data/ssl_dataset.py>`_ class is defined to support reading data from multiple data sources. For example: :code:`data = [dataset1, dataset2]` and the minibatches generated will have the corresponding data from each dataset.
+The `GenericSSLDataset <https://github.com/facebookresearch/vissl/blob/main/vissl/data/ssl_dataset.py>`_ class is defined to support reading data from multiple data sources. For example: :code:`data = [dataset1, dataset2]` and the minibatches generated will have the corresponding data from each dataset.
 For this reason, we also support labels from multiple sources. For example :code:`targets = [dataset1 targets, dataset2 targets]`.
 
 Source of the data (:code:`disk_filelist` | :code:`disk_folder` | :code:`torchvision_dataset`):
 
 - :code:`disk_folder`: this is simply the root folder path to the downloaded data.
 
-- :code:`disk_filelist`: These are numpy (or .pkl) files: (1) file containing images information (2) file containing corresponding labels for images. We provide `scripts <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_ that can be used to prepare these two files for a dataset of choice.
+- :code:`disk_filelist`: These are numpy (or .pkl) files: (1) file containing images information (2) file containing corresponding labels for images. We provide `scripts <https://github.com/facebookresearch/vissl/blob/main/extra_scripts/README.md>`_ that can be used to prepare these two files for a dataset of choice.
 
 - :code:`torchvision_dataset`: the root folder path to the torchvision dowloaded dataset. As of now, the supported datasets are: CIFAR10, CIFAR100, MNIST, STL10 and SVHN.
 
@@ -41,10 +41,10 @@ To use a dataset, VISSL takes following inputs in the configuration file for eac
 Using :code:`dataset_catalog.json`
 --------------------------------------
 
-In order to use a dataset with VISSL, the dataset name must be registered with :code:`VisslDatasetCatalog`. VISSL maintains a `dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/master/configs/config/dataset_catalog.json>`_ which is parsed by :code:`VisslDatasetCatalog` and the datasets
+In order to use a dataset with VISSL, the dataset name must be registered with :code:`VisslDatasetCatalog`. VISSL maintains a `dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/main/configs/config/dataset_catalog.json>`_ which is parsed by :code:`VisslDatasetCatalog` and the datasets
 are registered with VISSL, ready-to-use.
 
-Users can edit the template `dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/master/configs/config/dataset_catalog.json>`_ file
+Users can edit the template `dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/main/configs/config/dataset_catalog.json>`_ file
 to specify their datasets paths. Alternatively users can create their own dataset catalog json file and set the environment variable :code:`VISSL_DATASET_CATALOG_PATH` to its absolute path.
 This may be helpful if you are not building the code from source or are actively developing on VISSL. The json file can be fully decided by user and can have any number of supported datasets (one or more).
 User can give the string names to dataset as per their choice.
@@ -268,7 +268,7 @@ To run these benchmarks, the following data preparation scripts are mandatory:
 - :code:`extra_scripts/datasets/create_sun397_data_files.py` to transform the `SUN397 <https://vision.princeton.edu/projects/2010/SUN/>`_ dataset to the :code:`disk_filelist` format
 - :code:`extra_scripts/datasets/create_ucf101_data_files.py`: to create a :code:`disk_folder` image action recognition dataset from the video action recognition dataset `UCF101 <https://www.crcv.ucf.edu/data/UCF101.php>`_ by extracting the middle frame
 
-You can read more about how to download these datasets and run these scripts from `here <https://github.com/facebookresearch/vissl/blob/master/extra_scripts/README.md>`_.
+You can read more about how to download these datasets and run these scripts from `here <https://github.com/facebookresearch/vissl/blob/main/extra_scripts/README.md>`_.
 
 After data preparation, the output folders are either compatible with the :code:`disk_filelist` layout:
 
@@ -322,7 +322,7 @@ Or with the :code:`disk_folder` layout:
 Dataloader
 ------------------------------------------
 
-VISSL uses PyTorch :code:`torch.utils.data.DataLoader` and allows setting all the dataloader option as below. The dataloader is wrapped with `DataloaderAsyncGPUWrapper <https://github.com/facebookresearch/ClassyVision/blob/master/classy_vision/dataset/dataloader_async_gpu_wrapper.py>`_ or `DataloaderSyncGPUWrapper <https://github.com/facebookresearch/vissl/blob/master/vissl/data/dataloader_sync_gpu_wrapper.py>`_ depending on whether user wants to copy data to gpu async or not.
+VISSL uses PyTorch :code:`torch.utils.data.DataLoader` and allows setting all the dataloader option as below. The dataloader is wrapped with `DataloaderAsyncGPUWrapper <https://github.com/facebookresearch/ClassyVision/blob/main/classy_vision/dataset/dataloader_async_gpu_wrapper.py>`_ or `DataloaderSyncGPUWrapper <https://github.com/facebookresearch/vissl/blob/main/vissl/data/dataloader_sync_gpu_wrapper.py>`_ depending on whether user wants to copy data to gpu async or not.
 
 The settings for the :code:`Dataloader` in VISSL are:
 
@@ -341,7 +341,7 @@ The settings for the :code:`Dataloader` in VISSL are:
 Using Data Collators
 ------------------------------------------
 
-VISSL supports PyTorch default collator :code:`torch.utils.data.dataloader.default_collate` and also many custom data collators used in self-supervision. The use any collator, user has to simply specify the :code:`DATA.TRAIN.COLLATE_FUNCTION` to be the name of the collator to use. See all custom VISSL collators implemented `here <https://github.com/facebookresearch/vissl/tree/master/vissl/data/collators>`_.
+VISSL supports PyTorch default collator :code:`torch.utils.data.dataloader.default_collate` and also many custom data collators used in self-supervision. The use any collator, user has to simply specify the :code:`DATA.TRAIN.COLLATE_FUNCTION` to be the name of the collator to use. See all custom VISSL collators implemented `here <https://github.com/facebookresearch/vissl/tree/main/vissl/data/collators>`_.
 
 An example for specifying collator for SwAV training:
 
@@ -356,7 +356,7 @@ Using Data Transforms
 ------------------------------------------
 
 VISSL supports all PyTorch :code:`TorchVision` transforms as well as many transforms required by Self-supervised approaches including MoCo, SwAV, PIRL, SimCLR, BYOL, etc. Using Transforms is very intuitive and easy in VISSL. Users specify the list of transforms they want to apply on the data in the order of application.
-This involves using the transform name and the key:value to specify the parameter values for the transform. See the full list of transforms implemented by VISSL `here <https://github.com/facebookresearch/vissl/tree/master/vissl/data/ssl_transforms>`_
+This involves using the transform name and the key:value to specify the parameter values for the transform. See the full list of transforms implemented by VISSL `here <https://github.com/facebookresearch/vissl/tree/main/vissl/data/ssl_transforms>`_
 
 An example of transform for SwAV:
 
@@ -393,7 +393,7 @@ VISSL supports 2 types of samplers:
 
 - PyTorch default :code:`torch.utils.data.distributed.DistributedSampler`
 
-- VISSL sampler `StatefulDistributedSampler <https://github.com/facebookresearch/vissl/blob/master/vissl/data/data_helper.py>`_ that is written specifically for large scale dataset trainings. See the documentation for the sampler.
+- VISSL sampler `StatefulDistributedSampler <https://github.com/facebookresearch/vissl/blob/main/vissl/data/data_helper.py>`_ that is written specifically for large scale dataset trainings. See the documentation for the sampler.
 
 
 By default, the PyTorch default sampler is used unless user specifies :code:`DATA.TRAIN.USE_STATEFUL_DISTRIBUTED_SAMPLER=true` in which case :code:`StatefulDistributedSampler` will be used.

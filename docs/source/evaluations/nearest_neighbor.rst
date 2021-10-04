@@ -89,7 +89,7 @@ self-supervised model training.
 Benchmark: ImageNet-1k
 ------------------------------
 
-VISSL provides configuration settings for the benchmark `here <https://github.com/facebookresearch/vissl/blob/master/configs/config/benchmark/nearest_neighbor/eval_resnet_8gpu_in1k_kNN.yaml>`_.
+VISSL provides configuration settings for the benchmark `here <https://github.com/facebookresearch/vissl/blob/main/configs/config/benchmark/nearest_neighbor/eval_resnet_8gpu_in1k_kNN.yaml>`_.
 
 To run the benchmark:
 
@@ -101,7 +101,7 @@ To run the benchmark:
 Benchmark: Places205
 ----------------------------------
 
-VISSL provides configuration settings for the benchmark `here <https://github.com/facebookresearch/vissl/blob/master/configs/config/benchmark/nearest_neighbor/eval_resnet_8gpu_places205_kNN.yaml>`_.
+VISSL provides configuration settings for the benchmark `here <https://github.com/facebookresearch/vissl/blob/main/configs/config/benchmark/nearest_neighbor/eval_resnet_8gpu_places205_kNN.yaml>`_.
 
 To run the benchmark:
 

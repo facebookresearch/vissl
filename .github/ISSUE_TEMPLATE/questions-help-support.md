@@ -12,7 +12,7 @@ Describe what you want to do, including:
 
 ## ❓ What does an API do and how to use it?
 Please link to which API or documentation you're asking about from
-https://github.com/facebookresearch/vissl/tree/master/docs
+https://github.com/facebookresearch/vissl/tree/main/docs
 
 
 NOTE:

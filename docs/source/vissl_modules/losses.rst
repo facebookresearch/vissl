@@ -3,7 +3,7 @@ Using PyTorch and VISSL Losses
 
 
 VISSL supports all PyTorch loss functions and also implements several loss functions that are specific to self-supervised approaches like MoCo, PIRL, SwAV, SimCLR etc. Using any loss is very easy in VISSL and involves simply editing the configuration files to specify the loss name
-and the parameters of that loss. See all the `VISSL custom losses here <https://github.com/facebookresearch/vissl/tree/master/vissl/losses>`_.
+and the parameters of that loss. See all the `VISSL custom losses here <https://github.com/facebookresearch/vissl/tree/main/vissl/losses>`_.
 
 To use a certain loss, users need to simply set :code:`LOSS.name=<my_loss_name>` and set the parameter values that loss requires.
 

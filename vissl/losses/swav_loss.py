@@ -13,7 +13,6 @@ import numpy as np
 import torch
 from classy_vision.generic.distributed_util import (
     all_reduce_max,
-    all_reduce_sum,
     get_cuda_device_index,
     get_rank,
     get_world_size,
@@ -22,6 +21,7 @@ from classy_vision.losses import ClassyLoss, register_loss
 from fvcore.common.file_io import PathManager
 from torch import nn
 from vissl.config import AttrDict
+from vissl.losses.distibuted_sinkhornknopp import distributed_sinkhornknopp
 
 
 @register_loss("swav_loss")
@@ -173,75 +173,6 @@ class SwAVCriterion(nn.Module):
             self.initialize_queue()
         self.output_dir = output_dir
 
-    def distributed_sinkhornknopp(self, Q: torch.Tensor):
-        """
-        Apply the distributed sinknorn optimization on the scores matrix to
-        find the assignments
-        """
-        eps_num_stab = 1e-12
-        with torch.no_grad():
-            # remove potential infs in Q
-            # replace the inf entries with the max of the finite entries in Q
-            mask = torch.isinf(Q)
-            ind = torch.nonzero(mask)
-            if len(ind) > 0:
-                for i in ind:
-                    Q[i[0], i[1]] = 0
-                m = torch.max(Q)
-                for i in ind:
-                    Q[i[0], i[1]] = m
-            sum_Q = torch.sum(Q, dtype=Q.dtype)
-            all_reduce_sum(sum_Q)
-            Q /= sum_Q
-
-            k = Q.shape[0]
-            n = Q.shape[1]
-            N = self.world_size * Q.shape[1]
-
-            # we follow the u, r, c and Q notations from
-            # https://arxiv.org/abs/1911.05371
-            r = torch.ones(k) / k
-            c = torch.ones(n) / N
-            if self.use_double_prec:
-                r, c = r.double(), c.double()
-
-            if self.use_gpu:
-                r = r.cuda(non_blocking=True)
-                c = c.cuda(non_blocking=True)
-
-            for _ in range(self.nmb_sinkhornknopp_iters):
-                u = torch.sum(Q, dim=1, dtype=Q.dtype)
-                all_reduce_sum(u)
-
-                # for numerical stability, add a small epsilon value
-                # for non-zero Q values.
-                if len(torch.nonzero(u == 0)) > 0:
-                    Q += eps_num_stab
-                    u = torch.sum(Q, dim=1, dtype=Q.dtype)
-                    all_reduce_sum(u)
-                u = r / u
-                # remove potential infs in "u"
-                # replace the inf entries with the max of the finite entries in "u"
-                mask = torch.isinf(u)
-                ind = torch.nonzero(mask)
-                if len(ind) > 0:
-                    for i in ind:
-                        u[i[0]] = 0
-                    m = torch.max(u)
-                    for i in ind:
-                        u[i[0]] = m
-
-                Q *= u.unsqueeze(1)
-                Q *= (c / torch.sum(Q, dim=0, dtype=Q.dtype)).unsqueeze(0)
-            Q = (Q / torch.sum(Q, dim=0, keepdim=True, dtype=Q.dtype)).t().float()
-
-            # hard assignment
-            if self.num_iteration < self.temp_hard_assignment_iters:
-                index_max = torch.max(Q, dim=1)[1]
-                Q.zero_()
-                Q.scatter_(1, index_max.unsqueeze(1), 1)
-            return Q
-
     def forward(self, scores: torch.Tensor, head_id: int):
         assert scores.shape[0] % self.num_crops == 0
         bs = scores.shape[0] // self.num_crops
@@ -251,11 +182,21 @@ class SwAVCriterion(nn.Module):
 
         # 2 big crops are normally used for the assignment
         for i, crop_id in enumerate(self.crops_for_assign):
+
+            # Compute the target assignments, taking crop_id as the features
+            # used to compute the codes to which other crops will be mapped
             with torch.no_grad():
                 scores_this_crop = scores[bs * crop_id : bs * (crop_id + 1)]
+
+                # Add representations of the queue (this option is useful when
+                # the batch size is small, to increase the number of samples
+                # in sinkhornknopp to make equal repartition possible)
                 if self.use_queue:
                     queue = getattr(self, "local_queue" + str(head_id))[i].clone()
                     scores_this_crop = torch.cat((scores_this_crop, queue))
+
+                # Divide by epsilon (which can be seen as a temperature which
+                # helps to sharpen the distribution of the assignments)
                 if self.use_double_prec:
                     assignments = torch.exp(
                         scores_this_crop.double() / np.float64(self.epsilon)
@@ -268,10 +209,25 @@ class SwAVCriterion(nn.Module):
                     all_reduce_max(M)
                     assignments -= M
                     assignments = torch.exp(assignments).t()
-                assignments = self.distributed_sinkhornknopp(assignments)[:bs]
-                idx_crop_pred = np.delete(np.arange(self.num_crops), crop_id)
 
+                # Apply sinkhornknopp algorithm to divide equally the
+                # assignment to each of the prototypes
+                assignments = distributed_sinkhornknopp(
+                    Q=assignments,
+                    hard_assignment=self.num_iteration
+                    < self.temp_hard_assignment_iters,
+                    world_size=self.world_size,
+                    num_iter=self.nmb_sinkhornknopp_iters,
+                    use_gpu=self.use_gpu,
+                    use_double_prec=self.use_double_prec,
+                )
+                assignments = assignments[:bs]
+
+            # For each crop other than the one used as target assignment
+            # compute the cross entropy between the target assigment and
+            # the soft-max of the dot product of each crop to the prototypes
             loss = 0
+            idx_crop_pred = np.delete(np.arange(self.num_crops), crop_id)
             for p in idx_crop_pred:
                 if self.use_double_prec:
                     loss -= torch.mean(
@@ -296,11 +252,19 @@ class SwAVCriterion(nn.Module):
                             dtype=assignments.dtype,
                         )
                     )
+
+            # Average of the contribution of each crop (we don't want and
+            # increase in the number of crop to impact the loss magnitude
+            # and force us to update the LR)
             loss /= len(idx_crop_pred)
+
+            # Average the contribution of each swapped assignment (the
+            # division by 'n_term_loss' is done at the end of the loop)
+            # for the same reason as above
             total_loss += loss
             n_term_loss += 1
 
-            # stop training if NaN appears and log the output to help debugging
+            # Stop training if NaN appears and log the output to help debugging
             # TODO (prigoyal): extract the logic to be common for all losses
             # debug_state() method that all losses can override
             if torch.isnan(loss):
@@ -321,6 +285,7 @@ class SwAVCriterion(nn.Module):
                     torch.save(assignments, fwrite)
                 logging.info(f"Saved the scores matrix to: {scores_output_file}")
                 logging.info(f"Saved the assignment matrix to: {assignments_out_file}")
+
         total_loss /= n_term_loss
         return total_loss
 
