@@ -61,6 +61,7 @@ class DINOLoss(ClassyLoss):
         else:
             logging.info("Restoring checkpoint")
             super().load_state_dict(state_dict, *args, **kwargs)
+            self.center.copy_(state_dict["center"])
 
     @torch.no_grad()
     def update_center(self):
