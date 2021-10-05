@@ -31,6 +31,7 @@ class DINOLoss(ClassyLoss):
         self.is_distributed = is_distributed_training_run()
         self.use_gpu = get_cuda_device_index() > -1
         self.center = None
+        self.register_buffer("center", torch.zeros(1, loss_config["output_dim"]))
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
