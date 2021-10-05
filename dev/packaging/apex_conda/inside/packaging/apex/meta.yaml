@@ -27,10 +27,9 @@ build:
   script: python setup.py install --single-version-externally-managed --record=record.txt --cpp_ext --cuda_ext # [not win]
   script_env:
     - CUDA_HOME
+    - TORCH_CUDA_ARCH_LIST
   features:
     {{ environ.get('CONDA_CPUONLY_FEATURE') }}
-
-
 
 about:
   home: #https://github.com/facebookresearch/pytorch3d

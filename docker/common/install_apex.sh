@@ -22,7 +22,7 @@ nvcc --version
 export TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}
 
 # install apex now (note that we recommend a specific apex version for stability)
-pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" apex@https://github.com/NVIDIA/apex/tarball/1f2aa9156547377a023932a1512752c392d9bbdf
+pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" apex@https://github.com/NVIDIA/apex/tarball/9ce0a10fb6c2537ef6a59f27b7875e32a9e9b8b8
 
 popd
 

@@ -7,6 +7,7 @@ import logging
 import unittest
 
 import pkg_resources
+import torch
 from parameterized import parameterized
 from utils import UNIT_TEST_CONFIGS, SSLHydraConfig
 from vissl.engines.train import train_main
@@ -37,6 +38,11 @@ class TaskTest(unittest.TestCase):
         config.DATA.TRAIN.DATA_PATHS = [
             pkg_resources.resource_filename(__name__, "test_data")
         ]
+
+        if torch.distributed.is_initialized():
+            # Destroy process groups as torch may be initialized with NCCL, which
+            # is incompatible with test_cpu_regnet_moco.yaml
+            torch.distributed.destroy_process_group()
 
         # run training and make sure no exception is raised
         dist_run_id = get_dist_run_id(config, config.DISTRIBUTED.NUM_NODES)
