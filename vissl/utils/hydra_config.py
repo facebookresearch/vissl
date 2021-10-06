@@ -451,7 +451,7 @@ def infer_losses_config(cfg):
             queue_length // world_size
         )
 
-    # some inference for Simdist loss.
+    # some inference for DINO loss.
     if cfg.LOSS.name == "dino_loss":
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
         assert cfg.MODEL.HEAD.PARAMS[0][0] == "swav_head"

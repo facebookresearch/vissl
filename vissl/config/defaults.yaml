@@ -623,6 +623,25 @@ config:
         QK_SCALE: False # Scale
 
       # ------------------------------------------------------------- #
+      # XCiT (https://arxiv.org/abs/2106.09681)
+      # default config is that of xcit_small_12_p16
+      # ------------------------------------------------------------- #
+      XCIT:
+        name:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 384
+        NUM_LAYERS: 12
+        NUM_HEADS: 8
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.05
+        ETA: 1
+        TOKENS_NORM: True
+        QKV_BIAS: True # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
+
+      # ------------------------------------------------------------- #
       # Parameters unique to the ConViT and not used for standard vision
       # transformers
       # -------------------------------------------------------------
