@@ -139,6 +139,3 @@ config:
     OVERWRITE_EXISTING: true
   SLURM:
     CONSTRAINT: volta32gb
-
-
-

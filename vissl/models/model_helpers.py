@@ -76,6 +76,12 @@ def get_trunk_output_feature_names(model_config):
     return feature_names
 
 
+def get_no_ddp_model(model):
+    if isinstance(model, torch.nn.parallel.DistributedDataParallel):
+        return model.module
+    return model
+
+
 class Wrap(nn.Module):
     """
     Wrap a free function into a nn.Module.

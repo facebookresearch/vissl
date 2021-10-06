@@ -17,6 +17,7 @@ from classy_vision.generic.distributed_util import (
 )
 from classy_vision.losses import ClassyLoss, register_loss
 from vissl.config import AttrDict
+from vissl.models.model_helpers import get_no_ddp_model
 
 
 @register_loss("dino_loss")
@@ -30,7 +31,7 @@ class DINOLoss(ClassyLoss):
         self.teacher_temp = None
         self.is_distributed = is_distributed_training_run()
         self.use_gpu = get_cuda_device_index() > -1
-        self.center = None
+        self.register_buffer("center", torch.zeros(1, loss_config["output_dim"]))
 
     @classmethod
     def from_config(cls, loss_config: AttrDict):
@@ -59,7 +60,26 @@ class DINOLoss(ClassyLoss):
             logging.info("Storing the checkpoint for later use")
         else:
             logging.info("Restoring checkpoint")
-            super().load_state_dict(state_dict, *args, **kwargs)
+            teacher_model = get_no_ddp_model(self.momentum_teacher)
+
+            # teacher params
+            sd = {
+                x.replace("momentum_teacher.module.", ""): state_dict[x]
+                for x in state_dict
+                if x.find("momentum_teacher") != -1
+            }
+            sd = {x.replace("momentum_teacher.", ""): sd[x] for x in sd}
+            teacher_model.load_state_dict(sd)
+
+            # center value
+            non_teacher_sd = {
+                x: state_dict[x] for x in state_dict if x.find("momentum_teacher") == -1
+            }
+            assert (
+                len(non_teacher_sd) == 1
+            ), f"State dict for loss has multiple non teacher keys: {non_teacher_sd.keys()}"
+            self.center.copy_(state_dict["center"])
+            logging.info("Loaded the center in dino loss...")
 
     @torch.no_grad()
     def update_center(self):
@@ -75,15 +95,15 @@ class DINOLoss(ClassyLoss):
         self.center = self.center * m + batch_center * (1 - m)
 
     def forward(self, output: List[torch.Tensor], *args, **kwargs):
-        student_out = output[-1] / self.loss_config.student_temp
-        student_out = student_out.chunk(self.loss_config.num_crops)
+        student_out = output[-1] / self.loss_config["student_temp"]
+        student_out = student_out.chunk(self.loss_config["num_crops"])
 
         # teacher centering and sharpening
         teacher_out = F.softmax(
             (self.teacher_output - self.center) / self.teacher_temp, dim=-1
         )
         teacher_out = teacher_out.detach().chunk(
-            len(self.loss_config.crops_for_teacher)
+            len(self.loss_config["crops_for_teacher"])
         )
 
         total_loss = 0
