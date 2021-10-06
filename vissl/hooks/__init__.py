@@ -26,10 +26,6 @@ from vissl.hooks.state_update_hooks import (  # noqa
     FreezeParametersHook,
     SetDataSamplerEpochHook,
     SSLModelComplexityHook,
-    UpdateBatchesSeenHook,
-    UpdateTestBatchTimeHook,
-    UpdateTrainBatchTimeHook,
-    UpdateTrainIterationNumHook,
 )
 from vissl.hooks.swav_hooks import NormalizePrototypesHook  # noqa
 from vissl.hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
@@ -154,10 +150,6 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             CheckNanLossHook(),
             SetDataSamplerEpochHook(),
             FreezeParametersHook(),
-            UpdateBatchesSeenHook(),
-            UpdateTrainBatchTimeHook(),
-            UpdateTestBatchTimeHook(),
-            UpdateTrainIterationNumHook(),
             LogLossMetricsCheckpointHook(world_size),
             LogLossLrEtaHook(checkpoint_folder, rolling_btime_freq),
         ]

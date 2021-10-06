@@ -93,12 +93,11 @@ class SelfSupervisionTask(ClassificationTask):
         self.metrics = {}  # set by the trainer
         self.start_time = -1  # set by trainer
         # time of each batch in training and testing. This can be used to get average
-        # batch time etc. batch_time is appended after every parameter update by
-        # UpdateTrainBatchTimeHook and if test phase, by UpdateTestBatchTimeHook
+        # batch time etc. batch_time is appended after every parameter update.
         self.batch_time = []  # set by trainer
         # we maintain and store the iteration in the state itself. It counts
         # total number of iterations we do in training phases. Updated
-        # after every forward pass of training step in UpdateTrainIterationNumHook.
+        # after every forward pass of training step.
         # Starts from 1
         self.iteration = 0
         # collect how many total iterations we make irrespective of train/test phase.
@@ -108,7 +107,7 @@ class SelfSupervisionTask(ClassificationTask):
         # by SetDataSamplerEpochHook hook.
         self.phase_start_time = -1  # set by the hook at start of each epoch or phase
         # for every phase, record the number of batches seen. Incremented after every
-        # forward pass by UpdateBatchesSeenHook. Reset at the start of each phase by
+        # forward pass. Reset at the start of each phase by
         # SetDataSamplerEpochHook hook. Useful for debugging.
         self.batches = -1  # set by the hook at start of each epoch or phase
         # loss curve. Reset at start of each phase/epoch by SetDataSamplerEpochHook hook.
@@ -221,7 +220,7 @@ class SelfSupervisionTask(ClassificationTask):
         Set the iteration number.
         we maintain and store the iteration in the state itself. It counts
         total number of iterations we do in training phases. Updated
-        after every forward pass of training step in UpdateTrainIterationNumHook.
+        after every forward pass of training step.
         Starts from 1
         """
         assert iteration >= 0, "Iteration number must be positive"
