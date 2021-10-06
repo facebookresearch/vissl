@@ -193,6 +193,16 @@ class SelfSupervisionTrainer(object):
                     task = train_step_fn(task)
                     iteration_num += 1
                     task.local_iteration_num = iteration_num
+                    # Book-keeping: update the training iteration number (only updated
+                    # if it's a training phase).
+                    task.iteration += 1 if task.train else 0
+                    # Book-keeping. Track how many forward passes have been done.
+                    # aka how many batches have been seen by the trainer irrespective of
+                    # the train or test phase.
+                    task.batches += 1
+                    # update the batch time aka the training time for the current iteration.
+                    task.batch_time.append(time.time() - task.start_time)
+                    task.start_time = time.time()
                     task.run_hooks(SSLClassyHookFunctions.on_step.name)
                 except StopIteration:
                     break
@@ -507,7 +517,7 @@ class SelfSupervisionTrainer(object):
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
 
         # Assert that the model support extract of clusters
-        error_message = "Extracting clusters is only available for pre-training methods based on clusters"
+        error_message = "Extracting clusters is only available for pre-training methods based on clusters"  # NOQA
         assert self.task.base_model.is_clustering_model(), error_message
 
         # Create distributed model
