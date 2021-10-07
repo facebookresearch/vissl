@@ -630,7 +630,6 @@ def infer_and_assert_hydra_config(cfg):
     # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
     del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
     del cfg.MODEL.FSDP_CONFIG["AMP_TYPE"]
-    logging.info(f"Using the FSDP config: {cfg.MODEL.FSDP_CONFIG}")
 
     if cfg.DATA.TRAIN.BASE_DATASET == "generic_ssl":
         assert (
