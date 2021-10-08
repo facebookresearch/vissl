@@ -14,9 +14,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.utils import _ntuple
 from torch.utils.checkpoint import checkpoint
-from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.utils.activation_checkpointing import checkpoint_trunk
 from vissl.utils.misc import is_apex_available
+from vissl.utils.multi_dimensional_tensor import MultiDimensionalTensor
 
 
 # Tuple of classes of BN layers.

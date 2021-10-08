@@ -39,7 +39,6 @@ from classy_vision.models.anynet import (
 from classy_vision.models.regnet import RegNetParams
 from fairscale.nn import checkpoint_wrapper
 from vissl.config import AttrDict
-from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (
     Flatten,
     get_trunk_forward_outputs,
@@ -49,6 +48,7 @@ from vissl.models.model_helpers import (
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.fsdp_utils import auto_wrap_big_layers, fsdp_auto_wrap_bn, fsdp_wrapper
 from vissl.utils.misc import set_torch_seed
+from vissl.utils.multi_dimensional_tensor import MultiDimensionalTensor
 
 
 def init_weights(module):

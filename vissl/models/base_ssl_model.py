@@ -12,7 +12,6 @@ import torch.nn as nn
 from classy_vision.models import ClassyModel, register_model
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
-from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.heads import SwAVPrototypesHead, get_model_head
 from vissl.models.model_helpers import (
     get_trunk_output_feature_names,
@@ -27,6 +26,7 @@ from vissl.utils.checkpoint import (
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.fsdp_utils import fsdp_recursive_reset_lazy_init
 from vissl.utils.misc import set_torch_seed
+from vissl.utils.multi_dimensional_tensor import MultiDimensionalTensor
 
 
 @register_model("multi_input_output_model")

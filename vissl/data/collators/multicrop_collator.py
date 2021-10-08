@@ -5,7 +5,7 @@
 
 import torch
 from vissl.data.collators import register_collator
-from vissl.data.collators.collator_helper import MultiDimensionalTensor
+from vissl.utils.multi_dimensional_tensor import MultiDimensionalTensor
 
 
 @register_collator("multicrop_collator")
