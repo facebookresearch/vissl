@@ -20,7 +20,7 @@ import argparse
 import enum
 import os
 
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.checkpoint import CheckpointFormatConverter
 from vissl.utils.env import setup_path_manager
 from vissl.utils.io import makedir
@@ -41,7 +41,7 @@ class CheckpointType(enum.Enum):
 
 
 def convert_checkpoint(input_path: str, output_path: str, output_type: str):
-    assert PathManager.exists(
+    assert g_pathmgr.exists(
         input_path
     ), f"Checkpoint input path: {input_path} not found."
 

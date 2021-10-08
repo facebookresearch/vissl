@@ -15,7 +15,7 @@ import numpy as np
 import pkg_resources
 import torch
 import torch.multiprocessing as mp
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from scipy.sparse import csr_matrix
 from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 
@@ -198,7 +198,7 @@ def get_json_catalog_path(default_dataset_catalog_path: str) -> str:
 
     # If catalog path is the default and we cannot find it, we want to continue without failing.
     if os.environ.get("VISSL_DATASET_CATALOG_PATH", False):
-        assert PathManager.exists(
+        assert g_pathmgr.exists(
             dataset_catalog_path
         ), f"Dataset catalog path: { dataset_catalog_path } not found."
 

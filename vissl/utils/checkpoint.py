@@ -17,7 +17,7 @@ from classy_vision.generic.util import (
     save_checkpoint,
 )
 from fairscale.nn import FullyShardedDataParallel
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config import AttrDict
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import abspath, create_file_symlink, makedir
@@ -241,7 +241,7 @@ class CheckpointFormatConverter:
             },
         }
         logging.info(f"Saving consolidated checkpoint at: {output_checkpoint_path}")
-        with PathManager.open(output_checkpoint_path, "wb") as f:
+        with g_pathmgr.open(output_checkpoint_path, "wb") as f:
             torch.save(consolidated_checkpoint, f)
         logging.info(f"Done! Checkpoint available at: {output_checkpoint_path}")
 
@@ -271,14 +271,14 @@ class CheckpointFormatConverter:
             "type": CheckpointItemType.slice_list.name,
             "layers": saved_parameters,
         }
-        with PathManager.open(output_checkpoint_path, "wb") as f:
+        with g_pathmgr.open(output_checkpoint_path, "wb") as f:
             torch.save(checkpoint_list, f)
         logging.info(f"Done! Checkpoint available at: {output_checkpoint_path}")
 
     @classmethod
     def _read_shards(cls, input_checkpoint_path: str, device="cpu"):
         logging.info(f"Reading sharded checkpoint from: {input_checkpoint_path}")
-        with PathManager.open(input_checkpoint_path, "rb") as f:
+        with g_pathmgr.open(input_checkpoint_path, "rb") as f:
             checkpoint = torch.load(f, map_location=device)
 
         assert checkpoint["type"] == CheckpointItemType.shard_list.name
@@ -288,7 +288,7 @@ class CheckpointFormatConverter:
                 checkpoint_folder = os.path.split(input_checkpoint_path)[0]
                 shard_path = os.path.join(checkpoint_folder, shard_path)
 
-            with PathManager.open(shard_path, "rb") as f:
+            with g_pathmgr.open(shard_path, "rb") as f:
                 shard_content = torch.load(f, map_location=device)
 
             trunk_data = shard_content["classy_state_dict"]["base_model"]["model"][
@@ -341,7 +341,7 @@ class SlicedCheckpointLoader:
                 "type": CheckpointItemType.slice_list.name,
                 "layers": saved_parameters,
             }
-            with PathManager.open(checkpoint_path, "wb") as f:
+            with g_pathmgr.open(checkpoint_path, "wb") as f:
                 torch.save(checkpoint_list, f)
 
     @classmethod
@@ -358,7 +358,7 @@ class SlicedCheckpointLoader:
         file_path = os.path.join(checkpoint_sub_folder, f"{hash_name}.torch")
         file_path = abspath(file_path)
         checkpoint_slice = {"type": CheckpointItemType.slice.name, "weight": param}
-        with PathManager.open(file_path, "wb") as f:
+        with g_pathmgr.open(file_path, "wb") as f:
             torch.save(checkpoint_slice, f)
         return file_path
 
@@ -386,7 +386,7 @@ class SlicedCheckpointLoader:
         weight_path = cls._clean_path(weight_path)
         file_name = checkpoint["layers"].get(weight_path, None)
         assert file_name is not None, f"Could not find buffer: {weight_path}"
-        with PathManager.open(file_name, "rb") as f:
+        with g_pathmgr.open(file_name, "rb") as f:
             layer_checkpoint = torch.load(f)
         assert layer_checkpoint["type"] == CheckpointItemType.slice.name
         weight.copy_(layer_checkpoint["weight"])
@@ -461,7 +461,7 @@ def get_checkpoint_folder(config: AttrDict):
         odir = f"{odir}/{config.DISTRIBUTED.RUN_ID}"
 
     makedir(odir)
-    assert PathManager.exists(
+    assert g_pathmgr.exists(
         config.CHECKPOINT.DIR
     ), f"Please specify config.CHECKPOINT.DIR parameter. Invalid: {config.CHECKPOINT.DIR}"
     return odir
@@ -512,7 +512,7 @@ def has_checkpoint(checkpoint_folder: str, skip_final: bool = False):
     Returns:
         checkpoint_exists (bool): whether checkpoint exists or not
     """
-    checkpointed_files = PathManager.ls(checkpoint_folder)
+    checkpointed_files = g_pathmgr.ls(checkpoint_folder)
     checkpoint_exists = False
     for f in checkpointed_files:
         if f.endswith(".torch") and ("model_final" not in f or not skip_final):
@@ -535,7 +535,7 @@ def has_final_checkpoint(
     Returns:
         has_final_checkpoint: whether the final checkpoint exists or not
     """
-    checkpointed_files = PathManager.ls(checkpoint_folder)
+    checkpointed_files = g_pathmgr.ls(checkpoint_folder)
     torch_files = filter(lambda x: x.endswith(".torch"), checkpointed_files)
     final_files = filter(lambda x: final_checkpoint_pattern in x, torch_files)
     return len(list(final_files)) > 0
@@ -561,7 +561,7 @@ def get_checkpoint_resume_files(
                    Sometimes the latest checkpoints could be corrupt so this option
                    helps to resume from instead a few checkpoints before the last checkpoint.
     """
-    all_files = PathManager.ls(checkpoint_folder)
+    all_files = g_pathmgr.ls(checkpoint_folder)
     all_iters = []
     replace_prefix = "model_phase"
     # if we checkpoint at iterations too, we start from an iteration checkpoint

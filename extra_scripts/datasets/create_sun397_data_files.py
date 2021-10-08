@@ -10,7 +10,7 @@ import random
 from typing import Any, List
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from tqdm import tqdm
 from vissl.utils.download import download_and_extract_archive
 
@@ -95,7 +95,7 @@ def create_sun397_disk_filelist_dataset(input_path: str, output_path: str, seed:
     by allocating 70% of labels to "train", 10% to "val" and 20% to "test".
     """
     random.seed(seed)
-    PathManager.mkdirs(output_path)
+    g_pathmgr.mkdirs(output_path)
 
     # List all the available classes in SUN397 and their path
     image_folder = os.path.join(input_path, "SUN397")
@@ -129,10 +129,10 @@ def create_sun397_disk_filelist_dataset(input_path: str, output_path: str, seed:
     # Save each split
     for split, samples in splits_data.items():
         image_output_path = os.path.join(output_path, f"{split}_images.npy")
-        with PathManager.open(image_output_path, mode="wb") as f:
+        with g_pathmgr.open(image_output_path, mode="wb") as f:
             np.save(f, np.array(samples.image_paths))
         label_output_path = os.path.join(output_path, f"{split}_labels.npy")
-        with PathManager.open(label_output_path, mode="wb") as f:
+        with g_pathmgr.open(label_output_path, mode="wb") as f:
             np.save(f, np.array(samples.image_labels))
 
 

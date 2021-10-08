@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import List
 
 import submitit
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config.attr_dict import AttrDict
 from vissl.utils.distributed_launcher import launch_distributed_on_slurm
 from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
@@ -163,7 +163,7 @@ class BenchmarkSuiteScheduler:
                 )
 
             if (
-                PathManager.exists(self.training_checkpoint_file)
+                g_pathmgr.exists(self.training_checkpoint_file)
                 and self._max_training_iterations()
             ):
                 # Load training yaml config.
@@ -206,10 +206,10 @@ class BenchmarkSuiteScheduler:
         )
 
         # If the stdout.json path doesn't exist, return None.
-        if not PathManager.exists(training_stdout_json_file):
+        if not g_pathmgr.exists(training_stdout_json_file):
             return None
 
-        with PathManager.open(training_stdout_json_file, "rb") as f:
+        with g_pathmgr.open(training_stdout_json_file, "rb") as f:
             # First line of stdout.json must have max_iterations in the first line
             try:
                 first_json_line = json.loads(next(f))
@@ -294,10 +294,10 @@ class BenchmarkSuiteScheduler:
                 % self.training_config.CHECKPOINT.CHECKPOINT_FREQUENCY
             ) == 0, "Evaluation phase frequency must evenly divide the checkpoint phase frequency"  # NOQA
 
-        assert PathManager.exists(
+        assert g_pathmgr.exists(
             self.training_config.SLURM.LOG_FOLDER
         ), "Training slurm log folder must exist"
-        assert PathManager.exists(
+        assert g_pathmgr.exists(
             self.training_config.CHECKPOINT.DIR
         ), "Training slurm checkpoint folder must exist"
 
@@ -315,7 +315,7 @@ class BenchmarkSuiteScheduler:
             checkpoint_str = os.path.join(
                 self.training_config.CHECKPOINT.DIR, f"{ checkpoint_str }.torch"
             )
-            if PathManager.exists(checkpoint_str):
+            if g_pathmgr.exists(checkpoint_str):
                 self._evaluate_checkpoint(checkpoint_str, benchmarks)
 
     def _evaluate_checkpoint(self, checkpoint_str, benchmarks):
@@ -382,7 +382,7 @@ class BenchmarkSuiteScheduler:
         return launch_distributed_on_slurm(engine_name=args.engine_name, cfg=config)
 
     def _write_json_file(self, data, file_name):
-        with PathManager.open(file_name, "w") as fopen:
+        with g_pathmgr.open(file_name, "w") as fopen:
             fopen.write(json.dumps(data, sort_keys=True))
             fopen.flush()
 
@@ -435,10 +435,10 @@ class BenchmarkSuiteScheduler:
     def _get_benchmark_metrics(self, benchmark):
         metrics_file = os.path.join(benchmark["slurm_checkpoint_dir"], "metrics.json")
 
-        if PathManager.exists(metrics_file):
+        if g_pathmgr.exists(metrics_file):
             # Open metrics file from finished evaluation job.
             metrics = []
-            with PathManager.open(metrics_file, "rb") as f:
+            with g_pathmgr.open(metrics_file, "rb") as f:
                 for line in f:
                     metrics.append(json.loads(line))
 
@@ -476,7 +476,7 @@ class BenchmarkSuiteScheduler:
         )
         autoload_slurm_evaluator_checkpoint = (
             self.autoload_slurm_evaluator_checkpoint
-            and PathManager.exists(default_checkpoint)
+            and g_pathmgr.exists(default_checkpoint)
         )
 
         if autoload_slurm_evaluator_checkpoint or self.slurm_evaluator_checkpoint:

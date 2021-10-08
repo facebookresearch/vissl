@@ -5,7 +5,7 @@
 
 from typing import List, Tuple
 
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, CIFAR100, MNIST, STL10, SVHN
@@ -42,7 +42,7 @@ class TorchvisionDataset(Dataset):
         self, cfg: AttrDict, data_source: str, path: str, split: str, dataset_name: str
     ):
         super().__init__()
-        assert PathManager.isdir(path), f"Directory {path} does not exist"
+        assert g_pathmgr.isdir(path), f"Directory {path} does not exist"
         self.dataset_name = dataset_name
         self.path = path
         self.split = split.lower()

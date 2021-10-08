@@ -14,7 +14,7 @@ import numpy as np
 import scipy.io
 import torch
 import torchvision.transforms.functional as TF
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from PIL import Image, ImageFile
 from torch.nn import functional as F
 from torchvision import transforms
@@ -218,7 +218,7 @@ class WhiteningTrainingImageDataset:
     """
 
     def __init__(self, base_dir: str, image_list_file: str, num_samples: int = 0):
-        with PathManager.open(image_list_file) as fopen:
+        with g_pathmgr.open(image_list_file) as fopen:
             self.image_list = fopen.readlines()
         if num_samples > 0:
             self.image_list = self.image_list[:num_samples]
@@ -504,7 +504,7 @@ class InstanceRetrievalImageLoader:
         from the filename, load the whitening image and prepare it to be used by
         applying data transforms
         """
-        with PathManager.open(fname, "rb") as f:
+        with g_pathmgr.open(fname, "rb") as f:
             im = Image.open(f)
         if im.mode != "RGB":
             im = im.convert(mode="RGB")
@@ -517,7 +517,7 @@ class InstanceRetrievalImageLoader:
         from the filename, load the db or query image and prepare it to be used by
         applying data transforms
         """
-        with PathManager.open(fname, "rb") as f:
+        with g_pathmgr.open(fname, "rb") as f:
             im = Image.open(f)
         if self.transforms is not None:
             im = self.transforms(im)
@@ -530,7 +530,7 @@ class InstanceRetrievalImageLoader:
         the image once again. ROI format is (xmin,ymin,xmax,ymax)
         """
         # Read image, get aspect ratio, and resize such as the largest side equals S
-        with PathManager.open(fname, "rb") as f:
+        with g_pathmgr.open(fname, "rb") as f:
             img = Image.open(f).convert(mode="RGB")
         im_resized, ratio = self.apply_img_transform(img)
         # If there is a roi, adapt the roi to the new size and crop. Do not rescale
@@ -552,7 +552,7 @@ class InstanceRetrievalImageLoader:
         # open path as file to avoid ResourceWarning
         # (https://github.com/python-pillow/Pillow/issues/835)
 
-        with PathManager.open(img_path, "rb") as f:
+        with g_pathmgr.open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
 
         im_resized, ratio = self.apply_img_transform(img)
@@ -600,7 +600,7 @@ class GenericInstanceRetrievalDataset:
     def _get_filenames(self, data_path: str):
         fnames = []
 
-        for fname in sorted(PathManager.ls(data_path)):
+        for fname in sorted(g_pathmgr.ls(data_path)):
             # Only put images in fnames.
             if not fname.endswith(".jpg"):
                 continue
@@ -722,11 +722,11 @@ class InstanceRetrievalDataset:
         self.lab_root = f"{self.path}/lab/"
         self.img_root = f"{self.path}/jpg/"
         logging.info(f"Loading data: {self.path}")
-        lab_filenames = np.sort(PathManager.ls(self.lab_root))
+        lab_filenames = np.sort(g_pathmgr.ls(self.lab_root))
         # Get the filenames without the extension
         self.img_filenames = [
             e[:-4]
-            for e in np.sort(PathManager.ls(self.img_root))
+            for e in np.sort(g_pathmgr.ls(self.img_root))
             if e[:-4] not in self.blacklisted
         ]
 
@@ -746,7 +746,7 @@ class InstanceRetrievalDataset:
         for e in lab_filenames:
             if e.endswith("_query.txt"):
                 q_name = e[: -len("_query.txt")]
-                with PathManager.open(f"{self.lab_root}/{e}") as fopen:
+                with g_pathmgr.open(f"{self.lab_root}/{e}") as fopen:
                     q_data = fopen.readline().split(" ")
                 if q_data[0].startswith("oxc1_"):
                     q_filename = q_data[0][5:]
@@ -754,11 +754,11 @@ class InstanceRetrievalDataset:
                     q_filename = q_data[0]
                 self.filename_to_name[q_filename] = q_name
                 self.name_to_filename[q_name] = q_filename
-                with PathManager.open(f"{self.lab_root}/{q_name}_ok.txt") as fopen:
+                with g_pathmgr.open(f"{self.lab_root}/{q_name}_ok.txt") as fopen:
                     good = {e.strip() for e in fopen}
-                with PathManager.open(f"{self.lab_root}/{q_name}_good.txt") as fopen:
+                with g_pathmgr.open(f"{self.lab_root}/{q_name}_good.txt") as fopen:
                     good = good.union({e.strip() for e in fopen})
-                with PathManager.open(f"{self.lab_root}/{q_name}_junk.txt") as fopen:
+                with g_pathmgr.open(f"{self.lab_root}/{q_name}_junk.txt") as fopen:
                     junk = {e.strip() for e in fopen}
                 good_plus_junk = good.union(junk)
                 self.relevants[q_name] = [
@@ -813,7 +813,7 @@ class InstanceRetrievalDataset:
         """
         rnk = np.array(self.img_filenames[: self.N_images])[idx]
 
-        with PathManager.open(f"{temp_dir}/{self.q_names[i]}.rnk", "w") as f:
+        with g_pathmgr.open(f"{temp_dir}/{self.q_names[i]}.rnk", "w") as f:
             f.write("\n".join(rnk) + "\n")
 
         cmd = (
@@ -894,7 +894,7 @@ class CopyDaysDataset:
     def _get_filenames(self, data_path: str):
         fnames = []
 
-        for fname in sorted(PathManager.ls(data_path)):
+        for fname in sorted(g_pathmgr.ls(data_path)):
             # Only put images in fnames.
             if not fname.endswith(".jpg"):
                 continue

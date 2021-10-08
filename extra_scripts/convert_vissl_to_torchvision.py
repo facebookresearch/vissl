@@ -12,7 +12,7 @@ import logging
 import sys
 
 import torch
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.checkpoint import replace_module_prefix
 from vissl.utils.io import is_url
 
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def convert_and_save_model(args, replace_prefix):
-    assert PathManager.exists(args.output_dir), "Output directory does NOT exist"
+    assert g_pathmgr.exists(args.output_dir), "Output directory does NOT exist"
 
     # load the model
     model_path = args.model_url_or_file

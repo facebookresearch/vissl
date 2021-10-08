@@ -10,7 +10,7 @@ import re
 from typing import List, NamedTuple
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.io import load_file
 
 
@@ -59,7 +59,7 @@ class ExtractedFeaturesLoader:
         # dataset split and a given layer
         feature_regex = re.compile(rf"(.*)_{split}_{layer}_features.npy")
         prefixes = []
-        for file_path in PathManager.ls(input_dir):
+        for file_path in g_pathmgr.ls(input_dir):
             match = feature_regex.match(file_path)
             if match is not None:
                 prefixes.append(match.group(1))

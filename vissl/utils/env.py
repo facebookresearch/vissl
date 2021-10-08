@@ -33,7 +33,7 @@ def set_env_vars(local_rank: int, node_id: int, cfg: AttrDict):
 
 def setup_path_manager():
     """
-    Registering the right options for the PathManager:
+    Registering the right options for the g_pathmgr:
     Override this function in your build system to
     support different distributed file system
     """

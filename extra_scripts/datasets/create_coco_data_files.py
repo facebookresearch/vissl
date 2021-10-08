@@ -15,7 +15,7 @@ import logging
 import sys
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from pycocotools.coco import COCO
 
 
@@ -53,8 +53,8 @@ def get_valid_objs(entry, objs):
 
 
 def get_imgs_labels_info(split, json_file, args):
-    assert PathManager.exists(json_file), "Data source does not exist. Abort"
-    json_data = json.load(PathManager.open(json_file, "r"))
+    assert g_pathmgr.exists(json_file), "Data source does not exist. Abort"
+    json_data = json.load(g_pathmgr.open(json_file, "r"))
     image_index = [x["id"] for x in json_data["images"]]
     coco = COCO(json_file)
 

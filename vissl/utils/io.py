@@ -13,8 +13,8 @@ from urllib.parse import urlparse
 
 import numpy as np
 import yaml
-from fvcore.common.download import download
-from fvcore.common.file_io import PathManager, file_lock
+from iopath.common.download import download
+from iopath.common.file_io import g_pathmgr, file_lock
 from vissl.utils.slurm import get_slurm_dir
 
 
@@ -44,9 +44,9 @@ def create_file_symlink(file1, file2):
     latest successful checkpoint.
     """
     try:
-        if PathManager.exists(file2):
-            PathManager.rm(file2)
-        PathManager.symlink(file1, file2)
+        if g_pathmgr.exists(file2):
+            g_pathmgr.rm(file2)
+        g_pathmgr.symlink(file1, file2)
     except Exception as e:
         logging.info(f"Could NOT create symlink. Error: {e}")
 
@@ -63,22 +63,22 @@ def save_file(data, filename, append_to_json=True, verbose=True):
         logging.info(f"Saving data to file: {filename}")
     file_ext = os.path.splitext(filename)[1]
     if file_ext in [".pkl", ".pickle"]:
-        with PathManager.open(filename, "wb") as fopen:
+        with g_pathmgr.open(filename, "wb") as fopen:
             pickle.dump(data, fopen, pickle.HIGHEST_PROTOCOL)
     elif file_ext == ".npy":
-        with PathManager.open(filename, "wb") as fopen:
+        with g_pathmgr.open(filename, "wb") as fopen:
             np.save(fopen, data)
     elif file_ext == ".json":
         if append_to_json:
-            with PathManager.open(filename, "a") as fopen:
+            with g_pathmgr.open(filename, "a") as fopen:
                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
                 fopen.flush()
         else:
-            with PathManager.open(filename, "w") as fopen:
+            with g_pathmgr.open(filename, "w") as fopen:
                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
                 fopen.flush()
     elif file_ext == ".yaml":
-        with PathManager.open(filename, "w") as fopen:
+        with g_pathmgr.open(filename, "w") as fopen:
             dump = yaml.dump(data)
             fopen.write(dump)
             fopen.flush()
@@ -101,31 +101,31 @@ def load_file(filename, mmap_mode=None):
     logging.info(f"Loading data from file: {filename}")
     file_ext = os.path.splitext(filename)[1]
     if file_ext in [".pkl", ".pickle"]:
-        with PathManager.open(filename, "rb") as fopen:
+        with g_pathmgr.open(filename, "rb") as fopen:
             data = pickle.load(fopen, encoding="latin1")
     elif file_ext == ".npy":
         if mmap_mode:
             try:
-                with PathManager.open(filename, "rb") as fopen:
+                with g_pathmgr.open(filename, "rb") as fopen:
                     data = np.load(fopen, encoding="latin1", mmap_mode=mmap_mode)
             except ValueError as e:
                 logging.info(
-                    f"Could not mmap {filename}: {e}. Trying without PathManager"
+                    f"Could not mmap {filename}: {e}. Trying without g_pathmgr"
                 )
                 data = np.load(filename, encoding="latin1", mmap_mode=mmap_mode)
-                logging.info("Successfully loaded without PathManager")
+                logging.info("Successfully loaded without g_pathmgr")
             except Exception:
-                logging.info("Could not mmap without PathManager. Trying without mmap")
-                with PathManager.open(filename, "rb") as fopen:
+                logging.info("Could not mmap without g_pathmgr. Trying without mmap")
+                with g_pathmgr.open(filename, "rb") as fopen:
                     data = np.load(fopen, encoding="latin1")
         else:
-            with PathManager.open(filename, "rb") as fopen:
+            with g_pathmgr.open(filename, "rb") as fopen:
                 data = np.load(fopen, encoding="latin1")
     elif file_ext == ".json":
-        with PathManager.open(filename, "r") as fopen:
+        with g_pathmgr.open(filename, "r") as fopen:
             data = json.load(fopen)
     elif file_ext == ".yaml":
-        with PathManager.open(filename, "r") as fopen:
+        with g_pathmgr.open(filename, "r") as fopen:
             data = yaml.load(fopen, Loader=yaml.FullLoader)
     else:
         raise Exception(f"Reading from {file_ext} is not supported yet")
@@ -150,8 +150,8 @@ def makedir(dir_path):
     """
     is_success = False
     try:
-        if not PathManager.exists(dir_path):
-            PathManager.mkdirs(dir_path)
+        if not g_pathmgr.exists(dir_path):
+            g_pathmgr.mkdirs(dir_path)
         is_success = True
     except BaseException:
         logging.info(f"Error creating directory: {dir_path}")
@@ -171,7 +171,7 @@ def cleanup_dir(dir):
     Utility for deleting a directory. Useful for cleaning the storage space
     that contains various training artifacts like checkpoints, data etc.
     """
-    if PathManager.exists(dir):
+    if g_pathmgr.exists(dir):
         logging.info(f"Deleting directory: {dir}")
         os.system(f"rm -rf {dir}")
     logging.info(f"Deleted contents of directory: {dir}")
@@ -190,8 +190,8 @@ def copy_file(input_file, destination_dir, tmp_destination_dir):
     Copy a given input_file from source to the destination directory.
 
     Steps:
-    1. We use PathManager to extract the data to local path.
-    2. we simply move the files from the PathManager cached local directory
+    1. We use g_pathmgr to extract the data to local path.
+    2. we simply move the files from the g_pathmgr cached local directory
        to the user specified destination directory. We use rsync.
        How destination dir is chosen:
             a) If user is using slurm, we set destination_dir = slurm_dir (see get_slurm_dir)
@@ -203,10 +203,10 @@ def copy_file(input_file, destination_dir, tmp_destination_dir):
         output_file (str): the new path of the file
         destination_dir (str): the destination dir that was actually used
     """
-    # we first extract the local path for the files. PathManager
+    # we first extract the local path for the files. g_pathmgr
     # determines the local path itself and copies data there.
     logging.info(f"Copying {input_file} to local path...")
-    out = PathManager.get_local_path(input_file)
+    out = g_pathmgr.get_local_path(input_file)
     output_dir = os.path.dirname(out)
     logging.info(f"File coped to: {out}")
 
@@ -217,7 +217,7 @@ def copy_file(input_file, destination_dir, tmp_destination_dir):
             f"destination directory: {destination_dir}"
         )
     # if the user wants to copy the files to a specific location,
-    # we simply move the files from the PathManager cached directory
+    # we simply move the files from the g_pathmgr cached directory
     # to the user specified directory.
     destination_dir = get_slurm_dir(destination_dir)
     if "SLURM_JOBID" in os.environ:
@@ -225,7 +225,7 @@ def copy_file(input_file, destination_dir, tmp_destination_dir):
     if destination_dir is not None:
         makedir(destination_dir)
         output_file = f"{destination_dir}/{os.path.basename(input_file)}"
-        if PathManager.exists(output_file):
+        if g_pathmgr.exists(output_file):
             logging.info(f"File already copied: {output_file}")
             return output_file, destination_dir
 
@@ -264,7 +264,7 @@ def copy_dir(input_dir, destination_dir, num_threads):
     destination_dir = f"{destination_dir}/{data_name}"
     makedir(destination_dir)
     complete_flag = f"{destination_dir}/copy_complete"
-    if PathManager.isfile(complete_flag):
+    if g_pathmgr.isfile(complete_flag):
         logging.info(f"Found Data already copied: {destination_dir}...")
         return destination_dir
     logging.info(
@@ -276,7 +276,7 @@ def copy_dir(input_dir, destination_dir, num_threads):
         f"rsync -ruW --inplace {{}} {destination_dir}"
     )
     os.system(cmd)
-    PathManager.open(complete_flag, "a").close()
+    g_pathmgr.open(complete_flag, "a").close()
     logging.info("Copied to local directory")
     return destination_dir, destination_dir
 
@@ -297,11 +297,11 @@ def copy_data(input_file, destination_dir, num_threads, tmp_destination_dir):
         makedir(destination_dir)
     else:
         destination_dir = None
-    if PathManager.isfile(input_file):
+    if g_pathmgr.isfile(input_file):
         output_file, output_dir = copy_file(
             input_file, destination_dir, tmp_destination_dir
         )
-    elif PathManager.isdir(input_file):
+    elif g_pathmgr.isdir(input_file):
         output_file, output_dir = copy_dir(input_file, destination_dir, num_threads)
     else:
         raise RuntimeError("The input_file is neither a file nor a directory")

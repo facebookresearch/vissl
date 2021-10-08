@@ -23,7 +23,7 @@ from collections import OrderedDict
 
 import numpy as np
 import torch
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 
 
 # create the logger
@@ -58,7 +58,7 @@ def remove_jigsaw_names(data):
 
 
 def _load_c2_pickled_weights(file_path):
-    with PathManager.open(file_path, "rb") as f:
+    with g_pathmgr.open(file_path, "rb") as f:
         data = pickle.load(f, encoding="latin1")
     if "blobs" in data:
         weights = data["blobs"]
@@ -71,7 +71,7 @@ def _load_c2_weights(file_path):
     if file_path.endswith("pkl"):
         weights = _load_c2_pickled_weights(file_path)
     elif file_path.endswith("npy"):
-        with PathManager.open(file_path, "rb") as fopen:
+        with g_pathmgr.open(file_path, "rb") as fopen:
             weights = np.load(fopen, allow_pickle=True, encoding="latin1")[()]
     return weights
 

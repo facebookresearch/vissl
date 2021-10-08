@@ -10,7 +10,7 @@ from extra_scripts.datasets.create_imagenet_a_data_files import (
     create_imagenet_test_files,
     remove_file_name_whitespace,
 )
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.download import download_and_extract_archive
 from vissl.utils.io import cleanup_dir
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     dataset_name = "imagenet-r"
     input_path = os.path.join(args.input, dataset_name)
-    assert PathManager.exists(input_path), "Input data path does not exist"
+    assert g_pathmgr.exists(input_path), "Input data path does not exist"
     remove_file_name_whitespace(input_path)
     create_imagenet_test_files(input_path, args.output)
 

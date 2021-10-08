@@ -16,7 +16,7 @@ import os
 import sys
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 
 
 # initiate the logger
@@ -36,7 +36,7 @@ def get_all_classes(data_dir):
 
 
 def get_images_labels_info(split, args):
-    assert PathManager.exists(args.data_source_dir), "Data source NOT found. Abort!"
+    assert g_pathmgr.exists(args.data_source_dir), "Data source NOT found. Abort!"
     data_dir = f"{args.data_source_dir}/{split}"
     class_idx = get_all_classes(data_dir)
     logger.info("Number of classes in {} data: {}".format(split, len(class_idx)))
@@ -103,7 +103,7 @@ def main():
             json_out_path = f"{args.output_dir}/{partition}_targets.json"
             import json
 
-            with PathManager.open(json_out_path, "w") as fp:
+            with g_pathmgr.open(json_out_path, "w") as fp:
                 json.dump(output_dict, fp)
             logger.info("Saved Json to: {}".format(json_out_path))
     logger.info("DONE!")

@@ -87,7 +87,7 @@ def download_google_drive_url(url: str, output_path: str, output_file_name: str)
                         progress_bar.update(len(block))
 
 
-# The following methods are copied from torchvision, but we use PathManager
+# The following methods are copied from torchvision, but we use g_pathmgr
 # instead of `os` lib to support multiple distributed file systems.
 def _get_google_drive_file_id(url: str) -> Optional[str]:
     parts = urlparse(url)

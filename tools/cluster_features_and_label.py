@@ -16,7 +16,7 @@ from typing import Any, List, Optional
 
 import numpy as np
 import torch
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config import AttrDict
 from vissl.data import build_dataset
 from vissl.hooks import default_hook_generator
@@ -167,7 +167,7 @@ def _create_dataset_split(
         "images": image_paths,
     }
     output_dir = cfg.CLUSTERFIT.OUTPUT_DIR
-    PathManager.mkdirs(output_dir)
+    g_pathmgr.mkdirs(output_dir)
     output_prefix = (
         f"{data_name}_{data_split}_{layer_name}_N{num_clusters}_D{features_dim}"
     )
