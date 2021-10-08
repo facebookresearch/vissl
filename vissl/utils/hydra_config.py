@@ -12,6 +12,7 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from vissl.config import AttrDict, check_cfg_version
 from vissl.utils.io import save_file
+from vissl.utils.misc import is_augly_available
 
 
 def save_attrdict_to_disk(cfg: AttrDict):
@@ -462,6 +463,16 @@ def infer_losses_config(cfg):
     return cfg
 
 
+def assert_transforms(cfg):
+    for transforms in [cfg.DATA.TRAIN.TRANSFORMS, cfg.DATA.TEST.TRANSFORMS]:
+        for transform in transforms:
+            if "transform_type" in transform:
+                assert transform["transform_type"] in [None, "augly"]
+
+                if transform["transform_type"] == "augly":
+                    assert is_augly_available(), "Please pip install augly."
+
+
 def infer_and_assert_hydra_config(cfg):
     """
     Infer values of few parameters in the config file using the value of other config parameters
@@ -480,6 +491,7 @@ def infer_and_assert_hydra_config(cfg):
     """
     cfg = infer_losses_config(cfg)
     cfg = infer_learning_rate(cfg)
+    assert_transforms(cfg)
 
     # pass the seed to cfg["MODEL"] so that model init on different nodes can
     # use the same seed.
