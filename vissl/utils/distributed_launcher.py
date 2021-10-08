@@ -123,9 +123,9 @@ def launch_distributed(
     # given training. This ensures that if the same training resumes, then it
     # resumes from the checkpoint and not the weight init
     if checkpoint_path is None and cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]:
-        assert PathManager.exists(
-            cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
-        ), "Specified PARAMS_FILE does NOT exist"
+        params_file = cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+        error_message = f"Specified PARAMS_FILE does NOT exist: {params_file}"
+        assert PathManager.exists(params_file), error_message
 
     # copy the data to local if user wants. This can speed up dataloading.
     _copy_to_local(cfg)
