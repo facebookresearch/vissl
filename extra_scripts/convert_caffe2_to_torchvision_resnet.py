@@ -19,7 +19,7 @@ import sys
 from collections import OrderedDict
 
 import torch
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 
 
 # create the logger
@@ -124,7 +124,7 @@ def _rename_weights_for_resnet(weights, stage_names):
 
 
 def _load_c2_pickled_weights(file_path):
-    with PathManager.open(file_path, "rb") as f:
+    with g_pathmgr.open(file_path, "rb") as f:
         data = pickle.load(f, encoding="latin1")
     if "blobs" in data:
         weights = data["blobs"]

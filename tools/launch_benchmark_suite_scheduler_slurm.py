@@ -7,7 +7,7 @@ import sys
 
 import pkg_resources
 import submitit
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config.attr_dict import AttrDict
 from vissl.utils.benchmark_suite_scheduler import BenchmarkSuiteScheduler
 from vissl.utils.hydra_config import assert_hydra_dependency
@@ -56,7 +56,7 @@ class SlurmEvaluatorJob:
 
 
 def launch_benchmark_suite_scheduler(config_file):
-    assert PathManager.exists(config_file), "Slurm evaluator config file must exist"
+    assert g_pathmgr.exists(config_file), "Slurm evaluator config file must exist"
 
     user_config = load_file(config_file)
     config = _DEFAULT_CONFIG.copy()

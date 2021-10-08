@@ -5,7 +5,7 @@
 
 import logging
 
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from PIL import Image
 from torchvision.datasets import ImageFolder
 from vissl.data.data_helper import QueueDataset, get_mean_image
@@ -54,9 +54,9 @@ class DiskImageDataset(QueueDataset):
             "disk_folder",
         ], "data_source must be either disk_filelist or disk_folder"
         if data_source == "disk_filelist":
-            assert PathManager.isfile(path), f"File {path} does not exist"
+            assert g_pathmgr.isfile(path), f"File {path} does not exist"
         elif data_source == "disk_folder":
-            assert PathManager.isdir(path), f"Directory {path} does not exist"
+            assert g_pathmgr.isdir(path), f"Directory {path} does not exist"
         self.cfg = cfg
         self.split = split
         self.dataset_name = dataset_name
@@ -144,7 +144,7 @@ class DiskImageDataset(QueueDataset):
                     replace_prefix=self._remove_prefix,
                     new_prefix=self._new_prefix,
                 )
-                with PathManager.open(image_path, "rb") as fopen:
+                with g_pathmgr.open(image_path, "rb") as fopen:
                     img = Image.open(fopen).convert("RGB")
             elif self.data_source == "disk_folder":
                 img = self.image_dataset[idx][0]

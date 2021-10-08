@@ -14,7 +14,7 @@ from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
 from vissl.data import (
@@ -422,7 +422,7 @@ class SelfSupervisionTask(ClassificationTask):
         assert init_weights_path, "Shouldn't call this when init_weight_path is empty"
         logging.info(f"Initializing model from: {init_weights_path}")
 
-        if PathManager.exists(init_weights_path):
+        if g_pathmgr.exists(init_weights_path):
             checkpoint = CheckpointLoader.load_and_broadcast_init_weights(
                 checkpoint_path=init_weights_path, device=torch.device("cpu")
             )
@@ -480,7 +480,7 @@ class SelfSupervisionTask(ClassificationTask):
             self.checkpoint_path is None
             and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
         ):
-            assert PathManager.exists(
+            assert g_pathmgr.exists(
                 self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
             ), "Specified PARAMS_FILE does NOT exist"
         # If we want to initialize the model in case of finetuning or evaluation,
@@ -489,7 +489,7 @@ class SelfSupervisionTask(ClassificationTask):
         if (
             self.checkpoint_path is None
             and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
-            and PathManager.exists(self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"])
+            and g_pathmgr.exists(self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"])
         ):
             model = self._restore_model_weights(model)
 

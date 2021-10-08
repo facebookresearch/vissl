@@ -19,7 +19,7 @@ from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
 from classy_vision.hooks.classy_hook import ClassyHook
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.checkpoint import CheckpointWriter, is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
@@ -184,7 +184,7 @@ class LogLossLrEtaHook(ClassyHook):
         self.btime_freq: Optional[int] = btime_freq
         self.json_stdout_logger = None
         if is_primary():
-            self.json_stdout_logger = PathManager.open(
+            self.json_stdout_logger = g_pathmgr.open(
                 f"{checkpoint_folder}/stdout.json",
                 mode="a",
                 buffering=10 * 1024,  # 10KB
@@ -331,9 +331,9 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             input_sample_file = (
                 f"{task.checkpoint_folder}/rank{dist_rank}_input_sample.pth"
             )
-            with PathManager.open(model_output_file, "wb") as fwrite:
+            with g_pathmgr.open(model_output_file, "wb") as fwrite:
                 torch.save(model_output, fwrite)
-            with PathManager.open(input_sample_file, "wb") as fwrite:
+            with g_pathmgr.open(input_sample_file, "wb") as fwrite:
                 torch.save(task.last_batch.sample, fwrite)
             logging.info(f"Saved model output: {model_output_file}")
             logging.info(f"Saved model input: {input_sample_file}")

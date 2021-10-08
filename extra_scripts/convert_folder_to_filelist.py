@@ -21,7 +21,7 @@ python extra_scripts/convert_folder_to_filelist.py \
 import argparse
 import os
 
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.env import setup_path_manager
 from vissl.utils.io import save_file
 
@@ -58,13 +58,13 @@ if __name__ == "__main__":
 
     setup_path_manager()
 
-    splits = PathManager.ls(args.input)
+    splits = g_pathmgr.ls(args.input)
     print(f"The following splits are found: { ','.join(splits) }")
 
     dataset_summary = {}
 
     for split in ["train", "trainval", "val", "test"]:
-        if not PathManager.exists(os.path.join(args.input, split)):
+        if not g_pathmgr.exists(os.path.join(args.input, split)):
             continue
 
         dataset_summary[split] = {}
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         img_labels = []
 
         split_path = os.path.join(args.input, split)
-        label_paths = PathManager.ls(split_path)
+        label_paths = g_pathmgr.ls(split_path)
         dataset_summary[split]["labels"] = label_paths
         dataset_summary[split]["num_labels"] = len(label_paths)
         print(f"{len(label_paths)} classes found for { split } split.")
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         # Populate the img_paths and img_labels based on torchvision image folder file structure.
         for label in label_paths:
             label_path = os.path.join(split_path, label)
-            images = PathManager.ls(os.path.join(split_path, label))
+            images = g_pathmgr.ls(os.path.join(split_path, label))
             print(f"{len(images)} examples found for { label }, { split }.")
             total_split_examples += len(images)
             for image in images:
@@ -94,17 +94,17 @@ if __name__ == "__main__":
         # Remove the split .npy filelist if they exist and resave them..
         image_path = os.path.join(args.output, f"{split}_images.npy")
 
-        PathManager.rm(image_path)
+        g_pathmgr.rm(image_path)
         save_file(img_paths, image_path)
         print(f"Saved { image_path }")
 
         label_path = os.path.join(args.output, f"{split}_labels.npy")
 
-        PathManager.rm(label_path)
+        g_pathmgr.rm(label_path)
         save_file(img_labels, label_path)
         print(f"Saved { label_path }")
 
     # Save dataset summary.
     dataset_summary_path = os.path.join(args.output, "dataset_summary.json")
-    PathManager.rm(dataset_summary_path)
+    g_pathmgr.rm(dataset_summary_path)
     save_file(dataset_summary, dataset_summary_path)

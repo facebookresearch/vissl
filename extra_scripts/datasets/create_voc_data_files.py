@@ -16,7 +16,7 @@ import sys
 from glob import glob
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 
 
 # initiate the logger
@@ -39,7 +39,7 @@ def validate_files(input_files):
 
 def get_data_files(split, args):
     data_dir = f"{args.data_source_dir}/ImageSets/Main"
-    assert PathManager.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
+    assert g_pathmgr.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
     test_data_files = glob(os.path.join(data_dir, "*_test.txt"))
     test_data_files = validate_files(test_data_files)
     if args.separate_partitions > 0:
@@ -68,7 +68,7 @@ def get_data_files(split, args):
 
 
 def get_images_labels_info(split, args):
-    assert PathManager.exists(args.data_source_dir), "Data source NOT found. Abort"
+    assert g_pathmgr.exists(args.data_source_dir), "Data source NOT found. Abort"
 
     data_files = get_data_files(split, args)
     # we will construct a map for image name to the vector of -1, 0, 1
@@ -77,7 +77,7 @@ def get_images_labels_info(split, args):
     for cls_num, data_path in enumerate(sorted(data_files)):
         # for this class, we have images and each image will have label
         # 1, -1, 0 -> present, not present, ignore respectively as in VOC data.
-        with PathManager.open(data_path, "r") as fopen:
+        with g_pathmgr.open(data_path, "r") as fopen:
             for line in fopen:
                 try:
                     img_name, orig_label = line.strip().split()
@@ -174,7 +174,7 @@ def main():
             json_out_path = f"{args.output_dir}/{partition}_targets.json"
             import json
 
-            with PathManager.open(json_out_path, "w") as fp:
+            with g_pathmgr.open(json_out_path, "w") as fp:
                 json.dump(output_dict, fp)
             logger.info("Saved Json to: {}".format(json_out_path))
     logger.info("DONE!")

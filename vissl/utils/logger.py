@@ -9,7 +9,7 @@ import logging
 import subprocess
 import sys
 
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.io import makedir
 
 
@@ -61,7 +61,7 @@ def _cached_log_stream(filename):
     # we tune the buffering value so that the logs are updated
     # frequently.
     log_buffer_kb = 10 * 1024  # 10KB
-    io = PathManager.open(filename, mode="a", buffering=log_buffer_kb)
+    io = g_pathmgr.open(filename, mode="a", buffering=log_buffer_kb)
     atexit.register(io.close)
     return io
 

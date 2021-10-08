@@ -13,7 +13,7 @@ import numpy as np
 import torch
 import torchvision
 from classy_vision.generic.util import copy_model_to_gpu, load_checkpoint
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config import AttrDict
 from vissl.models import build_model
 from vissl.utils.checkpoint import (
@@ -63,7 +63,7 @@ def build_retrieval_model(cfg):
     """
     logging.info("Building model....")
     model = build_model(cfg.MODEL, cfg.OPTIMIZER)
-    if PathManager.exists(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
+    if g_pathmgr.exists(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
         init_weights_path = cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE
         logging.info(f"Initializing model from: {init_weights_path}")
         weights = load_checkpoint(init_weights_path, device=torch.device("cuda"))
@@ -129,7 +129,7 @@ def get_train_features(
         if out_dir:
             fname_out = f"{out_dir}/{i}.npy"
 
-        if fname_out and PathManager.exists(fname_out):
+        if fname_out and g_pathmgr.exists(fname_out):
             feat = load_file(fname_out)
             train_features.append(feat)
         else:
@@ -297,7 +297,7 @@ def get_dataset_features(
         if db_fname_out_dir:
             db_fname_out = f"{db_fname_out_dir}/{idx}.npy"
 
-        if db_fname_out and PathManager.exists(db_fname_out):
+        if db_fname_out and g_pathmgr.exists(db_fname_out):
             db_feature = load_file(db_fname_out)
         else:
             db_feature = process_eval_image(
@@ -360,7 +360,7 @@ def get_queries_features(
         if q_fname_out_dir:
             q_fname_out = f"{q_fname_out_dir}/{idx}.npy"
 
-        if q_fname_out and PathManager.exists(q_fname_out):
+        if q_fname_out and g_pathmgr.exists(q_fname_out):
             query_feature = load_file(q_fname_out)
         else:
             query_feature = process_eval_image(
@@ -413,7 +413,7 @@ def get_train_dataset(cfg, root_dataset_path, train_dataset_name, eval_binary_pa
     if cfg.IMG_RETRIEVAL.TRAIN_PCA_WHITENING:
         train_data_path = f"{root_dataset_path}/{train_dataset_name}"
 
-        assert PathManager.exists(train_data_path), f"Unknown path: {train_data_path}"
+        assert g_pathmgr.exists(train_data_path), f"Unknown path: {train_data_path}"
 
         num_samples = (
             None
@@ -462,7 +462,7 @@ def compute_l2_distance_matrix(features_queries, features_dataset):
 
 def get_eval_dataset(cfg, root_dataset_path, eval_dataset_name, eval_binary_path):
     eval_data_path = f"{root_dataset_path}/{eval_dataset_name}"
-    assert PathManager.exists(eval_data_path), f"Unknown path: {eval_data_path}"
+    assert g_pathmgr.exists(eval_data_path), f"Unknown path: {eval_data_path}"
 
     num_samples = (
         None
@@ -556,7 +556,7 @@ def instance_retrieval_test(args, cfg):
         if temp_dir:
 
             pca_out_fname = f"{temp_dir}/{train_dataset_name}_S{resize_img}_PCA.pickle"
-        if pca_out_fname and PathManager.exists(pca_out_fname):
+        if pca_out_fname and g_pathmgr.exists(pca_out_fname):
             logging.info("Loading PCA...")
             pca = load_pca(pca_out_fname)
         else:

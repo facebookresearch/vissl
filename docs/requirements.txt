@@ -18,6 +18,7 @@ parameterized==0.7.4
 tabulate
 pycocotools>=2.0.1
 fvcore
+iopath==0.1.9
 fairscale
 git+git://github.com/facebookresearch/ClassyVision.git
 https://download.pytorch.org/whl/cpu/torch-1.5.0%2Bcpu-cp37-cp37m-linux_x86_64.whl

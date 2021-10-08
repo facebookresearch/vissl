@@ -14,7 +14,7 @@ import logging
 import os
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 
 # COCO API
 from vissl.utils.io import makedir, save_file
@@ -60,8 +60,8 @@ def get_coco_imgs_labels_info(split, data_source_dir, args):
     from pycocotools.coco import COCO
 
     json_file = f"{data_source_dir}/annotations/instances_{split}2014.json"
-    assert PathManager.exists(json_file), "Annotations file does not exist. Abort"
-    json_data = json.load(PathManager.open(json_file, "r"))
+    assert g_pathmgr.exists(json_file), "Annotations file does not exist. Abort"
+    json_data = json.load(g_pathmgr.open(json_file, "r"))
     image_index = [x["id"] for x in json_data["images"]]
     coco = COCO(json_file)
 

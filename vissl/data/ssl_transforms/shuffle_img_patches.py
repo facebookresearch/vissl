@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.io import cache_url, is_url, load_file
 
 
@@ -42,7 +42,7 @@ class ShuffleImgPatches(ClassyTransform):
             cache_dir = os.path.join(temp_cache_dir, "perm_file_cache")
             cached_url_path = cache_url(url=self.perm_file, cache_dir=cache_dir)
             self.perm_file = cached_url_path
-        assert PathManager.exists(
+        assert g_pathmgr.exists(
             self.perm_file
         ), f"Permutation file NOT found: {self.perm_file}"
         logging.info(f"Loading permutation: {self.perm_file}")
