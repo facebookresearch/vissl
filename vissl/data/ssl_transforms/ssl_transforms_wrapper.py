@@ -5,9 +5,15 @@
 
 from typing import Any, Dict
 
-from classy_vision.dataset.transforms import build_transform, register_transform
+from classy_vision.dataset.transforms import (
+    build_transform as build_classy_transform,
+    register_transform,
+)
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
+from vissl.utils.misc import is_augly_available
 
+if is_augly_available():
+    import augly.image as imaugs  # NOQA
 
 # Below the transforms that require passing the labels as well. This is specifc
 # to SSL only where we automatically generate the labels for training. All other
@@ -108,7 +114,7 @@ class SSLTransformsWrapper(ClassyTransform):
         """
         self.indices = set(indices)
         self.name = args["name"]
-        self.transform = build_transform(args)
+        self.transform = self._build_transform(args)
         self.transform_receives_entire_batch = transform_receives_entire_batch
         self.transforms_with_labels = transform_types["TRANSFORMS_WITH_LABELS"]
         self.transforms_with_copies = transform_types["TRANSFORMS_WITH_COPIES"]
@@ -116,6 +122,38 @@ class SSLTransformsWrapper(ClassyTransform):
             "TRANSFORMS_WITH_OVERWRITE_ENTIRE_BATCH"
         ]
         self.transforms_with_grouping = transform_types["TRANSFORMS_WITH_GROUPING"]
+
+    def _build_transform(self, args):
+        if "transform_type" not in args:
+            # Default to classy transform.
+            return build_classy_transform(args)
+        elif args["transform_type"] == "augly":
+            # Build augly transform.
+            return self._build_augly_transform(args)
+        else:
+            raise RuntimeError(
+                f"Transform type: { args.transform_type } is not supported"
+            )
+
+    def _build_augly_transform(self, args):
+        assert is_augly_available(), "Please pip install augly."
+
+        # the name should be available in augly.image
+        # if users specify the transform name in snake case,
+        # we need to convert it to title case.
+        name = args["name"]
+
+        if not hasattr(imaugs, name):
+            # Try converting name to title case.
+            name = name.title().replace("_", "")
+
+        assert hasattr(imaugs, name), f"{name} isn't a registered tranform for augly."
+
+        # Delete superfluous keys.
+        del args["name"]
+        del args["transform_type"]
+
+        return getattr(imaugs, name)(**args)
 
     def _is_transform_with_labels(self):
         """

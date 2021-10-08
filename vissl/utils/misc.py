@@ -7,6 +7,7 @@ import collections
 import logging
 import os
 import random
+import sys
 import tempfile
 import time
 from functools import partial, wraps
@@ -78,6 +79,25 @@ def is_apex_available():
     except ImportError:
         apex_available = False
     return apex_available
+
+
+def is_augly_available():
+    """
+    Check if apex is available with simple python imports.
+    """
+    try:
+        assert sys.version_info >= (
+            3,
+            7,
+            0,
+        ), "Please upgrade your python version to 3.7 or higher to use Augly."
+
+        import augly.image  # NOQA
+
+        augly_available = True
+    except ImportError:
+        augly_available = False
+    return augly_available
 
 
 def find_free_tcp_port():

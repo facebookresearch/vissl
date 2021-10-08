@@ -16,7 +16,7 @@ cpu: &cpu
   environment:
     TERM: xterm
   machine:
-    image: default
+    image: ubuntu-1604:201903-01
   resource_class: medium
 
 gpu: &gpu
@@ -37,8 +37,8 @@ install_python: &install_python
       working_directory: ~/
       command: |
         pyenv versions
-        pyenv install 3.6.2
-        pyenv global 3.6.2
+        pyenv install -f 3.7.0
+        pyenv global 3.7.0
 
 update_gcc7: &update_gcc7
   - run:
@@ -107,6 +107,17 @@ install_vissl_dep: &install_vissl_dep
         # Update this since classy_vision seems to need it.
         pip install --progress-bar off --upgrade iopath
 
+# Must install python3-magic as per documentation:
+# https://github.com/facebookresearch/AugLy#installation
+install_augly: &install_augly
+  - run:
+      name: Install augly
+      working_directory: ~/vissl
+      command: |
+        pip install augly
+        sudo apt-get update
+        sudo apt-get install python3-magic
+
 install_apex_gpu: &install_apex_gpu
   - run:
       name: Install Apex
@@ -153,9 +164,10 @@ jobs:
       # Cache the vissl_venv directory that contains dependencies
       - restore_cache:
           keys:
-            - v5-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+            - v6-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl_dep
+      - <<: *install_augly
       - <<: *install_classy_vision
       - <<: *install_apex_cpu
       - <<: *pip_list
@@ -163,7 +175,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v5-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+          key: v6-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl
 
@@ -196,7 +208,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v5-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+            - v6-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
@@ -211,7 +223,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v5-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+          key: v6-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl
 
