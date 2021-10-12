@@ -8,6 +8,7 @@ Below we share, in reverse chronological order, the updates and new releases in 
 - **[Oct 2021]**: [XCiT: Cross-Covariance Image Transformers](https://arxiv.org/pdf/2106.09681.pdf) code released in this [commit](https://github.com/facebookresearch/vissl/commit/056e695a84ed1e1c63320ddeecb577a9e03cde63).
 - **[Sept 2021]**: VISSL master branch renamed to main in this [PR](https://github.com/facebookresearch/vissl/pull/425) in VISSL.
 - **[August 2021]**: Instance Retrieval benchmark implemented and [available](https://github.com/facebookresearch/vissl/pull/394) in VISSL.
+- **[July 2021]**: [Fully Sharded Data Parallel](https://github.com/facebookresearch/fairscale/pull/413) integrated in VISSL and announced in [blog](https://engineering.fb.com/2021/07/15/open-source/fsdp/).
 - **[May 2021]**: [DINO: Emerging Properties in Self-Supervised Vision Transformers](https://arxiv.org/pdf/2104.14294.pdf) code released.
 - **[May 2021]**: VISSL relicensed under [MIT License](LICENSE).
 - **[May 2021]**: [Barlow Twins: Self-Supervised Learning via Redundancy Reduction](https://arxiv.org/abs/2103.03230) code released.
