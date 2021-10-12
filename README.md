@@ -4,6 +4,7 @@
 
 ## What's New
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
+- **[Oct 2021]**: [AugLy](https://github.com/facebookresearch/AugLy) data augmentations support introduced in this [commit](https://github.com/facebookresearch/vissl/commit/dd9971a0c1fb17c96fd4994d73ebbda6f82c8f03).
 - **[Oct 2021]**: [XCiT: Cross-Covariance Image Transformers](https://arxiv.org/pdf/2106.09681.pdf) code released in this [commit](https://github.com/facebookresearch/vissl/commit/056e695a84ed1e1c63320ddeecb577a9e03cde63).
 - **[Sept 2021]**: VISSL master branch renamed to main in this [PR](https://github.com/facebookresearch/vissl/pull/425) in VISSL.
 - **[August 2021]**: Instance Retrieval benchmark implemented and [available](https://github.com/facebookresearch/vissl/pull/394) in VISSL.
