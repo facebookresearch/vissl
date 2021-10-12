@@ -5,6 +5,7 @@
 
 import logging
 import pprint
+import re
 import sys
 from typing import Any, List, Tuple
 
@@ -88,7 +89,7 @@ def is_hydra_available():
 def get_hydra_version() -> Tuple[int, ...]:
     import hydra
 
-    return tuple(int(x) for x in hydra.__version__.split("."))
+    return tuple(int(re.findall("\\d+", x)[0]) for x in hydra.__version__.split("."))
 
 
 def assert_hydra_dependency():
