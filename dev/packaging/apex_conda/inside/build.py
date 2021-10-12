@@ -110,7 +110,7 @@ for python_version in python_versions:
 
             try:
                 subprocess.check_call(args)
-            except:
+            except Exception:
                 print(f"Package: {apex_file_name} failed to build. Continuing...")
                 continue
 
