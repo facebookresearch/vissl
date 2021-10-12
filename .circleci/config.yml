@@ -97,12 +97,26 @@ pip_list: &pip_list
       command: |
         pip list
 
+install_pyt_19: &install_pyt_19
+  - run:
+      name: Install Pytorch version 1.9
+      working_directory: ~/vissl
+      command: |
+        pip install --progress-bar off torch==1.9.1 torchvision==0.10.1 opencv-python==3.4.2.17
+
+install_pyt_16: &install_pyt_16
+  - run:
+      name: Install Pytorch version 1.6
+      working_directory: ~/vissl
+      command: |
+        pip install --progress-bar off torch==1.6.0 torchvision==0.7.0 opencv-python==3.4.2.17
+
+
 install_vissl_dep: &install_vissl_dep
   - run:
       name: Install Dependencies
       working_directory: ~/vissl
       command: |
-        pip install --progress-bar off torch==1.7.1 torchvision==0.8.2 opencv-python==3.4.2.17
         pip install --progress-bar off -r requirements.txt
         # Update this since classy_vision seems to need it.
         pip install --progress-bar off --upgrade iopath
@@ -147,11 +161,12 @@ run_unittests: &run_unittests
       command: |
         python -m unittest discover -v -s tests
 
+
 # -------------------------------------------------------------------------------------
 # Jobs to run (cpu and gpu)
 # -------------------------------------------------------------------------------------
 jobs:
-  cpu_tests:
+  pyt16_cpu_tests:
     <<: *cpu
 
     working_directory: ~/vissl
@@ -164,8 +179,9 @@ jobs:
       # Cache the vissl_venv directory that contains dependencies
       - restore_cache:
           keys:
-            - v6-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+            - v6-pyt16-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
+      - <<: *install_pyt_16
       - <<: *install_vissl_dep
       - <<: *install_augly
       - <<: *install_classy_vision
@@ -175,7 +191,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v6-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+          key: v6-pyt16-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl
 
@@ -194,7 +210,7 @@ jobs:
 
       - <<: *run_unittests
 
-  gpu_tests:
+  pyt16_gpu_tests:
     <<: *gpu
 
     working_directory: ~/vissl
@@ -208,8 +224,9 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v6-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+            - v5-pyt16-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
+      - <<: *install_pyt_16
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
       - <<: *update_gcc7
@@ -223,7 +240,74 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v6-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+          key: v5-pyt16-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+
+      - <<: *install_vissl
+
+      - run:
+          name: Run GPU tests
+          command: bash ./dev/run_quick_tests.sh
+
+  pyt19_cpu_tests:
+    <<: *cpu
+
+    working_directory: ~/vissl
+
+    steps:
+      - checkout
+      - <<: *install_python
+      - <<: *setup_venv
+
+      # Cache the vissl_venv directory that contains dependencies
+      - restore_cache:
+          keys:
+            - v5-pyt16-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+
+      - <<: *install_pyt_19
+      - <<: *install_vissl_dep
+      - <<: *install_classy_vision
+      - <<: *install_apex_cpu
+      - <<: *pip_list
+
+      - save_cache:
+          paths:
+            - ~/vissl_venv
+          key: v5-pyt19-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+
+      - <<: *install_vissl
+      - <<: *run_unittests
+
+  pyt19_gpu_tests:
+    <<: *gpu
+
+    working_directory: ~/vissl
+
+    steps:
+      - checkout
+      - <<: *setupcuda
+      - <<: *install_python
+      - <<: *setup_venv
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v6-pyt16-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+
+      - <<: *install_pyt_19
+      - <<: *install_vissl_dep
+      - <<: *install_classy_vision
+      - <<: *update_gcc7
+      - <<: *install_apex_gpu
+      - <<: *pip_list
+
+      - run:
+          name: Check CUDA Available
+          command: python -c "import torch; assert torch.cuda.is_available(), 'CUDA not available'"
+
+      - save_cache:
+          paths:
+            - ~/vissl_venv
+          key: v6-pyt19-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl
 
@@ -238,5 +322,7 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - cpu_tests
-      - gpu_tests
+      - pyt16_cpu_tests
+      - pyt16_gpu_tests
+      - pyt19_cpu_tests
+      - pyt19_gpu_tests
