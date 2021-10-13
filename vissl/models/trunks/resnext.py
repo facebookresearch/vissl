@@ -12,7 +12,6 @@ import torch.nn as nn
 import torchvision.models as models
 from torchvision.models.resnet import Bottleneck
 from vissl.config import AttrDict
-from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (
     Flatten,
     _get_norm,
@@ -21,6 +20,7 @@ from vissl.models.model_helpers import (
     transform_model_input_data_type,
 )
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.multi_dimensional_tensor import MultiDimensionalTensor
 
 
 # For more depths, add the block config here

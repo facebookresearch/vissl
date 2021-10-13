@@ -7,7 +7,7 @@ import logging
 import unittest
 
 import torch
-from vissl.data.collators.collator_helper import MultiDimensionalTensor
+from vissl.utils.multi_dimensional_tensor import MultiDimensionalTensor
 
 
 logger = logging.getLogger("__name__")
