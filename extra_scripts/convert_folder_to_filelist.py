@@ -23,7 +23,7 @@ import os
 
 from iopath.common.file_io import g_pathmgr
 from vissl.utils.env import setup_path_manager
-from vissl.utils.io import save_file
+from vissl.utils.io import save_file, cleanup_dir
 
 
 def get_argument_parser():
@@ -94,17 +94,17 @@ if __name__ == "__main__":
         # Remove the split .npy filelist if they exist and resave them..
         image_path = os.path.join(args.output, f"{split}_images.npy")
 
-        g_pathmgr.rm(image_path)
+        cleanup_dir(image_path)
         save_file(img_paths, image_path)
         print(f"Saved { image_path }")
 
         label_path = os.path.join(args.output, f"{split}_labels.npy")
 
-        g_pathmgr.rm(label_path)
+        cleanup_dir(label_path)
         save_file(img_labels, label_path)
         print(f"Saved { label_path }")
 
     # Save dataset summary.
     dataset_summary_path = os.path.join(args.output, "dataset_summary.json")
-    g_pathmgr.rm(dataset_summary_path)
+    cleanup_dir(dataset_summary_path)
     save_file(dataset_summary, dataset_summary_path)

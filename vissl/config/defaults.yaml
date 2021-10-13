@@ -84,6 +84,11 @@ config:
   # ----------------------------------------------------------------------------------- #
   HOOKS:
     # ----------------------------------------------------------------------------------- #
+    # Whether or not to check if the loss or model_output is NaN.
+    # ----------------------------------------------------------------------------------- #
+    CHECK_NAN: True
+
+    # ----------------------------------------------------------------------------------- #
     # Perf hooks for several steps of model training
     # ----------------------------------------------------------------------------------- #
     PERF_STATS:
@@ -418,6 +423,11 @@ config:
     # data size is too big, it could be hard to compute the meter on training set. Hence
     # we might want to disable it.
     enable_training_meter: True
+    # When model output mask is True, only classes present in the labels list will be
+    # considered for the meters. For example, if our labels only have 200 classes,
+    # but the model output has 1000 classes, the model output for 800 classes will
+    # be cast to -inf.
+    model_output_mask: False
     # calculate top-k meter on single target multiple ouput setting
     accuracy_list_meter:
       # number of accuracy meters. In cases like linear evaluation of feature, we perform
@@ -445,7 +455,6 @@ config:
       # names of the meter. Useful in cases where we have several meters. For the linear
       # feature evaluation workflows, meter name is automatically inferred.
       meter_names: []
-
   # ----------------------------------------------------------------------------------- #
   # MACHINE (cpu, gpu)
   # ----------------------------------------------------------------------------------- #

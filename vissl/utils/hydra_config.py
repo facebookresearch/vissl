@@ -647,3 +647,8 @@ def infer_and_assert_hydra_config(cfg):
         assert (
             cfg.DATA.TRAIN.get("TRAIN_PHASES_PER_EPOCH", 1) == 1
         ), "When using the generic_ssl, we must set TRAIN_PHASES_PER_EPOCH = 1."
+
+    if cfg.METERS.model_output_mask:
+        assert (
+            cfg.DATA.TEST.BASE_DATASET == "generic_ssl"
+        ), "Model output mask is only supported with ssl dataset."
