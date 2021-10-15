@@ -10,12 +10,14 @@ from enum import Enum
 from typing import Dict, List, Tuple
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.utils import _ntuple
 from torch.utils.checkpoint import checkpoint
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.utils.activation_checkpointing import checkpoint_trunk
+from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.misc import is_apex_available
 
 
@@ -105,6 +107,31 @@ class SyncBNTypes(str, Enum):
     pytorch = "pytorch"
 
 
+def split_world_in_process_groups(world_size: int, group_size: int) -> List[List[int]]:
+    """
+    Split the process ids of the worlds (from 0 to world_size-1) into chunks
+    of size bounded by group_size.
+
+    Examples:
+
+        > split_world_in_process_groups(world_size=9, group_size=3)
+        [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+
+        > split_world_in_process_groups(world_size=9, group_size=4)
+        [[0, 1, 2, 3], [4, 5, 6, 7], [8]]
+
+        > split_world_in_process_groups(world_size=15, group_size=4)
+        [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14]]
+
+    """
+    all_groups = []
+    all_ids = list(reversed(range(world_size)))
+    while all_ids:
+        all_groups.append(all_ids[-group_size:][::-1])
+        all_ids = all_ids[:-group_size]
+    return all_groups
+
+
 def convert_sync_bn(config, model):
     """
     Convert the BatchNorm layers in the model to the SyncBatchNorm layers.
@@ -167,26 +194,14 @@ def convert_sync_bn(config, model):
             process_group = None
             logging.info("Not creating process_group for PyTorch SyncBN...")
         else:
-            logging.warning(
-                "Process groups not supported with PyTorch SyncBN currently. "
-                "Training will be slow. Please consider using Apex for SyncBN."
+            process_group_ids = split_world_in_process_groups(
+                world_size=config.DISTRIBUTED.NUM_PROC_PER_NODE
+                * config.DISTRIBUTED.NUM_NODES,
+                group_size=group_size,
             )
-            process_group = None
-            # TODO (prigoyal): process groups don't work well with pytorch.
-            # import os
-            # num_gpus_per_node = config.DISTRIBUTED.NUM_PROC_PER_NODE
-            # node_id = int(os.environ["RANK"]) // num_gpus_per_node
-            # assert (
-            #     group_size == num_gpus_per_node
-            # ), "Use group_size=num_gpus per node as interconnect is cheap in a machine"
-            # process_ids = list(
-            #     range(
-            #         node_id * num_gpus_per_node,
-            #         (node_id * num_gpus_per_node) + group_size,
-            #     )
-            # )
-            # logging.info(f"PyTorch SyncBN Node: {node_id} process_ids: {process_ids}")
-            # process_group = torch.distributed.new_group(process_ids)
+            process_groups = [dist.new_group(pids) for pids in process_group_ids]
+            _, dist_rank = get_machine_local_and_dist_rank()
+            process_group = process_groups[dist_rank // group_size]
         return nn.SyncBatchNorm.convert_sync_batchnorm(
             model, process_group=process_group
         )

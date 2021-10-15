@@ -19,6 +19,7 @@ TEST_LIST=(
     "test_larc_fsdp.py"
     "test_layer_memory_tracking.py"
     "test_losses_gpu.py"
+    "test_model_helpers.py"
     "test_regnet_fsdp.py"
     "test_regnet_fsdp_integration.py"
     "test_state_checkpoint_conversion.py"
