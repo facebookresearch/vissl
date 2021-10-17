@@ -67,7 +67,7 @@ config:
       RESNETS:
         DEPTH: 50
         ZERO_INIT_RESIDUAL: True
-    HEAD:     
+    HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 4096, 256], "use_relu": True, "use_bn": True}],
         ["mlp", {"dims": [256, 4096, 256], "use_relu": True, "use_bn": True}]
@@ -82,15 +82,16 @@ config:
       byol_loss:
         embedding_dim: 256
         momentum: 0.99
-  OPTIMIZER:   # from official BYOL implementation, deepmind-research/byol/configs/byol.py
+  OPTIMIZER:
       name: lars
-      trust_coefficient: 0.001
+      eta: 0.001
       weight_decay: 1.0e-6
       momentum: 0.9
       nesterov: False
       num_epochs: 300
       regularize_bn: False
-      regularize_bias: True
+      regularize_bias: False
+      exclude_bias_and_norm: True
       param_schedulers:
         lr:
           auto_lr_scaling:

@@ -1,6 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-import math
 import logging
+import math
 
 import torch
 from classy_vision import tasks
@@ -8,14 +8,15 @@ from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.models import build_model
 from vissl.utils.env import get_machine_local_and_dist_rank
 
+
 class BYOLHook(ClassyHook):
     """
-   BYOL - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
-   is based on Contrastive learning. This hook
-   creates a target network with the same architecture
-   as the main online network, but without the projection head.
-   The online network does not participate in backpropogation,
-   but instead is an exponential moving average of the online network.
+    BYOL - Bootstrap your own latent: (https://arxiv.org/abs/2006.07733)
+    is based on Contrastive learning. This hook
+    creates a target network with the same architecture
+    as the main online network, but without the projection head.
+    The online network does not participate in backpropogation,
+    but instead is an exponential moving average of the online network.
     """
 
     on_start = ClassyHook._noop
@@ -28,7 +29,7 @@ class BYOLHook(ClassyHook):
     on_update = ClassyHook._noop
 
     @staticmethod
-    def cosine_decay(training_iter, max_iters, initial_value)  -> float:
+    def cosine_decay(training_iter, max_iters, initial_value) -> float:
         """
         For a given starting value, this function anneals the learning
         rate.
@@ -42,8 +43,8 @@ class BYOLHook(ClassyHook):
         """
         Updates Exponential Moving average of the Target Network.
         """
-        decay = BYOLHook.cosine_decay(training_iter, max_iters, 1.)
-        return 1. - (1. - base_ema) * decay
+        decay = BYOLHook.cosine_decay(training_iter, max_iters, 1.0)
+        return 1.0 - (1.0 - base_ema) * decay
 
     def _build_byol_target_network(self, task: tasks.ClassyTask) -> None:
         """
@@ -53,18 +54,18 @@ class BYOLHook(ClassyHook):
         """
         # Create the encoder, which will slowly track the model
         logging.info(
-            "BYOL: Building BYOL target network - rank %s %s", *get_machine_local_and_dist_rank()
+            "BYOL: Building BYOL target network - rank %s %s",
+            *get_machine_local_and_dist_rank(),
         )
 
-        # Target model has the same architecture, but without the projector head.
-        target_model_config = task.config['MODEL']
-        target_model_config['HEAD']['PARAMS'] = target_model_config['HEAD']['PARAMS'][0:1]
+        # Target model has the same architecture, *without* the projector head.
+        target_model_config = task.config["MODEL"]
+        target_model_config["HEAD"]["PARAMS"] = target_model_config["HEAD"]["PARAMS"][
+            0:1
+        ]
         task.loss.target_network = build_model(
             target_model_config, task.config["OPTIMIZER"]
         )
-
-        # TESTED: Target Network and Online network are properly created.
-        # TODO: Check SyncBatchNorm settings (low prior)
 
         task.loss.target_network.to(task.device)
 
@@ -73,7 +74,9 @@ class BYOLHook(ClassyHook):
         if task.loss.checkpoint is not None:
             task.loss.load_state_dict(task.loss.checkpoint)
         else:
-            logging.info("BYOL: Copying and freezing model parameters from online to target network")
+            logging.info(
+                "BYOL: Copying and freezing model parameters from online to target network"
+            )
             for param_q, param_k in zip(
                 task.base_model.parameters(), task.loss.target_network.parameters()
             ):
@@ -92,7 +95,9 @@ class BYOLHook(ClassyHook):
             self.total_iters = task.max_iteration
             logging.info(f"{self.total_iters} total iters")
         training_iteration = task.iteration
-        self.momentum = self.target_ema(training_iteration, self.base_momentum, self.total_iters)
+        self.momentum = self.target_ema(
+            training_iteration, self.base_momentum, self.total_iters
+        )
 
     @torch.no_grad()
     def _update_target_network(self, task: tasks.ClassyTask) -> None:
@@ -106,9 +111,9 @@ class BYOLHook(ClassyHook):
             task.base_model.parameters(), task.loss.target_network.parameters()
         ):
             target_params.data = (
-                target_params.data * self.momentum + online_params.data * (1. - self.momentum)
+                target_params.data * self.momentum
+                + online_params.data * (1.0 - self.momentum)
             )
-
 
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
@@ -127,9 +132,8 @@ class BYOLHook(ClassyHook):
         else:
             self._update_target_network(task)
 
-
         # Compute target network embeddings
-        batch = task.last_batch.sample['input']
+        batch = task.last_batch.sample["input"]
         target_embs = task.loss.target_network(batch)[0]
 
         # Save target embeddings to use them in the loss

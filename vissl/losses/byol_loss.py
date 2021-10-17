@@ -7,9 +7,9 @@ import torch
 import torch.nn.functional as F
 from classy_vision.losses import ClassyLoss, register_loss
 
-_BYOLLossConfig = namedtuple(
-    "_BYOLLossConfig", ["embedding_dim", "momentum"]
-)
+
+_BYOLLossConfig = namedtuple("_BYOLLossConfig", ["embedding_dim", "momentum"])
+
 
 def regression_loss(x, y):
     """
@@ -19,17 +19,16 @@ def regression_loss(x, y):
     Cosine similarity. This implementation uses Cosine similarity.
     """
     normed_x, normed_y = F.normalize(x, dim=1), F.normalize(y, dim=1)
-    return torch.sum((normed_x - normed_y).pow(2), dim=1)
+    # Euclidean Distance squared.
+    return 2 - 2 * (normed_x * normed_y).sum(dim=1)
 
 
 class BYOLLossConfig(_BYOLLossConfig):
-    """ Settings for the BYOL loss"""
+    """Settings for the BYOL loss"""
 
     @staticmethod
     def defaults() -> "BYOLLossConfig":
-        return BYOLLossConfig(
-            embedding_dim=256, momentum=0.999
-        )
+        return BYOLLossConfig(embedding_dim=256, momentum=0.999)
 
 
 @register_loss("byol_loss")
@@ -68,7 +67,9 @@ class BYOLLoss(ClassyLoss):
         """
         return cls(config)
 
-    def forward(self, online_network_prediction: torch.Tensor, *args, **kwargs) -> torch.Tensor:
+    def forward(
+        self, online_network_prediction: torch.Tensor, *args, **kwargs
+    ) -> torch.Tensor:
         """
         In this function, the Online Network receives the tensor as input after projection
         and they make predictions on the output of the target network’s projection,
@@ -79,7 +80,6 @@ class BYOLLoss(ClassyLoss):
         compute the cross entropy loss for this batch.
 
         Args:
-            query: output of the encoder given the current batch
             online_network_prediction: online model output. this is a prediction of the
             target network output.
 
@@ -90,8 +90,6 @@ class BYOLLoss(ClassyLoss):
         # Split data
         online_view1, online_view2 = torch.chunk(online_network_prediction, 2, 0)
         target_view1, target_view2 = torch.chunk(self.target_embs.detach(), 2, 0)
-
-        # TESTED: Views are received correctly.
 
         # Compute losses
         loss1 = regression_loss(online_view1, target_view2)
@@ -111,7 +109,6 @@ class BYOLLoss(ClassyLoss):
         Args:
             state_dict (serialized via torch.save)
         """
-
         # If the encoder has been allocated, use the normal pytorch restoration
         if self.target_network is None:
             self.checkpoint = state_dict

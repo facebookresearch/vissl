@@ -8,6 +8,7 @@ from typing import List
 
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.config import AttrDict
+from vissl.hooks.byol_hooks import BYOLHook  # noqa
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
 from vissl.hooks.dino_hooks import DINOHook
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
@@ -21,15 +22,12 @@ from vissl.hooks.log_hooks import (  # noqa
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
 from vissl.hooks.profiling_hook import ProfilingHook
-from vissl.hooks.byol_hooks import BYOLHook  # noqa
-
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     FreezeParametersHook,
     SetDataSamplerEpochHook,
     SSLModelComplexityHook,
 )
-from vissl.hooks.byol_hooks import BYOLHook  # noqa
 from vissl.hooks.swav_hooks import NormalizePrototypesHook  # noqa
 from vissl.hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
 from vissl.hooks.swav_momentum_hooks import (
@@ -125,38 +123,6 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
     # add the loss hooks based on the loss being used
     hooks = add_loss_hooks(hooks, cfg.LOSS, cfg)
 
-    if cfg.LOSS.name == "swav_loss":
-        hooks.extend([SwAVUpdateQueueScoresHook(), NormalizePrototypesHook()])
-    if cfg.LOSS.name == "swav_momentum_loss":
-        hooks.extend(
-            [
-                SwAVMomentumHook(
-                    cfg.LOSS["swav_momentum_loss"]["momentum"],
-                    cfg.LOSS["swav_momentum_loss"]["momentum_eval_mode_iter_start"],
-                    cfg.LOSS["swav_momentum_loss"]["crops_for_assign"],
-                ),
-                SwAVMomentumNormalizePrototypesHook(),
-            ]
-        )
-    if cfg.LOSS.name == "deepclusterv2_loss":
-        hooks.extend([InitMemoryHook(), ClusterMemoryHook()])
-    if cfg.LOSS.name == "moco_loss":
-        hooks.extend(
-            [
-                MoCoHook(
-                    cfg.LOSS["moco_loss"]["momentum"],
-                    shuffle_batch=(not cfg.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN),
-                )
-            ]
-        )
-    if cfg.LOSS.name == "byol_loss":
-        hooks.extend(
-            [
-                BYOLHook(
-                    cfg.LOSS["byol_loss"]["momentum"],
-                )
-            ]
-        )
     if cfg.HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
     if cfg.HOOKS.LOG_GPU_STATS:
