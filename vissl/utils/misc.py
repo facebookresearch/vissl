@@ -95,7 +95,7 @@ def is_augly_available():
         import augly.image  # NOQA
 
         augly_available = True
-    except ImportError:
+    except (AssertionError, ImportError):
         augly_available = False
     return augly_available
 
