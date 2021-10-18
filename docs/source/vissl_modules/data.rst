@@ -37,6 +37,8 @@ To use a dataset, VISSL takes following inputs in the configuration file for eac
 
 - :code:`LABEL_TYPE`: choose from :code:`standard | sample_index`. :code:`sample_index` is a common practice in self-supervised learning and :code:`sample_index`=id of the sample in the data. :code:`standard` label type is used for supervised learning and user specifis the annotated labels to use.
 
+- :code:`DATA_LIMIT`: How many samples to train with per epoch. This can be useful for debugging purposes or for evaluating low-shot learning. Note that the default :code:`DATA_LIMIT=-1` uses the full dataset. You can also configure additional options, like the seed and ensuring class-balanced sampling in :code:`DATA_LIMIT_SAMPLING`.
+
 
 Using :code:`dataset_catalog.json`
 --------------------------------------
@@ -52,7 +54,7 @@ User can give the string names to dataset as per their choice.
 Template for a dataset entry in :code:`dataset_catalog.json`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: bash
+.. code-block:: python
 
     "data_name": {
        "train": [

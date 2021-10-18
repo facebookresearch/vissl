@@ -7,8 +7,8 @@ One particularly important type of benchmark is robustness to distribution shift
 These benchmarks are also interesting on models pre-trained using Self-Supervised Learning and have been used in the past in papers such as `CLIP <https://cdn.openai.com/papers/Learning_Transferable_Visual_Models_From_Natural_Language_Supervision.pdf>`_:
 they give a measure of how well an SSL algorithm is able to produce representations free of spurious correlations.
 
-VISSL provides benchmarks for Out-Of-Distribution (OOD) generalisation based on the two datasets `Imagenet-A <https://github.com/hendrycks/natural-adv-examples>`_ and `Imagenet-R <https://github.com/hendrycks/imagenet-r>`_.
-In those benchmarks, a pre-trained model is either fine-tuned or trained with linear evaluation on Imagenet, and then tested against the `Imagenet-A <https://github.com/hendrycks/natural-adv-examples>`_ and `Imagenet-R <https://github.com/hendrycks/imagenet-r>`_.
+VISSL provides benchmarks for Out-Of-Distribution (OOD) generalisation based on the following datasets `Imagenet-A <https://github.com/hendrycks/natural-adv-examples>`_ , `Imagenet-R <https://github.com/hendrycks/imagenet-r>`_, `Objectnet <https://objectnet.dev/>`_, `Imagenet Real <https://arxiv.org/pdf/2006.07159.pdf>`_, `Imagenet Sketch <https://github.com/HaohanWang/ImageNet-Sketch>`_, and `Imagenet V2 <https://github.com/modestyachts/ImageNetV2>`_.
+In those benchmarks, a pre-trained model is either fine-tuned or trained with linear evaluation on Imagenet, and then tested against each dataset.
 
 
 Benchmark: ImageNet-A

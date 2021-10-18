@@ -67,31 +67,31 @@ Change the :code:`DATA.TRAIN.DATA_PATHS` path to the ImageNet train dataset fold
     	config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true
 
 
-If using pre-built conda/pip VISSL packages
+If using pre-built conda/pip VISSL packages (v0.1.6)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Users need to set the dataset and obtain the builtin tool for training. Follow the steps:
 
 - **Step1: Setup ImageNet1K dataset**
-If you installed pre-built VISSL packages, we will set the ImageNet1K dataset following our `data documentation <https://vissl.readthedocs.io/en/latest/vissl_modules/data.html>`_ and `tutorial <https://colab.research.google.com/drive/1CCuZ50BN99JcOB6VEPytVi_i2tSMd7A3#scrollTo=KPGCiTsXZeW3>`_. NOTE that we need to register
+If you installed pre-built VISSL packages (v0.1.6), we will set the ImageNet1K dataset following our `data documentation <https://vissl.readthedocs.io/en/latest/vissl_modules/data.html>`_ and `tutorial <https://colab.research.google.com/drive/1CCuZ50BN99JcOB6VEPytVi_i2tSMd7A3#scrollTo=KPGCiTsXZeW3>`_. NOTE that we need to register
 the dataset with VISSL.
 
 In your python interpretor:
 
-.. code-block:: bash
+.. code-block:: python
 
-	>>> json_data = {
+	json_data = {
 		"imagenet1k_folder": {
 		    "train": ["<img_path>", "<lbl_path>"],
 		    "val": ["<img_path>", "<lbl_path>"]
 		}
 	    }
-	>>> from vissl.utils.io import save_file
-	>>> save_file(json_data, "/tmp/configs/config/dataset_catalog.json", append_to_json=False)
-	>>> from vissl.data.dataset_catalog import VisslDatasetCatalog
-	>>> print(VisslDatasetCatalog.list())
+	from vissl.utils.io import save_file
+	save_file(json_data, "/tmp/configs/config/dataset_catalog.json", append_to_json=False)
+	from vissl.data.dataset_catalog import VisslDatasetCatalog
+	print(VisslDatasetCatalog.list())
 	['imagenet1k_folder']
-	>>> print(VisslDatasetCatalog.get("imagenet1k_folder"))
+	print(VisslDatasetCatalog.get("imagenet1k_folder"))
 	{'train': ['<img_path>', '<lbl_path>'], 'val': ['<img_path>', '<lbl_path>']}
 
 
@@ -101,9 +101,9 @@ We will use the pre-built VISSL tool for training `run_distributed_engines.py <h
 .. code-block:: bash
 
 	cd /tmp/ && mkdir -p /tmp/configs/config
-	wget -q -O configs/__init__.py https://dl.fbaipublicfiles.com/vissl/tutorials/configs/__init__.py
-	wget -q -O configs/config/quick_1gpu_resnet50_simclr.yaml https://dl.fbaipublicfiles.com/vissl/tutorials/configs/quick_1gpu_resnet50_simclr.yaml
-	wget -q  https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
+	wget -q -O configs/__init__.py https://dl.fbaipublicfiles.com/vissl/tutorials/v0.1.6/configs/__init__.py
+	wget -q -O configs/config/quick_1gpu_resnet50_simclr.yaml https://dl.fbaipublicfiles.com/vissl/tutorials/v0.1.6/configs/quick_simclr.yaml
+	wget -q  https://dl.fbaipublicfiles.com/vissl/tutorials/v0.1.6/run_distributed_engines.py
 
 
 - **Step3: Train**

@@ -20,7 +20,7 @@ Users can implement their custom training loop by following the steps:
 
 - **Step1**: Create your :code:`my_new_training_loop` module under :code:`vissl/trainer/train_steps/my_new_training_loop.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     from vissl.trainer.train_steps import register_train_step
 

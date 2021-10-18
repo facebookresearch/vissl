@@ -1,10 +1,9 @@
 Using Tensorboard in VISSL
 ==================================
 
-VISSL provides integration of `Tensorboard <https://www.tensorflow.org/tensorboard>`_ to facilitate self-supervised training and experimentation. VISSL logs many useful scalars and non-scalars to Tensorboard that provide useful insights into an ongoing training.:
+VISSL provides integration of `Tensorboard <https://www.tensorflow.org/tensorboard>`_ to facilitate self-supervised training and experimentation. VISSL logs many useful metrics to Tensorboard that provide useful insights into an ongoing training:
 
 - **Scalars**:
-
     - Training Loss
     - Learning Rate
     - Average Training iteration time
@@ -15,7 +14,6 @@ VISSL provides integration of `Tensorboard <https://www.tensorflow.org/tensorboa
     - Peak GPU memory allocated
 
 - **Non-scalars**:
-
     - Model parameters (at the start of every epoch and/or after N iterations)
     - Model parameter gradients (at the start of every epoch and/or after N iterations)
 
@@ -23,7 +21,7 @@ VISSL provides integration of `Tensorboard <https://www.tensorflow.org/tensorboa
 How to use Tensorboard in VISSL
 --------------------------------
 
-Using Tensorboard is very easy in VISSL and can be achieved by setting some configuration options. User needs to set :code:`TENSORBOARD_SETUP.USE_TENSORBOARD=true` and adjust the values of other config parameters as desired. Full set of
+Using Tensorboard is very easy in VISSL and can be achieved by setting some configuration options. User needs to set :code:`HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true` and adjust the values of other config parameters as desired. Full set of
 parameters exposed by VISSL for Tensorboard:
 
 .. code-block:: yaml
@@ -47,7 +45,7 @@ parameters exposed by VISSL for Tensorboard:
 
 .. note::
 
-    Please install tensorboard manually: if pip environment: :code:`pip install tensorboard` or if using conda and you prefer conda install of tensorboard:  :code:`conda install -c conda-forge tensorboard`.
+    Please install tensorboard manually: if pip environment: :code:`pip install tensorboard` or if using conda and you prefer the conda install of tensorboard:  :code:`conda install -c conda-forge tensorboard`.
 
 Example usage
 ---------------

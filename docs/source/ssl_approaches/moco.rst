@@ -12,7 +12,7 @@ VISSL closely follows the implementation provided by MoCo authors themselves htt
 How to train MoCo (and MoCo v2 model) model
 --------------------------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
 all the components including loss, data augmentations, collators etc required for this approach.
 
 To train ResNet-50 model on 8-gpus on ImageNet-1K dataset with MoCo-v2 approach using feature projection dimension 128:

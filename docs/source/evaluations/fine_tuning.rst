@@ -1,8 +1,8 @@
 Benchmark task: Full-finetuning
 ===========================================================
 
-Using a self-supervised model to initialize a network and further tune the weights on the target task is a very common evaluation protocol.
-This benchmark requires only initializing the model and no other settings in :code:`MODEL.FEATURE_EVAL_SETTINGS` are needed unlike other benchmark tasks.
+Using a self-supervised model to initialize a network and finetune the full weights on the target task is a very common evaluation protocol.
+This benchmark requires only initializing the model -- no other settings in :code:`MODEL.FEATURE_EVAL_SETTINGS` are needed unlike other benchmark tasks.
 
 Benchmark: ImageNet-1k
 ---------------------------

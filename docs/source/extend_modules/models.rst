@@ -1,7 +1,7 @@
 Add new Models
 =======================
 
-VISSL allows adding new models (head and trunks easily) and combine different trunks and heads to train a new model. Follow the steps below on how to add new heads or trunks.
+VISSL allows adding new models (head and trunks easily) and combining different trunks and heads to train a new model. Follow the steps below on how to add new heads or trunks.
 
 
 Adding New Heads
@@ -11,7 +11,7 @@ To add a new model head, follow the steps:
 
 - **Step1**: Add the new head :code:`my_new_head` under :code:`vissl/models/heads/my_new_head.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     import torch
     import torch.nn as nn
@@ -62,7 +62,7 @@ To add a new trunk (a new architecture like vision transformers, etc.), follow t
 
 - **Step1**: Add your new trunk :code:`my_new_trunk` under :code:`vissl/data/trunks/my_new_trunk.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     import torch
     import torch.nn as nn

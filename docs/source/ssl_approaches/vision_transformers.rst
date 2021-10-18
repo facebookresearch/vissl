@@ -55,9 +55,19 @@ Let's take a look at the ``model`` section of the config file:
         NUM_HEADS: 12
         HIDDEN_DIM: 768
         MLP_DIM: 3072
-        DROPOUT_RATE: 0.1
+        # MLP and projection layer dropout rate
+        DROPOUT_RATE: 0
+        # Attention dropout rate
         ATTENTION_DROPOUT_RATE: 0
+        # Use the token for classification. Currently no alternatives
+        # supported
         CLASSIFIER: token
+        # Stochastic depth dropout rate. Turning on stochastic depth and
+        # using aggressive augmentation is essentially the difference
+        # between a DeiT and a ViT.
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,
@@ -78,6 +88,7 @@ Let's move on to the ``OPTIMIZER`` section of the configuration file:
     name: adamw
     weight_decay: 0.05
     num_epochs: 300
+    betas: [.9, .999] # for Adam/AdamW
     param_schedulers:
       lr:
         auto_lr_scaling:
@@ -95,6 +106,9 @@ Let's move on to the ``OPTIMIZER`` section of the configuration file:
         interval_scaling: [rescaled, rescaled]
         update_interval: step
         lengths: [0.017, 0.983]
+      # Parameters to omit from regularization.
+      # We don't want to regularize the class token or position in the ViT.
+      non_regularized_parameters: [pos_embedding, class_token]
 
 Again, these hyperparameters reflect the authors' recipe in the original ViT publication. It's also worth pointing out that VISSL offers a lot control of the optimizer, so be sure to `read up on it <https://vissl.readthedocs.io/en/v0.1.5/vissl_modules/optimizer.html>`_ and poke around in ``vissl/config/defaults.yaml``. `AdamW <https://arxiv.org/abs/1711.05101>`_ thus far seems like the most consistently successful optimizer for training vision transformers, so we use it in all our config files.
 
@@ -117,6 +131,9 @@ This config file is for a ViT-B16. What if we wanted instead to train the next l
         DROPOUT_RATE: 0.1
         ATTENTION_DROPOUT_RATE: 0
         CLASSIFIER: token
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 1024, "hidden_dim": 4096,
@@ -224,6 +241,9 @@ This section primarily addresses the differences between DeiT and ViT. `See here
         DROPOUT_RATE: 0 # 0.1 for ViT
         ATTENTION_DROPOUT_RATE: 0
         DROP_PATH_RATE: 0.1 # stochastic depth dropout probability. 0 for ViT
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
 
 The DeiT uses `stochastic depth <https://arxiv.org/abs/1603.09382>`_, which is set via ``MODEL.TRUNK.VISION_TRANSORMERS.DROP_PATH_RATE``. In contrast to ViT, DeiT does not use gradient clipping. DeiT also uses a number of data augmentations:
 
@@ -312,6 +332,8 @@ ConViT
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
         DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
       CONVIT:
         N_GPSA_LAYERS: 10 # Number of gated positional self-attention layers. Remaining layers are standard self-attention layers.
         CLASS_TOKEN_IN_LOCAL_LAYERS: False # Whether to add class token in GPSA layers. Recommended not to because it has been shown to lower performance.

@@ -133,7 +133,7 @@ If instead, you want to use a custom data storage solution :code:`my_data_source
 
 - **Step1**: Implement your custom data source under :code:`vissl/data/my_data_source.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     from vissl.data.data_helper import get_mean_image
     from torch.utils.data import Dataset

@@ -2,13 +2,13 @@ Train RotNet model
 ===============================
 
 VISSL reproduces the self-supervised approach **Unsupervised Representation Learning by Predicting Image Rotations**
-proposed by **Spyros Gidaris, Praveer Singh, Nikos Komodakis** in `<https://arxiv.org/abs/1803.07728>`_.
+proposed by **Spyros Gidaris, Praveer Singh, Nikos Komodakis** in `this paper <https://arxiv.org/abs/1803.07728>`_.
 
 How to train RotNet model
 ---------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
-all the components including data augmentations, collators etc required for this approach.
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
+all the components including data augmentations, collators, etc required for this approach.
 
 To train ResNet-50 model on 8-gpus on ImageNet-1K dataset using 4 rotation angles:
 

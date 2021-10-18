@@ -1,7 +1,7 @@
 How to Load Pretrained Models
 ================================
 
-VISSL supports Torchvision models out of the box. Generally, for loading any non-VISSL model, one needs to correctly set the following configuration options:
+VISSL supports loading Torchvision models trunks out of the box. Generally, for loading any non-VISSL model, one needs to correctly set the following configuration options:
 
 .. code-block:: yaml
 
