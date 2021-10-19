@@ -7,6 +7,7 @@ import collections
 import logging
 import os
 import random
+import sys
 import tempfile
 import time
 from functools import partial, wraps
@@ -15,7 +16,7 @@ import numpy as np
 import pkg_resources
 import torch
 import torch.multiprocessing as mp
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from scipy.sparse import csr_matrix
 from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 
@@ -78,6 +79,25 @@ def is_apex_available():
     except ImportError:
         apex_available = False
     return apex_available
+
+
+def is_augly_available():
+    """
+    Check if apex is available with simple python imports.
+    """
+    try:
+        assert sys.version_info >= (
+            3,
+            7,
+            0,
+        ), "Please upgrade your python version to 3.7 or higher to use Augly."
+
+        import augly.image  # NOQA
+
+        augly_available = True
+    except (AssertionError, ImportError):
+        augly_available = False
+    return augly_available
 
 
 def find_free_tcp_port():
@@ -198,7 +218,7 @@ def get_json_catalog_path(default_dataset_catalog_path: str) -> str:
 
     # If catalog path is the default and we cannot find it, we want to continue without failing.
     if os.environ.get("VISSL_DATASET_CATALOG_PATH", False):
-        assert PathManager.exists(
+        assert g_pathmgr.exists(
             dataset_catalog_path
         ), f"Dataset catalog path: { dataset_catalog_path } not found."
 

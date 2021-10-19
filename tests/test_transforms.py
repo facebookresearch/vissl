@@ -12,6 +12,11 @@ from torchvision.transforms import Compose, ToTensor
 from vissl.data.ssl_transforms.img_pil_to_multicrop import ImgPilToMultiCrop
 from vissl.data.ssl_transforms.img_pil_to_tensor import ImgToTensor
 from vissl.data.ssl_transforms.mnist_img_pil_to_rgb_mode import MNISTImgPil2RGB
+from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
+from vissl.utils.test_utils import (
+    in_temporary_directory,
+    run_integration_test,
+)
 
 
 RAND_TENSOR = (torch.rand((224, 224, 3)) * 255).to(dtype=torch.uint8)
@@ -77,3 +82,16 @@ class TestTransform(unittest.TestCase):
             self.assertEqual((224, 224), crop.size)
         for crop in crops[2:]:
             self.assertEqual((96, 96), crop.size)
+
+    def test_augly_transforms(self):
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/cpu_test/test_cpu_resnet_simclr.yaml",
+                "+config/test/transforms=augly_transforms_example",
+            ],
+        )
+        args, config = convert_to_attrdict(cfg)
+
+        with in_temporary_directory() as _:
+            # Test that the training runs with an augly transformation.
+            run_integration_test(config)

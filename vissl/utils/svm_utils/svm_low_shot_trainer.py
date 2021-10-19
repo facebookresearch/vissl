@@ -7,7 +7,7 @@ import logging
 import pickle
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from sklearn.svm import LinearSVC
 from vissl.utils.io import load_file, save_file
 from vissl.utils.svm_utils.evaluate import get_precision_recall
@@ -106,7 +106,7 @@ class SVMLowShotTrainer(SVMTrainer):
                 cost = self.costs_list[cost_idx]
                 suffix = f"sample{sample_num}_k{low_shot_kvalue}"
                 out_file = self._get_svm_low_shot_model_filename(cls_num, cost, suffix)
-                if PathManager.exists(out_file) and not self.config.force_retrain:
+                if g_pathmgr.exists(out_file) and not self.config.force_retrain:
                     logging.info(f"SVM model exists: {out_file}")
                     continue
                 logging.info(f"Training model with the cost: {cost}")
@@ -134,7 +134,7 @@ class SVMLowShotTrainer(SVMTrainer):
                 )
                 clf.fit(train_feats, train_cls_labels)
                 logging.info(f"Saving SVM model to: {out_file}")
-                with PathManager.open(out_file, "wb") as fwrite:
+                with g_pathmgr.open(out_file, "wb") as fwrite:
                     pickle.dump(clf, fwrite)
         logging.info(f"Done training: sample: {sample_num} k-value: {low_shot_kvalue}")
 
@@ -213,7 +213,7 @@ class SVMLowShotTrainer(SVMTrainer):
                 sample_idx = sample_inds[inds]
                 file_name = f"test_ap_sample{sample_idx}_k{k_low}.npy"
                 filepath = f"{self.output_dir}/{file_name}"
-                if PathManager.exists(filepath):
+                if g_pathmgr.exists(filepath):
                     k_val_output.append(load_file(filepath))
                 else:
                     logging.info(f"file does not exist: {filepath}")

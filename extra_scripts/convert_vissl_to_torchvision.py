@@ -12,7 +12,7 @@ import logging
 import sys
 
 import torch
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.checkpoint import replace_module_prefix
 from vissl.utils.io import is_url
 
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def convert_and_save_model(args, replace_prefix):
-    assert PathManager.exists(args.output_dir), "Output directory does NOT exist"
+    assert g_pathmgr.exists(args.output_dir), "Output directory does NOT exist"
 
     # load the model
     model_path = args.model_url_or_file
@@ -54,7 +54,10 @@ def convert_and_save_model(args, replace_prefix):
     logger.info(f"Converted model. Number of params: {len(converted_model.keys())}")
 
     # save the state
-    output_filename = f"converted_vissl_{args.output_name}.torch"
+    if args.output_name.endswith(".torch"):
+        output_filename = f"converted_vissl_{args.output_name}"
+    else:
+        output_filename = f"converted_vissl_{args.output_name}.torch"
     output_model_filepath = f"{args.output_dir}/{output_filename}"
     logger.info(f"Saving model: {output_model_filepath}")
     torch.save(converted_model, output_model_filepath)

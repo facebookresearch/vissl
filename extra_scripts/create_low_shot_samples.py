@@ -11,7 +11,7 @@ import logging
 import random
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.io import load_file, save_file
 
 
@@ -171,7 +171,7 @@ def main():
     )
     opts = parser.parse_args()
 
-    assert PathManager.exists(opts.targets_data_file), "Target file not found. Abort"
+    assert g_pathmgr.exists(opts.targets_data_file), "Target file not found. Abort"
     targets = load_file(opts.targets_data_file)
     sample_ids = list(range(1, 1 + opts.num_samples))
 

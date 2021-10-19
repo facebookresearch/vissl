@@ -23,7 +23,7 @@ config:
           total_num_crops: 10
           size_crops: [224, 96]
           num_crops: [2, 8]
-          crop_scales: [[0.4, 1], [0.05, 0.4]]
+          crop_scales: [[0.3, 1], [0.05, 0.3]]
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
@@ -49,19 +49,20 @@ config:
     name: ""
   MODEL:
     TRUNK:
-      NAME: vision_transformer
-      VISION_TRANSFORMERS:
+      NAME: xcit
+      XCIT:
         IMAGE_SIZE: 224
         PATCH_SIZE: 16
-        NUM_LAYERS: 12
-        NUM_HEADS: 6
         HIDDEN_DIM: 384
-        MLP_DIM: 1532
-        CLASSIFIER: token
+        NUM_LAYERS: 12
+        NUM_HEADS: 8
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.05
+        ETA: 1
+        TOKENS_NORM: True
         QKV_BIAS: True
-        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QK_SCALE: False
     HEAD:
       PARAMS: [
               ["swav_head", {"use_weight_norm_prototypes": True, "dims": [384, 2048, 2048, 256], "use_bn": False, "return_embeddings": False, "activation_name": "GELU", "num_clusters": [65536]}],
@@ -137,5 +138,3 @@ config:
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5
     OVERWRITE_EXISTING: true
-  SLURM:
-    CONSTRAINT: volta32gb

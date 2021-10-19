@@ -65,10 +65,9 @@ config:
         DROP_PATH_RATE: 0 # stochastic depth dropout probability
     HEAD:
       PARAMS: [
-              ["swav_head", {"use_weight_norm_prototypes": False, "dims": [384, 2048, 2048, 256], "use_bn": False, "return_embeddings": False, "activation_name": "GELU", "num_clusters": [65536]}],
+        ["swav_head", {"use_weight_norm_prototypes": False, "dims": [384, 2048, 2048, 256], "use_bn": False, "return_embeddings": False, "activation_name": "GELU", "num_clusters": [65536]}],
       ]
-    TEMP_FROZEN_PARAMS_ITER_MAP: [['module.heads.0.prototypes0.weight', 2],
-      ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [['module.heads.0.prototypes0.weight', 2]]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
@@ -124,7 +123,7 @@ config:
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."
-    AUTO_RESUME: False
+    AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
     OVERWRITE_EXISTING: true
-
+    USE_SYMLINK_CHECKPOINT_FOR_RESUME: True

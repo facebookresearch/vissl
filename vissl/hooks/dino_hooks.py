@@ -8,13 +8,10 @@ import math
 
 import torch
 from classy_vision import tasks
-from classy_vision.generic.distributed_util import (
-    get_world_size,
-    init_distributed_data_parallel_model,
-)
 from classy_vision.hooks.classy_hook import ClassyHook
 from torch import nn
 from vissl.models import build_model
+from vissl.models.model_helpers import get_no_ddp_model
 
 
 class DINOHook(ClassyHook):
@@ -47,35 +44,36 @@ class DINOHook(ClassyHook):
         logging.info("Building momentum encoder")
 
         # - same architecture but do not apply stochastic depth
+        # TODO: make drop_path_rate configurable for teacher
         task.config["MODEL"]["TRUNK"]["VISION_TRANSFORMERS"]["DROP_PATH_RATE"] = 0
         task.loss.momentum_teacher = build_model(
             task.config["MODEL"], task.config["OPTIMIZER"]
         )
-        task.loss.momentum_teacher = nn.SyncBatchNorm.convert_sync_batchnorm(
-            task.loss.momentum_teacher
-        )
         task.loss.momentum_teacher.to(task.device)
 
-        if get_world_size() > 1:
-            task.loss.momentum_teacher = init_distributed_data_parallel_model(
-                task.loss.momentum_teacher
-            )
+        # no gradients for teacher model
+        for p in task.loss.momentum_teacher.parameters():
+            p.requires_grad = False
 
         # Restore an hypothetical checkpoint
         if task.loss.checkpoint is not None:
             task.loss.load_state_dict(task.loss.checkpoint)
         # Initialize from the model
         else:
-            task.loss.momentum_teacher.load_state_dict(task.model.state_dict())
+            task_model = get_no_ddp_model(task.model)
+            teacher_model = get_no_ddp_model(task.loss.momentum_teacher)
+            teacher_model.load_state_dict(task_model.state_dict())
 
-    @torch.no_grad()
-    def _build_center(self, task: tasks.ClassyTask) -> None:
-        """
-        Init teacher center.
-        """
-        task.loss.center = torch.zeros(1, task.loss.loss_config.output_dim).to(
-            task.device
+        task.loss.momentum_teacher = nn.SyncBatchNorm.convert_sync_batchnorm(
+            task.loss.momentum_teacher
         )
+
+        # Newer PyTorch versions throw error for using DDP with a model that
+        # has zero trainable parameters
+        # if get_world_size() > 1:
+        #     task.loss.momentum_teacher = init_distributed_data_parallel_model(
+        #         task.loss.momentum_teacher
+        #     )
 
     @torch.no_grad()
     def _update_momentum_network(self, task: tasks.ClassyTask) -> None:
@@ -87,9 +85,13 @@ class DINOHook(ClassyHook):
         m = 1 - 0.5 * (1 - task.loss.loss_config.momentum) * (
             math.cos(math.pi * task.iteration / task.max_iteration) + 1
         )
+
+        task_model = get_no_ddp_model(task.model)
+        teacher_model = get_no_ddp_model(task.loss.momentum_teacher)
+
         # EMA update for the teacher parameters
         for param_q, param_k in zip(
-            task.model.parameters(), task.loss.momentum_teacher.parameters()
+            task_model.parameters(), teacher_model.parameters()
         ):
             param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
 
@@ -99,9 +101,11 @@ class DINOHook(ClassyHook):
         Update the teacher temperature
         """
         if self.teacher_temp_schedule is None:
-            teacher_temp_min = task.loss.loss_config.teacher_temp_min
-            teacher_temp_max = task.loss.loss_config.teacher_temp_max
-            teacher_temp_warmup_iters = task.loss.loss_config.teacher_temp_warmup_iters
+            teacher_temp_min = task.loss.loss_config["teacher_temp_min"]
+            teacher_temp_max = task.loss.loss_config["teacher_temp_max"]
+            teacher_temp_warmup_iters = task.loss.loss_config[
+                "teacher_temp_warmup_iters"
+            ]
             self.teacher_temp_schedule = torch.cat(
                 (
                     torch.linspace(
@@ -123,13 +127,11 @@ class DINOHook(ClassyHook):
         # Create the momentum teacher and its center if this is the first forward of a run
         if task.loss.momentum_teacher is None:
             self._build_momentum_network(task)
-        if task.loss.center is None:
-            self._build_center(task)
 
         # Compute momentum teacher features
         im_k = [
             task.last_batch.sample["input"][i]
-            for i in task.loss.loss_config.crops_for_teacher
+            for i in task.loss.loss_config["crops_for_teacher"]
         ]
         task.loss.teacher_output = task.loss.momentum_teacher(im_k)[0][-1]
         self.get_teacher_temperature(task)

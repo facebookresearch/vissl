@@ -13,7 +13,7 @@ import os
 from typing import List
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.data.datasets import get_coco_imgs_labels_info, get_voc_images_labels_info
 from vissl.utils.misc import get_json_data_catalog_file
 from vissl.utils.slurm import get_slurm_dir
@@ -39,7 +39,7 @@ class VisslDatasetCatalog(object):
         Args:
             filepath: a .json filepath that contains the data to be registered
         """
-        with PathManager.open(json_catalog_path) as fopen:
+        with g_pathmgr.open(json_catalog_path) as fopen:
             data_catalog = json.load(fopen)
         for key, value in data_catalog.items():
             VisslDatasetCatalog.register_data(key, value)
@@ -135,17 +135,17 @@ def get_local_path(input_file, dest_dir):
     - If both above fail, we return the input_file as is.
     """
     out = ""
-    if PathManager.isfile(input_file):
+    if g_pathmgr.isfile(input_file):
         out = os.path.join(dest_dir, os.path.basename(input_file))
-    elif PathManager.isdir(input_file):
+    elif g_pathmgr.isdir(input_file):
         data_name = input_file.strip("/").split("/")[-1]
         if "SLURM_JOBID" in os.environ:
             dest_dir = get_slurm_dir(dest_dir)
         dest_dir = os.path.join(dest_dir, data_name)
         complete_flag = os.path.join(dest_dir, "copy_complete")
-        if PathManager.isfile(complete_flag):
+        if g_pathmgr.isfile(complete_flag):
             out = dest_dir
-    if PathManager.exists(out):
+    if g_pathmgr.exists(out):
         return out
     else:
         return input_file
@@ -172,9 +172,9 @@ def check_data_exists(data_files):
     we iteratively check for each file in the list.
     """
     if isinstance(data_files, list):
-        return np.all([PathManager.exists(item) for item in data_files])
+        return np.all([g_pathmgr.exists(item) for item in data_files])
     else:
-        return PathManager.exists(data_files)
+        return g_pathmgr.exists(data_files)
 
 
 def register_pascal_voc():
@@ -188,7 +188,7 @@ def register_pascal_voc():
     for voc_data in voc_datasets:
         data_info = VisslDatasetCatalog.get(voc_data)
         data_folder = data_info["train"][0]
-        if PathManager.exists(data_folder):
+        if g_pathmgr.exists(data_folder):
             train_data_info = get_voc_images_labels_info("train", data_folder)
             test_data_info = get_voc_images_labels_info("val", data_folder)
             data_info["train"] = train_data_info
@@ -208,7 +208,7 @@ def register_coco():
     """
     data_info = VisslDatasetCatalog.get("coco2014_folder")
     data_folder = data_info["train"][0]
-    if PathManager.exists(data_folder):
+    if g_pathmgr.exists(data_folder):
         train_data_info = get_coco_imgs_labels_info("train", data_folder)
         test_data_info = get_coco_imgs_labels_info("val", data_folder)
         data_info["train"] = train_data_info
@@ -228,7 +228,7 @@ def register_datasets(json_catalog_path):
     Args:
         json_catalog_path (str): the path to the json dataset catalog
     """
-    if PathManager.exists(json_catalog_path):
+    if g_pathmgr.exists(json_catalog_path):
         logging.info(f"Registering datasets: {json_catalog_path}")
         VisslDatasetCatalog.clear()
         VisslDatasetCatalog.register_json(json_catalog_path)

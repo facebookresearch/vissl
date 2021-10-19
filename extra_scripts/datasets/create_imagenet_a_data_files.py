@@ -8,7 +8,7 @@ import os
 
 import numpy as np
 import torchvision.datasets as datasets
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from tqdm import tqdm
 from vissl.utils.download import download_and_extract_archive
 from vissl.utils.io import cleanup_dir
@@ -44,7 +44,7 @@ def get_argument_parser():
 
 def remove_file_name_whitespace(input_path: str):
     """
-    Remove the whitespace in the file names for better compatibility with PathManager.
+    Remove the whitespace in the file names for better compatibility with g_pathmgr.
     """
     for class_folder_path in os.listdir(input_path):
         # All necessary folders start with n.
@@ -82,7 +82,7 @@ class ImagenetTargetMapper:
     )
 
     def __init__(self):
-        with PathManager.open(self.IMAGENET_TARGETS_URL) as f:
+        with g_pathmgr.open(self.IMAGENET_TARGETS_URL) as f:
             imagenet_classes = [line.strip() for line in f.readlines()]
             imagenet_classes.sort()
         self.label_to_id = {label: i for i, label in enumerate(imagenet_classes)}
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         download_datasets(args.input)
 
     input_path = os.path.join(args.input, "imagenet-a")
-    assert PathManager.exists(input_path), "Input data path does not exist"
+    assert g_pathmgr.exists(input_path), "Input data path does not exist"
     remove_file_name_whitespace(input_path)
     create_imagenet_test_files(input_path, args.output)
 

@@ -18,7 +18,7 @@ from classy_vision.generic.distributed_util import (
     get_world_size,
 )
 from classy_vision.losses import ClassyLoss, register_loss
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from torch import nn
 from vissl.config import AttrDict
 from vissl.losses.distibuted_sinkhornknopp import distributed_sinkhornknopp
@@ -279,9 +279,9 @@ class SwAVCriterion(nn.Module):
                     self.output_dir,
                     "rank" + str(self.dist_rank) + "_assignments" + str(i) + ".pth",
                 )
-                with PathManager.open(scores_output_file, "wb") as fwrite:
+                with g_pathmgr.open(scores_output_file, "wb") as fwrite:
                     torch.save(scores, fwrite)
-                with PathManager.open(assignments_out_file, "wb") as fwrite:
+                with g_pathmgr.open(assignments_out_file, "wb") as fwrite:
                     torch.save(assignments, fwrite)
                 logging.info(f"Saved the scores matrix to: {scores_output_file}")
                 logging.info(f"Saved the assignment matrix to: {assignments_out_file}")

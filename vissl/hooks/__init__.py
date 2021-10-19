@@ -26,10 +26,6 @@ from vissl.hooks.state_update_hooks import (  # noqa
     FreezeParametersHook,
     SetDataSamplerEpochHook,
     SSLModelComplexityHook,
-    UpdateBatchesSeenHook,
-    UpdateTestBatchTimeHook,
-    UpdateTrainBatchTimeHook,
-    UpdateTrainIterationNumHook,
 )
 from vissl.hooks.swav_hooks import NormalizePrototypesHook  # noqa
 from vissl.hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
@@ -59,31 +55,7 @@ class SSLClassyHookFunctions(Enum):
     on_exception = auto()
 
 
-def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
-    """
-    The utility function that prepares all the hoooks that will be used in training
-    based on user selection. Some basic hooks are used by default.
-
-    Optional hooks:
-        - Tensorboard hook,
-        - loss specific hooks (swav loss, deepcluster loss, moco loss) used only when the
-          loss is being used
-        - model complexity hook (if user wants to compute model flops, activations, params)
-          enable the hook via HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY = True
-
-    Returns:
-        hooks (List(functions)): list containing the hook functions that will be used
-    """
-    hooks = []
-
-    # conditionally add hooks based on use-case
-    if cfg.HOOKS.PERF_STATS.MONITOR_PERF_STATS:
-        perf_stat_freq = (
-            cfg.HOOKS.PERF_STATS.PERF_STAT_FREQUENCY
-            if cfg.HOOKS.PERF_STATS.PERF_STAT_FREQUENCY > 0
-            else None
-        )
-        hooks.append(LogPerfTimeMetricsHook(perf_stat_freq))
+def add_loss_hooks(hooks, loss_cfg, cfg):
     if cfg.LOSS.name == "swav_loss":
         hooks.extend([SwAVUpdateQueueScoresHook(), NormalizePrototypesHook()])
     if cfg.LOSS.name == "swav_momentum_loss":
@@ -110,6 +82,38 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
                 )
             ]
         )
+    return hooks
+
+
+def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
+    """
+    The utility function that prepares all the hoooks that will be used in training
+    based on user selection. Some basic hooks are used by default.
+
+    Optional hooks:
+        - Tensorboard hook,
+        - loss specific hooks (swav loss, deepcluster loss, moco loss) used only when the
+          loss is being used
+        - model complexity hook (if user wants to compute model flops, activations, params)
+          enable the hook via HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY = True
+
+    Returns:
+        hooks (List(functions)): list containing the hook functions that will be used
+    """
+    hooks = []
+
+    # conditionally add hooks based on use-case
+    if cfg.HOOKS.PERF_STATS.MONITOR_PERF_STATS:
+        perf_stat_freq = (
+            cfg.HOOKS.PERF_STATS.PERF_STAT_FREQUENCY
+            if cfg.HOOKS.PERF_STATS.PERF_STAT_FREQUENCY > 0
+            else None
+        )
+        hooks.append(LogPerfTimeMetricsHook(perf_stat_freq))
+
+    # add the loss hooks based on the loss being used
+    hooks = add_loss_hooks(hooks, cfg.LOSS, cfg)
+
     if cfg.HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:
         hooks.extend([SSLModelComplexityHook()])
     if cfg.HOOKS.LOG_GPU_STATS:
@@ -154,10 +158,6 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
             CheckNanLossHook(),
             SetDataSamplerEpochHook(),
             FreezeParametersHook(),
-            UpdateBatchesSeenHook(),
-            UpdateTrainBatchTimeHook(),
-            UpdateTestBatchTimeHook(),
-            UpdateTrainIterationNumHook(),
             LogLossMetricsCheckpointHook(world_size),
             LogLossLrEtaHook(checkpoint_folder, rolling_btime_freq),
         ]

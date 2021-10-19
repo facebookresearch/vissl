@@ -9,7 +9,7 @@ from typing import Dict, List
 
 import numpy as np
 import torch
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config import AttrDict
 from vissl.data import build_dataset
 
@@ -32,7 +32,7 @@ class ClusterAssignmentLoader:
     @classmethod
     def save_cluster_assignment(cls, output_dir: str, assignments: ClusterAssignment):
         output_file = os.path.join(output_dir, "cluster_assignments.torch")
-        with PathManager.open(output_file, "wb") as f:
+        with g_pathmgr.open(output_file, "wb") as f:
             content = {
                 cls._CONFIG_KEY: assignments.config,
                 cls._ASSIGN_KEY: assignments.cluster_assignments,
@@ -41,7 +41,7 @@ class ClusterAssignmentLoader:
 
     @classmethod
     def load_cluster_assigment(cls, file_path: str) -> ClusterAssignment:
-        with PathManager.open(file_path, "rb") as f:
+        with g_pathmgr.open(file_path, "rb") as f:
             content = torch.load(f)
             return ClusterAssignment(
                 config=content[cls._CONFIG_KEY],

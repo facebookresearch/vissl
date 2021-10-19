@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Set
 
 import numpy as np
 from classy_vision.generic.distributed_util import get_world_size
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config import AttrDict
 from vissl.data import dataset_catalog
 from vissl.data.data_helper import balanced_sub_sampling, unbalanced_sub_sampling
@@ -168,22 +168,22 @@ class GenericSSLDataset(VisslDatasetBase):
         To save memory, if the mmap_mode is set to True for loading, we try to load
         the images in mmap_mode. If it fails, we simply load the labels without mmap
         """
-        assert PathManager.isfile(path), f"Path to labels {path} is not a file"
+        assert g_pathmgr.isfile(path), f"Path to labels {path} is not a file"
         assert path.endswith("npy"), "Please specify a numpy file for labels"
         if self.cfg["DATA"][self.split].MMAP_MODE:
             try:
-                with PathManager.open(path, "rb") as fopen:
+                with g_pathmgr.open(path, "rb") as fopen:
                     labels = np.load(fopen, allow_pickle=True, mmap_mode="r")
             except ValueError as e:
-                logging.info(f"Could not mmap {path}: {e}. Trying without PathManager")
+                logging.info(f"Could not mmap {path}: {e}. Trying without g_pathmgr")
                 labels = np.load(path, allow_pickle=True, mmap_mode="r")
-                logging.info("Successfully loaded without PathManager")
+                logging.info("Successfully loaded without g_pathmgr")
             except Exception:
-                logging.info("Could not mmap without PathManager. Trying without mmap")
-                with PathManager.open(path, "rb") as fopen:
+                logging.info("Could not mmap without g_pathmgr. Trying without mmap")
+                with g_pathmgr.open(path, "rb") as fopen:
                     labels = np.load(fopen, allow_pickle=True)
         else:
-            with PathManager.open(path, "rb") as fopen:
+            with g_pathmgr.open(path, "rb") as fopen:
                 labels = np.load(fopen, allow_pickle=True)
         return labels
 

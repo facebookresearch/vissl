@@ -20,7 +20,7 @@ import logging
 import sys
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.download import download_and_extract_archive
 from vissl.utils.io import save_file
 
@@ -111,10 +111,10 @@ def main():
     args = parser.parse_args()
 
     # Make sure that the input and output directories exist.
-    assert PathManager.exists(
+    assert g_pathmgr.exists(
         args.input_dir_path
     ), "Data input directory not found! Please create the directory"
-    assert PathManager.exists(
+    assert g_pathmgr.exists(
         args.output_dir_path
     ), "Data output directory not found! Please create the directory"
 

@@ -13,7 +13,7 @@ import tempfile
 from typing import Any, Callable, List
 
 import torch
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.config import AttrDict
 from vissl.data.dataset_catalog import get_data_files
 from vissl.engines import run_engine
@@ -109,7 +109,7 @@ def launch_distributed(
     # Get the checkpoint where to resume from. The get_resume_checkpoint function will
     # automatically take care of detecting whether it's a resume or not.
     symlink_checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
-    if cfg.CHECKPOINT.USE_SYMLINK_CHECKPOINT_FOR_RESUME and PathManager.exists(
+    if cfg.CHECKPOINT.USE_SYMLINK_CHECKPOINT_FOR_RESUME and g_pathmgr.exists(
         symlink_checkpoint_path
     ):
         checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
@@ -123,9 +123,9 @@ def launch_distributed(
     # given training. This ensures that if the same training resumes, then it
     # resumes from the checkpoint and not the weight init
     if checkpoint_path is None and cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]:
-        assert PathManager.exists(
-            cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
-        ), "Specified PARAMS_FILE does NOT exist"
+        params_file = cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+        error_message = f"Specified PARAMS_FILE does NOT exist: {params_file}"
+        assert g_pathmgr.exists(params_file), error_message
 
     # copy the data to local if user wants. This can speed up dataloading.
     _copy_to_local(cfg)
@@ -245,7 +245,7 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
     # setup the log folder
     log_folder = cfg.SLURM.LOG_FOLDER
     makedir(log_folder)
-    assert PathManager.exists(
+    assert g_pathmgr.exists(
         log_folder
     ), f"Specified config.SLURM.LOG_FOLDER={log_folder} doesn't exist"
     assert cfg.SLURM.PARTITION, "SLURM.PARTITION must be set when using SLURM"

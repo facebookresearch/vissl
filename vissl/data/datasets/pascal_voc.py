@@ -14,7 +14,7 @@ import os
 from glob import glob
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from vissl.utils.io import makedir, save_file
 
 
@@ -40,7 +40,7 @@ def validate_files(input_files):
 
 def get_data_files(split, data_source_dir):
     data_dir = f"{data_source_dir}/ImageSets/Main"
-    assert PathManager.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
+    assert g_pathmgr.exists(data_dir), "Data: {} doesn't exist".format(data_dir)
     test_data_files = glob(os.path.join(data_dir, "*_test.txt"))
     test_data_files = validate_files(test_data_files)
     train_data_files = glob(os.path.join(data_dir, "*_trainval.txt"))
@@ -56,7 +56,7 @@ def get_data_files(split, data_source_dir):
 
 
 def get_voc_images_labels_info(split, data_source_dir):
-    assert PathManager.exists(data_source_dir), "Data source NOT found. Abort"
+    assert g_pathmgr.exists(data_source_dir), "Data source NOT found. Abort"
     data_files = get_data_files(split, data_source_dir)
     # we will construct a map for image name to the vector of -1, 0, 1
     # we sort the data_files which gives sorted class names as well
@@ -64,7 +64,7 @@ def get_voc_images_labels_info(split, data_source_dir):
     for cls_num, data_path in enumerate(sorted(data_files)):
         # for this class, we have images and each image will have label
         # 1, -1, 0 -> present, not present, ignore respectively as in VOC data.
-        with PathManager.open(data_path, "r") as fopen:
+        with g_pathmgr.open(data_path, "r") as fopen:
             for line in fopen:
                 try:
                     img_name, orig_label = line.strip().split()

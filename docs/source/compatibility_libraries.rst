@@ -24,7 +24,7 @@ All the ResNe(X)t models in VISSL can be converted to Detectron2 weights using f
 
 Converting to ClassyVision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-All the ResNe(X)t models in VISSL can be converted to Detectron2 weights using following command:
+All the ResNe(X)t models in VISSL can be converted to Classy Vision weights using following command:
 
 .. code-block:: bash
 

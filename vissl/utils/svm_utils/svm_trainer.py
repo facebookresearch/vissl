@@ -8,7 +8,7 @@ import pickle
 import threading
 
 import numpy as np
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from sklearn.model_selection import cross_val_score
 from sklearn.svm import LinearSVC
 from vissl.utils.io import load_file, save_file
@@ -34,7 +34,7 @@ class SVMTrainer(object):
 
     def _get_output_dir(self, cfg_out_dir):
         odir = f"{cfg_out_dir}/{self.layer}"
-        PathManager.mkdirs(odir)
+        g_pathmgr.mkdirs(odir)
         logging.info(f"Output directory for SVM results: {odir}")
         return odir
 
@@ -43,8 +43,8 @@ class SVMTrainer(object):
         Given the input data (features) and targets (labels) files, load the
         features of shape N x D and labels of shape (N,)
         """
-        assert PathManager.exists(data_file), "Data file not found. Abort!"
-        assert PathManager.exists(targets_file), "Targets file not found. Abort!"
+        assert g_pathmgr.exists(data_file), "Data file not found. Abort!"
+        assert g_pathmgr.exists(targets_file), "Targets file not found. Abort!"
         # load the features and the targets
         logging.info("loading features and targets...")
         targets = load_file(targets_file)
@@ -105,9 +105,7 @@ class SVMTrainer(object):
         """
         crossval_ap_file = f"{self.output_dir}/crossval_ap.npy"
         chosen_cost_file = f"{self.output_dir}/chosen_cost.npy"
-        if PathManager.exists(crossval_ap_file) and PathManager.exists(
-            chosen_cost_file
-        ):
+        if g_pathmgr.exists(crossval_ap_file) and g_pathmgr.exists(chosen_cost_file):
             self.chosen_cost = load_file(chosen_cost_file)
             self.train_ap_matrix = load_file(crossval_ap_file)
             return self.chosen_cost
@@ -143,8 +141,8 @@ class SVMTrainer(object):
             cost = self.costs_list[cost_idx]
             out_file, ap_out_file = self._get_svm_model_filename(cls_num, cost)
             if (
-                PathManager.exists(out_file)
-                and PathManager.exists(ap_out_file)
+                g_pathmgr.exists(out_file)
+                and g_pathmgr.exists(ap_out_file)
                 and not self.config.force_retrain
             ):
                 logging.info(f"SVM model exists: {out_file}")
@@ -191,7 +189,7 @@ class SVMTrainer(object):
             logging.info(f"Saving cls cost AP to: {ap_out_file}")
             save_file(np.array([ap_scores.mean()]), ap_out_file)
             logging.info(f"Saving SVM model to: {out_file}")
-            with PathManager.open(out_file, "wb") as fwrite:
+            with g_pathmgr.open(out_file, "wb") as fwrite:
                 pickle.dump(clf, fwrite)
 
     def train(self, features, targets):

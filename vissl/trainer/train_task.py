@@ -14,7 +14,7 @@ from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
-from fvcore.common.file_io import PathManager
+from iopath.common.file_io import g_pathmgr
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
 from vissl.data import (
@@ -93,12 +93,11 @@ class SelfSupervisionTask(ClassificationTask):
         self.metrics = {}  # set by the trainer
         self.start_time = -1  # set by trainer
         # time of each batch in training and testing. This can be used to get average
-        # batch time etc. batch_time is appended after every parameter update by
-        # UpdateTrainBatchTimeHook and if test phase, by UpdateTestBatchTimeHook
+        # batch time etc. batch_time is appended after every parameter update.
         self.batch_time = []  # set by trainer
         # we maintain and store the iteration in the state itself. It counts
         # total number of iterations we do in training phases. Updated
-        # after every forward pass of training step in UpdateTrainIterationNumHook.
+        # after every forward pass of training step.
         # Starts from 1
         self.iteration = 0
         # collect how many total iterations we make irrespective of train/test phase.
@@ -108,7 +107,7 @@ class SelfSupervisionTask(ClassificationTask):
         # by SetDataSamplerEpochHook hook.
         self.phase_start_time = -1  # set by the hook at start of each epoch or phase
         # for every phase, record the number of batches seen. Incremented after every
-        # forward pass by UpdateBatchesSeenHook. Reset at the start of each phase by
+        # forward pass. Reset at the start of each phase by
         # SetDataSamplerEpochHook hook. Useful for debugging.
         self.batches = -1  # set by the hook at start of each epoch or phase
         # loss curve. Reset at start of each phase/epoch by SetDataSamplerEpochHook hook.
@@ -221,7 +220,7 @@ class SelfSupervisionTask(ClassificationTask):
         Set the iteration number.
         we maintain and store the iteration in the state itself. It counts
         total number of iterations we do in training phases. Updated
-        after every forward pass of training step in UpdateTrainIterationNumHook.
+        after every forward pass of training step.
         Starts from 1
         """
         assert iteration >= 0, "Iteration number must be positive"
@@ -423,7 +422,7 @@ class SelfSupervisionTask(ClassificationTask):
         assert init_weights_path, "Shouldn't call this when init_weight_path is empty"
         logging.info(f"Initializing model from: {init_weights_path}")
 
-        if PathManager.exists(init_weights_path):
+        if g_pathmgr.exists(init_weights_path):
             checkpoint = CheckpointLoader.load_and_broadcast_init_weights(
                 checkpoint_path=init_weights_path, device=torch.device("cpu")
             )
@@ -481,7 +480,7 @@ class SelfSupervisionTask(ClassificationTask):
             self.checkpoint_path is None
             and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
         ):
-            assert PathManager.exists(
+            assert g_pathmgr.exists(
                 self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
             ), "Specified PARAMS_FILE does NOT exist"
         # If we want to initialize the model in case of finetuning or evaluation,
@@ -490,7 +489,7 @@ class SelfSupervisionTask(ClassificationTask):
         if (
             self.checkpoint_path is None
             and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
-            and PathManager.exists(self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"])
+            and g_pathmgr.exists(self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"])
         ):
             model = self._restore_model_weights(model)
 
