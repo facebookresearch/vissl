@@ -1,5 +1,6 @@
 ARG CUDA_VER
 ARG CUDA_SUFFIX
+ARG APEX_CUDA_SUFFIX
 ARG USER_ID
 ARG TORCH_CUDA_ARCH_LIST
 
@@ -30,16 +31,18 @@ ENV PATH="/home/vissluser/.local/bin:${PATH}"
 
 # install PyTorch.
 ARG CUDA_SUFFIX
-RUN pip install --user torch==1.5 torchvision==0.6 -f https://download.pytorch.org/whl/${CUDA_SUFFIX}/torch_stable.html
+RUN pip install --user torch==1.9.1 torchvision==0.10.1 -f https://download.pytorch.org/whl/${CUDA_SUFFIX}/torch_stable.html
 
 # install apex
-ARG TORCH_CUDA_ARCH_LIST
-ARG CUDA_VER
-ADD ./common/install_apex.sh install_apex.sh
-RUN bash ./install_apex.sh && rm install_apex.sh
+RUN pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py39_cu${APEX_CUDA_SUFFIX}_pyt191/download.html apex
+
+# install classyvision
+RUN pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
+# TODO: Set Classyvision commit.
 
 # Install VISSL
-RUN git clone https://github.com/facebookresearch/vissl vissl && cd vissl
+ARG VISSL_BRANCH
+RUN git clone https://github.com/facebookresearch/vissl vissl && cd vissl && git checkout ${VISSL_BRANCH} && git checkout -b ${VISSL_BRANCH}
 RUN pip install --user -e vissl
 WORKDIR /home/vissluser/vissl
 
