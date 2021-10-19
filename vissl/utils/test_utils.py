@@ -29,8 +29,10 @@ def in_temporary_directory(enabled: bool = True):
         old_cwd = os.getcwd()
         with tempfile.TemporaryDirectory() as temp_dir:
             os.chdir(temp_dir)
-            yield temp_dir
-            os.chdir(old_cwd)
+            try:
+                yield temp_dir
+            finally:
+                os.chdir(old_cwd)
     else:
         yield os.getcwd()
 

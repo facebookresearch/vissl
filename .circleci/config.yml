@@ -15,6 +15,7 @@ version: 2
 cpu: &cpu
   environment:
     TERM: xterm
+    TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
   machine:
     image: ubuntu-1604:201903-01
   resource_class: medium
@@ -133,7 +134,7 @@ install_apex_cpu: &install_apex_cpu
       name: Install Apex for CPU
       working_directory: ~/vissl
       command: |
-        pip install -v --no-cache-dir apex@https://github.com/NVIDIA/apex/tarball/1f2aa9156547377a023932a1512752c392d9bbdf
+        pip install -v --disable-pip-version-check --no-cache-dir apex@https://github.com/NVIDIA/apex/tarball/9ce0a10fb6c2537ef6a59f27b7875e32a9e9b8b8
 
 install_vissl: &install_vissl
   - run:

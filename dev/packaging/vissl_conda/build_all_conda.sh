@@ -8,8 +8,13 @@ set -ex
 
 rm -rf dev/packaging/vissl_conda/ClassyVision
 git clone https://github.com/facebookresearch/ClassyVision.git dev/packaging/vissl_conda/ClassyVision
+
 rm -rf dev/packaging/vissl_conda/fairscale
 git clone https://github.com/facebookresearch/fairscale.git dev/packaging/vissl_conda/fairscale
+cd dev/packaging/vissl_conda/fairscale
+git reset --hard df7db85cef7f9c30a5b821007754b96eb1f977b6
+cd ../../../../
+
 rm -rf classy_vision
 cp -r dev/packaging/vissl_conda/ClassyVision/classy_vision classy_vision
 rm -rf fairscale
