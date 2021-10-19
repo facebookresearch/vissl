@@ -69,7 +69,7 @@ def build_model(model_config, optimizer_config):
     The returned model is not copied to gpu yet (if using gpu) and neither
     wrapped with DDP yet. This is done later train_task.py .prepare()
     """
-    model_name = model_config.NAME
+    model_name = model_config.BASE_MODEL_NAME
     model_cls = get_model(model_name)
     return model_cls(model_config, optimizer_config)
 

@@ -457,7 +457,7 @@ config:
   # ----------------------------------------------------------------------------------- #
   MODEL:
     # default model. User can define their own model and use that instead.
-    NAME: "multi_input_output_model"
+    BASE_MODEL_NAME: "multi_input_output_model"
     # sometimes we can avoid CUDA OOM issues by clearing out the cache. Clearing out cache
     # is slow so chose wisely.
     CUDA_CACHE:

@@ -19,7 +19,7 @@ VISSL supports several types of Heads and several types of trunks. VISSL impleme
 
 - Model that is completely frozen and features are extracted.
 
-Users can also implement their own model and specify the model name in :code:`MODEL.NAME`.
+Users can also implement their own model and specify the model name in :code:`MODEL.BASE_MODEL_NAME`.
 
 Trunks
 -------------
