@@ -333,10 +333,17 @@ def create_regnet_feature_blocks(factory: RegnetBlocksFactory, model_config):
             model_config.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING
         )
         all_group_delimiters = trunk_config.get("stage_checkpoints", [])
+        all_group_checkpoint = trunk_config.get("stage_checkpointing", [])
         group_delimiters = (
             all_group_delimiters[i] if len(all_group_delimiters) > i else []
         )
-        group_checkpoint = [with_checkpointing] * len(group_delimiters)
+        group_checkpoint = (
+            all_group_checkpoint[i] if len(all_group_checkpoint) > i else []
+        )
+        if not group_checkpoint:
+            group_checkpoint = [with_checkpointing] * len(group_delimiters)
+        assert len(group_delimiters) == len(group_checkpoint)
+
         assert (
             sorted(group_delimiters) == group_delimiters
         ), "Checkpoint boundaries should be sorted"
