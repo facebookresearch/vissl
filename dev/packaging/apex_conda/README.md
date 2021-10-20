@@ -11,6 +11,9 @@ nothing to do here.
 2. Go into the `inside` directory and clone apex with
 `git clone https://github.com/NVIDIA/apex.git`.
 
+Move to the appropriate commit.
+`git checkout 9ce0a10fb6c2537ef6a59f27b7875e32a9e9b8b8`.
+
 3. You may want to `docker pull pytorch/conda-cuda:latest`.
 
 4. Run `bash go.sh` in this directory. This takes ages

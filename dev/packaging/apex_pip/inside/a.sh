@@ -34,6 +34,9 @@ declare -A CONDA_CUDA_VERSIONS=(
     ["1.7.0"]="cu101 cu102 cu110"
     ["1.7.1"]="cu101 cu102 cu110"
     ["1.8.0"]="cu101 cu102 cu111"
+    ["1.8.1"]="cu101 cu102 cu111"
+    ["1.9.0"]="cu102 cu111"
+    ["1.9.1"]="cu102 cu111"
 )
 
 #VERSION=$(python -c "exec(open('${script_dir}/apex/__init__.py').read()); print(__version__)")
@@ -54,19 +57,23 @@ do
             case "$cu_version" in
                 cu111)
                     export CUDA_HOME=/usr/local/cuda-11.1/
+                    export TORCH_CUDA_ARCH_LIST="6.0;6.1;6.2;7.0;7.5;8.0"
                     export CUDA_TAG=11.1
                     extra_channel="-c conda-forge"
                 ;;
                 cu110)
                     export CUDA_HOME=/usr/local/cuda-11.0/
+                    export TORCH_CUDA_ARCH_LIST="6.0;6.1;6.2;7.0;7.5;8.0"
                     export CUDA_TAG=11.0
                 ;;
                 cu102)
                     export CUDA_HOME=/usr/local/cuda-10.2/
+                    export TORCH_CUDA_ARCH_LIST="6.0;6.1;6.2;7.0;7.5"
                     export CUDA_TAG=10.2
                 ;;
                 cu101)
                     export CUDA_HOME=/usr/local/cuda-10.1/
+                    export TORCH_CUDA_ARCH_LIST="6.0;6.1;6.2;7.0;7.5"
                     export CUDA_TAG=10.1
                 ;;
                 *)
@@ -85,6 +92,7 @@ do
             outdir="../output/$tag"
             if [[ -d "$outdir" ]]
             then
+                echo "skipping" "$outdir"
                 continue
             fi
 

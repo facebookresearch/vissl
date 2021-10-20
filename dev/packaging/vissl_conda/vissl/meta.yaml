@@ -38,7 +38,7 @@ test:
   source_files:
     - tests
     - tools
-    - dev/run_quick_tests.sh
+    - dev/run_quick_integration_tests.sh
     - configs
   requires:
     - ca-certificates
@@ -47,7 +47,7 @@ test:
     - tensorboard
   commands:
     - python -m unittest discover -v -s tests
-    - ./dev/run_quick_tests.sh
+    - ./dev/run_quick_integration_tests.sh
 
 build:
   string: py{{py}}
