@@ -33,7 +33,6 @@ CUDA_HOMES = {
     "cu110": "/usr/local/cuda-11.0/",
     "cu102": "/usr/local/cuda-10.2/",
     "cu101": "/usr/local/cuda-10.1/",
-    "cu100": "/usr/local/cuda-10.0/",
     "cu92": "/usr/local/cuda-9.2/",
 }
 CUDATOOLKIT_CONSTRAINTS = {
@@ -41,7 +40,6 @@ CUDATOOLKIT_CONSTRAINTS = {
     "cu110": "- cudatoolkit >=11.0,<11.1 # [not osx]",
     "cu102": "- cudatoolkit >=10.2,<10.3 # [not osx]",
     "cu101": "- cudatoolkit >=10.1,<10.2 # [not osx]",
-    "cu100": "- cudatoolkit >=10.0,<10.1 # [not osx]",
     "cu92": "- cudatoolkit >=9.2,<9.3 # [not osx]",
 }
 
@@ -50,9 +48,9 @@ TORCH_CUDA_ARCH_LISTS = {
     "cu110": "6.0;6.1;6.2;7.0;7.5;8.0",
     "cu102": "6.0;6.1;6.2;7.0;7.5",
     "cu101": "6.0;6.1;6.2;7.0;7.5",
-    "cu100": "6.0;6.1;6.2;7.0;7.5",
-    "cu92": "6.0;6.1;6.2;7.0"
+    "cu92": "6.0;6.1;6.2;7.0",
 }
+
 
 def pytorch_versions_for_python(python_version):
     if python_version in ["3.6", "3.7", "3.8"]:

@@ -76,16 +76,6 @@ do
                     export TORCH_CUDA_ARCH_LIST="6.0;6.1;6.2;7.0;7.5"
                     export CUDA_TAG=10.1
                 ;;
-                cu100)
-                    export CUDA_HOME=/usr/local/cuda-10.0/
-                    export TORCH_CUDA_ARCH_LIST="6.0;6.1;6.2;7.0;7.5"
-                    export CUDA_TAG=10.0
-                ;;
-                cu92)
-                    export CUDA_HOME=/usr/local/cuda-9.2/
-                    export TORCH_CUDA_ARCH_LIST="6.0;6.1;6.2;7.0"
-                    export CUDA_TAG=9.2
-                ;;
                 *)
                     echo "Unrecognized cu_version=$cu_version"
                     exit 1
