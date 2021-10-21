@@ -157,7 +157,7 @@ config:
     # ----------------------------------------------------------------------------------- #
 
     EMA_METERS:
-      ENABLE_EMA_METERS: True
+      ENABLE_EMA_METERS: False
       # after how many iterations should you update the ema.
       UPDATE_ITER: 1
       # after how many iterations to begin setting the ema.
