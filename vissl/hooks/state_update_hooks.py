@@ -14,7 +14,9 @@ from classy_vision.generic.profiler import (
     count_params,
 )
 from classy_vision.hooks.classy_hook import ClassyHook
+from fvcore.common.file_io import PathManager
 from vissl.data import AirstoreDataset, GenericSSLDataset
+from vissl.utils.env import get_machine_local_and_dist_rank
 
 
 class SSLModelComplexityHook(ClassyHook):
@@ -111,6 +113,61 @@ class SetDataSamplerEpochHook(ClassyHook):
                         data_obj.set_epoch(task.phase_idx)
 
         logging.info(f"Starting phase {task.phase_idx} [{phase_type}]")
+
+
+class CheckNanModelOutputHook(ClassyHook):
+    """
+    After every model forward, verify the loss is not infinite.
+    Called for both training/test phase.
+    """
+
+    on_start = ClassyHook._noop
+    on_phase_start = ClassyHook._noop
+    on_backward = ClassyHook._noop
+    on_phase_end = ClassyHook._noop
+    on_end = ClassyHook._noop
+    on_step = ClassyHook._noop
+    on_update = ClassyHook._noop
+    on_loss_and_meter = ClassyHook._noop
+
+    def on_forward(self, task: "tasks.ClassyTask") -> None:
+        """
+        Called each time a model forward is done and make sure that
+        the model forward output is not NaN. If we encounter NaN as the model
+        output, we checkpoint the model to enable debugging and also checkpoint
+        the model input sample, model output.
+        """
+        # check the model output is not NaN.
+        has_nan = False
+        model_output = task.last_batch.model_output
+        if isinstance(model_output, list):
+            has_nan = not torch.tensor(
+                [torch.isfinite(x).all() for x in model_output]
+            ).all()
+        else:
+            has_nan = not torch.isfinite(model_output).all()
+
+        if has_nan:
+            _, dist_rank = get_machine_local_and_dist_rank()
+            logging.info(f"Infinite Model output or NaN at iteration={task.iteration}.")
+            self._checkpoint_model(
+                task,
+                mode_frequency=1,
+                mode_num=task.iteration,
+                mode="iteration",
+            )
+            model_output_file = (
+                f"{task.checkpoint_folder}/rank{dist_rank}_model_output.pth"
+            )
+            input_sample_file = (
+                f"{task.checkpoint_folder}/rank{dist_rank}_input_sample.pth"
+            )
+            with PathManager.open(model_output_file, "wb") as fwrite:
+                torch.save(model_output, fwrite)
+            with PathManager.open(input_sample_file, "wb") as fwrite:
+                torch.save(task.last_batch.sample, fwrite)
+            logging.info(f"Saved model output: {model_output_file}")
+            logging.info(f"Saved model input: {input_sample_file}")
 
 
 class CheckNanLossHook(ClassyHook):

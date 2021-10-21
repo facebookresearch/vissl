@@ -91,7 +91,7 @@ class GenericSSLDataset(VisslDatasetBase):
         self.data_limit = self.cfg["DATA"][split].DATA_LIMIT
         self.data_limit_sampling = self._get_data_limit_sampling(cfg, split)
         self.transform = get_transform(self.cfg["DATA"][split].TRANSFORMS)
-        self._labels_init = False
+        self.labels_init = False
         self._subset_initialized = False
         self.image_and_label_subset = None
         self._verify_data_sources(split, dataset_source_map)
@@ -201,7 +201,7 @@ class GenericSSLDataset(VisslDatasetBase):
         else:
             return labels
 
-    def _load_labels(self):
+    def load_labels(self):
         """
         Load the labels if the dataset has labels. In self-supervised
         pre-training task, we don't use labels. However, we use labels for the
@@ -249,6 +249,8 @@ class GenericSSLDataset(VisslDatasetBase):
             else:
                 raise ValueError(f"unknown label source: {label_source}")
             self.label_objs.append(labels)
+
+        self.labels_init = True
 
     def _can_random_subset_data_sources(self):
         """
@@ -308,10 +310,8 @@ class GenericSSLDataset(VisslDatasetBase):
 
         The final transformed sample is returned to be added into the minibatch.
         """
-
-        if not self._labels_init and len(self.label_sources) > 0:
-            self._load_labels()
-            self._labels_init = True
+        if not self.labels_init and len(self.label_sources) > 0:
+            self.load_labels()
 
         subset_idx = idx
         if self.data_limit >= 0 and self._can_random_subset_data_sources():

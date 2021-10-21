@@ -20,9 +20,11 @@ from vissl.hooks.log_hooks import (  # noqa
     LogPerfTimeMetricsHook,
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
+from vissl.hooks.model_output_mask_hook import ModelOutputMaskHook
 from vissl.hooks.profiling_hook import ProfilingHook
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
+    CheckNanModelOutputHook,
     FreezeParametersHook,
     SetDataSamplerEpochHook,
     SSLModelComplexityHook,
@@ -153,13 +155,20 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
 
     world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
     checkpoint_folder = get_checkpoint_folder(cfg)
+
     hooks.extend(
         [
-            CheckNanLossHook(),
             SetDataSamplerEpochHook(),
             FreezeParametersHook(),
             LogLossMetricsCheckpointHook(world_size),
             LogLossLrEtaHook(checkpoint_folder, rolling_btime_freq),
         ]
     )
+
+    if cfg.METERS.model_output_mask:
+        hooks.extend([ModelOutputMaskHook()])
+
+    if cfg.HOOKS.CHECK_NAN:
+        hooks.extend([CheckNanLossHook(), CheckNanModelOutputHook()])
+
     return hooks

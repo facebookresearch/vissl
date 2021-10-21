@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 """
 Code modified from https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py # NOQA
 and https://github.com/facebookresearch/deit/blob/main/models.py by Matthew
@@ -231,8 +232,8 @@ class VisionTransformer(nn.Module):
             )
         num_patches = self.patch_embed.num_patches
 
-        self.class_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_embedding = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
         self.pos_drop = nn.Dropout(p=drop_rate)
 
         dpr = [
@@ -261,8 +262,8 @@ class VisionTransformer(nn.Module):
         # self.repr = nn.Linear(embed_dim, representation_size)
         # self.repr_act = nn.Tanh()
 
-        trunc_normal_(self.pos_embedding, std=0.02)
-        trunc_normal_(self.class_token, std=0.02)
+        trunc_normal_(self.pos_embed, std=0.02)
+        trunc_normal_(self.cls_token, std=0.02)
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
@@ -278,17 +279,21 @@ class VisionTransformer(nn.Module):
     def no_weight_decay(self):
         return {"pos_embedding", "class_token"}
 
-    def forward_features(self, x):
+    def prepare_tokens(self, x):
         B = x.shape[0]
         x = self.patch_embed(x)
 
-        class_tokens = self.class_token.expand(
+        class_tokens = self.cls_token.expand(
             B, -1, -1
         )  # stole class_tokens impl from Phil Wang, thanks
         x = torch.cat((class_tokens, x), dim=1)
-        pos_embed = self.interpolate_pos_encoding(x, self.pos_embedding)
+        pos_embed = self.interpolate_pos_encoding(x, self.pos_embed)
         x = x + pos_embed
         x = self.pos_drop(x)
+        return x
+
+    def forward_features(self, x):
+        x = self.prepare_tokens(x)
 
         for blk in self.blocks:
             x = blk(x)
@@ -296,11 +301,44 @@ class VisionTransformer(nn.Module):
         x = self.norm(x)
         return x[:, 0]
 
+    def get_intermediate_features(self, x, names):
+        interms = []
+
+        x = self.prepare_tokens(x)
+
+        # get feature from every intermediate block and apply norm
+        for blk in self.blocks:
+            x = blk(x)
+            interms.append(self.norm(x))
+
+        # feature names are as follows
+        # blkCLS[integer] => CLS token of blk[integer]
+        # concatCLS[integer] => concat of CLS token from last #"integer" blocks
+        # lastCLS => CLS token of last block
+
+        output = []
+        for name in names:
+            if name.startswith("blkCLS"):
+                v = int(name.replace("blkCLS", ""))
+                output.append(interms[v][:, 0])
+            elif name.startswith("concatCLS"):
+                v = int(name.replace("concatCLS", ""))
+                feat = torch.cat([x[:, 0] for x in interms[-v:]], dim=-1)
+                output.append(feat)
+            elif name == "lastCLS":
+                output.append(interms[-1][:, 0])
+        return output
+
     def forward(
         self, x: torch.Tensor, out_feat_keys: List[str] = None
     ) -> List[torch.Tensor]:
-        x = self.forward_features(x)
-        x = x.unsqueeze(0)
+        if out_feat_keys is None or len(out_feat_keys) == 0:
+            x = self.forward_features(x)
+            x = x.unsqueeze(0)
+        else:
+            # we specified a feature layer name. Follow DINO
+            # (https://github.com/facebookresearch/dino/blob/main/eval_linear.py#L159) # NOQA
+            x = self.get_intermediate_features(x, out_feat_keys)
         return x
 
     def interpolate_pos_encoding(self, x, pos_embed):

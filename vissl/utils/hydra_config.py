@@ -474,6 +474,76 @@ def assert_transforms(cfg):
                     assert is_augly_available(), "Please pip install augly."
 
 
+def infer_fsdp(cfg):
+    """
+    inference for the FSDP settings. Conditions are:
+    1) use the FSDP task
+    2) use the single param group in the optimizer
+    3) if AMP is used, it must be PyTorch AMP
+    4) If training SwAV, we automatically set the head to SwAV FSDP head
+    4) Inference for the FSDP parameters to ensure the good convergence
+    """
+    if cfg.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP:
+        cfg.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
+        cfg.OPTIMIZER.construct_single_param_group_only = True
+
+        # safely set flatten_parameters=True for FSDP trainings.
+        cfg["MODEL"]["FSDP_CONFIG"]["flatten_parameters"] = True
+        # recommended FSDP settings below for the convergence
+        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
+
+        # Inference of optimizer configuration
+        if cfg["OPTIMIZER"]["use_larc"]:
+            cfg["OPTIMIZER"]["name"] = "sgd_fsdp"
+            # if using LARC, we set the flatten_params=False so that we can
+            # compute the right params groups
+            cfg["MODEL"]["FSDP_CONFIG"]["flatten_parameters"] = False
+
+        # AMP based inference
+        if cfg["MODEL"]["AMP_PARAMS"]["USE_AMP"]:
+            cfg["MODEL"]["AMP_PARAMS"]["AMP_TYPE"] = "pytorch"
+            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = True
+            # setup the compute_dtype and fp32_reduce_scatter
+            # based on whether O1 or O2 is desired
+            if cfg.MODEL.FSDP_CONFIG["AMP_TYPE"] == "O1":
+                cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
+                cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = True
+            elif cfg.MODEL.FSDP_CONFIG["AMP_TYPE"] == "O2":
+                cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float16"
+                cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
+        else:
+            # if not using AMP, we can't use mixed_precision as it requires PyTorch AMP
+            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = False
+            # if mixed_precision=False, FSDP mandates setting fp32_reduce_scatter=False
+            cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
+
+        # Inference of the head in case of training with FSDP
+        for i, head_param in enumerate(cfg.MODEL.HEAD.PARAMS):
+            if head_param[0] == "swav_head":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "swav_head_fsdp"
+            if head_param[0] == "eval_mlp":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "eval_mlp_fsdp"
+            if head_param[0] == "mlp":
+                cfg.MODEL.HEAD.PARAMS[i][0] = "mlp_fsdp"
+
+        # Inference of the trunk in case of training with FSDP
+        if cfg.MODEL.TRUNK.NAME == "regnet":
+            cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
+
+        # Profiling the communication requires some setup for FSDP
+        if cfg.PROFILING.MEMORY_PROFILING.TRACK_BY_LAYER_MEMORY:
+            cfg["MODEL"]["FSDP_CONFIG"]["_TRACK_COMMUNICATIONS"] = True
+
+        logging.info(f"Using the FSDP config: {cfg.MODEL.FSDP_CONFIG}")
+
+    # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
+    # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
+    del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
+    del cfg.MODEL.FSDP_CONFIG["AMP_TYPE"]
+
+    return cfg
+
+
 def infer_and_assert_hydra_config(cfg):
     """
     Infer values of few parameters in the config file using the value of other config parameters
@@ -580,71 +650,23 @@ def infer_and_assert_hydra_config(cfg):
         del cfg.OPTIMIZER.base_optimizer["use_zero"]
         del cfg.OPTIMIZER.base_optimizer["head_optimizer_params"]
 
-    # inference for the FSDP settings. Conditions are:
-    # 1) use the FSDP task
-    # 2) use the single param group in the optimizer
-    # 3) if AMP is used, it must be PyTorch AMP
-    # 4) If training SwAV, we automatically set the head to SwAV FSDP head
-    # 4) Inference for the FSDP parameters to ensure the good convergence
-    if cfg.MODEL.FSDP_CONFIG.AUTO_SETUP_FSDP:
-        cfg.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
-        cfg.OPTIMIZER.construct_single_param_group_only = True
-
-        # safely set flatten_parameters=True for FSDP trainings.
-        cfg["MODEL"]["FSDP_CONFIG"]["flatten_parameters"] = True
-        # recommended FSDP settings below for the convergence
-        cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
-
-        # Inference of optimizer configuration
-        if cfg["OPTIMIZER"]["use_larc"]:
-            cfg["OPTIMIZER"]["name"] = "sgd_fsdp"
-            # if using LARC, we set the flatten_params=False so that we can
-            # compute the right params groups
-            cfg["MODEL"]["FSDP_CONFIG"]["flatten_parameters"] = False
-
-        # AMP based inference
-        if cfg["MODEL"]["AMP_PARAMS"]["USE_AMP"]:
-            cfg["MODEL"]["AMP_PARAMS"]["AMP_TYPE"] = "pytorch"
-            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = True
-            # setup the compute_dtype and fp32_reduce_scatter
-            # based on whether O1 or O2 is desired
-            if cfg.MODEL.FSDP_CONFIG["AMP_TYPE"] == "O1":
-                cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float32"
-                cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = True
-            elif cfg.MODEL.FSDP_CONFIG["AMP_TYPE"] == "O2":
-                cfg["MODEL"]["FSDP_CONFIG"]["compute_dtype"] = "float16"
-                cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
-        else:
-            # if not using AMP, we can't use mixed_precision as it requires PyTorch AMP
-            cfg["MODEL"]["FSDP_CONFIG"]["mixed_precision"] = False
-            # if mixed_precision=False, FSDP mandates setting fp32_reduce_scatter=False
-            cfg["MODEL"]["FSDP_CONFIG"]["fp32_reduce_scatter"] = False
-
-        # Inference of the head in case of training with FSDP
-        for i, head_param in enumerate(cfg.MODEL.HEAD.PARAMS):
-            if head_param[0] == "swav_head":
-                cfg.MODEL.HEAD.PARAMS[i][0] = "swav_head_fsdp"
-            if head_param[0] == "eval_mlp":
-                cfg.MODEL.HEAD.PARAMS[i][0] = "eval_mlp_fsdp"
-            if head_param[0] == "mlp":
-                cfg.MODEL.HEAD.PARAMS[i][0] = "mlp_fsdp"
-
-        # Inference of the trunk in case of training with FSDP
-        if cfg.MODEL.TRUNK.NAME == "regnet":
-            cfg.MODEL.TRUNK.NAME = "regnet_fsdp"
-
-        # Profiling the communication requires some setup for FSDP
-        if cfg.PROFILING.MEMORY_PROFILING.TRACK_BY_LAYER_MEMORY:
-            cfg["MODEL"]["FSDP_CONFIG"]["_TRACK_COMMUNICATIONS"] = True
-
-        logging.info(f"Using the FSDP config: {cfg.MODEL.FSDP_CONFIG}")
-
-    # Delete the AUTO_SETUP_FSDP key since we send the FSDP_CONFIG
-    # to FSDP from fairscale which doesn't know about AUTO_SETUP_FSDP
-    del cfg.MODEL.FSDP_CONFIG["AUTO_SETUP_FSDP"]
-    del cfg.MODEL.FSDP_CONFIG["AMP_TYPE"]
+    # Infer fsdp settings
+    cfg = infer_fsdp(cfg)
 
     if cfg.DATA.TRAIN.BASE_DATASET == "generic_ssl":
         assert (
             cfg.DATA.TRAIN.get("TRAIN_PHASES_PER_EPOCH", 1) == 1
         ), "When using the generic_ssl, we must set TRAIN_PHASES_PER_EPOCH = 1."
+
+    if cfg.METERS.model_output_mask:
+        assert (
+            len(cfg.DATA.TEST.DATA_SOURCES) > 0
+        ), "Model output mask is only applicable when there is a test dataset."
+
+        assert (
+            cfg.DATA.TEST.BASE_DATASET == "generic_ssl"
+        ), "Model output mask is only supported with ssl dataset."
+
+        # Remove CHECK_NAN hooks, as model output masking casts the logits
+        # to -inf, which will throw an error from the CHECK_NAN hooks.
+        cfg.HOOKS.CHECK_NAN = False

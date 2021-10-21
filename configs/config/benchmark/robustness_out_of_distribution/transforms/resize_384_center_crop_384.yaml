@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  DATA:
+    TEST:
+      # Transforms for linear eval.
+      TRANSFORMS:
+        - name: OneHotEncode
+          num_classes: 1000
+        - name: Resize
+          size: 384
+          interpolation: 3
+        - name: CenterCrop
+          size: 384
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
