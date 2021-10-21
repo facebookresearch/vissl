@@ -62,7 +62,7 @@ creating the :code:`my_new_approach` folder under :code:`pretrain/` path and cre
 How to override a training component with config files
 ---------------------------------------------------------
 
-To replace one training component with an other, like replacing the training dataset, one can simply
+To replace one training component with another, like replacing the training dataset, one can simply
 create a new yaml file for the dataset and use that during training.
 
 For example:

@@ -94,7 +94,7 @@ Example of ["name", kwargs] :code:`MODEL.HEAD.PARAMS=["mlp", {"dims": [2048, 128
 Types of Heads one can specify
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Case 1: Simple Head containing single module - Single Input, Single output**
+- **Case1: Simple Head containing single module - Single Input, Single output**
 
 .. code-block:: yaml
 
@@ -104,7 +104,7 @@ Types of Heads one can specify
             ["mlp", {"dims": [2048, 128]}]
         ]
 
-- **Case 2: Complex Head containing chain of head modules - Single Input, Single output**
+- **Case2: Complex Head containing chain of head modules - Single Input, Single output**
 
 .. code-block:: yaml
 
@@ -116,7 +116,7 @@ Types of Heads one can specify
             ["mlp", {"dims": [9000, 128]}]
         ]
 
-- **Case 3: Multiple Heads (example 2 heads) - Single input, multiple output**: can be used for multi-task learning
+- **Case3: Multiple Heads (example 2 heads) - Single input, multiple output**: can be used for multi-task learning
 
 .. code-block:: yaml
 
@@ -135,7 +135,7 @@ Types of Heads one can specify
             ]
         ]
 
-- **Case 4: Multiple Heads (example 5 simple heads) - Single input, multiple output:**: For example, in linear evaluation of models. This attaches a head to each of the layers specified in :code:`MODEL.FEATURE_EVAL_SETTINGS`.
+- **Case4: Multiple Heads (example 5 simple heads) - Single input, multiple output:**: For example, in linear evaluation of models. This attaches a head to each of the layers specified in :code:`MODEL.FEATURE_EVAL_SETTINGS`.
 
 .. code-block:: yaml
 
