@@ -3,12 +3,12 @@ Benchmark: Linear Image Classification
 
 VISSL provides a standardized benchmark suite to evaluate the feature representation quality of self-supervised pretrained models. A popular
 evaluation protocol is to freeze the model traink and train linear classifiers on several layers of the model on some target datasets (like ImageNet-1k, Places205, VOC07, iNaturalist2018).
-In VISSL, we support all the linear evals on all the datasets. We also provide standard set of hyperparams for various approaches
+In VISSL, we support linear evaluations on all the common datasets. We also provide standard set of hyperparams for various approaches
 in order to reproduce the model performance in SSL literature. For reproducibility, see `VISSL Model Zoo <https://github.com/facebookresearch/vissl/blob/main/MODEL_ZOO.md>`_.
 
 .. note::
 
-    To run the benchmark, we recommend using the standard set of hyperparams provided by VISSL as these hyperparams reproduce results of large number of self-supervised approaches.
+    To run the benchmark, we recommend using the standard set of hyperparams provided by VISSL as these hyperparams reproduce results of a large number of self-supervised approaches.
     Users are however free to modify the hyperparams to suit their evaluation criterion.
 
 Eval Config settings using MLP head
@@ -44,7 +44,7 @@ Attaching MLP head to many layers of trunk
 Attaching MLP head to trunk output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To attach a linear classifier at multiple layers of model following Zhang et. al style which has :code:`BN -> FC` as the head, use :code:`eval_mlp` head. For example, for a ResNet-50 model,
+To attach a linear classifier to multiple layers of the model following Zhang et. al style which has :code:`BN -> FC` as the head, use :code:`eval_mlp` head. For example, for a ResNet-50 model:
 
 .. code-block:: yaml
 

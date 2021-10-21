@@ -5,7 +5,7 @@ VISSL allows implementing new data collators easily. Follow the steps below:
 
 - **Step1**: Create the new data collator :code:`my_new_collator.py` under :code:`vissl/data/collators/my_new_collator.py` following the template.
 
-.. code-block:: bash
+.. code-block:: python
 
     import torch
     from vissl.data.collators import register_collator

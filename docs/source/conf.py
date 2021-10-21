@@ -86,6 +86,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.doctest",
     "sphinx.ext.ifconfig",
+    "sphinx.ext.autosectionlabel",
     "sphinx_markdown_tables",
 ]
 

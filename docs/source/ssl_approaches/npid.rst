@@ -8,7 +8,7 @@ further by **Misra et. al** in **Self-Supervised Learning of Pretext-Invariant R
 How to train NPID model
 ---------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
 all the components including loss, data augmentations, collators etc required for this approach.
 
 To train ResNet-50 model on 8-gpus on ImageNet-1K dataset with NPID approach using 4,096 negatives selected randomly and feature projection dimension 128:

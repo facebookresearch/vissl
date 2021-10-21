@@ -133,7 +133,7 @@ If instead, you want to use a custom data storage solution :code:`my_data_source
 
 - **Step1**: Implement your custom data source under :code:`vissl/data/my_data_source.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     from vissl.data.data_helper import get_mean_image
     from torch.utils.data import Dataset
@@ -203,7 +203,7 @@ If instead, you want to use a custom data storage solution :code:`my_data_source
 
 - **Step3**: Register the name of the datasets you plan to load using the new data source. There are 2 ways to do this:
 
-  - See our documentation on `Using dataset_catalog.json <https://vissl.readthedocs.io/en/latest/vissl_modules/data.html#using-dataset-catalog-json>`_ to update the :code:`configs/dataset_catalog.json` file.
+  - See our documentation on :ref:`Using dataset_catalog.json<Using Data>` to update the :code:`configs/dataset_catalog.json` file.
 
   - Insert a python call following:
 

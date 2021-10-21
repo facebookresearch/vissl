@@ -1,14 +1,14 @@
 How to Extract Features
 ===========================================================
 
-Given a pre-trained models, VISSL makes it easy to extract the features for the model on the datasets. VISSL seamlessly supports TorchVision models and in general, to load non-VISSL models, please
+Given a pre-trained models, VISSL makes it easy to extract the features for the model on the datasets. VISSL seamlessly supports TorchVision models. To load non-VISSL models, please
 follow our documentation for loading models.
 
-To extract the features for a model that VISSL can load, users need 2 things:
+To extract the features for a VISSL compatible model, users need 2 things:
 
-- **config file**: the configuration file should clearly specify what layers of the model should features be extracted from.
+- **config file**: the configuration file should clearly specify what layers of the model features should be extracted from.
 
-- **set the correct engine_name**: in VISSL, we have two types of engine - a) training, b) feature extraction. Users must set :code:`engine_name=extract_features` in the yaml config file.
+- **set the correct engine_name**: in VISSL, we have two types of engines - a) training, b) feature extraction. Users must set :code:`engine_name=extract_features` in the yaml config file.
 
 .. note::
 
@@ -44,6 +44,9 @@ Extract features from several layers of the trunk
         NAME: resnet
         RESNETS:
           DEPTH: 50
+    EXTRACT_FEATURES:
+      OUTPUT_DIR: ""
+      CHUNK_THRESHOLD: 0
 
 
 Extract features of the trunk output
@@ -61,6 +64,9 @@ Extract features of the trunk output
         NAME: resnet
         RESNETS:
           DEPTH: 50
+    EXTRACT_FEATURES:
+      OUTPUT_DIR: ""
+      CHUNK_THRESHOLD: 0
 
 
 Extract features of the model head output (self-supervised head)
@@ -86,6 +92,9 @@ self-supervised model training.
           ["mlp", {"dims": [2048, 2048], "use_relu": True}],
           ["mlp", {"dims": [2048, 128]}],
         ]
+    EXTRACT_FEATURES:
+      OUTPUT_DIR: ""
+      CHUNK_THRESHOLD: 0
 
 .. note::
 
@@ -102,3 +111,40 @@ Once users have the desired config file, user can extract features using the fol
         config=feature_extraction/extract_resnet_in1k_8gpu \
         +config/feature_extraction/trunk_only=rn50_layers \
         config.MODEL.WEIGHTS_INIT.PARAMS_FILE=<my_weights.torch>
+
+Loading your extracted features.
+------------------------------------------
+
+Vissl offers an easy to use API to load your extracted features. You can also view this tutorial `here <https://vissl.ai/tutorials/Feature_Extraction>`_ for a working example.
+
+.. code-block:: python
+
+  from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
+
+  # We will load all the res5 test features
+  features = ExtractedFeaturesLoader.load_features(
+    input_dir="/content/checkpoints/",
+    split="train",
+    layer="heads",
+    flatten_features=False,
+  )
+  # Access the features.
+  feature = features['features']
+  # Indeces of each image according to your dataset.
+  # For example if you are using the DiskFolder, this corresponds
+  # to the index of torchvision ImageFolder, see https://pytorch.org/vision/stable/datasets.html#torchvision.datasets.ImageFolder # NOQA
+  # Or if you are using the DiskFilelist, this corresponds to the
+  # index of the image in the .npy file.
+  DiskFilelist, this corresponds to the index
+  # Targets of each image according to your dataset.
+  targets = features['targets']
+
+  # We can also sample 5 flattened features.
+  sampled_features = ExtractedFeaturesLoader.sample_features(
+    input_dir="/content/checkpoints/",
+    split="train",
+    layer="heads",
+    num_samples=5,
+    seed=0, # Seed for deterministic sampling.
+    flatten_features=True,
+  )

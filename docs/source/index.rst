@@ -10,7 +10,7 @@ VISSL documentation
 ===================
 
 VISSL is a computer vision library for state-of-the-art Self-Supervised Learning research with
-`PyTorch <https://pytorch.org>`_. VISSL aims to accelerate research cycle in self-supervised learning:
+`PyTorch <https://pytorch.org>`_. VISSL aims to accelerate the research cycle in self-supervised learning:
 from designing a new self-supervised task to evaluating the learned representations.
 
 .. toctree::
@@ -62,6 +62,8 @@ from designing a new self-supervised task to evaluating the learned representati
    ssl_approaches/moco
    ssl_approaches/deepclusterv2
    ssl_approaches/swav
+   ssl_approaches/dino
+   ssl_approaches/vision_transformers
    ssl_approaches/barlow_twins
 
 
@@ -79,7 +81,7 @@ from designing a new self-supervised task to evaluating the learned representati
    evaluations/feature_extraction
    evaluations/feature_eval_settings
    evaluations/load_models
-
+   evaluations/instance_retrieval
 
 .. toctree::
    :maxdepth: 1

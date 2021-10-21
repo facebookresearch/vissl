@@ -10,7 +10,7 @@ cluster assignments produced for different augmentations (or “views”) of the
 How to train SwAV model
 ----------------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
 all the components including loss, data augmentations, collators etc required for this approach.
 
 To train ResNet-50 model on 8-gpus on ImageNet-1K dataset using feature projection dimension 128 for memory:

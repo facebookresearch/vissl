@@ -119,4 +119,4 @@ VISSL allows adding new meters easily. Follow the steps below to add a new loss:
         ...
 
 
-- **Step3**: Meter is ready to use. Simply set the configuration param :code:`METERS.name=my_new_meter`
+- **Step3**: Meter is ready to use. Simply set the configuration param :code:`METERS.name=my_new_meter` or if you want to use multiple meters :code:`METERS.names=[meter_one, my_new_meter]`.

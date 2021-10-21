@@ -1,7 +1,7 @@
 Add new Models
 =======================
 
-VISSL allows adding new models (head and trunks easily) and combine different trunks and heads to train a new model. Follow the steps below on how to add new heads or trunks.
+VISSL allows adding new models (head and trunks easily) and combining different trunks and heads to train a new model. Follow the steps below on how to add new heads or trunks.
 
 
 Adding New Heads
@@ -11,7 +11,7 @@ To add a new model head, follow the steps:
 
 - **Step1**: Add the new head :code:`my_new_head` under :code:`vissl/models/heads/my_new_head.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     import torch
     import torch.nn as nn
@@ -62,7 +62,7 @@ To add a new trunk (a new architecture like vision transformers, etc.), follow t
 
 - **Step1**: Add your new trunk :code:`my_new_trunk` under :code:`vissl/data/trunks/my_new_trunk.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     import torch
     import torch.nn as nn
@@ -125,3 +125,88 @@ To add a new trunk (a new architecture like vision transformers, etc.), follow t
           ...
 
 - **Step3**: The trunk is ready to use. Set the trunk name and params in your config file :code:`MODEL.TRUNK.NAME=my_new_trunk`
+
+Adding New Base Model
+----------------------
+
+VISSL's uses :code:`BaseSSLMultiInputOutputModel` as it's base model class where it invokes the Trunk and the Head models.
+When altering the head or trunk does not offer enough flexibility, a user may wish to override the entire base model.
+**NOTE**: Usually implementing a new HEAD or TRUNK should fulfill your needs. Only use this if necessary.
+-
+- **Step1**: Add the new model :code:`my_new_head` under :code:`vissl/models/my_new_model.py` following the template for full compatibility with VISSL:
+
+.. code-block:: python
+
+    from classy_vision.models import ClassyModel, register_model
+
+    @register_model("my_new_model")
+    class MyNewModel(ClassyModel):
+        """
+        Add documentation on what this model is.
+        """
+
+        def __init__(self, model_config: AttrDict, param1: val, ....):
+            """
+            Args:
+                add documentation on what are the parameters to the head
+            """
+            super().__init__()
+            # implement what the init of model should do.
+            ...
+
+        def forward(self, batch):
+            """
+            Main forward of the model. Depending on the model type the calls are patched
+            to the suitable function.
+            """
+            ...
+
+        def freeze_head(self):
+            """
+            Freeze the model head.
+            """
+            ...
+
+        def freeze_trunk(self):
+            """
+            Freeze the model trunk
+            """
+            ...
+
+        def freeze_head_and_trunk(self):
+            """
+            Freeze the model trunk and head.
+            """
+            ...
+
+        def is_fully_frozen_model(self):
+            """
+            If the model is fully frozen.
+            """
+            ...
+
+        def get_classy_state(self, deep_copy=False):
+            """
+            Return the model state (trunk + heads) to checkpoint.
+            """
+            ...
+
+        def set_classy_state(self, deep_copy=False):
+            """
+            Initialize the model trunk and head from the state dictionary.
+            """
+            ...
+
+        def init_model_from_weights_params_file(self):
+            """
+            We initialize the weights from this checkpoint.
+            """
+            ...
+
+- **Step2**: The new model is ready to use. Test it by setting the new model in the configuration file.
+
+.. code-block:: yaml
+
+    MODEL:
+      # default model. User can define their own model and use that instead.
+      BASE_MODEL_NAME: multi_input_output_model

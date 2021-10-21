@@ -4,12 +4,12 @@ Train DINO model
 Author: mathilde@fb.com
 
 VISSL reproduces the self-supervised approach called :code:`DINO` presented in **Emerging Properties in Self-Supervised Vision Transformers** which was proposed by
-**Mathilde Caron, Hugo Touvron, Ishan Misra, Herve Jegou, Julien Mairal, Piotr Bojanowski and Armand Joulin** in `this paper <https://arxiv.org/abs/2104.14294>`_. 
+**Mathilde Caron, Hugo Touvron, Ishan Misra, Herve Jegou, Julien Mairal, Piotr Bojanowski and Armand Joulin** in `this paper <https://arxiv.org/abs/2104.14294>`_.
 
 How to train DINO model
 ----------------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
 all the components including loss, data augmentations, collators etc required for this approach.
 
 To train DeiT-S/16 model on 16-gpus on ImageNet-1K dataset:

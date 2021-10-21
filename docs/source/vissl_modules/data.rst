@@ -15,7 +15,7 @@ VISSL allows reading data from multiple sources (disk, etc) and in multiple form
 The `GenericSSLDataset <https://github.com/facebookresearch/vissl/blob/main/vissl/data/ssl_dataset.py>`_ class is defined to support reading data from multiple data sources. For example: :code:`data = [dataset1, dataset2]` and the minibatches generated will have the corresponding data from each dataset.
 For this reason, we also support labels from multiple sources. For example :code:`targets = [dataset1 targets, dataset2 targets]`.
 
-Source of the data (:code:`disk_filelist` | :code:`disk_folder` | :code:`torchvision_dataset`):
+Source of the data (:code:`disk_folder` | :code:`disk_filelist` | :code:`torchvision_dataset`):
 
 - :code:`disk_folder`: this is simply the root folder path to the downloaded data.
 
@@ -37,6 +37,8 @@ To use a dataset, VISSL takes following inputs in the configuration file for eac
 
 - :code:`LABEL_TYPE`: choose from :code:`standard | sample_index`. :code:`sample_index` is a common practice in self-supervised learning and :code:`sample_index`=id of the sample in the data. :code:`standard` label type is used for supervised learning and user specifis the annotated labels to use.
 
+- :code:`DATA_LIMIT`: How many samples to train with per epoch. This can be useful for debugging purposes or for evaluating low-shot learning. Note that the default :code:`DATA_LIMIT=-1` uses the full dataset. You can also configure additional options, like the seed and ensuring class-balanced sampling in :code:`DATA_LIMIT_SAMPLING`.
+
 
 Using :code:`dataset_catalog.json`
 --------------------------------------
@@ -47,12 +49,12 @@ are registered with VISSL, ready-to-use.
 Users can edit the template `dataset_catalog.json <https://github.com/facebookresearch/vissl/blob/main/configs/config/dataset_catalog.json>`_ file
 to specify their datasets paths. Alternatively users can create their own dataset catalog json file and set the environment variable :code:`VISSL_DATASET_CATALOG_PATH` to its absolute path.
 This may be helpful if you are not building the code from source or are actively developing on VISSL. The json file can be fully decided by user and can have any number of supported datasets (one or more).
-User can give the string names to dataset as per their choice.
+Users can give the string names of the dataset they wish to use.
 
 Template for a dataset entry in :code:`dataset_catalog.json`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: bash
+.. code-block:: python
 
     "data_name": {
        "train": [
@@ -66,7 +68,7 @@ Template for a dataset entry in :code:`dataset_catalog.json`
 
 The :code:`images_path_or_folder` and :code:`labels_path_or_folder` can be directories or filepaths (numpy, pickle.)
 
-User can mix match the source of image, labels i.e. labels can be filelist and images can be folder path. The yaml configuration files require specifying :code:`LABEL_SOURCES` and :code:`DATA_SOURCES` which allows the code to figure out how to ingest various sources.
+User can mix and match the source of image, labels. i.e. labels can be filelist and images can be folder path. The yaml configuration files require specifying :code:`LABEL_SOURCES` and :code:`DATA_SOURCES` which allows the code to figure out how to ingest various sources.
 
 .. note::
 
@@ -316,7 +318,7 @@ Or with the :code:`disk_folder` layout:
     original dataset files and is more advantageous for small number of images or when the inputs do not allow to reference images
     (for instance when extracting frames from videos, or dealing with images in an unsupported format).
 
-    The before mentioned scripts use the either the :code:`disk_folder` or :code:`disk_filelist` based on these constraints.
+    The aforementioned scripts use the either the :code:`disk_folder` or :code:`disk_filelist` based on these constraints.
 
 
 Dataloader
@@ -355,7 +357,7 @@ An example for specifying collator for SwAV training:
 Using Data Transforms
 ------------------------------------------
 
-VISSL supports all PyTorch :code:`TorchVision` transforms as well as many transforms required by Self-supervised approaches including MoCo, SwAV, PIRL, SimCLR, BYOL, etc. Using Transforms is very intuitive and easy in VISSL. Users specify the list of transforms they want to apply on the data in the order of application.
+VISSL supports all PyTorch :code:`TorchVision` transforms, `Augly Transforms <https://github.com/facebookresearch/AugLy>`_, as well as many custom transforms required by Self-supervised approaches including MoCo, SwAV, PIRL, SimCLR, BYOL, etc. Using Transforms is intuitive and easy in VISSL. Users specify the list of transforms they want to apply on the data in the order of application.
 This involves using the transform name and the key:value to specify the parameter values for the transform. See the full list of transforms implemented by VISSL `here <https://github.com/facebookresearch/vissl/tree/main/vissl/data/ssl_transforms>`_
 
 An example of transform for SwAV:
@@ -383,7 +385,20 @@ An example of transform for SwAV:
             mean: [0.485, 0.456, 0.406]
             std: [0.229, 0.224, 0.225]
 
+To use an `Augly Transforms <https://github.com/facebookresearch/AugLy>`_, please first :code:`pip install augly` and use :code:`>= Python 3.7 `. Then specify the Augly transform class name, set :code:`transform_type: augly`, and specify any other arguments required. For example using the `Overlay Emoji Transform <https://github.com/facebookresearch/AugLy/blob/263284f4a8b5b76d457005ed27298ed0b4e6b362/augly/image/transforms.py#L1029>`_:
 
+.. code-block:: yaml
+
+    DATA:
+      TRAIN:
+        TRANSFORMS:
+          - name: OverlayEmoji
+            transform_type: augly
+            opacity: 0.5
+            emoji_size: 0.2
+            x_pos: 0.3
+            y_pos: 0.4
+            p: 0.7
 
 
 Using Data Sampler
@@ -393,7 +408,7 @@ VISSL supports 2 types of samplers:
 
 - PyTorch default :code:`torch.utils.data.distributed.DistributedSampler`
 
-- VISSL sampler `StatefulDistributedSampler <https://github.com/facebookresearch/vissl/blob/main/vissl/data/data_helper.py>`_ that is written specifically for large scale dataset trainings. See the documentation for the sampler.
+- VISSL sampler `StatefulDistributedSampler <https://github.com/facebookresearch/vissl/blob/main/vissl/data/data_helper.py>`_ that is written specifically for large scale dataset trainings. See the `documentation <https://github.com/facebookresearch/vissl/blob/main/vissl/data/data_helper.py>`_ for the sampler.
 
 
 By default, the PyTorch default sampler is used unless user specifies :code:`DATA.TRAIN.USE_STATEFUL_DISTRIBUTED_SAMPLER=true` in which case :code:`StatefulDistributedSampler` will be used.

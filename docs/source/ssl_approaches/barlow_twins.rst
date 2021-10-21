@@ -8,7 +8,7 @@ Stéphane Deny** in `this paper <https://arxiv.org/abs/2103.03230v1>`_.
 How to train Barlow Twins model
 -------------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to
 reproduce the model. VISSL implements all the components including loss, data
 augmentations, collators etc required for this approach.
 

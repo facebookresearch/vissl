@@ -7,7 +7,7 @@ proposed by **Xueting Yan, Ishan Misra, Abhinav Gupta, Deepti Ghadiyaram, Dhruv 
 How to train ClusterFit model
 ---------------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
 all the components including data augmentations, collators etc required for this approach.
 
 ClusterFit approach involves 2 steps:
@@ -32,7 +32,7 @@ To train ResNet-50 model on 8-gpus on ImageNet-1K dataset and using RotNet model
 The full set of hyperparams supported by VISSL for ClusterFit Step-1 include:
 
 
-.. code-block:: bash
+.. code-block:: yaml
 
     CLUSTERFIT:
       NUM_CLUSTERS: 16000
@@ -48,7 +48,7 @@ The full set of hyperparams supported by VISSL for ClusterFit Step-1 include:
 
 How to use other pre-trained models in VISSL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-VISSL supports Torchvision models out of the box. Generally, for loading any non-VISSL model, one needs to correctly set the following configuration options:
+VISSL supports Torchvision model trunks out of the box. Generally, for loading any non-VISSL model, one needs to correctly set the following configuration options:
 
 .. code-block:: yaml
 

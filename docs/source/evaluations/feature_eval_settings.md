@@ -215,6 +215,9 @@ MODEL:
     NAME: resnet
     RESNETS:
       DEPTH: 50
+EXTRACT_FEATURES:
+  OUTPUT_DIR: ""
+  CHUNK_THRESHOLD: 0
 ```
 
 ### Extract features of the trunk output
@@ -230,6 +233,9 @@ MODEL:
     NAME: resnet
     RESNETS:
       DEPTH: 50
+EXTRACT_FEATURES:
+  OUTPUT_DIR: ""
+  CHUNK_THRESHOLD: 0
 ```
 
 ### Extract features of the model head output (self-supervised head)
@@ -249,9 +255,11 @@ MODEL:
       ["mlp", {"dims": [2048, 2048], "use_relu": True}],
       ["mlp", {"dims": [2048, 128]}],
     ]
+EXTRACT_FEATURES:
+  OUTPUT_DIR: ""
+  CHUNK_THRESHOLD: 0
 ```
 
 ## Full finetuning
 
-Since this only requires to initialize the model from the pre-trained model weights, there's
-no need for the `FEATURE_EVAL_SETTINGS` params. Simply set `MODEL.WEIGHTS_INIT` params.
+Since this only requires to initialize the model from the pre-trained model weights, there's no need for the `FEATURE_EVAL_SETTINGS` params. Simply set the `MODEL.WEIGHTS_INIT` params.

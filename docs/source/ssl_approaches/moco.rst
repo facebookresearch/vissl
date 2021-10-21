@@ -7,12 +7,12 @@ VISSL reproduces the self-supervised approach MoCo **Momentum Contrast for Unsup
 proposed by **Kaiming He, Haoqi Fan, Yuxin Wu, Saining Xie, Ross Girshick** in `this paper <https://arxiv.org/abs/1911.05722>`_. The MoCo baselines were improved
 further by **Xinlei Chen, Haoqi Fan, Ross Girshick, Kaiming He** in "Improved Baselines with Momentum Contrastive Learning" proposed in `this paper <https://arxiv.org/abs/2003.04297>`_.
 
-VISSL closely follows the implementation provided by MoCo authors themselves https://github.com/facebookresearch/moco.
+VISSL closely follows the `implementation <https://github.com/facebookresearch/moco>`_ provided by MoCo authors themselves.
 
 How to train MoCo (and MoCo v2 model) model
 --------------------------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
 all the components including loss, data augmentations, collators etc required for this approach.
 
 To train ResNet-50 model on 8-gpus on ImageNet-1K dataset with MoCo-v2 approach using feature projection dimension 128:

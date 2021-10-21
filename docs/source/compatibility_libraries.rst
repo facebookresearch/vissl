@@ -1,17 +1,17 @@
 Compatibility with Other Libraries
 ========================================
 
-- VISSL provides several helpful scripts to convert VISSL models to models that are compatible with other libraries like `Detectron2 <https://github.com/facebookresearch/detectron2>`_ and `ClassyVision <https://github.com/facebookresearch/ClassyVision>`_ compatible models.
+- VISSL provides several helpful scripts to convert VISSL models to models that are compatible with other libraries like `Detectron2 <https://github.com/facebookresearch/detectron2>`_ and `ClassyVision <https://github.com/facebookresearch/ClassyVision>`_.
 - VISSL also provides scripts to convert models from other sources like `Caffe2 models <https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md>`_ in the `paper <https://arxiv.org/abs/1905.01235>`_ to VISSL compatible models.
-- `TorchVision <https://github.com/pytorch/vision/tree/main/torchvision/models>`_ models are directly compatible with VISSL and don't require any conversion.
+- `TorchVision <https://github.com/pytorch/vision/tree/main/torchvision/models>`_ models trunks are directly compatible with VISSL and don't require any conversion.
 
 Converting Models VISSL -> {Detectron2, ClassyVision, TorchVision}
----------------------------------------------------------------
+-------------------------------------------------------------------
 We provide scripts to convert VISSL models to `Detectron2 <https://github.com/facebookresearch/detectron2>`_ and `ClassyVision <https://github.com/facebookresearch/ClassyVision>`_ compatible models.
 
 Converting to Detectron2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-All the ResNe(X)t models in VISSL can be converted to Detectron2 weights using following command:
+All the ResNe(X)t models in VISSL can be converted to Detectron2 weights using the following command:
 
 .. code-block:: bash
 
@@ -24,7 +24,7 @@ All the ResNe(X)t models in VISSL can be converted to Detectron2 weights using f
 
 Converting to ClassyVision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-All the ResNe(X)t models in VISSL can be converted to Classy Vision weights using following command:
+All the ResNe(X)t models in VISSL can be converted to Classy Vision weights using the following command:
 
 .. code-block:: bash
 
@@ -36,7 +36,7 @@ All the ResNe(X)t models in VISSL can be converted to Classy Vision weights usin
 
 Converting to TorchVision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-All the ResNe(X)t models in VISSL can be converted to Torchvision weights using following command:
+All the ResNe(X)t models in VISSL can be converted to Torchvision weights using the following command:
 
 .. code-block:: bash
 
