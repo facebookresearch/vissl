@@ -1,6 +1,7 @@
 # How to build VISSL docker images
 
-VISSL supports several cuda versions (10.1, 10.2) for both pip and conda environments. We provide a parameterized `Dockerfile` to build the image based on the build environment. The different configurations are identified by a freeform string that we call a build environment. We support latest pytorch version (1.5) in our dockers.
+VISSL supports (10.2, 11.1) CUDA version for these docker containers for both the pip and conda environments.
+We provide a parameterized `Dockerfile` to build the image based on the build environment. The different configurations are identified by a freeform string that we call a build environment. We support latest pytorch version (1.9.1) in our docker container. If you wish to change the pytorch version, please modify the Dockerfile pytorch installation commands.
 
 ## Build environments
 
@@ -9,8 +10,8 @@ You can specify build environment with string:
 - `cu$CU_VERSION-conda`    # conda
 
 Examples:
-- Pip environment: `cu101`
-- Conda environment: `cu101-conda`
+- Pip environment: `cu102`
+- Conda environment: `c102-conda`
 
 See `build_docker.sh` for a full list of terms that are extracted from the build environment into parameters for the image build.
 

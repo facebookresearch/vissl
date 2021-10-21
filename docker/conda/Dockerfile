@@ -24,17 +24,18 @@ RUN ./install_conda.sh && rm install_conda.sh
 ENV PATH="/opt/conda/bin:${PATH}"
 
 # install PyTorch.
-ARG CUDA_VER
-RUN conda install pytorch torchvision cudatoolkit=${CUDA_VER} -c pytorch
+RUN conda install pytorch==1.9.1 torchvision cudatoolkit=${CUDA_VER} -c pytorch -c conda-forge
 
 # install apex
-ARG TORCH_CUDA_ARCH_LIST
-ARG CUDA_VER
-ADD ./common/install_apex.sh install_apex.sh
-RUN bash ./install_apex.sh && rm install_apex.sh
+RUN conda install apex -c vissl
+
+# install classyvision
+RUN pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
+# TODO: Set Classyvision commit.
 
 # Install VISSL
-RUN git clone https://github.com/facebookresearch/vissl vissl && cd vissl
+ARG VISSL_BRANCH
+RUN git clone https://github.com/facebookresearch/vissl vissl && cd vissl && git checkout ${VISSL_BRANCH} && git checkout -b ${VISSL_BRANCH}
 RUN pip install --user -e vissl
 WORKDIR /vissl
 

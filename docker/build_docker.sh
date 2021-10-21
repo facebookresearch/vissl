@@ -11,6 +11,7 @@ set -ex
 # Examples:
 #   -> image=cu101 ./build_docker.sh
 #   -> image=cu101-conda  ./build_docker.sh
+
 image=${image}
 if [ -z "${image}" ]; then
   echo "Usage: $0 IMAGE"
@@ -23,7 +24,9 @@ USER_ID=${USER_ID-1000}
 DOCKERFILE="./Dockerfile"
 CUDA_SUFFIX="cu${CUDA_VER}"
 IMAGE_TAG="vissl:1.0-${CUDA_SUFFIX}"
-
+ # You can choose a specific VISSL branch or commit to run. e.g. main or v0.1.6.
+VISSL_BRANCH=${VISSL_BRANCH-v0.1.6}
+APEX_CUDA_SUFFIX="${CUDA_SUFFIX//./}"
 # Get setting whether to use conda or not
 if [[ "$image" == *-conda* ]]; then
     CONDA_ENV=1
@@ -53,6 +56,8 @@ echo "============Printing summary============="
 echo "image: ${image}"
 echo "CUDA_SUFFIX: ${CUDA_SUFFIX}"
 echo "CUDA_VER: ${CUDA_VER}"
+echo "APEX_CUDA_SUFFIX: ${APEX_CUDA_SUFFIX}"
+echo "VISSL_BRANCH: ${VISSL_BRANCH}"
 echo "PYTORCH_VERSION: ${PYTORCH_VERSION}"
 echo "CONDA_ENV: ${CONDA_ENV}"
 echo "USER_ID: ${USER_ID}"
@@ -70,6 +75,9 @@ docker build \
        --build-arg "CUDA_SUFFIX=${CUDA_SUFFIX}" \
        --build-arg "CUDA_VER=${CUDA_VER}" \
        --build-arg "USER_ID=${USER_ID}" \
+       --build-arg "VISSL_BRANCH=${VISSL_BRANCH}" \
+       --build-arg "APEX_CUDA_SUFFIX=${APEX_CUDA_SUFFIX}" \
        -t ${IMAGE_TAG} \
        -f ${DOCKERFILE} \
+       --progress=plain \
        .
