@@ -36,6 +36,7 @@ from vissl.hooks.swav_momentum_hooks import (
     SwAVMomentumNormalizePrototypesHook,
 )
 from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
+from vissl.hooks.ema_meter_hooks import EmaMetersHook
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
 
@@ -170,5 +171,8 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
 
     if cfg.HOOKS.CHECK_NAN:
         hooks.extend([CheckNanLossHook(), CheckNanModelOutputHook()])
+
+    if cfg.HOOKS.EMA_METERS.ENABLE_EMA_METERS:
+        hooks.extend([EmaMetersHook()])
 
     return hooks

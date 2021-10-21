@@ -670,3 +670,8 @@ def infer_and_assert_hydra_config(cfg):
         # Remove CHECK_NAN hooks, as model output masking casts the logits
         # to -inf, which will throw an error from the CHECK_NAN hooks.
         cfg.HOOKS.CHECK_NAN = False
+
+    if cfg.HOOKS.EMA_METERS.ENABLE_EMA_METERS:
+        assert (
+            cfg.METERS.get("name", "") or cfg.METERS.get("names", [])
+        ), "Please specify METER.name or METER.names if you are enabling the EMA_METERS hook."

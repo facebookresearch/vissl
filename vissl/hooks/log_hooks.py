@@ -191,6 +191,39 @@ class LogLossLrEtaHook(ClassyHook):
             )
             atexit.register(self.json_stdout_logger.close)
 
+    @classmethod
+    def print_and_save_meters(self, task, train_phase_idx, meters, metric_key_name_suffix=""):
+        """
+        Executed only on primary gpu at the end of each epoch. Computes the
+        meters and logs the metrics to the json file and to logger streams
+        (stdout, file).
+        """
+        phase_type = "train" if task.train else "test"
+        rank, _ = get_machine_local_and_dist_rank()
+        checkpoint_folder = task.checkpoint_folder
+        save_metrics = {}
+        save_metrics["iteration"] = task.iteration
+        save_metrics["phase_idx"] = task.phase_idx
+        save_metrics["train_phase_idx"] = train_phase_idx
+        for meter in meters:
+            if len(meters) > 0 and (
+                (task.train and task.config["METERS"]["enable_training_meter"])
+                or (not task.train)
+            ):
+                meter_value = meter.value
+                metric_key = f"{phase_type}_{meter.name}"
+
+                if metric_key_name_suffix:
+                    metric_key = f"{metric_key}_{metric_key_name_suffix}"
+
+                if metric_key not in task.metrics:
+                    task.metrics[metric_key] = []
+                task.metrics[metric_key].append(meter_value)
+                save_metrics[metric_key] = meter_value
+                logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
+        meter_file = f"{checkpoint_folder}/metrics.json"
+        save_file(save_metrics, meter_file, append_to_json=True)
+
     def on_update(self, task: "tasks.ClassyTask") -> None:
         """
         Executed after after parameter update. If the current phase is training,
@@ -359,7 +392,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         save the checkpoint. We pass the mode: phase or iteration
         """
         if is_primary():
-            self._print_and_save_meters(task, task.train_phase_idx)
+            LogLossLrEtaHook.print_and_save_meters(task, task.train_phase_idx, task.meters)
         checkpoint_frequency = task.config["CHECKPOINT"]["CHECKPOINT_FREQUENCY"]
         self._checkpoint_model(
             task,
@@ -444,6 +477,12 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     restart_phase = phase_idx
                     restart_iteration = task.iteration
 
+                if task.ema_model is not None:
+                    model_state_dict["ema_model"] = task.ema_model.module.get_classy_state()
+                    model_state_dict["ema_meters"] = [
+                        meter.get_classy_state() for meter in task.ema_meters
+                    ]
+
                 checkpoint_content = {
                     "phase_idx": restart_phase,
                     "iteration": restart_iteration,
@@ -470,35 +509,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     )
                 else:
                     checkpoint_writer.save_consolidated_checkpoint(checkpoint_content)
-
-    def _print_and_save_meters(self, task, train_phase_idx):
-        """
-        Executed only on primary gpu at the end of each epoch. Computes the
-        meters and logs the metrics to the json file and to logger streams
-        (stdout, file).
-        """
-        phase_type = "train" if task.train else "test"
-        rank, _ = get_machine_local_and_dist_rank()
-        checkpoint_folder = task.checkpoint_folder
-        save_metrics = {}
-        save_metrics["iteration"] = task.iteration
-        save_metrics["phase_idx"] = task.phase_idx
-        save_metrics["train_phase_idx"] = train_phase_idx
-        for meter in task.meters:
-            if len(task.meters) > 0 and (
-                (task.train and task.config["METERS"]["enable_training_meter"])
-                or (not task.train)
-            ):
-                meter_value = meter.value
-                metric_key = f"{phase_type}_{meter.name}"
-                if metric_key not in task.metrics:
-                    task.metrics[metric_key] = []
-                task.metrics[metric_key].append(meter_value)
-                save_metrics[metric_key] = meter_value
-                logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
-        meter_file = f"{checkpoint_folder}/metrics.json"
-        save_file(save_metrics, meter_file, append_to_json=True)
-
 
 class LogPerfTimeMetricsHook(ClassyHook):
     """

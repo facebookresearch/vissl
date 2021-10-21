@@ -226,6 +226,7 @@ def standard_train_step(task):
             else:
                 task.optimizer.step(where=task.where)
         task.run_hooks(SSLClassyHookFunctions.on_update.name)
+
         task.num_updates += task.get_global_batchsize()
 
     timer_train_step.stop()

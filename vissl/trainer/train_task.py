@@ -27,7 +27,7 @@ from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import CheckpointLoader
 from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
-
+from vissl.utils.ema_model import ModelEmaV2
 
 if is_apex_available():
     import apex
@@ -583,6 +583,8 @@ class SelfSupervisionTask(ClassificationTask):
         # with the CPU inputs. When the model runs, it rather sends CUDA.
         self.base_model.to(self.device)
 
+        self._set_ema_meters_state(state)
+
         for meter, meter_state in zip(self.meters, state["meters"]):
             meter.set_classy_state(meter_state)
         self.optimizer.set_classy_state(state["optimizer"])
@@ -625,6 +627,17 @@ class SelfSupervisionTask(ClassificationTask):
 
         if self.train and self.train_phase_idx >= 0:
             self.optimizer.on_epoch(self.where)
+
+    def _set_ema_meters_state(self, state):
+        """
+        Only used if EmaMetersHook is enabled.
+        """
+        if self.ema_model is not None:
+            logging.info("Loading ema model")
+            self.ema_model.module.set_classy_state(state["ema_model"])
+            for meter, meter_state in zip(self.ema_meters, state["ema_meters"]):
+                meter.set_classy_state(meter_state)
+
 
     def _update_classy_state(self, state_dict=None):
         """
@@ -714,6 +727,9 @@ class SelfSupervisionTask(ClassificationTask):
                 self.base_model, self.optimizer.optimizer, **self.amp_args
             )
 
+        # Create EMA average of the model if hook is specified.
+        self._create_ema_meters()
+
         # Restore an hypothetical checkpoint
         vissl_state_dict = None
         if self.checkpoint_path is not None:
@@ -753,6 +769,19 @@ class SelfSupervisionTask(ClassificationTask):
             logging.info("======Loaded loss state from checkpoint======")
 
         return self._update_classy_state(vissl_state_dict)
+
+    def _create_ema_meters(self):
+        self.ema_model = None
+        self.ema_meters = []
+
+        if self.config["HOOKS"]["EMA_METERS"]["ENABLE_EMA_METERS"] > 0:
+            logging.info("Creating EMA model")
+            model_no_ddp = self.base_model
+            if isinstance(self.base_model, torch.nn.parallel.DistributedDataParallel):
+                model_no_ddp = self.base_model.module
+            self.ema_model = ModelEmaV2(
+                model_no_ddp, decay=self.config["HOOKS"]["EMA_METERS"]["DECAY"]
+            )
 
     def set_epoch(
         self, phase_type: str, epoch: int, start_iter: int, train_phase_idx: int

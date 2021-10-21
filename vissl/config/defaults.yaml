@@ -152,6 +152,19 @@ config:
       # frequency. -1 means the params will be logged only at the end of epochs.
       LOG_PARAMS_EVERY_N_ITERS: 310
 
+    # ----------------------------------------------------------------------------------- #
+    # Exponential Moving Average (EMA) Meters  (visualization)
+    # ----------------------------------------------------------------------------------- #
+
+    EMA_METERS:
+      ENABLE_EMA_METERS: True
+      # after how many iterations should you update the ema.
+      UPDATE_ITER: 1
+      # after how many iterations to begin setting the ema.
+      WARMUP: 0
+      # decay to use for the exponential moving average.
+      DECAY: 0.9999
+
   # ----------------------------------------------------------------------------------- #
   # MONITORING
   # ----------------------------------------------------------------------------------- #
