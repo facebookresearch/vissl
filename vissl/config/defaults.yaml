@@ -37,6 +37,10 @@ defaults:
   # you must specify the base config you want to run
   - config: ???
 
+# By default, make hydra verbose
+hydra:
+  verbose: True
+
 ######################### versioning ###################################
 # this config version is checked with the VISSL latest config version in
 # vissl/config/__init__.py

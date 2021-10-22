@@ -54,5 +54,4 @@ if __name__ == "__main__":
     `python tools/run_distributed_engines.py config=test/integration_test/quick_simclr`
     """
     overrides = sys.argv[1:]
-    overrides.append("hydra.verbose=true")
     hydra_main(overrides=overrides)
