@@ -171,15 +171,14 @@ class SSLTensorboardHook(ClassyHook):
         if is_primary():
             phase_type = "Training" if task.train else "Testing"
             for meter in task.meters:
-                if "accuracy" in meter.name:
-                    for top_n, accuracies in meter.value.items():
-                        for i, acc in accuracies.items():
-                            tag_name = f"{phase_type}/Accuracy_" f" {top_n}_Output_{i}"
-                            self.tb_writer.add_scalar(
-                                tag=tag_name,
-                                scalar_value=round(acc, 5),
-                                global_step=task.train_phase_idx,
-                            )
+                for metric_name, val in meter.value.items():
+                    for i, val in val.items():
+                        tag_name = f"{phase_type}/{meter.name}_{metric_name}_Output_{i}"
+                        self.tb_writer.add_scalar(
+                            tag=tag_name,
+                            scalar_value=round(val, 5),
+                            global_step=task.train_phase_idx,
+                        )
         if not (self.log_params or self.log_params_gradients):
             return
 

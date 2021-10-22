@@ -577,9 +577,23 @@ def infer_and_assert_hydra_config(cfg):
     if cfg.METERS is not None:
         from vissl.models import is_feature_extractor_model
 
+        # Ensure backwards compatibility of cfg.METERS.name.
         meter_name = cfg.METERS.get("name", "")
-        valid_meters = ["accuracy_list_meter", "mean_ap_list_meter"]
         if meter_name:
+            meter_names = set(cfg.METERS.get("names", []))
+            meter_names.add(meter_name)
+            cfg.METERS.names = list(meter_names)
+
+        meter_names = cfg.METERS.get("names", [])
+        valid_meters = [
+            "accuracy_list_meter",
+            "mean_ap_list_meter",
+            "precision_at_k_list_meter",
+            "recall_at_k_list_meter",
+        ]
+
+        for meter_name in meter_names:
+            # Add appropriate meters for each feature extractor layer specified.
             if meter_name in valid_meters and is_feature_extractor_model(cfg.MODEL):
                 cfg.METERS[meter_name]["num_meters"] = len(
                     cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP

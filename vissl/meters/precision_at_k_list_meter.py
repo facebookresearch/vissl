@@ -8,25 +8,25 @@ from typing import List, Union
 
 import torch
 from classy_vision.generic.util import is_pos_int
-from classy_vision.meters import AccuracyMeter, ClassyMeter, register_meter
+from classy_vision.meters import PrecisionAtKMeter, ClassyMeter, register_meter
 from vissl.config import AttrDict
 
 
-@register_meter("accuracy_list_meter")
-class AccuracyListMeter(ClassyMeter):
+@register_meter("precision_at_k_list_meter")
+class PrecisionAtKListMeter(ClassyMeter):
     """
-    Meter to calculate top-k accuracy for single label image classification task.
+    Meter to calculate precision@k.
 
-    Supports multi-target and multiple output. A list of accuracy meters is
-    constructed and each output has a meter associated.
+    Supports multi-target and multiple output. A list of precision meters is
+    constructed and each output has a meter associated. Note that Precision@k is
+    different than vanilla Precision.
 
     Example:
-        target = [0 0 0 1 1]  # Correct classes are 0, 3
-
+        target = [0 1 0 1 0]  # Correct classes are 1, 3
         pred = [0.06, 0.41, 0.04, 0.39, 0.1]  # Top-1 prediction is 1, top-3 is 1, 3, 0
 
-        Accuracy@1: 0 correct = 0.0
-        Accuracy@3: 1 correct = 1.0
+        Precision@1: 1 correct / 1 predicted = 1.0
+        Precision@3: 2 correct / 3 predicted = 0.666
 
     Args:
         num_meters: number of meters and hence we have same number of outputs
@@ -47,7 +47,7 @@ class AccuracyListMeter(ClassyMeter):
         self._num_meters = num_meters
         self._topk_values = topk_values
         self._meters = [
-            AccuracyMeter(self._topk_values) for _ in range(self._num_meters)
+            PrecisionAtKMeter(self._topk_values) for _ in range(self._num_meters)
         ]
         self._meter_names = meter_names
         self.reset()
@@ -55,7 +55,7 @@ class AccuracyListMeter(ClassyMeter):
     @classmethod
     def from_config(cls, meters_config: AttrDict):
         """
-        Get the AccuracyListMeter instance from the user defined config
+        Get the PrecisionAtKListMeter instance from the user defined config
         """
         return cls(
             num_meters=meters_config["num_meters"],
@@ -68,7 +68,7 @@ class AccuracyListMeter(ClassyMeter):
         """
         Name of the meter
         """
-        return "accuracy_list_meter"
+        return "precision_at_k_list_meter"
 
     @property
     def value(self):
@@ -84,6 +84,7 @@ class AccuracyListMeter(ClassyMeter):
             val_dict[ind] = {}
             val_dict[ind]["val"] = meter_val
             val_dict[ind]["sample_count"] = sample_count
+
         # also create dict w.r.t top-k
         output_dict = {}
         for k in self._topk_values:
