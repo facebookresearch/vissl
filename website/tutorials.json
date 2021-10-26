@@ -1,38 +1,44 @@
 {
   "Getting Started": [
      {
-      "id": "Installation",
+      "id": "Installation_v0_1_6",
       "title": "Installation"
      },{
-      "id": "Understanding_VISSL_Training_and_YAML_Config",
+      "id": "Understanding_VISSL_Training_and_YAML_Config_V0_1_6",
       "title": "Understanding VISSL Training and YAML Config"
      }
   ],
   "Training": [
      {
-      "id": "Train_SimCLR_on_1_gpu",
+      "id": "Train_SimCLR_on_1_gpu_V0_1_6",
       "title": "Train SimCLR on 1-gpu"
      }
   ],
   "Feature Extraction": [
      {
-      "id": "Feature_Extraction",
+      "id": "Feature_Extraction_V0_1_6",
       "title": "Feature Extraction"
      }
   ],
   "Benchmark": [
      {
-      "id": "Benchmark_Linear_Image_Classification_on_ImageNet_1K",
+      "id": "Benchmark_Linear_Image_Classification_on_ImageNet_1K_V0_1_6",
       "title": "Benchmark Linear Image Classification on ImageNet-1K"
      },{
-      "id": "Benchmark_Full_Finetuning_on_ImageNet_1K",
+      "id": "Benchmark_Full_Finetuning_on_ImageNet_1K_V0_1_6",
       "title": "Benchmark Full-Finetuning on ImageNet-1K"
      }
   ],
    "Large Scale Training": [
       {
-      "id": "Large_Scale_Training",
+      "id": "Large_Scale_Training_V0_1_6",
       "title": "Large Scale Training with VISSL (fp16, LARC, ZeRO, etc)"
+      }
+   ],
+   "Inference": [
+      {
+         "id": "Using_a_pretrained_model_for_inference_V0_1_6",
+         "title": "Using a pretrained model for inference"
       }
    ]
 }

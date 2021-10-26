@@ -39,7 +39,7 @@ See [`INSTALL.md`](https://github.com/facebookresearch/vissl/blob/main/INSTALL.m
 ## Getting Started
 
 Install VISSL by following the [installation instructions](https://github.com/facebookresearch/vissl/blob/main/INSTALL.md).
-After installation, please see [Getting Started with VISSL](https://github.com/facebookresearch/vissl/blob/main/GETTING_STARTED.md) and the [Colab Notebook](https://colab.research.google.com/drive/1iigQmKL_DUuBLT6BqjrGXlW9ZIqKIFmt?usp=sharing) to learn about basic usage.
+After installation, please see [Getting Started with VISSL](https://github.com/facebookresearch/vissl/blob/main/GETTING_STARTED.md) and the [Colab Notebook](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Understanding_VISSL_Training_and_YAML_Config_V0_1_6.ipynb) to learn about basic usage.
 
 ## Documentation
 
@@ -49,12 +49,14 @@ Learn more about VISSL at our [documentation](https://vissl.readthedocs.io). And
 
 Get started with VISSL by trying one of the **Colab tutorial notebooks**.
 
-- [Train SimCLR on 1-gpu](https://colab.research.google.com/drive/1Rt3Plt3ph84i1A-eolLFafybwjrBFxYe?usp=sharing)
-- [Extracting Features from a pretrained model](https://colab.research.google.com/drive/1EXZyW65lXBryWE2ZmC0bar2996KEiBZb?usp=sharing)
-- [Benchmark task: Full finetuning on ImageNet-1K](https://colab.research.google.com/drive/1m1LUa-3vIR-rxwcm0QCrefc5S6PAY874?usp=sharing)
-- [Benchmark task: Linear image classification on ImageNet-1K](https://colab.research.google.com/drive/1CCuZ50BN99JcOB6VEPytVi_i2tSMd7A3?usp=sharing)
-- [Large scale training (fp16, LARC, ZeRO)](https://colab.research.google.com/drive/1fvZdRNUyHxMOaxuEO34x7XeGndzTUfIW?usp=sharing)
-- [Using a pre-trained model in inference mode](https://colab.research.google.com/drive/1DkqGi9L47eWjA5j77EVEmbrktWBGoynN?usp=sharing)
+- [Train SimCLR on 1-gpu](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Train_SimCLR_on_1_gpu_V0_1_6.ipynb)
+- [Extracting Features from a pretrained model](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Using_a_pretrained_model_for_inference_V0_1_6.ipynb)
+- [Benchmark task: Full finetuning on ImageNet-1K](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Benchmark_Full_Finetuning_on_ImageNet_1K_V0_1_6.ipynb)
+- [Benchmark task: Linear image classification on ImageNet-1K](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K_V0_1_6.ipynb)
+- [Large scale training (fp16, LARC, ZeRO)](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Large_Scale_Training_V0_1_6.ipynb)
+- [Using a pre-trained model in inference mode](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Using_a_pretrained_model_for_inference_V0_1_6.ipynb)
+- [Using a pre-trained model in inference mode](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Using_a_pretrained_model_for_inference_V0_1_6.ipynb)
+- [Using a pre-trained model in inference mode](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Using_a_pretrained_model_for_inference_V0_1_6.ipynb)
 
 
 ## Model Zoo and Baselines

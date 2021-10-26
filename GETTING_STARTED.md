@@ -60,7 +60,7 @@ python3 tools/run_distributed_engines.py \
 Users need to set the dataset and obtain the builtin tool for training. Follow the steps:
 
 #### Step1: Setup ImageNet1K dataset
-If you installed pre-built VISSL packages, we will set the ImageNet1K dataset following our [data documentation](https://vissl.readthedocs.io/en/latest/vissl_modules/data.html) and [tutorial](https://colab.research.google.com/drive/1CCuZ50BN99JcOB6VEPytVi_i2tSMd7A3#scrollTo=KPGCiTsXZeW3). NOTE that we need to register
+If you installed pre-built VISSL packages, we will set the ImageNet1K dataset following our [data documentation](https://vissl.readthedocs.io/en/latest/vissl_modules/data.html) and [tutorial](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K_V0_1_6.ipynb). NOTE that we need to register
 the dataset with VISSL.
 
 In your python interpretor:
