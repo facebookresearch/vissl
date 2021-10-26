@@ -22,7 +22,7 @@ Hooks are the helper functions that can be executed at several parts of a traini
 - :code:`on_end`: executed at the very end of training.
 
 
-Vissl Hooks
+VISSL Hooks
 -------------------------------------
 
 Hooks are executed by inserting :code:`task.run_hooks(SSLClassyHookFunctions.<type>.name)` at several steps of the training. VISSL currently supports the following hooks. To see comprehensive documentation on these hooks, pelase see the :code:`defaults.yaml`.

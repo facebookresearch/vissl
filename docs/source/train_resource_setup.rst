@@ -47,7 +47,6 @@ More precisely, the number of nodes and GPU by node to allocate is driven by the
       NUM_PROC_PER_NODE: 2    # user sets this to number of gpus to use
 
 While the more SLURM specific options are located in the "SLURM" configuration block:
-TODO: Make sure this renders.
 
 .. code-block:: yaml
 

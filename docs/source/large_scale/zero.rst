@@ -34,7 +34,7 @@ An example for using ZeRO with LARC and SGD optimization:
 
     OPTIMIZER:
       name: "zero"
-      use_zero: True # TODO: Is this correct? Do we use zero in name anymore?
+      use_zero: True
       base_optimizer:
         name: sgd
         use_larc: False
@@ -47,7 +47,7 @@ An example for using ZeRO with LARC and SGD optimization:
         nesterov: False
 .. note::
 
-    ZeRO works seamlessly with LARC and mixed precision training. Using ZeRO with activation checkpointing is not yet enabled primarily due to manual gradient reduction need for activation checkpointing. TODO: Quentin/Priya Is this still correct?
+    ZeRO works seamlessly with LARC and mixed precision training. Using ZeRO with activation checkpointing is not yet enabled primarily due to manual gradient reduction need for activation checkpointing.
 
 To use Sharded Data Parallel (SDP), inspired by Zero-2, merely set:
 
@@ -59,7 +59,6 @@ To use Sharded Data Parallel (SDP), inspired by Zero-2, merely set:
          # VISSL will automatically set optimizer = zero and
          # configure the settings required to run SDP successfully.
          USE_SDP: True
-         # TODO: Can we document what this is?
          reduce_buffer_size: -1
 
 To use Fully Sharded Data Parallel (FSDP), inspired by Zero-3, merely set:
@@ -85,4 +84,4 @@ To use Fully Sharded Data Parallel (FSDP), inspired by Zero-3, merely set:
          clear_autocast_cache: True
          verbose: True
 
-TODO: Quentin/Priya to review this page and let me know if I missed anything/want anything to add.
+**Warning:** This has only been fully tested with SwAV + Regnet models.
