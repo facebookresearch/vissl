@@ -217,7 +217,8 @@ There is some standard deviation in linear results if we run the same eval sever
 
 ### DINO
 
-The model is obtained with [this config](https://github.com/facebookresearch/vissl/blob/main/configs/config/pretrain/dino/dino_16gpus_deits16.yaml).
+The ViT-small model is obtained with [this config](https://github.com/facebookresearch/vissl/blob/main/configs/config/pretrain/dino/dino_16gpus_deits16.yaml).
 | Method | Model | PreTrain dataset | ImageNet k-NN acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
-| [DINO](https://arxiv.org/abs/)   |    DeiT-S/16 - 300 epochs - 1024 batch-size         |    ImageNet-1K      | 73.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/dino_300ep_deitsmall16/model_final_checkpoint_phase299.torch)
+| [DINO](https://arxiv.org/abs/2104.14294)   |    ViT-S/16 - 300 epochs - 1024 batch-size         |    ImageNet-1K      | 73.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/dino_300ep_deitsmall16/model_final_checkpoint_phase299.torch)
+| [DINO](https://arxiv.org/abs/2104.14294)   |    XCiT-S/16 - 300 epochs - 1024 batch-size         |    ImageNet-1K      | 74.8 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/dino_300ep_xcitsmall16/model_phase250.torch)
