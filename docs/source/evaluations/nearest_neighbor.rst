@@ -1,7 +1,7 @@
 Benchmark: Nearest Neighbor k-means
 ===========================================================
 
-VISSL supports Nearest Neighbor evaluation task using k-means. We closely follow the benchmark setup from Zhirong Wu et al. https://github.com/zhirongw/lemniscate.pytorch#nearest-neighbor.
+VISSL supports Nearest Neighbor evaluation task using k-means. We closely follow the benchmark setup from Zhirong Wu et al. `here <https://github.com/zhirongw/lemniscate.pytorch#nearest-neighbor>`_.
 For the Nearest neighbor evaluation, the process involves 2 steps:
 
 - **Step1**: Extract the relevant features from the model for both training and validation set.

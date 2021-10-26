@@ -1,4 +1,4 @@
-Working with Vision Transformers in vissl
+Training Vision Transformer models
 ============================================
 
 Author: matthew.l.leavitt@gmail.com
@@ -25,7 +25,7 @@ We start by demonstrating how to train ViTs, and continue with examples of train
 Supervised ViT training on 1 gpu
 --------------------------------------------
 
-VISSL provides yaml configuration files for many of the common hyperparameter settings for different vision transformer model variants. We will start with supervised training of a ViT-baseline (ViT-B) model on the ImageNet-1k dataset (see `Using Data <https://vissl.readthedocs.io/en/v0.1.5/vissl_modules/data.html>`_ to set up your dataset) using a single GPU:
+VISSL provides yaml configuration files for many of the common hyperparameter settings for different vision transformer model variants. We will start with supervised training of a ViT-baseline (ViT-B) model on the ImageNet-1k dataset (see :ref:`Using Data<Using Data>` to set up your dataset) using a single GPU:
 
 .. code-block:: bash
 
@@ -55,9 +55,19 @@ Let's take a look at the ``model`` section of the config file:
         NUM_HEADS: 12
         HIDDEN_DIM: 768
         MLP_DIM: 3072
-        DROPOUT_RATE: 0.1
+        # MLP and projection layer dropout rate
+        DROPOUT_RATE: 0
+        # Attention dropout rate
         ATTENTION_DROPOUT_RATE: 0
+        # Use the token for classification. Currently no alternatives
+        # supported
         CLASSIFIER: token
+        # Stochastic depth dropout rate. Turning on stochastic depth and
+        # using aggressive augmentation is essentially the difference
+        # between a DeiT and a ViT.
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 768, "hidden_dim": 3072,
@@ -68,7 +78,7 @@ Starting at the top, we can see that ``MODEL.GRAD_CLIP.USE_GRAD_CLIP`` is set to
 
 Moving on to ``MODEL.TRUNK.NAME``, we can see that we are using a ``vision_transformer``, which corresponds to class of model in ``vissl/models/trunks``. The architectural hyperparameters are contained in ``MODEL.TRUNK.VISION_TRANSFORMERS`` (again, see ``defaults.yaml`` for details on these hyperparameters). These are the appropriate architectural hyperparameters for a ViT-B as per the `publication <https://arxiv.org/abs/2010.11929>`_.
 
-The head architecture is specified in ``MODEL.HEAD.PARAMS``. See the `models documentation <https://vissl.readthedocs.io/en/v0.1.5/extend_modules/models.html>`_ for more information about how to specify model head parameters. ``"in_plane"`` is the dimensionality of the input to the head, which must match the output dimensionality of the trunk, which for the ViT-B is 768.
+The head architecture is specified in ``MODEL.HEAD.PARAMS``. See the :ref:`models documentation<Building Models>` for more information about how to specify model head parameters. ``"in_plane"`` is the dimensionality of the input to the head, which must match the output dimensionality of the trunk, which for the ViT-B is 768.
 
 Let's move on to the ``OPTIMIZER`` section of the configuration file:
 
@@ -78,6 +88,7 @@ Let's move on to the ``OPTIMIZER`` section of the configuration file:
     name: adamw
     weight_decay: 0.05
     num_epochs: 300
+    betas: [.9, .999] # for Adam/AdamW
     param_schedulers:
       lr:
         auto_lr_scaling:
@@ -95,8 +106,11 @@ Let's move on to the ``OPTIMIZER`` section of the configuration file:
         interval_scaling: [rescaled, rescaled]
         update_interval: step
         lengths: [0.017, 0.983]
+      # Parameters to omit from regularization.
+      # We don't want to regularize the class token or position in the ViT.
+      non_regularized_parameters: [pos_embedding, class_token]
 
-Again, these hyperparameters reflect the authors' recipe in the original ViT publication. It's also worth pointing out that VISSL offers a lot control of the optimizer, so be sure to `read up on it <https://vissl.readthedocs.io/en/v0.1.5/vissl_modules/optimizer.html>`_ and poke around in ``vissl/config/defaults.yaml``. `AdamW <https://arxiv.org/abs/1711.05101>`_ thus far seems like the most consistently successful optimizer for training vision transformers, so we use it in all our config files.
+Again, these hyperparameters reflect the authors' recipe in the original ViT publication. It's also worth pointing out that VISSL offers a lot control of the optimizer, so be sure to :ref:`read up on it<Using Optimizers>` and poke around in ``vissl/config/defaults.yaml``. `AdamW <https://arxiv.org/abs/1711.05101>`_ thus far seems like the most consistently successful optimizer for training vision transformers, so we use it in all our config files.
 
 This config file is for a ViT-B16. What if we wanted instead to train the next larger ViT, ViT-L? This would require the following changes to the model architecture parameters:
 
@@ -117,6 +131,9 @@ This config file is for a ViT-B16. What if we wanted instead to train the next l
         DROPOUT_RATE: 0.1
         ATTENTION_DROPOUT_RATE: 0
         CLASSIFIER: token
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
     HEAD:
       PARAMS: [
       ["vision_transformer_head", {"in_plane": 1024, "hidden_dim": 4096,
@@ -173,7 +190,8 @@ MoCo ViT-B16 training
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DROP_LAST: True
 
-Most of the contrastive training schemes require duplicating each sample, which is achieved in this case by using the transformation ``ImgReplicatePil``, which is specified in ``DATA.TRAIN.TRANSFORMS``. Many of the self-supervised methods also require a specific data collator, specified in ``DATA.TRAIN.COLLATE_FUNCTION``. See `Using Data <https://vissl.readthedocs.io/en/v0.1.5/vissl_modules/data.html>`_ for more details.
+
+Most of the contrastive training schemes require duplicating each sample, which is achieved in this case by using the transformation ``ImgReplicatePil``, which is specified in ``DATA.TRAIN.TRANSFORMS``. Many of the self-supervised methods also require a specific data collator, specified in ``DATA.TRAIN.COLLATE_FUNCTION``. See :ref:`Using Data<Using Data>` for more details.
 
 The `LOSS` section of the config file specifies the parameters for the MoCo loss:
 
@@ -201,12 +219,12 @@ If you move to the bottom of the file, you can see that this file specifies usin
   MACHINE:
     DEVICE: gpu
 
-See the `documentation on running large jobs <https://vissl.readthedocs.io/en/v0.1.5/large_scale/distributed_training.html>`_ for more details on scaling up!
+See the :ref:`documentation on running large jobs<Train on multiple-gpus>` for more details on scaling up!
 
 
 Training DeiT with SwAV
 --------------------------------
-This section primarily addresses the differences between DeiT and ViT. `See here <https://vissl.readthedocs.io/en/v0.1.5/ssl_approaches/swav.html>`_ for detailed information about how to use SwAV. Aside from training with distillation, which is not currently supported in VISSL, the differences between DeiT and ViT are mostly in the choice of hyperparameters (see Table 9 in the `DeiT paper <https://arxiv.org/abs/2012.12877>`_ for details):
+This section primarily addresses the differences between DeiT and ViT. See :ref:`here<Train SwAV model>` for detailed information about how to use SwAV. Aside from training with distillation, which is not currently supported in VISSL, the differences between DeiT and ViT are mostly in the choice of hyperparameters (see Table 9 in the `DeiT paper <https://arxiv.org/abs/2012.12877>`_ for details):
 
 .. code-block:: yaml
 
@@ -224,6 +242,9 @@ This section primarily addresses the differences between DeiT and ViT. `See here
         DROPOUT_RATE: 0 # 0.1 for ViT
         ATTENTION_DROPOUT_RATE: 0
         DROP_PATH_RATE: 0.1 # stochastic depth dropout probability. 0 for ViT
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
 
 The DeiT uses `stochastic depth <https://arxiv.org/abs/1603.09382>`_, which is set via ``MODEL.TRUNK.VISION_TRANSORMERS.DROP_PATH_RATE``. In contrast to ViT, DeiT does not use gradient clipping. DeiT also uses a number of data augmentations:
 
@@ -274,7 +295,7 @@ The DeiT uses `stochastic depth <https://arxiv.org/abs/1603.09382>`_, which is s
 
 DeiT uses `RandAugment <https://arxiv.org/abs/1909.13719>`_, `Random Erasing <https://arxiv.org/abs/1708.04896>`_, `MixUp <https://arxiv.org/abs/1710.09412>`_, `CutMix <https://arxiv.org/abs/1905.04899>`_, and Label Smoothing. Note that MixUp, CutMix, and Label Smoothing are not implemented as VISSL transforms, but instead as a custom collator ``DATA.TRAIN.COLLATE_FUNCTION: cutmixup_collator``, and using Label Smoothing requires setting ``DATA.TRAIN.LABEL_TYPE: "zero"`` (see ``vissl/config/defaults.yaml`` for details).
 
-The ``LOSS`` section contains the parameters for the SwAV loss (`See here <https://vissl.readthedocs.io/en/v0.1.5/ssl_approaches/swav.html>`_ for detailed information about how to use SwAV):
+The ``LOSS`` section contains the parameters for the SwAV loss (See :ref:`here<Train SwAV model>` for detailed information about how to use SwAV):
 
 .. code-block:: yaml
 
@@ -312,6 +333,8 @@ ConViT
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
         DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
       CONVIT:
         N_GPSA_LAYERS: 10 # Number of gated positional self-attention layers. Remaining layers are standard self-attention layers.
         CLASS_TOKEN_IN_LOCAL_LAYERS: False # Whether to add class token in GPSA layers. Recommended not to because it has been shown to lower performance.
@@ -336,11 +359,11 @@ Additional information
 
 Other important factors related to training include:
 
-- **Synchronized batch norm**: Vision transformers typically don't use batch norm, but many self-supervised learning methods obtain optimal performance when using heads that have batch norm. Ensure sync batch norm is set up properly if you're using batch norm and training on multiple GPUs. See the `SwAV documentation <https://vissl.readthedocs.io/en/v0.1.5/ssl_approaches/swav.html>`_ for a walk-through on sync batch norm.
+- **Synchronized batch norm**: Vision transformers typically don't use batch norm, but many self-supervised learning methods obtain optimal performance when using heads that have batch norm. Ensure sync batch norm is set up properly if you're using batch norm and training on multiple GPUs. See the :ref:`Swav Documentation<Train SwAV model>` for a walk-through on sync batch norm.
 
-- **Mixed precision**: Using mixed precision variables can reduce memory usage and afford larger batch sizes. See the `SwAV documentation <https://vissl.readthedocs.io/en/v0.1.5/ssl_approaches/swav.html>`_ for a walk-through on sync mixed precision training.
+- **Mixed precision**: Using mixed precision variables can reduce memory usage and afford larger batch sizes. See the :ref:`Swav Documentation<Train SwAV model>` for a walk-through on sync mixed precision training.
 
-- **Data augmentations**: Read about `data augmentation in VISSL <https://vissl.readthedocs.io/en/v0.1.5/vissl_modules/data.html#using-data-transforms>`_; the `SwAV documentation <https://vissl.readthedocs.io/en/v0.1.5/ssl_approaches/swav.html>`_ has details about using multi-crop.
+- **Data augmentations**: Read about :ref:`data augmentations in VISSL<Using Data Transforms>`; the :ref:`Swav Documentation<Train SwAV model>` has details about using multi-crop.
 
 Pre-trained models
 --------------------

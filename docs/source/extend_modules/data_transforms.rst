@@ -6,7 +6,7 @@ Adding new transforms and using them is quite easy in VISSL. Follow the steps be
 - **Step1**: Create your transform under :code:`vissl/data/ssl_transforms/my_new_transform.py`. The transform should follow the template:
 
 
-.. code-block:: bash
+.. code-block:: python
 
 
     @register_transform("MyNewTransform")

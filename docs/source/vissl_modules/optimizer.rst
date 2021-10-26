@@ -189,11 +189,12 @@ Below we provide some examples of how to setup various types of Learning rate sc
 Auto-scaling of Learning Rate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VISSL supports automatically scaling LR as per https://arxiv.org/abs/1706.02677. To turn this automatic scaling on, set :code:`config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=true`.
+VISSL supports automatically scaling LR as per `Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour <https://arxiv.org/abs/1706.02677>`_.
+To turn this automatic scaling on, set :code:`config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.auto_scale=true`.
 
 :code:`scaled_lr` is calculated: for a given
 
-- :code:`base_lr_batch_size` = batch size for which the base learning rate is specified,
+- :code:`base_lr_batch_size` = batch size for which the base learning rate is specified.
 
 - :code:`base_value` = base learning rate value that will be scaled, the current batch size is used to determine how to scale the base learning rate value.
 
@@ -203,7 +204,7 @@ if :code:`scaling_type` is set to "sqrt", :code:`scale_factor = sqrt(scale_facto
 
 :code:`scaled_lr = scale_factor * base_value`
 
-For different types of learning rate schedules, the LR scaling is handles as below:
+For different types of learning rate schedules, the LR scaling is handled as below:
 
 .. code-block:: bash
 
@@ -227,3 +228,24 @@ For different types of learning rate schedules, the LR scaling is handles as bel
         applied, it's possible the warmup is not necessary if the global batch_size is smaller
         than the base_lr_batch_size and in that case, we remove the linear warmup from the
         schedule.
+
+Here is an example configuration for linear scaling, with a base batchsize of 256, and a base learning rate of 0.1:
+
+.. code-block:: yaml
+
+    OPTIMIZER:
+      param_schedulers:
+         lr:
+           # we make it convenient to scale Learning rate automatically as per the scaling
+           # rule specified in https://arxiv.org/abs/1706.02677 (ImageNet in 1Hour).
+           auto_lr_scaling:
+             # if set to True, learning rate will be scaled.
+             auto_scale: True
+             # base learning rate value that will be scaled.
+             base_value: 0.1
+             # batch size for which the base learning rate is specified. The current batch size
+             # is used to determine how to scale the base learning rate value.
+             # scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size
+             base_lr_batch_size: 256
+             # scaling_type can be set to "sqrt" to reduce the impact of scaling on the base value
+             scaling_type: "linear"

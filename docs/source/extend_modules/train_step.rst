@@ -1,26 +1,26 @@
 Add custom Train loop
 =======================
 
-VISSL implements a default training loop (single iteration step) that is used for self-supervised training of all VISSL reference approaches, for feature extraction and for supervised workflows. Users con
+VISSL implements a default training loop (single iteration step) that is used for self-supervised training of all VISSL reference approaches, for feature extraction and for supervised workflows. Users can
 implement their own training loop.
 
 The training loop performs: data read, forward, loss computation, backward, optimizer step, parameter updates.
 
 Various intermediate steps are also performed:
 
-- logging the training loss, training eta, LR, etc to loggers
+- logging the training loss, training eta, LR, etc to loggers.
 
-- logging to tensorboard,
+- logging metrics to tensorboard.
 
-- performing any self-supervised method specific operations (like in MoCo approach, the momentum encoder is updated), computing the scores in swav
+- performing any self-supervised method specific operations (like in MoCo approach, the momentum encoder is updated), computing the scores in swav.
 
-- checkpointing model if user wants to checkpoint in the middle of an epoch
+- checkpointing model if user wants to checkpoint in the middle of an epoch.
 
 Users can implement their custom training loop by following the steps:
 
 - **Step1**: Create your :code:`my_new_training_loop` module under :code:`vissl/trainer/train_steps/my_new_training_loop.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     from vissl.trainer.train_steps import register_train_step
 

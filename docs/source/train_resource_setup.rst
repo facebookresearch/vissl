@@ -19,7 +19,9 @@ Train anything on 1-gpu
 =============================
 
 If you have a configuration file (any vissl compatible file) for any training, that you want to run on 1-gpu only (for example: train SimCLR on 1 gpu, etc), you don't need to modify the config file. VISSL provides a helper script that takes care of all the adjustments.
-This can facilitate debugging by allowing users to insert :code:`pdb` in their code. VISSL also takes care of auto-scaling the Learning rate for various schedules (cosine, multistep, step etc.) if you have enabled the auto_scaling (see :code:`config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling`). You can simply achieve this by using the :code:`low_resource_1gpu_train_wrapper.sh` script. An example usage:
+This can facilitate debugging by allowing users to insert :code:`pdb` in their code.
+
+VISSL also takes care of auto-scaling the Learning rate for various schedules (cosine, multistep, step etc.) if you have enabled the auto_scaling (see :code:`config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling`). You can simply achieve this by using the :code:`low_resource_1gpu_train_wrapper.sh` script. An example usage:
 
 .. code-block:: yaml
 
@@ -48,31 +50,35 @@ While the more SLURM specific options are located in the "SLURM" configuration b
 
 .. code-block:: yaml
 
-  SLURM:
-    # set to True to use SLURM
-    USE_SLURM: true
-    # Name of the job on SLURM
-    NAME: "vissl"
-    # Comment of the job on SLURM
-    COMMENT: "vissl job"
-    # Partition of SLURM on which to run the job
-    PARTITION: "learnfair"
-    # Where the logs produced by the SLURM jobs will be output
-    LOG_FOLDER: "."
-    # Maximum number of hours needed by the job to complete. Above this limit, the job might be pre-empted.
-    TIME_HOURS: 72
-    # Additional constraints on the hardware of the nodes to allocate (example 'volta' to select a volta GPU)
-    CONSTRAINT: ""
-    # GB of RAM memory to allocate for each node
-    MEM_GB: 250
-    # TCP port on which the workers will synchronize themselves with torch distributed
-    PORT_ID: 40050
-    # Number of CPUs per GPUs to request on the cluster.
-    NUM_CPU_PER_PROC: 8
-    # Any other parameters for slurm (e.g. account, hint, distribution, etc.,)
-    # Please see https://github.com/facebookincubator/submitit/issues/23#issuecomment-695217824.
-    ADDITIONAL_PARAMETERS: {}
-
+    # ----------------------------------------------------------------------------------- #
+    # DISTRIBUTED TRAINING ON SLURM: Additional options for SLURM node allocation
+    # (options like number of nodes and number of GPUs by node are taken from DISTRIBUTED)
+    # ----------------------------------------------------------------------------------- #
+    SLURM:
+      # Whether or not to run the job on SLURM
+      USE_SLURM: false
+      # Name of the job on SLURM
+      NAME: "vissl"
+      # Comment of the job on SLURM
+      COMMENT: "vissl job"
+      # Partition of SLURM on which to run the job. This is a required field if using SLURM.
+      PARTITION: ""
+      # Where the logs produced by the SLURM jobs will be output
+      LOG_FOLDER: "."
+      # Maximum number of hours / minutes needed by the job to complete. Above this limit, the job might be pre-empted.
+      TIME_HOURS: 72
+      TIME_MINUTES: 0
+      # Additional constraints on the hardware of the nodes to allocate (example 'volta' to select a volta GPU)
+      CONSTRAINT: ""
+      # GB of RAM memory to allocate for each node
+      MEM_GB: 250
+      # TCP port on which the workers will synchronize themselves with torch distributed
+      PORT_ID: 40050
+      # Number of CPUs per GPUs to request on the cluster.
+      NUM_CPU_PER_PROC: 8
+      # Any other parameters for slurm (e.g. account, hint, distribution, etc.,) as dictated by submitit.
+      # Please see https://github.com/facebookincubator/submitit/issues/23#issuecomment-695217824.
+      ADDITIONAL_PARAMETERS: {}
 
 Users can customize these values by using the standard hydra override syntax (same as for any other item in the configuration), or can modify the script to fit their needs.
 

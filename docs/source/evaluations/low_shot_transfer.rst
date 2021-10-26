@@ -4,7 +4,7 @@ Benchmark: Low Shot Transfer
 Using a model pre-trained with Self Supervised Learning on a huge dataset and fine-tuning it on smaller datasets is a very common use case of Self Supervised Learning algorithm.
 
 VISSL provides a set of low-shot transfer tasks to benchmark your models on and compare them with other pre-training techniques.
-A lost of the low shot transfer benchmarks listed below are directly inspired from the `VTAB <https://arxiv.org/pdf/1910.04867.pdf>`_ paper.
+A lot of the low shot transfer benchmarks listed below are directly inspired from the `VTAB <https://arxiv.org/pdf/1910.04867.pdf>`_ paper.
 
 
 Benchmark: Caltech-101

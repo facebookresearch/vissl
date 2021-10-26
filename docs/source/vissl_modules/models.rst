@@ -1,21 +1,21 @@
 Building Models
 ===============================
 
-The model in VISSL is split into :code:`trunk` that computes features and :code:`head` that computes outputs (projections, classifications etc).
+The default model used in vissl is :code:`BaseSSLMultiInputOutputModel`. This model is split into :code:`trunk` that computes features and :code:`head` that computes outputs (projections, classifications etc).
 
 VISSL supports several types of Heads and several types of trunks. VISSL implements a default model :code:`BaseSSLMultiInputOutputModel` which supports the following use cases:
 
-- Model producing single output as in standard supervised ImageNet training
+- Model producing single output as in standard supervised ImageNet training.
 
-- Model producing multiple outputs (Multi-task)
+- Model producing multiple outputs (Multi-task).
 
-- Model producing multiple outputs from different features (layers) from the trunk (useful in linear evaluation of features from several model layers)
+- Model producing multiple outputs from different features (layers) from the trunk (useful in linear evaluation of features from several model layers).
 
 - Model that accepts multiple inputs (e.g. image and patches as in PIRL appraoch).
 
-- Model where the trunk is frozen and head is trained
+- Model where the trunk is frozen and head is trained.
 
-- Model that supports multiple resolutions inputs as in SwAV
+- Model that supports multiple resolutions inputs as in SwAV.
 
 - Model that is completely frozen and features are extracted.
 
@@ -40,7 +40,12 @@ Examples of trunks:
         RESNETS:
           DEPTH: 50
           WIDTH_MULTIPLIER: 1
-          NORM: BatchNorm    # BatchNorm | LayerNorm
+          NORM: BatchNorm    # BatchNorm | LayerNorm | GroupNorm
+          # If using GroupNorm, this sets number of groups. Recommend 32 as a
+          # naive suggestion. GroupNorm only available for ResNe(X)t.
+          GROUPNORM_GROUPS: 32
+          # Use weight-standardized convolutions
+          STANDARDIZE_CONVOLUTIONS: False
           GROUPS: 1
           ZERO_INIT_RESIDUAL: False
           WIDTH_PER_GROUP: 64
@@ -130,7 +135,7 @@ Types of Heads one can specify
             ]
         ]
 
-- **Case4: Multiple Heads (example 5 simple heads) - Single input, multiple output:**: For example, used in linear evaluation of models
+- **Case4: Multiple Heads (example 5 simple heads) - Single input, multiple output:**: For example, in linear evaluation of models. This attaches a head to each of the layers specified in :code:`MODEL.FEATURE_EVAL_SETTINGS`.
 
 .. code-block:: yaml
 

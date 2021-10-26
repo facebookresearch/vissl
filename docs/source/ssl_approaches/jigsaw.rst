@@ -2,12 +2,12 @@ Train Jigsaw model
 ===============================
 
 VISSL reproduces the self-supervised approach **Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles**
-proposed by **Mehdi Noroozi and Paolo Favaro** in https://arxiv.org/abs/1603.09246.
+proposed by **Mehdi Noroozi and Paolo Favaro** in `this paper <https://arxiv.org/abs/1603.09246>`_.
 
 How to train Jigsaw model
 ---------------------------
 
-VISSL provides yaml configuration file containing the exact hyperparam settings to reproduce the model. VISSL implements
+VISSL provides a yaml configuration file containing the exact hyperparameter settings to reproduce the model. VISSL implements
 all the components including data augmentations, collators etc required for this approach.
 
 To train ResNet-50 model on 8-gpus on ImageNet-1K dataset using 2000 permutations.
@@ -19,8 +19,8 @@ To train ResNet-50 model on 8-gpus on ImageNet-1K dataset using 2000 permutation
 
 Training with different permutations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In order to adjust the permutations and retrain, you can do so from command line. For example: to train for 10K permutations instead,
-VISSL provides the configuration files with necessary changes related to 10K permutation. Run:
+In order to adjust the permutations and retrain, you can do so from the command line. For example: to train for 10K permutations instead,
+VISSL provides the configuration files with the necessary changes. Run:
 
 .. code-block:: bash
 

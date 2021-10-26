@@ -5,7 +5,7 @@ VISSL allows adding new losses easily. Follow the steps below to add a new loss:
 
 - **Step1**: Create a new loss :code:`my_new_loss` in :code:`vissl/losses/my_new_loss.py` following the template
 
-.. code-block:: bash
+.. code-block:: python
 
     import pprint
     from classy_vision.losses import ClassyLoss, register_loss

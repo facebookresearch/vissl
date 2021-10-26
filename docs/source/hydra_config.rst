@@ -2,20 +2,18 @@ YAML Configuration system
 =========================
 
 
-VISSL uses `Hydra <https://github.com/facebookresearch/hydra>`_ for configuration management. The configuration files are simple YAML files.
-Hydra provides flexible yet powerful configuration system.
+VISSL uses `Hydra <https://github.com/facebookresearch/hydra>`_ for configuration management. Hydra provides flexible yet powerful configuration system composed of simple YAML files.
 
-- Users can create configs for only a specific component of their training (for example: using different datasets) and overwrite a main configuration setting for that specific component. This way, Hydra allows reusability of configs.
-- Hydra also allows to modify the configuration values from command line and
-- Hydra also offers an intuitive solution to adding new keys to a configuration.
+- Users can create configs for only a specific component of their training (for example: using a different datasets) and overwrite a main configuration setting for that specific component. This way, Hydra allows reusability of configs.
+- Hydra also allows users to modify the configuration values from command line.
 
-The usage looks like:
+For example:
 
 .. code-block:: bash
 
     python <binary-name>.py config=<yaml_config path>/<yaml_config_file_name>
 
-**All the parameters and settings VISSL supports**: you can see all the settings in `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml>`_.
+**VISSL Settings**: You can see all the parameters and settings VISSL supports in `VISSL defaults.yaml file <https://github.com/facebookresearch/vissl/blob/main/vissl/config/defaults.yaml>`_. **Tip**: This is a great place to look for documentation on the various parameter settings.
 
 
 Detecting new configuration directories in Hydra
@@ -29,8 +27,8 @@ add their own Plugin following the :code:`VisslPlugin`.
 
 .. note::
 
-    For any new folder containing configuration files, Hydra requires creating a :code:`__init__.py` empty file. Hence, if users
-    create a new configuration directory, they must create empty :code:`__init__.py` file.
+    For any new folder containing configuration files, Hydra requires creating an empty :code:`__init__.py` file. Hence, if users
+    create a new configuration directory, they must create an empty :code:`__init__.py` file.
 
 
 How to use VISSL provided config files
@@ -58,14 +56,14 @@ For example:
       config=pretrain/my_new_approach/my_approach_config_file.yaml
 
 In the above case, we are simply
-creating the :code:`my_new_approach` folder under :code:`pretrain/` path and create a file :code:`my_approach_config_file.yaml` with the path `pretrain/my_new_approach/my_approach_config_file.yaml`
+creating the :code:`my_new_approach` folder under :code:`pretrain/` path and creating a file :code:`my_approach_config_file.yaml` with the path `pretrain/my_new_approach/my_approach_config_file.yaml`.
 
 
 How to override a training component with config files
 ---------------------------------------------------------
 
-To replace one training component with the other, for example, replacing the training datasets, one can achieve this by simply
-creating a new yaml file for the dataset and use that during training.
+To replace one training component with another, like replacing the training dataset, one can simply
+create a new yaml file for the dataset and use that during training.
 
 For example:
 
@@ -76,14 +74,14 @@ For example:
       +config/pretrain/swav/optimization=my_new_optimization \
       +config/pretrain/swav/my_new_dataset=my_new_dataset_file_name \
 
-In the above case, we are overriding optimization and data settings for the SwAV training. For overriding, we simply
+In the above case, we are overriding optimization and data settings for the SwAV training. To override, we simply
 create the :code:`my_new_dataset` sub-folder under :code:`pretrain/swav` path and create a file :code:`my_new_dataset_file_name.yaml` with the path `pretrain/swav/my_new_dataset_file_name.yaml`
 
 
 How to override single values in config files
 -----------------------------------------------
 
-If you want to override single value of an existing key in the config, you can achieve that with: :code:`my_key=my_new_value`
+If you want to override single value of an existing key in the config, you can achieve that via the command-line by setting: :code:`my_key=my_new_value`
 
 For example:
 
@@ -97,7 +95,7 @@ For example:
 How to add new keys to the dictionary in config files
 ------------------------------------------------------
 
-If you want to add single key to a dictionary in the config, you can achieve that with :code:`+my_new_key_name=my_value`. Note the use of :code:`+`.
+If you want to add a single key to a dictionary in the config, you can achieve that with :code:`+my_new_key_name=my_value`. Note the use of :code:`+`.
 
 For example:
 

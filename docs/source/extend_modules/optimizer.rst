@@ -1,13 +1,13 @@
 Add new Optimizers
 =======================
 
-VISSL makes it easy to add new optimizers. VISSL depends on `ClassyVision <https://github.com/facebookresearch/ClassyVision>`_ .
+VISSL makes it easy to add new optimizers. VISSL depends on `ClassyVision <https://github.com/facebookresearch/ClassyVision>`_ and its optimizers.
 
 Follow the steps below to add a new optimizer to VISSL.
 
 - **Step1**: Create your new optimizer :code:`my_new_optimizer` under :code:`vissl/optimizers/my_new_optimizer.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     from classy_vision.optim import ClassyOptimizer, register_optimizer
 
@@ -53,7 +53,7 @@ Follow the steps below to add a new optimizer to VISSL.
 
 - **Step2**: Enable the automatic import of all the modules. Add the following lines of code to :code:`vissl/optimizers/__init__.py`. Skip this step if already exists.
 
-.. code-block:: bash
+.. code-block:: python
 
     from pathlib import Path
     from classy_vision.generic.registry_utils import import_all_modules
@@ -65,7 +65,7 @@ Follow the steps below to add a new optimizer to VISSL.
 
 - **Step3**: Enable the registry of the new optimizers in VISSL. Add the following line to :code:`vissl/trainer/__init__.py`. Skip this step if already exists.
 
-.. code-block:: bash
+.. code-block:: python
 
     import vissl.optimizers # NOQA
 
@@ -80,7 +80,7 @@ VISSL allows adding new Learning rate schedulers easily. Follow the steps below:
 
 - **Step1**: Create a class for your :code:`my_new_lr_scheduler` under :code:`vissl/optimizers/param_scheduler/my_new_lr_scheduler.py` following the template:
 
-.. code-block:: bash
+.. code-block:: python
 
     from classy_vision.optim.param_scheduler import (
         ClassyParamScheduler,

@@ -1,8 +1,8 @@
 Train on multiple-gpus
 ==========================
 
-VISSL supports training any model on 1-gpu or more. Typically, a single machine can have 2, 4 or 8-gpus. If users want to train on >1 gpus within the single machine, it's very easy.
-Typically for single machine training, this involves correctly setting the number of gpus to use via :code:`DISTRIBUTED.NUM_PROC_PER_NODE`.
+VISSL supports training any model on 1-gpu or more. Typically, a single machine can have 2, 4 or 8-gpus. If users want to train on >1 gpus within a single machine, it's very easy.
+Typically for single machine training, this involves correctly setting the number of gpus to use with :code:`DISTRIBUTED.NUM_PROC_PER_NODE`.
 
 The config will look like:
 
@@ -35,7 +35,7 @@ The list of all the options exposed by VISSL:
       # number of machines to use in training. Each machine can have many gpus. NODES count
       # number of unique hosts.
       NUM_NODES: 1
-      # set this to the number of gpus per machine. This ensrures that each gpu of the
+      # set this to the number of gpus per machine. This ensures that each gpu of the
       # node has a process attached to it.
       NUM_PROC_PER_NODE: 8
       # this could be: tcp | env | file or any other pytorch supported methods
@@ -47,6 +47,10 @@ The list of all the options exposed by VISSL:
       #      - If using 1 machine, set RUN_ID=auto and a free port will be automatically selected
       #   3. IF using INIT_METHOD=file, RUN_ID={file_path}
       RUN_ID: "auto"
+      # if True, does the gradient reduction in DDP manually. This is useful during the
+      # activation checkpointing and sometimes saving the memory from the pytorch gradient
+      # buckets.
+      MANUAL_GRADIENT_REDUCTION: False
 
 
 Train on multiple machines
@@ -90,7 +94,7 @@ The list of all the options exposed by VISSL:
       # number of machines to use in training. Each machine can have many gpus. NODES count
       # number of unique hosts.
       NUM_NODES: 1
-      # set this to the number of gpus per machine. This ensrures that each gpu of the
+      # set this to the number of gpus per machine. This ensures that each gpu of the
       # node has a process attached to it.
       NUM_PROC_PER_NODE: 8
       # this could be: tcp | env | file or any other pytorch supported methods
@@ -102,10 +106,14 @@ The list of all the options exposed by VISSL:
       #      - If using 1 machine, set RUN_ID=auto and a free port will be automatically selected
       #   3. IF using INIT_METHOD=file, RUN_ID={file_path}
       RUN_ID: "auto"
+      # if True, does the gradient reduction in DDP manually. This is useful during the
+      # activation checkpointing and sometimes saving the memory from the pytorch gradient
+      # buckets.
+      MANUAL_GRADIENT_REDUCTION: False
 
 
 Using SLURM
 =============
 
 Please follow the documentation
-`here <https://github.com/facebookresearch/vissl/blob/main/docs/source/train_resource_setup.rst#train-on-slurm-cluster>`_
+`here <https://github.com/facebookresearch/vissl/blob/main/docs/source/train_resource_setup.rst#train-on-slurm-cluster>`_.
