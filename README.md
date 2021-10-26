@@ -55,8 +55,6 @@ Get started with VISSL by trying one of the **Colab tutorial notebooks**.
 - [Benchmark task: Linear image classification on ImageNet-1K](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K_V0_1_6.ipynb)
 - [Large scale training (fp16, LARC, ZeRO)](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Large_Scale_Training_V0_1_6.ipynb)
 - [Using a pre-trained model in inference mode](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Using_a_pretrained_model_for_inference_V0_1_6.ipynb)
-- [Using a pre-trained model in inference mode](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Using_a_pretrained_model_for_inference_V0_1_6.ipynb)
-- [Using a pre-trained model in inference mode](https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Using_a_pretrained_model_for_inference_V0_1_6.ipynb)
 
 
 ## Model Zoo and Baselines
