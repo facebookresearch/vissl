@@ -14,8 +14,8 @@ conda create -y -n myenv python=3.7 opencv
 conda activate myenv
 conda install pytorch==1.9.1 torchvision cudatoolkit=10.2 -c pytorch -c conda-forge
 
-pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt151/download.html apex
-pip install vissl --no-index -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu102_pyt191/download.html apex
+pip install vissl -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
 pip install augly
 python -c "import vissl, apex, augly"
 cd loc1
