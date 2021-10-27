@@ -1,0 +1,1500 @@
+<!DOCTYPE html><html lang=""><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>VISSL · A library for state-of-the-art self-supervised learning from images</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="generator" content="Docusaurus"/><meta name="description" content="A library for state-of-the-art self-supervised learning from images"/><meta property="og:title" content="VISSL · A library for state-of-the-art self-supervised learning from images"/><meta property="og:type" content="website"/><meta property="og:url" content="https://vissl.ai/"/><meta property="og:description" content="A library for state-of-the-art self-supervised learning from images"/><meta property="og:image" content="https://vissl.ai/img/vissllogo.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://vissl.ai/img/vissllogo.svg"/><link rel="shortcut icon" href="/img/visslfavicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-172675973-1', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/visslfavicon.png" alt="VISSL"/><h2 class="headerTitleWithLogo">VISSL</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/tutorials" target="_self">Tutorials</a></li><li class=""><a href="https://vissl.readthedocs.io/" target="_self">Docs</a></li><li class=""><a href="https://github.com/facebookresearch/vissl" target="_self">GitHub</a></li><li class=""><a target="_self"></a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span></span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Tutorials</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Installation_v0_1_6">Installation</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Understanding_VISSL_Training_and_YAML_Config_V0_1_6">Understanding VISSL Training and YAML Config</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Training</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/tutorials/Train_SimCLR_on_1_gpu_V0_1_6">Train SimCLR on 1-gpu</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Feature Extraction</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Feature_Extraction_V0_1_6">Feature Extraction</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Benchmark</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Linear_Image_Classification_on_ImageNet_1K_V0_1_6">Benchmark Linear Image Classification on ImageNet-1K</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Benchmark_Full_Finetuning_on_ImageNet_1K_V0_1_6">Benchmark Full-Finetuning on ImageNet-1K</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Large Scale Training</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Large_Scale_Training_V0_1_6">Large Scale Training with VISSL (fp16, LARC, ZeRO, etc)</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Inference</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Using_a_pretrained_model_for_inference_V0_1_6">Using a pretrained model for inference</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="tutorialButtonsWrapper"><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Train_SimCLR_on_1_gpu_V0_1_6.ipynb" target="_blank"><img class="colabButton" align="left" src="/img/colab_icon.png"/>Run in Google Colab</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Train_SimCLR_on_1_gpu_V0_1_6.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Train_SimCLR_on_1_gpu_V0_1_6.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div><div class="tutorialBody">
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js">
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
+</script>
+<div class="notebook">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="https://colab.research.google.com/github/facebookresearch/vissl/blob/v0.1.6/tutorials/Train_SimCLR_on_1_gpu_V0_1_6.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Training-SimCLR-on-1-gpu-with-VISSL">Training SimCLR on 1-gpu with VISSL<a class="anchor-link" href="#Training-SimCLR-on-1-gpu-with-VISSL">¶</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this tutorial, we demonstrate how to use VISSL to train a self-supervsied model using the <a href="https://arxiv.org/abs/2002.05709">SimCLR</a> approach. We will use 1-gpu for this training.</p>
+<p>You can make a copy of this tutorial by <code>File -&gt; Open in playground mode</code> and make changes there. Please do <em>NOT</em> request access to this tutorial.</p>
+<p><strong>NOTE:</strong> Please ensure your Collab Notebook has a GPU available. To ensure this, simply follow: <code>Edit -&gt; Notebook Settings -&gt; select GPU.</code></p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Install-VISSL">Install VISSL<a class="anchor-link" href="#Install-VISSL">¶</a></h2><p>Installing VISSL is straightfoward. We will install VISSL from source using pip, following the instructions from <a href="https://github.com/facebookresearch/vissl/blob/main/INSTALL.md#install-vissl-pip-package">here</a>. Note, you can also install VISSL in a conda environment or from our conda/pip binaries.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Install pytorch version 1.8</span>
+<span class="o">!</span>pip install <span class="nv">torch</span><span class="o">==</span><span class="m">1</span>.8.0+cu101 <span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.9.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+
+<span class="c1"># install Apex by checking system settings: cuda version, pytorch version, and python version</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="n">version_str</span><span class="o">=</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+    <span class="sa">f</span><span class="s2">"py3</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">_cu"</span><span class="p">,</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span><span class="s2">""</span><span class="p">),</span>
+    <span class="sa">f</span><span class="s2">"_pyt</span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+<span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">version_str</span><span class="p">)</span>
+
+<span class="c1"># install apex (pre-compiled with optimizer C++ extensions and CUDA kernels)</span>
+<span class="o">!</span>pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/<span class="o">{</span>version_str<span class="o">}</span>/download.html
+
+<span class="c1"># # clone vissl repository and checkout latest version.</span>
+<span class="o">!</span>git clone --recursive https://github.com/facebookresearch/vissl.git
+
+<span class="o">%</span><span class="k">cd</span> vissl/
+
+<span class="o">!</span>git checkout v0.1.6
+<span class="o">!</span>git checkout -b v0.1.6
+
+<span class="c1"># install vissl dependencies</span>
+<span class="o">!</span>pip install --progress-bar off -r requirements.txt
+<span class="o">!</span>pip install opencv-python
+
+<span class="c1"># update classy vision install to commit compatible with v0.1.6</span>
+<span class="o">!</span>pip uninstall -y classy_vision
+<span class="o">!</span>pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d
+
+<span class="c1"># install vissl dev mode (e stands for editable)</span>
+<span class="o">!</span>pip install -e .<span class="o">[</span>dev<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>VISSL should be successfuly installed by now and all the dependencies should be available.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">vissl</span>
+<span class="kn">import</span> <span class="nn">tensorboard</span>
+<span class="kn">import</span> <span class="nn">apex</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Train">Train<a class="anchor-link" href="#Train">¶</a></h2><p>VISSL provides yaml configuration files that reproduces training of all self-supervised approaches <a href="https://github.com/facebookresearch/vissl/tree/main/configs/config/pretrain">here</a>. For the purpose of this tutorial, we will use the config file for training SimCLR approach on 1-gpu.</p>
+<p>VISSL provides a <a href="https://github.com/facebookresearch/vissl/blob/main/tools/run_distributed_engines.py">helper python tool</a> that allows you to train models based on our configuration system. This tool allows:</p>
+<ul>
+<li>training and feature extraction.</li>
+<li>training on 1-gpu, multi-gpu, or even multi-machine using Pytorch DDP or Fairscale FSDP.</li>
+<li>allows training and feature extraction both using VISSL. </li>
+<li>also allows training on 1-gpu or multi-gpu. </li>
+<li>can be used to launch multi-machine distributed training.</li>
+</ul>
+<p>We are ready to train now. For the purpose of training, we will use a synthetic dataset and train on dummy images. VISSL supports training on wide range of datasets and allows adding custom datasets. Please see VISSL documentation.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">!</span>python3 tools/run_distributed_engines.py <span class="err">\</span>
+    <span class="n">hydra</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="n">true</span> \
+    <span class="n">config</span><span class="o">=</span><span class="n">test</span><span class="o">/</span><span class="n">integration_test</span><span class="o">/</span><span class="n">quick_simclr</span><span class="o">.</span><span class="n">yaml</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">DATA</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">DATA_SOURCES</span><span class="o">=</span><span class="p">[</span><span class="n">synthetic</span><span class="p">]</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">CHECKPOINT</span><span class="o">.</span><span class="n">DIR</span><span class="o">=</span><span class="s2">"/content/checkpoints"</span> \
+    <span class="n">config</span><span class="o">.</span><span class="n">HOOKS</span><span class="o">.</span><span class="n">TENSORBOARD_SETUP</span><span class="o">.</span><span class="n">USE_TENSORBOARD</span><span class="o">=</span><span class="n">true</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+####### overrides: ['hydra.verbose=true', 'config=test/integration_test/quick_simclr.yaml', 'config.DATA.TRAIN.DATA_SOURCES=[synthetic]', 'config.CHECKPOINT.DIR=/content/checkpoints', 'config.HOOKS.TENSORBOARD_SETUP.USE_TENSORBOARD=true', 'hydra.verbose=true']
+INFO 2021-10-17 23:58:53,051 distributed_launcher.py: 184: Spawning process for node_id: 0, local_rank: 0, dist_rank: 0, dist_run_id: localhost:53679
+INFO 2021-10-17 23:58:53,051 train.py:  94: Env set for rank: 0, dist_rank: 0
+INFO 2021-10-17 23:58:53,051 env.py:  50: CLICOLOR:	1
+INFO 2021-10-17 23:58:53,052 env.py:  50: CLOUDSDK_CONFIG:	/content/.config
+INFO 2021-10-17 23:58:53,052 env.py:  50: CLOUDSDK_PYTHON:	python3
+INFO 2021-10-17 23:58:53,052 env.py:  50: COLAB_GPU:	1
+INFO 2021-10-17 23:58:53,052 env.py:  50: CUDA_VERSION:	11.1.1
+INFO 2021-10-17 23:58:53,052 env.py:  50: CUDNN_VERSION:	8.0.5.39
+INFO 2021-10-17 23:58:53,052 env.py:  50: DATALAB_SETTINGS_OVERRIDES:	{"kernelManagerProxyPort":6000,"kernelManagerProxyHost":"172.28.0.3","jupyterArgs":["--ip=\"172.28.0.2\""],"debugAdapterMultiplexerPath":"/usr/local/bin/dap_multiplexer","enableLsp":true}
+INFO 2021-10-17 23:58:53,052 env.py:  50: DEBIAN_FRONTEND:	noninteractive
+INFO 2021-10-17 23:58:53,052 env.py:  50: ENV:	/root/.bashrc
+INFO 2021-10-17 23:58:53,053 env.py:  50: GCE_METADATA_TIMEOUT:	0
+INFO 2021-10-17 23:58:53,053 env.py:  50: GCS_READ_CACHE_BLOCK_SIZE_MB:	16
+INFO 2021-10-17 23:58:53,053 env.py:  50: GIT_PAGER:	cat
+INFO 2021-10-17 23:58:53,053 env.py:  50: GLIBCPP_FORCE_NEW:	1
+INFO 2021-10-17 23:58:53,053 env.py:  50: GLIBCXX_FORCE_NEW:	1
+INFO 2021-10-17 23:58:53,053 env.py:  50: HOME:	/root
+INFO 2021-10-17 23:58:53,053 env.py:  50: HOSTNAME:	383570df96ef
+INFO 2021-10-17 23:58:53,053 env.py:  50: JPY_PARENT_PID:	66
+INFO 2021-10-17 23:58:53,054 env.py:  50: LANG:	en_US.UTF-8
+INFO 2021-10-17 23:58:53,054 env.py:  50: LAST_FORCED_REBUILD:	20211007
+INFO 2021-10-17 23:58:53,054 env.py:  50: LD_LIBRARY_PATH:	/usr/lib64-nvidia
+INFO 2021-10-17 23:58:53,054 env.py:  50: LD_PRELOAD:	/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+INFO 2021-10-17 23:58:53,054 env.py:  50: LIBRARY_PATH:	/usr/local/cuda/lib64/stubs
+INFO 2021-10-17 23:58:53,054 env.py:  50: LOCAL_RANK:	0
+INFO 2021-10-17 23:58:53,054 env.py:  50: MPLBACKEND:	module://ipykernel.pylab.backend_inline
+INFO 2021-10-17 23:58:53,054 env.py:  50: NCCL_VERSION:	2.7.8
+INFO 2021-10-17 23:58:53,055 env.py:  50: NO_GCE_CHECK:	True
+INFO 2021-10-17 23:58:53,055 env.py:  50: NVIDIA_DRIVER_CAPABILITIES:	compute,utility
+INFO 2021-10-17 23:58:53,055 env.py:  50: NVIDIA_REQUIRE_CUDA:	cuda&gt;=11.1 brand=tesla,driver&gt;=418,driver&lt;419 brand=tesla,driver&gt;=440,driver&lt;441 brand=tesla,driver&gt;=450,driver&lt;451
+INFO 2021-10-17 23:58:53,055 env.py:  50: NVIDIA_VISIBLE_DEVICES:	all
+INFO 2021-10-17 23:58:53,055 env.py:  50: OLDPWD:	/
+INFO 2021-10-17 23:58:53,055 env.py:  50: PAGER:	cat
+INFO 2021-10-17 23:58:53,055 env.py:  50: PATH:	/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/node/bin:/tools/google-cloud-sdk/bin:/opt/bin
+INFO 2021-10-17 23:58:53,055 env.py:  50: PWD:	/content/vissl
+INFO 2021-10-17 23:58:53,056 env.py:  50: PYDEVD_USE_FRAME_EVAL:	NO
+INFO 2021-10-17 23:58:53,056 env.py:  50: PYTHONPATH:	/env/python
+INFO 2021-10-17 23:58:53,056 env.py:  50: PYTHONWARNINGS:	ignore:::pip._internal.cli.base_command
+INFO 2021-10-17 23:58:53,056 env.py:  50: RANK:	0
+INFO 2021-10-17 23:58:53,056 env.py:  50: SHELL:	/bin/bash
+INFO 2021-10-17 23:58:53,056 env.py:  50: SHLVL:	1
+INFO 2021-10-17 23:58:53,056 env.py:  50: TBE_CREDS_ADDR:	172.28.0.1:8008
+INFO 2021-10-17 23:58:53,056 env.py:  50: TERM:	xterm-color
+INFO 2021-10-17 23:58:53,056 env.py:  50: TF_FORCE_GPU_ALLOW_GROWTH:	true
+INFO 2021-10-17 23:58:53,057 env.py:  50: WORLD_SIZE:	1
+INFO 2021-10-17 23:58:53,057 env.py:  50: _:	/usr/bin/python3
+INFO 2021-10-17 23:58:53,057 env.py:  50: __EGL_VENDOR_LIBRARY_DIRS:	/usr/lib64-nvidia:/usr/share/glvnd/egl_vendor.d/
+INFO 2021-10-17 23:58:53,057 misc.py: 161: Set start method of multiprocessing to forkserver
+INFO 2021-10-17 23:58:53,057 train.py: 105: Setting seed....
+INFO 2021-10-17 23:58:53,057 misc.py: 173: MACHINE SEED: 0
+INFO 2021-10-17 23:58:53,059 hydra_config.py: 131: Training with config:
+INFO 2021-10-17 23:58:53,067 hydra_config.py: 140: {'CHECKPOINT': {'APPEND_DISTR_RUN_ID': False,
+                'AUTO_RESUME': True,
+                'BACKEND': 'disk',
+                'CHECKPOINT_FREQUENCY': 1,
+                'CHECKPOINT_ITER_FREQUENCY': -1,
+                'DIR': '/content/checkpoints',
+                'LATEST_CHECKPOINT_RESUME_FILE_NUM': 1,
+                'OVERWRITE_EXISTING': True,
+                'USE_SYMLINK_CHECKPOINT_FOR_RESUME': False},
+ 'CLUSTERFIT': {'CLUSTER_BACKEND': 'faiss',
+                'DATA_LIMIT': -1,
+                'DATA_LIMIT_SAMPLING': {'SEED': 0},
+                'FEATURES': {'DATASET_NAME': '',
+                             'DATA_PARTITION': 'TRAIN',
+                             'DIMENSIONALITY_REDUCTION': 0,
+                             'EXTRACT': False,
+                             'LAYER_NAME': '',
+                             'PATH': '.',
+                             'TEST_PARTITION': 'TEST'},
+                'NUM_CLUSTERS': 16000,
+                'NUM_ITER': 50,
+                'OUTPUT_DIR': '.'},
+ 'DATA': {'DDP_BUCKET_CAP_MB': 25,
+          'ENABLE_ASYNC_GPU_COPY': True,
+          'NUM_DATALOADER_WORKERS': 5,
+          'PIN_MEMORY': True,
+          'TEST': {'BASE_DATASET': 'generic_ssl',
+                   'BATCHSIZE_PER_REPLICA': 256,
+                   'COLLATE_FUNCTION': 'default_collate',
+                   'COLLATE_FUNCTION_PARAMS': {},
+                   'COPY_DESTINATION_DIR': '',
+                   'COPY_TO_LOCAL_DISK': False,
+                   'DATASET_NAMES': ['imagenet1k_folder'],
+                   'DATA_LIMIT': -1,
+                   'DATA_LIMIT_SAMPLING': {'IS_BALANCED': False,
+                                           'SEED': 0,
+                                           'SKIP_NUM_SAMPLES': 0},
+                   'DATA_PATHS': [],
+                   'DATA_SOURCES': [],
+                   'DEFAULT_GRAY_IMG_SIZE': 224,
+                   'DROP_LAST': False,
+                   'ENABLE_QUEUE_DATASET': False,
+                   'INPUT_KEY_NAMES': ['data'],
+                   'LABEL_PATHS': [],
+                   'LABEL_SOURCES': [],
+                   'LABEL_TYPE': 'sample_index',
+                   'MMAP_MODE': True,
+                   'NEW_IMG_PATH_PREFIX': '',
+                   'RANDOM_SYNTHETIC_IMAGES': False,
+                   'REMOVE_IMG_PATH_PREFIX': '',
+                   'TARGET_KEY_NAMES': ['label'],
+                   'TRANSFORMS': [],
+                   'USE_DEBUGGING_SAMPLER': False,
+                   'USE_STATEFUL_DISTRIBUTED_SAMPLER': False},
+          'TRAIN': {'BASE_DATASET': 'generic_ssl',
+                    'BATCHSIZE_PER_REPLICA': 32,
+                    'COLLATE_FUNCTION': 'simclr_collator',
+                    'COLLATE_FUNCTION_PARAMS': {},
+                    'COPY_DESTINATION_DIR': '/tmp/imagenet1k',
+                    'COPY_TO_LOCAL_DISK': False,
+                    'DATASET_NAMES': ['imagenet1k_filelist'],
+                    'DATA_LIMIT': 500,
+                    'DATA_LIMIT_SAMPLING': {'IS_BALANCED': False,
+                                            'SEED': 0,
+                                            'SKIP_NUM_SAMPLES': 0},
+                    'DATA_PATHS': [],
+                    'DATA_SOURCES': ['synthetic'],
+                    'DEFAULT_GRAY_IMG_SIZE': 224,
+                    'DROP_LAST': True,
+                    'ENABLE_QUEUE_DATASET': False,
+                    'INPUT_KEY_NAMES': ['data'],
+                    'LABEL_PATHS': [],
+                    'LABEL_SOURCES': [],
+                    'LABEL_TYPE': 'sample_index',
+                    'MMAP_MODE': True,
+                    'NEW_IMG_PATH_PREFIX': '',
+                    'RANDOM_SYNTHETIC_IMAGES': False,
+                    'REMOVE_IMG_PATH_PREFIX': '',
+                    'TARGET_KEY_NAMES': ['label'],
+                    'TRANSFORMS': [{'name': 'ImgReplicatePil', 'num_times': 2},
+                                   {'name': 'RandomResizedCrop', 'size': 224},
+                                   {'name': 'RandomHorizontalFlip', 'p': 0.5},
+                                   {'name': 'ImgPilColorDistortion',
+                                    'strength': 1.0},
+                                   {'name': 'ImgPilGaussianBlur',
+                                    'p': 0.5,
+                                    'radius_max': 2.0,
+                                    'radius_min': 0.1},
+                                   {'name': 'ToTensor'},
+                                   {'mean': [0.485, 0.456, 0.406],
+                                    'name': 'Normalize',
+                                    'std': [0.229, 0.224, 0.225]}],
+                    'USE_DEBUGGING_SAMPLER': False,
+                    'USE_STATEFUL_DISTRIBUTED_SAMPLER': False}},
+ 'DISTRIBUTED': {'BACKEND': 'nccl',
+                 'BROADCAST_BUFFERS': True,
+                 'INIT_METHOD': 'tcp',
+                 'MANUAL_GRADIENT_REDUCTION': False,
+                 'NCCL_DEBUG': False,
+                 'NCCL_SOCKET_NTHREADS': '',
+                 'NUM_NODES': 1,
+                 'NUM_PROC_PER_NODE': 1,
+                 'RUN_ID': 'auto'},
+ 'EXTRACT_FEATURES': {'CHUNK_THRESHOLD': 0, 'OUTPUT_DIR': ''},
+ 'HOOKS': {'LOG_GPU_STATS': True,
+           'MEMORY_SUMMARY': {'DUMP_MEMORY_ON_EXCEPTION': False,
+                              'LOG_ITERATION_NUM': 0,
+                              'PRINT_MEMORY_SUMMARY': True},
+           'MODEL_COMPLEXITY': {'COMPUTE_COMPLEXITY': False,
+                                'INPUT_SHAPE': [3, 224, 224]},
+           'PERF_STATS': {'MONITOR_PERF_STATS': True,
+                          'PERF_STAT_FREQUENCY': 10,
+                          'ROLLING_BTIME_FREQ': 5},
+           'TENSORBOARD_SETUP': {'EXPERIMENT_LOG_DIR': 'tensorboard',
+                                 'FLUSH_EVERY_N_MIN': 5,
+                                 'LOG_DIR': '.',
+                                 'LOG_PARAMS': True,
+                                 'LOG_PARAMS_EVERY_N_ITERS': 310,
+                                 'LOG_PARAMS_GRADIENTS': True,
+                                 'USE_TENSORBOARD': True}},
+ 'IMG_RETRIEVAL': {'CROP_QUERY_ROI': False,
+                   'DATASET_PATH': '',
+                   'DEBUG_MODE': False,
+                   'EVAL_BINARY_PATH': '',
+                   'EVAL_DATASET_NAME': 'Paris',
+                   'FEATS_PROCESSING_TYPE': '',
+                   'GEM_POOL_POWER': 4.0,
+                   'IMG_SCALINGS': [1],
+                   'NORMALIZE_FEATURES': True,
+                   'NUM_DATABASE_SAMPLES': -1,
+                   'NUM_QUERY_SAMPLES': -1,
+                   'NUM_TRAINING_SAMPLES': -1,
+                   'N_PCA': 512,
+                   'RESIZE_IMG': 1024,
+                   'SAVE_FEATURES': False,
+                   'SAVE_RETRIEVAL_RANKINGS_SCORES': True,
+                   'SIMILARITY_MEASURE': 'cosine_similarity',
+                   'SPATIAL_LEVELS': 3,
+                   'TRAIN_DATASET_NAME': 'Oxford',
+                   'TRAIN_PCA_WHITENING': True,
+                   'USE_DISTRACTORS': False,
+                   'WHITEN_IMG_LIST': ''},
+ 'LOG_FREQUENCY': 1,
+ 'LOSS': {'CrossEntropyLoss': {'ignore_index': -1},
+          'barlow_twins_loss': {'embedding_dim': 8192,
+                                'lambda_': 0.0051,
+                                'scale_loss': 0.024},
+          'bce_logits_multiple_output_single_target': {'normalize_output': False,
+                                                       'reduction': 'none',
+                                                       'world_size': 1},
+          'cross_entropy_multiple_output_single_target': {'ignore_index': -1,
+                                                          'normalize_output': False,
+                                                          'reduction': 'mean',
+                                                          'temperature': 1.0,
+                                                          'weight': None},
+          'deepclusterv2_loss': {'BATCHSIZE_PER_REPLICA': 256,
+                                 'DROP_LAST': True,
+                                 'kmeans_iters': 10,
+                                 'memory_params': {'crops_for_mb': [0],
+                                                   'embedding_dim': 128},
+                                 'num_clusters': [3000, 3000, 3000],
+                                 'num_crops': 2,
+                                 'num_train_samples': -1,
+                                 'temperature': 0.1},
+          'dino_loss': {'crops_for_teacher': [0, 1],
+                        'ema_center': 0.9,
+                        'momentum': 0.996,
+                        'normalize_last_layer': True,
+                        'output_dim': 65536,
+                        'student_temp': 0.1,
+                        'teacher_temp_max': 0.07,
+                        'teacher_temp_min': 0.04,
+                        'teacher_temp_warmup_iters': 37500},
+          'moco_loss': {'embedding_dim': 128,
+                        'momentum': 0.999,
+                        'queue_size': 65536,
+                        'temperature': 0.2},
+          'multicrop_simclr_info_nce_loss': {'buffer_params': {'effective_batch_size': 4096,
+                                                               'embedding_dim': 128,
+                                                               'world_size': 64},
+                                             'num_crops': 2,
+                                             'temperature': 0.1},
+          'name': 'simclr_info_nce_loss',
+          'nce_loss_with_memory': {'loss_type': 'nce',
+                                   'loss_weights': [1.0],
+                                   'memory_params': {'embedding_dim': 128,
+                                                     'memory_size': -1,
+                                                     'momentum': 0.5,
+                                                     'norm_init': True,
+                                                     'update_mem_on_forward': True},
+                                   'negative_sampling_params': {'num_negatives': 16000,
+                                                                'type': 'random'},
+                                   'norm_constant': -1,
+                                   'norm_embedding': True,
+                                   'num_train_samples': -1,
+                                   'temperature': 0.07,
+                                   'update_mem_with_emb_index': -100},
+          'simclr_info_nce_loss': {'buffer_params': {'effective_batch_size': 64,
+                                                     'embedding_dim': 128,
+                                                     'world_size': 1},
+                                   'temperature': 0.1},
+          'swav_loss': {'crops_for_assign': [0, 1],
+                        'embedding_dim': 128,
+                        'epsilon': 0.05,
+                        'normalize_last_layer': True,
+                        'num_crops': 2,
+                        'num_iters': 3,
+                        'num_prototypes': [3000],
+                        'output_dir': '.',
+                        'queue': {'local_queue_length': 0,
+                                  'queue_length': 0,
+                                  'start_iter': 0},
+                        'temp_hard_assignment_iters': 0,
+                        'temperature': 0.1,
+                        'use_double_precision': False},
+          'swav_momentum_loss': {'crops_for_assign': [0, 1],
+                                 'embedding_dim': 128,
+                                 'epsilon': 0.05,
+                                 'momentum': 0.99,
+                                 'momentum_eval_mode_iter_start': 0,
+                                 'normalize_last_layer': True,
+                                 'num_crops': 2,
+                                 'num_iters': 3,
+                                 'num_prototypes': [3000],
+                                 'queue': {'local_queue_length': 0,
+                                           'queue_length': 0,
+                                           'start_iter': 0},
+                                 'temperature': 0.1,
+                                 'use_double_precision': False}},
+ 'MACHINE': {'DEVICE': 'gpu'},
+ 'METERS': {'accuracy_list_meter': {'meter_names': [],
+                                    'num_meters': 1,
+                                    'topk_values': [1]},
+            'enable_training_meter': True,
+            'mean_ap_list_meter': {'max_cpu_capacity': -1,
+                                   'meter_names': [],
+                                   'num_classes': 9605,
+                                   'num_meters': 1},
+            'name': ''},
+ 'MODEL': {'ACTIVATION_CHECKPOINTING': {'NUM_ACTIVATION_CHECKPOINTING_SPLITS': 2,
+                                        'USE_ACTIVATION_CHECKPOINTING': False},
+           'AMP_PARAMS': {'AMP_ARGS': {'keep_batchnorm_fp32': True,
+                                       'loss_scale': 'dynamic',
+                                       'master_weights': True,
+                                       'opt_level': 'O3'},
+                          'AMP_TYPE': 'apex',
+                          'USE_AMP': False},
+           'CUDA_CACHE': {'CLEAR_CUDA_CACHE': False, 'CLEAR_FREQ': 100},
+           'FEATURE_EVAL_SETTINGS': {'EVAL_MODE_ON': False,
+                                     'EVAL_TRUNK_AND_HEAD': False,
+                                     'EXTRACT_TRUNK_FEATURES_ONLY': False,
+                                     'FREEZE_TRUNK_AND_HEAD': False,
+                                     'FREEZE_TRUNK_ONLY': False,
+                                     'LINEAR_EVAL_FEAT_POOL_OPS_MAP': [],
+                                     'SHOULD_FLATTEN_FEATS': True},
+           'FSDP_CONFIG': {'AUTO_WRAP_THRESHOLD': 0,
+                           'bucket_cap_mb': 0,
+                           'clear_autocast_cache': True,
+                           'compute_dtype': torch.float32,
+                           'flatten_parameters': True,
+                           'fp32_reduce_scatter': False,
+                           'mixed_precision': True,
+                           'verbose': True},
+           'GRAD_CLIP': {'MAX_NORM': 1, 'NORM_TYPE': 2, 'USE_GRAD_CLIP': False},
+           'HEAD': {'BATCHNORM_EPS': 1e-05,
+                    'BATCHNORM_MOMENTUM': 0.1,
+                    'PARAMS': [['mlp',
+                                {'dims': [2048, 2048],
+                                 'skip_last_layer_relu_bn': False,
+                                 'use_relu': True}],
+                               ['mlp', {'dims': [2048, 128]}]],
+                    'PARAMS_MULTIPLIER': 1.0},
+           'INPUT_TYPE': 'rgb',
+           'MULTI_INPUT_HEAD_MAPPING': [],
+           'NON_TRAINABLE_PARAMS': [],
+           'SHARDED_DDP_SETUP': {'USE_SDP': False, 'reduce_buffer_size': -1},
+           'SINGLE_PASS_EVERY_CROP': False,
+           'SYNC_BN_CONFIG': {'CONVERT_BN_TO_SYNC_BN': True,
+                              'GROUP_SIZE': -1,
+                              'SYNC_BN_TYPE': 'pytorch'},
+           'TEMP_FROZEN_PARAMS_ITER_MAP': [],
+           'TRUNK': {'CONVIT': {'CLASS_TOKEN_IN_LOCAL_LAYERS': False,
+                                'LOCALITY_DIM': 10,
+                                'LOCALITY_STRENGTH': 1.0,
+                                'N_GPSA_LAYERS': 10,
+                                'USE_LOCAL_INIT': True},
+                     'EFFICIENT_NETS': {},
+                     'NAME': 'resnet',
+                     'REGNET': {},
+                     'RESNETS': {'DEPTH': 50,
+                                 'GROUPNORM_GROUPS': 32,
+                                 'GROUPS': 1,
+                                 'LAYER4_STRIDE': 2,
+                                 'NORM': 'BatchNorm',
+                                 'STANDARDIZE_CONVOLUTIONS': False,
+                                 'WIDTH_MULTIPLIER': 1,
+                                 'WIDTH_PER_GROUP': 64,
+                                 'ZERO_INIT_RESIDUAL': False},
+                     'VISION_TRANSFORMERS': {'ATTENTION_DROPOUT_RATE': 0,
+                                             'CLASSIFIER': 'token',
+                                             'DROPOUT_RATE': 0,
+                                             'DROP_PATH_RATE': 0,
+                                             'HIDDEN_DIM': 768,
+                                             'IMAGE_SIZE': 224,
+                                             'MLP_DIM': 3072,
+                                             'NUM_HEADS': 12,
+                                             'NUM_LAYERS': 12,
+                                             'PATCH_SIZE': 16,
+                                             'QKV_BIAS': False,
+                                             'QK_SCALE': False,
+                                             'name': None},
+                     'XCIT': {'ATTENTION_DROPOUT_RATE': 0,
+                              'DROPOUT_RATE': 0,
+                              'DROP_PATH_RATE': 0.05,
+                              'ETA': 1,
+                              'HIDDEN_DIM': 384,
+                              'IMAGE_SIZE': 224,
+                              'NUM_HEADS': 8,
+                              'NUM_LAYERS': 12,
+                              'PATCH_SIZE': 16,
+                              'QKV_BIAS': True,
+                              'QK_SCALE': False,
+                              'TOKENS_NORM': True,
+                              'name': None}},
+           'WEIGHTS_INIT': {'APPEND_PREFIX': '',
+                            'PARAMS_FILE': '',
+                            'REMOVE_PREFIX': '',
+                            'SKIP_LAYERS': ['num_batches_tracked'],
+                            'STATE_DICT_KEY_NAME': 'classy_state_dict'},
+           '_MODEL_INIT_SEED': 0},
+ 'MONITORING': {'MONITOR_ACTIVATION_STATISTICS': 0},
+ 'MULTI_PROCESSING_METHOD': 'forkserver',
+ 'NEAREST_NEIGHBOR': {'L2_NORM_FEATS': False, 'SIGMA': 0.1, 'TOPK': 200},
+ 'OPTIMIZER': {'betas': [0.9, 0.999],
+               'construct_single_param_group_only': False,
+               'head_optimizer_params': {'use_different_lr': False,
+                                         'use_different_wd': False,
+                                         'weight_decay': 1e-06},
+               'larc_config': {'clip': False,
+                               'eps': 1e-08,
+                               'trust_coefficient': 0.001},
+               'momentum': 0.9,
+               'name': 'sgd',
+               'nesterov': False,
+               'non_regularized_parameters': [],
+               'num_epochs': 2,
+               'param_schedulers': {'lr': {'auto_lr_scaling': {'auto_scale': False,
+                                                               'base_lr_batch_size': 256,
+                                                               'base_value': 0.3,
+                                                               'scaling_type': 'linear'},
+                                           'end_value': 0.0,
+                                           'interval_scaling': ['rescaled',
+                                                                'rescaled'],
+                                           'lengths': [0.1, 0.9],
+                                           'milestones': [30, 60],
+                                           'name': 'composite',
+                                           'schedulers': [{'end_value': 4.8,
+                                                           'name': 'linear',
+                                                           'start_value': 0.6},
+                                                          {'end_value': 0.0048,
+                                                           'is_adaptive': True,
+                                                           'name': 'cosine_warm_restart',
+                                                           'restart_interval_length': 0.334,
+                                                           'start_value': 4.8,
+                                                           'wave_type': 'full'}],
+                                           'start_value': 0.1,
+                                           'update_interval': 'step',
+                                           'value': 0.1,
+                                           'values': [0.1, 0.01, 0.001]},
+                                    'lr_head': {'auto_lr_scaling': {'auto_scale': False,
+                                                                    'base_lr_batch_size': 256,
+                                                                    'base_value': 0.3,
+                                                                    'scaling_type': 'linear'},
+                                                'end_value': 0.0,
+                                                'interval_scaling': ['rescaled',
+                                                                     'rescaled'],
+                                                'lengths': [0.1, 0.9],
+                                                'milestones': [30, 60],
+                                                'name': 'composite',
+                                                'schedulers': [{'end_value': 4.8,
+                                                                'name': 'linear',
+                                                                'start_value': 0.6},
+                                                               {'end_value': 0.0048,
+                                                                'is_adaptive': True,
+                                                                'name': 'cosine_warm_restart',
+                                                                'restart_interval_length': 0.334,
+                                                                'start_value': 4.8,
+                                                                'wave_type': 'full'}],
+                                                'start_value': 0.1,
+                                                'update_interval': 'step',
+                                                'value': 0.1,
+                                                'values': [0.1, 0.01, 0.001]}},
+               'regularize_bias': True,
+               'regularize_bn': False,
+               'use_larc': True,
+               'use_zero': False,
+               'weight_decay': 1e-06},
+ 'PROFILING': {'MEMORY_PROFILING': {'TRACK_BY_LAYER_MEMORY': False},
+               'NUM_ITERATIONS': 10,
+               'OUTPUT_FOLDER': '.',
+               'PROFILED_RANKS': [0, 1],
+               'RUNTIME_PROFILING': {'LEGACY_PROFILER': False,
+                                     'PROFILE_CPU': True,
+                                     'PROFILE_GPU': True,
+                                     'USE_PROFILER': False},
+               'START_ITERATION': 0,
+               'STOP_TRAINING_AFTER_PROFILING': False,
+               'WARMUP_ITERATIONS': 0},
+ 'REPRODUCIBILITY': {'CUDDN_DETERMINISTIC': False},
+ 'SEED_VALUE': 0,
+ 'SLURM': {'ADDITIONAL_PARAMETERS': {},
+           'COMMENT': 'vissl job',
+           'CONSTRAINT': '',
+           'LOG_FOLDER': '.',
+           'MEM_GB': 250,
+           'NAME': 'vissl',
+           'NUM_CPU_PER_PROC': 8,
+           'PARTITION': '',
+           'PORT_ID': 40050,
+           'TIME_HOURS': 72,
+           'TIME_MINUTES': 0,
+           'USE_SLURM': False},
+ 'SVM': {'cls_list': [],
+         'costs': {'base': -1.0,
+                   'costs_list': [0.1, 0.01],
+                   'power_range': [4, 20]},
+         'cross_val_folds': 3,
+         'dual': True,
+         'force_retrain': False,
+         'loss': 'squared_hinge',
+         'low_shot': {'dataset_name': 'voc',
+                      'k_values': [1, 2, 4, 8, 16, 32, 64, 96],
+                      'sample_inds': [1, 2, 3, 4, 5]},
+         'max_iter': 2000,
+         'normalize': True,
+         'penalty': 'l2'},
+ 'TEST_EVERY_NUM_EPOCH': 1,
+ 'TEST_MODEL': False,
+ 'TEST_ONLY': False,
+ 'TRAINER': {'TASK_NAME': 'self_supervision_task',
+             'TRAIN_STEP_NAME': 'standard_train_step'},
+ 'VERBOSE': False}
+INFO 2021-10-17 23:58:53,697 train.py: 117: System config:
+-------------------  ---------------------------------------------------------------
+sys.platform         linux
+Python               3.7.12 (default, Sep 10 2021, 00:21:48) [GCC 7.5.0]
+numpy                1.19.5
+Pillow               7.1.2
+vissl                0.1.5 @/content/vissl/vissl
+GPU available        True
+GPU 0                Tesla K80
+CUDA_HOME            /usr/local/cuda
+torchvision          0.9.0+cu101 @/usr/local/lib/python3.7/dist-packages/torchvision
+hydra                1.0.7 @/usr/local/lib/python3.7/dist-packages/hydra
+classy_vision        0.7.0.dev @/usr/local/lib/python3.7/dist-packages/classy_vision
+tensorboard          2.6.0
+apex                 0.1 @/usr/local/lib/python3.7/dist-packages/apex
+cv2                  4.1.2
+PyTorch              1.8.0+cu101 @/usr/local/lib/python3.7/dist-packages/torch
+PyTorch debug build  False
+-------------------  ---------------------------------------------------------------
+PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2020.0.0 Product Build 20191122 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.7.0 (Git Hash 7aed236906b1f7a05c0917e5257a1af05e9ff683)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 10.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70
+  - CuDNN 7.6.3
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=10.1, CUDNN_VERSION=7.6.3, CXX_COMPILER=/opt/rh/devtoolset-7/root/usr/bin/c++, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.8.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+CPU info:
+-------------------  ------------------------------
+Architecture         x86_64
+CPU op-mode(s)       32-bit, 64-bit
+Byte Order           Little Endian
+CPU(s)               2
+On-line CPU(s) list  0,1
+Thread(s) per core   2
+Core(s) per socket   1
+Socket(s)            1
+NUMA node(s)         1
+Vendor ID            GenuineIntel
+CPU family           6
+Model                63
+Model name           Intel(R) Xeon(R) CPU @ 2.30GHz
+Stepping             0
+CPU MHz              2299.998
+BogoMIPS             4599.99
+Hypervisor vendor    KVM
+Virtualization type  full
+L1d cache            32K
+L1i cache            32K
+L2 cache             256K
+L3 cache             46080K
+NUMA node0 CPU(s)    0,1
+-------------------  ------------------------------
+INFO 2021-10-17 23:58:53,697 tensorboard.py:  49: Tensorboard dir: /content/checkpoints/tb_logs
+INFO 2021-10-17 23:58:55,230 tensorboard_hook.py:  90: Setting up SSL Tensorboard Hook...
+INFO 2021-10-17 23:58:55,230 tensorboard_hook.py: 103: Tensorboard config: log_params: True, log_params_freq: 310, log_params_gradients: True, log_activation_statistics: 0
+INFO 2021-10-17 23:58:55,231 trainer_main.py: 113: Using Distributed init method: tcp://localhost:53679, world_size: 1, rank: 0
+INFO 2021-10-17 23:58:55,232 distributed_c10d.py: 187: Added key: store_based_barrier_key:1 to store for rank: 0
+INFO 2021-10-17 23:58:55,232 trainer_main.py: 134: | initialized host 383570df96ef as rank 0 (0)
+INFO 2021-10-17 23:58:57,244 train_task.py: 181: Not using Automatic Mixed Precision
+INFO 2021-10-17 23:58:57,244 train_task.py: 449: Building model....
+INFO 2021-10-17 23:58:57,245 resnext.py:  68: ResNeXT trunk, supports activation checkpointing. Deactivated
+INFO 2021-10-17 23:58:57,245 resnext.py:  88: Building model: ResNeXt50-1x64d-w1-BatchNorm2d
+INFO 2021-10-17 23:58:58,072 model_helpers.py: 150: Using SyncBN group size: 1
+INFO 2021-10-17 23:58:58,072 model_helpers.py: 165: Converting BN layers to PyTorch SyncBN
+WARNING 2021-10-17 23:58:58,072 model_helpers.py: 171: Process groups not supported with PyTorch SyncBN currently. Training will be slow. Please consider using Apex for SyncBN.
+INFO 2021-10-17 23:58:58,081 train_task.py: 651: Broadcast model BN buffers from primary on every forward pass
+INFO 2021-10-17 23:58:58,081 classification_task.py: 387: Synchronized Batch Normalization is disabled
+INFO 2021-10-17 23:58:58,126 optimizer_helper.py: 294: 
+Trainable params: 163, 
+Non-Trainable params: 0, 
+Trunk Regularized Parameters: 53, 
+Trunk Unregularized Parameters 106, 
+Head Regularized Parameters: 4, 
+Head Unregularized Parameters: 0 
+Remaining Regularized Parameters: 0 
+Remaining Unregularized Parameters: 0
+INFO 2021-10-17 23:58:58,126 img_replicate_pil.py:  52: ImgReplicatePil | Using num_times: 2
+INFO 2021-10-17 23:58:58,127 img_pil_color_distortion.py:  56: ImgPilColorDistortion | Using strength: 1.0
+INFO 2021-10-17 23:58:58,127 ssl_dataset.py: 157: Rank: 0 split: TRAIN Data files:
+['']
+INFO 2021-10-17 23:58:58,127 ssl_dataset.py: 160: Rank: 0 split: TRAIN Label files:
+[]
+INFO 2021-10-17 23:58:58,128 misc.py: 161: Set start method of multiprocessing to forkserver
+INFO 2021-10-17 23:58:58,128 __init__.py: 126: Created the Distributed Sampler....
+INFO 2021-10-17 23:58:58,128 __init__.py: 101: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 500, 'total_size': 500, 'shuffle': True, 'seed': 0}
+/usr/local/lib/python3.7/dist-packages/torch/utils/data/dataloader.py:477: UserWarning: This DataLoader will create 5 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  cpuset_checked))
+INFO 2021-10-17 23:58:58,129 __init__.py: 215: Wrapping the dataloader to async device copies
+INFO 2021-10-17 23:58:58,129 train_task.py: 384: Building loss...
+INFO 2021-10-17 23:58:58,135 simclr_info_nce_loss.py:  91: Creating Info-NCE loss on Rank: 0
+INFO 2021-10-17 23:58:58,135 trainer_main.py: 268: Training 2 epochs
+INFO 2021-10-17 23:58:58,135 trainer_main.py: 269: One epoch = 15 iterations.
+INFO 2021-10-17 23:58:58,135 trainer_main.py: 270: Total 500 samples in one epoch
+INFO 2021-10-17 23:58:58,136 trainer_main.py: 276: Total 30 iterations for training
+INFO 2021-10-17 23:58:58,222 logger.py:  84: Sun Oct 17 23:58:58 2021       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 470.74       Driver Version: 460.32.03    CUDA Version: 11.2     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla K80           Off  | 00000000:00:04.0 Off |                    0 |
+| N/A   48C    P0    66W / 149W |    564MiB / 11441MiB |      6%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+
+INFO 2021-10-17 23:58:58,225 trainer_main.py: 173: Model is:
+ Classy &lt;class 'vissl.models.base_ssl_model.BaseSSLMultiInputOutputModel'&gt;:
+BaseSSLMultiInputOutputModel(
+  (_heads): ModuleDict()
+  (trunk): ResNeXt(
+    (_feature_blocks): ModuleDict(
+      (conv1): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+      (bn1): SyncBatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv1_relu): ReLU(inplace=True)
+      (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+      (layer1): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (1): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer2): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (3): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer3): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): SyncBatchNorm(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (3): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (4): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (5): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer4): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(&lt;SUPPORTED_L4_STRIDE.two: 2&gt;, &lt;SUPPORTED_L4_STRIDE.two: 2&gt;), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(&lt;SUPPORTED_L4_STRIDE.two: 2&gt;, &lt;SUPPORTED_L4_STRIDE.two: 2&gt;), bias=False)
+            (1): SyncBatchNorm(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): SyncBatchNorm(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): SyncBatchNorm(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
+      (flatten): Flatten()
+    )
+  )
+  (heads): ModuleList(
+    (0): MLP(
+      (clf): Sequential(
+        (0): Linear(in_features=2048, out_features=2048, bias=True)
+        (1): ReLU(inplace=True)
+      )
+    )
+    (1): MLP(
+      (clf): Sequential(
+        (0): Linear(in_features=2048, out_features=128, bias=True)
+      )
+    )
+  )
+)
+INFO 2021-10-17 23:58:58,316 trainer_main.py: 174: Loss is: { 'info_average': { 'dist_rank': 0,
+  'name': 'SimclrInfoNCECriterion',
+  'num_negatives': 62,
+  'num_pos': 2,
+  'temperature': 0.1},
+  'name': 'SimclrInfoNCELoss'}
+INFO 2021-10-17 23:58:58,316 trainer_main.py: 175: Starting training....
+INFO 2021-10-17 23:58:58,316 __init__.py: 101: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 0, 'num_samples': 500, 'total_size': 500, 'shuffle': True, 'seed': 0}
+/usr/local/lib/python3.7/dist-packages/torch/utils/data/dataloader.py:477: UserWarning: This DataLoader will create 5 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  cpuset_checked))
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+INFO 2021-10-17 23:59:05,834 trainer_main.py: 333: Phase advanced. Rank: 0
+INFO 2021-10-17 23:59:05,838 log_hooks.py:  77: ========= Memory Summary at on_phase_start =======
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 0                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |  147151 KB |  147151 KB |  147152 KB |     512 B  |
+|       from large pool |  128256 KB |  128256 KB |  128256 KB |       0 B  |
+|       from small pool |   18895 KB |   18895 KB |   18896 KB |     512 B  |
+|---------------------------------------------------------------------------|
+| Active memory         |  147151 KB |  147151 KB |  147152 KB |     512 B  |
+|       from large pool |  128256 KB |  128256 KB |  128256 KB |       0 B  |
+|       from small pool |   18895 KB |   18895 KB |   18896 KB |     512 B  |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |  163840 KB |  163840 KB |  163840 KB |       0 B  |
+|       from large pool |  141312 KB |  141312 KB |  141312 KB |       0 B  |
+|       from small pool |   22528 KB |   22528 KB |   22528 KB |       0 B  |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |   16688 KB |   28795 KB |   92570 KB |   75881 KB |
+|       from large pool |   13056 KB |   28160 KB |   75776 KB |   62720 KB |
+|       from small pool |    3632 KB |    3633 KB |   16794 KB |   13161 KB |
+|---------------------------------------------------------------------------|
+| Allocations           |     328    |     328    |     329    |       1    |
+|       from large pool |      19    |      19    |      19    |       0    |
+|       from small pool |     309    |     309    |     310    |       1    |
+|---------------------------------------------------------------------------|
+| Active allocs         |     328    |     328    |     329    |       1    |
+|       from large pool |      19    |      19    |      19    |       0    |
+|       from small pool |     309    |     309    |     310    |       1    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |      17    |      17    |      17    |       0    |
+|       from large pool |       6    |       6    |       6    |       0    |
+|       from small pool |      11    |      11    |      11    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |       9    |       9    |      18    |       9    |
+|       from large pool |       5    |       5    |       6    |       1    |
+|       from small pool |       4    |       5    |      12    |       8    |
+|===========================================================================|
+
+
+INFO 2021-10-17 23:59:11,163 state_update_hooks.py: 113: Starting phase 0 [train]
+INFO 2021-10-17 23:59:13,884 log_hooks.py:  77: ========= Memory Summary at on_forward =======
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 0                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |    5390 MB |    7844 MB |   25886 MB |   20496 MB |
+|       from large pool |    5370 MB |    7825 MB |   25866 MB |   20496 MB |
+|       from small pool |      19 MB |      19 MB |      19 MB |       0 MB |
+|---------------------------------------------------------------------------|
+| Active memory         |    5390 MB |    7844 MB |   25886 MB |   20496 MB |
+|       from large pool |    5370 MB |    7825 MB |   25866 MB |   20496 MB |
+|       from small pool |      19 MB |      19 MB |      19 MB |       0 MB |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |    8184 MB |    9330 MB |   15628 MB |    7444 MB |
+|       from large pool |    8162 MB |    9308 MB |   15606 MB |    7444 MB |
+|       from small pool |      22 MB |      22 MB |      22 MB |       0 MB |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |  202300 KB |    1563 MB |   10613 MB |   10415 MB |
+|       from large pool |  199936 KB |    1559 MB |   10597 MB |   10401 MB |
+|       from small pool |    2364 KB |       3 MB |      16 MB |      14 MB |
+|---------------------------------------------------------------------------|
+| Allocations           |     545    |     545    |     658    |     113    |
+|       from large pool |     124    |     124    |     164    |      40    |
+|       from small pool |     421    |     421    |     494    |      73    |
+|---------------------------------------------------------------------------|
+| Active allocs         |     545    |     545    |     658    |     113    |
+|       from large pool |     124    |     124    |     164    |      40    |
+|       from small pool |     421    |     421    |     494    |      73    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |      32    |      33    |      37    |       5    |
+|       from large pool |      21    |      22    |      26    |       5    |
+|       from small pool |      11    |      11    |      11    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |      18    |      20    |      95    |      77    |
+|       from large pool |      14    |      15    |      30    |      16    |
+|       from small pool |       4    |       5    |      65    |      61    |
+|===========================================================================|
+
+
+INFO 2021-10-17 23:59:21,443 log_hooks.py:  77: ========= Memory Summary at on_backward =======
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 0                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |  299186 KB |    8008 MB |   69912 MB |   69620 MB |
+|       from large pool |  261632 KB |    7988 MB |   69872 MB |   69616 MB |
+|       from small pool |   37554 KB |      36 MB |      40 MB |       3 MB |
+|---------------------------------------------------------------------------|
+| Active memory         |  299186 KB |    8008 MB |   69912 MB |   69620 MB |
+|       from large pool |  261632 KB |    7988 MB |   69872 MB |   69616 MB |
+|       from small pool |   37554 KB |      36 MB |      40 MB |       3 MB |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |    3226 MB |    9330 MB |   21396 MB |   18170 MB |
+|       from large pool |    3186 MB |    9308 MB |   21356 MB |   18170 MB |
+|       from small pool |      40 MB |      40 MB |      40 MB |       0 MB |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |    2933 MB |    3791 MB |   40967 MB |   38033 MB |
+|       from large pool |    2930 MB |    3787 MB |   40936 MB |   38006 MB |
+|       from small pool |       3 MB |       4 MB |      30 MB |      27 MB |
+|---------------------------------------------------------------------------|
+| Allocations           |     498    |     560    |    1132    |     634    |
+|       from large pool |      38    |     128    |     417    |     379    |
+|       from small pool |     460    |     462    |     715    |     255    |
+|---------------------------------------------------------------------------|
+| Active allocs         |     498    |     560    |    1132    |     634    |
+|       from large pool |      38    |     128    |     417    |     379    |
+|       from small pool |     460    |     462    |     715    |     255    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |      31    |      38    |      51    |      20    |
+|       from large pool |      11    |      22    |      31    |      20    |
+|       from small pool |      20    |      20    |      20    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |      26    |      29    |     336    |     310    |
+|       from large pool |      13    |      20    |     162    |     149    |
+|       from small pool |      13    |      13    |     174    |     161    |
+|===========================================================================|
+
+
+INFO 2021-10-17 23:59:21,556 log_hooks.py:  77: ========= Memory Summary at on_update =======
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 0                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |  410227 KB |    8008 MB |   70128 MB |   69727 MB |
+|       from large pool |  354048 KB |    7988 MB |   70051 MB |   69705 MB |
+|       from small pool |   56179 KB |      54 MB |      77 MB |      22 MB |
+|---------------------------------------------------------------------------|
+| Active memory         |  410227 KB |    8008 MB |   70128 MB |   69727 MB |
+|       from large pool |  354048 KB |    7988 MB |   70051 MB |   69705 MB |
+|       from small pool |   56179 KB |      54 MB |      77 MB |      22 MB |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |    3244 MB |    9330 MB |   21414 MB |   18170 MB |
+|       from large pool |    3186 MB |    9308 MB |   21356 MB |   18170 MB |
+|       from small pool |      58 MB |      58 MB |      58 MB |       0 MB |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |    2843 MB |    3791 MB |   41085 MB |   38241 MB |
+|       from large pool |    2840 MB |    3787 MB |   41025 MB |   38184 MB |
+|       from small pool |       3 MB |       4 MB |      60 MB |      57 MB |
+|---------------------------------------------------------------------------|
+| Allocations           |     661    |     664    |    3024    |    2363    |
+|       from large pool |      56    |     128    |     453    |     397    |
+|       from small pool |     605    |     608    |    2571    |    1966    |
+|---------------------------------------------------------------------------|
+| Active allocs         |     661    |     664    |    3024    |    2363    |
+|       from large pool |      56    |     128    |     453    |     397    |
+|       from small pool |     605    |     608    |    2571    |    1966    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |      40    |      40    |      60    |      20    |
+|       from large pool |      11    |      22    |      31    |      20    |
+|       from small pool |      29    |      29    |      29    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |      17    |      29    |    1786    |    1769    |
+|       from large pool |      11    |      20    |     162    |     151    |
+|       from small pool |       6    |      16    |    1624    |    1618    |
+|===========================================================================|
+
+
+INFO 2021-10-17 23:59:21,557 tensorboard_hook.py: 237: Logging Parameter gradients. Iteration 0
+INFO 2021-10-17 23:59:24,947 tensorboard_hook.py: 256: Logging metrics. Iteration 0
+INFO 2021-10-17 23:59:24,952 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 0; lr: 0.6; loss: 4.14865; btime(ms): 0; eta: 0:00:00; peak_mem(M): 8008;
+INFO 2021-10-17 23:59:26,297 tensorboard_hook.py: 256: Logging metrics. Iteration 1
+INFO 2021-10-17 23:59:26,302 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 1; lr: 2.0; loss: 4.28504; btime(ms): 26816; eta: 0:12:57; peak_mem(M): 8008; max_iterations: 30;
+INFO 2021-10-17 23:59:27,634 tensorboard_hook.py: 256: Logging metrics. Iteration 2
+INFO 2021-10-17 23:59:27,638 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 2; lr: 3.4; loss: 4.20261; btime(ms): 14083; eta: 0:06:34; peak_mem(M): 8008;
+INFO 2021-10-17 23:59:28,939 tensorboard_hook.py: 256: Logging metrics. Iteration 3
+INFO 2021-10-17 23:59:28,944 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 3; lr: 3.59685; loss: 4.26182; btime(ms): 9834; eta: 0:04:25; peak_mem(M): 8008;
+INFO 2021-10-17 23:59:30,231 tensorboard_hook.py: 256: Logging metrics. Iteration 4
+INFO 2021-10-17 23:59:30,237 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 4; lr: 3.48896; loss: 4.14; btime(ms): 7702; eta: 0:03:20; peak_mem(M): 8008;
+INFO 2021-10-17 23:59:31,523 tensorboard_hook.py: 256: Logging metrics. Iteration 5
+INFO 2021-10-17 23:59:31,529 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 5; lr: 3.17827; loss: 4.16033; btime(ms): 6420; eta: 0:02:40; peak_mem(M): 8008; btime(5iters)(ms): 6420; rolling_eta: 0:02:40;
+INFO 2021-10-17 23:59:32,830 tensorboard_hook.py: 256: Logging metrics. Iteration 6
+INFO 2021-10-17 23:59:32,836 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 6; lr: 2.70209; loss: 4.14842; btime(ms): 5565; eta: 0:02:13; peak_mem(M): 8008; btime(5iters)(ms): 1315; rolling_eta: 0:00:31;
+INFO 2021-10-17 23:59:34,130 tensorboard_hook.py: 256: Logging metrics. Iteration 7
+INFO 2021-10-17 23:59:34,135 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 7; lr: 2.11763; loss: 4.14528; btime(ms): 4957; eta: 0:01:54; peak_mem(M): 8008; btime(5iters)(ms): 1306; rolling_eta: 0:00:30;
+INFO 2021-10-17 23:59:35,437 tensorboard_hook.py: 256: Logging metrics. Iteration 8
+INFO 2021-10-17 23:59:35,441 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 8; lr: 1.49511; loss: 4.14322; btime(ms): 4500; eta: 0:01:39; peak_mem(M): 8008; btime(5iters)(ms): 1299; rolling_eta: 0:00:28;
+INFO 2021-10-17 23:59:35,821 log_hooks.py: 568: Average train batch time (ms) for 10 batches: 2998
+INFO 2021-10-17 23:59:35,821 log_hooks.py: 577: Train step time breakdown (rank 0):
+               Timer     Host    CudaEvent
+         read_sample:    1.88 ms    1.91 ms
+             forward:  291.63 ms  612.24 ms
+        loss_compute:    1.26 ms    1.22 ms
+     loss_all_reduce:    0.12 ms    0.13 ms
+            backward:  524.34 ms 1256.48 ms
+      optimizer_step:  807.50 ms   78.64 ms
+    train_step_total: 2696.80 ms 2696.84 ms
+INFO 2021-10-17 23:59:36,731 tensorboard_hook.py: 256: Logging metrics. Iteration 9
+INFO 2021-10-17 23:59:36,736 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 9; lr: 0.90932; loss: 4.14402; btime(ms): 4145; eta: 0:01:27; peak_mem(M): 8008; btime(5iters)(ms): 1299; rolling_eta: 0:00:27;
+INFO 2021-10-17 23:59:38,030 tensorboard_hook.py: 256: Logging metrics. Iteration 10
+INFO 2021-10-17 23:59:38,037 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 10; lr: 0.43064; loss: 4.14239; btime(ms): 3860; eta: 0:01:17; peak_mem(M): 8008; btime(5iters)(ms): 1299; rolling_eta: 0:00:25;
+INFO 2021-10-17 23:59:39,330 tensorboard_hook.py: 256: Logging metrics. Iteration 11
+INFO 2021-10-17 23:59:39,336 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 11; lr: 0.11656; loss: 4.14555; btime(ms): 3627; eta: 0:01:08; peak_mem(M): 8008; btime(5iters)(ms): 1301; rolling_eta: 0:00:24;
+INFO 2021-10-17 23:59:40,623 tensorboard_hook.py: 256: Logging metrics. Iteration 12
+INFO 2021-10-17 23:59:40,628 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 12; lr: 0.00484; loss: 4.14967; btime(ms): 3433; eta: 0:01:01; peak_mem(M): 8008; btime(5iters)(ms): 1299; rolling_eta: 0:00:23;
+INFO 2021-10-17 23:59:41,920 tensorboard_hook.py: 256: Logging metrics. Iteration 13
+INFO 2021-10-17 23:59:41,926 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 13; lr: 0.03928; loss: 4.14126; btime(ms): 3268; eta: 0:00:55; peak_mem(M): 8008; btime(5iters)(ms): 1298; rolling_eta: 0:00:22;
+INFO 2021-10-17 23:59:43,270 tensorboard_hook.py: 256: Logging metrics. Iteration 14
+INFO 2021-10-17 23:59:43,275 log_hooks.py: 277: Rank: 0; [ep: 0] iter: 14; lr: 0.1411; loss: 4.14631; btime(ms): 3127; eta: 0:00:50; peak_mem(M): 8008; btime(5iters)(ms): 1296; rolling_eta: 0:00:20;
+INFO 2021-10-17 23:59:43,276 trainer_main.py: 214: Meters synced
+INFO 2021-10-17 23:59:43,276 log_hooks.py: 568: Average train batch time (ms) for 15 batches: 2495
+INFO 2021-10-17 23:59:43,276 log_hooks.py: 577: Train step time breakdown (rank 0):
+               Timer     Host    CudaEvent
+         read_sample:    4.50 ms    4.53 ms
+             forward:  200.70 ms  534.89 ms
+        loss_compute:    1.23 ms    1.19 ms
+     loss_all_reduce:    0.12 ms    0.13 ms
+            backward:  323.64 ms 1089.26 ms
+      optimizer_step:  839.05 ms   76.92 ms
+    train_step_total: 2140.15 ms 2140.18 ms
+/usr/local/lib/python3.7/dist-packages/torch/cuda/memory.py:263: FutureWarning: torch.cuda.reset_max_memory_allocated now calls torch.cuda.reset_peak_memory_stats, which resets /all/ peak memory stats.
+  FutureWarning)
+/usr/local/lib/python3.7/dist-packages/torch/cuda/memory.py:289: FutureWarning: torch.cuda.reset_max_memory_cached now calls torch.cuda.reset_peak_memory_stats, which resets /all/ peak memory stats.
+  FutureWarning)
+INFO 2021-10-17 23:59:49,742 io.py:  63: Saving data to file: /content/checkpoints/metrics.json
+INFO 2021-10-17 23:59:49,743 io.py:  89: Saved data to file: /content/checkpoints/metrics.json
+INFO 2021-10-17 23:59:49,743 log_hooks.py: 426: [phase: 0] Saving checkpoint to /content/checkpoints
+INFO 2021-10-17 23:59:50,354 checkpoint.py: 131: Saved checkpoint: /content/checkpoints/model_phase0.torch
+INFO 2021-10-17 23:59:50,354 checkpoint.py: 140: Creating symlink...
+INFO 2021-10-17 23:59:50,354 checkpoint.py: 144: Created symlink: /content/checkpoints/checkpoint.torch
+INFO 2021-10-17 23:59:50,355 __init__.py: 101: Distributed Sampler config:
+{'num_replicas': 1, 'rank': 0, 'epoch': 1, 'num_samples': 500, 'total_size': 500, 'shuffle': True, 'seed': 0}
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+** fvcore version of PathManager will be deprecated soon. **
+** Please migrate to the version in iopath repo. **
+https://github.com/facebookresearch/iopath 
+
+INFO 2021-10-17 23:59:57,908 trainer_main.py: 333: Phase advanced. Rank: 0
+INFO 2021-10-17 23:59:57,908 state_update_hooks.py: 113: Starting phase 1 [train]
+INFO 2021-10-17 23:59:59,584 tensorboard_hook.py: 256: Logging metrics. Iteration 15
+INFO 2021-10-17 23:59:59,593 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 15; lr: 0.29803; loss: 4.14134; btime(ms): 3009; eta: 0:00:45; peak_mem(M): 5676; btime(5iters)(ms): 1307; rolling_eta: 0:00:19;
+INFO 2021-10-18 00:00:01,069 tensorboard_hook.py: 256: Logging metrics. Iteration 16
+INFO 2021-10-18 00:00:01,074 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 16; lr: 0.49122; loss: 4.14388; btime(ms): 3841; eta: 0:00:53; peak_mem(M): 5676; btime(5iters)(ms): 4311; rolling_eta: 0:01:00;
+INFO 2021-10-18 00:00:02,382 tensorboard_hook.py: 256: Logging metrics. Iteration 17
+INFO 2021-10-18 00:00:02,388 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 17; lr: 0.69747; loss: 4.14125; btime(ms): 3702; eta: 0:00:48; peak_mem(M): 5676; btime(5iters)(ms): 4347; rolling_eta: 0:00:56;
+INFO 2021-10-18 00:00:03,692 tensorboard_hook.py: 256: Logging metrics. Iteration 18
+INFO 2021-10-18 00:00:03,697 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 18; lr: 0.89198; loss: 4.13336; btime(ms): 3569; eta: 0:00:42; peak_mem(M): 5676; btime(5iters)(ms): 4351; rolling_eta: 0:00:52;
+INFO 2021-10-18 00:00:04,988 tensorboard_hook.py: 256: Logging metrics. Iteration 19
+INFO 2021-10-18 00:00:04,994 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 19; lr: 1.0514; loss: 4.13802; btime(ms): 3450; eta: 0:00:37; peak_mem(M): 5676; btime(5iters)(ms): 4354; rolling_eta: 0:00:47;
+INFO 2021-10-18 00:00:06,290 tensorboard_hook.py: 256: Logging metrics. Iteration 20
+INFO 2021-10-18 00:00:06,295 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 20; lr: 1.15658; loss: 4.14599; btime(ms): 3342; eta: 0:00:33; peak_mem(M): 5676; btime(5iters)(ms): 4343; rolling_eta: 0:00:43;
+INFO 2021-10-18 00:00:07,579 tensorboard_hook.py: 256: Logging metrics. Iteration 21
+INFO 2021-10-18 00:00:07,585 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 21; lr: 1.19487; loss: 4.17002; btime(ms): 3245; eta: 0:00:29; peak_mem(M): 5676; btime(5iters)(ms): 1340; rolling_eta: 0:00:12;
+INFO 2021-10-18 00:00:08,876 tensorboard_hook.py: 256: Logging metrics. Iteration 22
+INFO 2021-10-18 00:00:08,881 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 22; lr: 1.16167; loss: 4.14622; btime(ms): 3156; eta: 0:00:25; peak_mem(M): 5676; btime(5iters)(ms): 1302; rolling_eta: 0:00:10;
+INFO 2021-10-18 00:00:10,177 tensorboard_hook.py: 256: Logging metrics. Iteration 23
+INFO 2021-10-18 00:00:10,183 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 23; lr: 1.06098; loss: 4.1521; btime(ms): 3075; eta: 0:00:21; peak_mem(M): 5676; btime(5iters)(ms): 1298; rolling_eta: 0:00:09;
+INFO 2021-10-18 00:00:10,567 log_hooks.py: 568: Average train batch time (ms) for 10 batches: 1265
+INFO 2021-10-18 00:00:10,567 log_hooks.py: 577: Train step time breakdown (rank 0):
+               Timer     Host    CudaEvent
+         read_sample:    1.83 ms    2.04 ms
+             forward:   34.09 ms  389.79 ms
+        loss_compute:    1.39 ms    1.32 ms
+     loss_all_reduce:    0.13 ms    0.14 ms
+            backward:   38.55 ms  841.65 ms
+      optimizer_step:  918.39 ms  118.75 ms
+    train_step_total: 1363.51 ms 1363.37 ms
+INFO 2021-10-18 00:00:11,486 tensorboard_hook.py: 256: Logging metrics. Iteration 24
+INFO 2021-10-18 00:00:11,491 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 24; lr: 0.90489; loss: 4.15478; btime(ms): 3001; eta: 0:00:18; peak_mem(M): 5676; btime(5iters)(ms): 1297; rolling_eta: 0:00:07;
+INFO 2021-10-18 00:00:12,785 tensorboard_hook.py: 256: Logging metrics. Iteration 25
+INFO 2021-10-18 00:00:12,792 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 25; lr: 0.71216; loss: 4.1479; btime(ms): 2934; eta: 0:00:14; peak_mem(M): 5676; btime(5iters)(ms): 1299; rolling_eta: 0:00:06;
+INFO 2021-10-18 00:00:14,083 tensorboard_hook.py: 256: Logging metrics. Iteration 26
+INFO 2021-10-18 00:00:14,088 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 26; lr: 0.50593; loss: 4.14714; btime(ms): 2871; eta: 0:00:11; peak_mem(M): 5676; btime(5iters)(ms): 1299; rolling_eta: 0:00:05;
+INFO 2021-10-18 00:00:15,384 tensorboard_hook.py: 256: Logging metrics. Iteration 27
+INFO 2021-10-18 00:00:15,389 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 27; lr: 0.31099; loss: 4.14215; btime(ms): 2813; eta: 0:00:08; peak_mem(M): 5676; btime(5iters)(ms): 1300; rolling_eta: 0:00:03;
+INFO 2021-10-18 00:00:16,680 tensorboard_hook.py: 256: Logging metrics. Iteration 28
+INFO 2021-10-18 00:00:16,685 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 28; lr: 0.15075; loss: 4.14735; btime(ms): 2759; eta: 0:00:05; peak_mem(M): 5676; btime(5iters)(ms): 1301; rolling_eta: 0:00:02;
+INFO 2021-10-18 00:00:18,027 tensorboard_hook.py: 256: Logging metrics. Iteration 29
+INFO 2021-10-18 00:00:18,032 log_hooks.py: 277: Rank: 0; [ep: 1] iter: 29; lr: 0.04446; loss: 4.14566; btime(ms): 2708; eta: 0:00:02; peak_mem(M): 5676; btime(5iters)(ms): 1300; rolling_eta: 0:00:01;
+INFO 2021-10-18 00:00:18,033 trainer_main.py: 214: Meters synced
+INFO 2021-10-18 00:00:18,033 log_hooks.py: 568: Average train batch time (ms) for 15 batches: 1341
+INFO 2021-10-18 00:00:18,034 log_hooks.py: 577: Train step time breakdown (rank 0):
+               Timer     Host    CudaEvent
+         read_sample:    4.70 ms    4.85 ms
+             forward:   28.96 ms  386.72 ms
+        loss_compute:    1.29 ms    1.24 ms
+     loss_all_reduce:    0.12 ms    0.13 ms
+            backward:   32.36 ms  840.03 ms
+      optimizer_step:  905.85 ms  101.79 ms
+    train_step_total: 1341.27 ms 1341.20 ms
+INFO 2021-10-18 00:00:24,460 io.py:  63: Saving data to file: /content/checkpoints/metrics.json
+INFO 2021-10-18 00:00:24,462 io.py:  89: Saved data to file: /content/checkpoints/metrics.json
+INFO 2021-10-18 00:00:24,462 log_hooks.py: 426: [phase: 1] Saving checkpoint to /content/checkpoints
+INFO 2021-10-18 00:00:25,088 checkpoint.py: 131: Saved checkpoint: /content/checkpoints/model_final_checkpoint_phase1.torch
+INFO 2021-10-18 00:00:25,088 checkpoint.py: 140: Creating symlink...
+INFO 2021-10-18 00:00:25,088 checkpoint.py: 144: Created symlink: /content/checkpoints/checkpoint.torch
+INFO 2021-10-18 00:00:25,321 train.py: 131: All Done!
+INFO 2021-10-18 00:00:25,321 logger.py:  73: Shutting down loggers...
+INFO 2021-10-18 00:00:25,322 distributed_launcher.py: 168: All Done!
+INFO 2021-10-18 00:00:25,322 logger.py:  73: Shutting down loggers...
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And we are done!! We have a SimCLR model trained and available in <code>checkpoints/model_final_checkpoint_phase1.torch</code>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Training-logs,-checkpoints,-metrics">Training logs, checkpoints, metrics<a class="anchor-link" href="#Training-logs,-checkpoints,-metrics">¶</a></h2><p>VISSL dumps model checkpoints in the checkpoint directory specified by user. In above example, we used <code>./checkpoints</code> directory. Let's take a look at the content of directory.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ls</span> <span class="o">/</span><span class="n">content</span><span class="o">/</span><span class="n">checkpoints</span><span class="o">/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre><span class="ansi-cyan-intense-fg ansi-bold">checkpoint.torch</span>@  model_final_checkpoint_phase1.torch  <span class="ansi-blue-intense-fg ansi-bold">tb_logs</span>/
+log.txt            model_phase0.torch                   train_config.yaml
+metrics.json       stdout.json
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We notice:</p>
+<ul>
+<li>model checkpoints <code>.torch</code> files after every epoch, </li>
+<li>model training log <code>log.txt</code> which has the full stdout but saved in file</li>
+<li><code>metrics.json</code> if your training calculated some metrics, those metrics values will be saved there..</li>
+<li><code>tb_logs</code> which are the tensorboard events</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Visualizing-Tensorboard-Logs">Visualizing Tensorboard Logs<a class="anchor-link" href="#Visualizing-Tensorboard-Logs">¶</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If you have enabled <code>config.TENSORBOARD_SETUP.USE_TENSORBOARD=true</code> , you will see the tensorboard events dumped in <code>tb_logs/</code> directory. You can use this to visualize the events in tensorboard as follows:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Look at training curves in tensorboard:</span>
+<span class="o">%</span><span class="k">reload_ext</span> tensorboard
+<span class="o">%</span><span class="k">tensorboard</span> --logdir /content/checkpoints/tb_logs
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div id="04cd0f31-9bb6-4ad7-9e5b-fc9488bd3060"></div>
+<div class="output_subarea output_javascript">
+<script type="text/javascript">
+var element = $('#04cd0f31-9bb6-4ad7-9e5b-fc9488bd3060');
+
+        (async () => {
+            const url = new URL(await google.colab.kernel.proxyPort(6007, {'cache': true}));
+            url.searchParams.set('tensorboardColab', 'true');
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.setAttribute('width', '100%');
+            iframe.setAttribute('height', '800');
+            iframe.setAttribute('frameborder', 0);
+            document.body.appendChild(iframe);
+        })();
+    
+</script>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><div class="social"><a class="github-button" href="https://github.com/facebookresearch/vissl" data-count-href="https://github.com/facebookresearch/vissl/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star VISSL on GitHub">vissl</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2021 Facebook Inc<br/>Legal:<a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></section></footer></div></body></html>
