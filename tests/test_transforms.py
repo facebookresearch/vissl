@@ -14,6 +14,7 @@ from vissl.data.ssl_transforms.img_pil_to_tensor import ImgToTensor
 from vissl.data.ssl_transforms.mnist_img_pil_to_rgb_mode import MNISTImgPil2RGB
 from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.test_utils import (
+    augly_test,
     in_temporary_directory,
     run_integration_test,
 )
@@ -83,6 +84,7 @@ class TestTransform(unittest.TestCase):
         for crop in crops[2:]:
             self.assertEqual((96, 96), crop.size)
 
+    @augly_test()
     def test_augly_transforms(self):
         cfg = compose_hydra_configuration(
             [

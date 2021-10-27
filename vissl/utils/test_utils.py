@@ -17,6 +17,7 @@ import torch.multiprocessing as mp
 from vissl.config.attr_dict import AttrDict
 from vissl.hooks import default_hook_generator
 from vissl.utils.distributed_launcher import launch_distributed
+from vissl.utils.misc import is_augly_available
 
 
 @contextmanager
@@ -85,6 +86,23 @@ def gpu_test(gpu_count: int = 1):
         @functools.wraps(test_function)
         def wrapped_test(*args, **kwargs):
             if torch.cuda.device_count() >= gpu_count:
+                return test_function(*args, **kwargs)
+
+        return wrapped_test
+
+    return gpu_test_decorator
+
+
+def augly_test():
+    """
+    Annotation for Augly tests, skipping the test if the
+    required amount of Augly is not available
+    """
+
+    def gpu_test_decorator(test_function: Callable):
+        @functools.wraps(test_function)
+        def wrapped_test(*args, **kwargs):
+            if is_augly_available():
                 return test_function(*args, **kwargs)
 
         return wrapped_test
