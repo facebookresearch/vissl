@@ -12,12 +12,12 @@ source ~/.bashrc
 
 conda create -y -n myenv python=3.7 opencv
 conda activate myenv
-conda install -y -c pytorch pytorch=1.5.1 cudatoolkit=10.1 torchvision
+conda install -y -c pytorch pytorch==1.9.1 torchvision==0.10.1 cudatoolkit=10.2
 
 pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt151/download.html apex
-#pip install vissl --no-index -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
-pip install vissl
-python -c "import vissl, apex"
+pip install vissl --no-index -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
+pip install augly
+python -c "import vissl, apex, augly"
 cd loc1
 python -m unittest discover -v -s tests
 dev/run_quick_tests.sh
