@@ -58,7 +58,7 @@ git checkout -b v0.1.6
 # install vissl dependencies
 pip install --progress-bar off -r requirements.txt
 pip install opencv-python
-# update classy vision install to current main branch
+# update classy vision install to current main branch.
 pip uninstall -y classy_vision
 pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
 # install vissl dev mode (e stands for editable)
