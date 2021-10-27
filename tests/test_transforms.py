@@ -92,7 +92,7 @@ class TestTransform(unittest.TestCase):
                 "+config/test/transforms=augly_transforms_example",
             ],
         )
-        args, config = convert_to_attrdict(cfg)
+        _, config = convert_to_attrdict(cfg)
 
         with in_temporary_directory() as _:
             # Test that the training runs with an augly transformation.

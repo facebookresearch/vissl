@@ -12,7 +12,7 @@ source ~/.bashrc
 
 conda create -y -n myenv python=3.7 opencv
 conda activate myenv
-conda install -y -c pytorch pytorch==1.9.1 torchvision==0.10.1 cudatoolkit=10.2
+conda install pytorch==1.9.1 torchvision cudatoolkit=10.2 -c pytorch -c conda-forge
 
 pip install -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/py37_cu101_pyt151/download.html apex
 pip install vissl --no-index -f https://dl.fbaipublicfiles.com/vissl/packaging/visslwheels/download.html
