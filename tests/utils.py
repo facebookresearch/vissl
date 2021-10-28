@@ -84,6 +84,7 @@ ROOT_LOSS_CONFIGS = create_valid_input(
             "nearest_neighbor",
             "feature_extraction",
             "fb",
+            "test/transforms",
         ],
     )
 )

@@ -3,10 +3,13 @@
   "localized-strings": {
     "next": "Next",
     "previous": "Previous",
-    "tagline": "A library for SOTA Self-Supervised Learning with images",
+    "tagline": "A library for state-of-the-art self-supervised learning from images",
     "docs": {
       "README": {
         "title": "README"
+      },
+      "source/evaluations/feature_eval_settings": {
+        "title": "source/evaluations/feature_eval_settings"
       }
     },
     "links": {
