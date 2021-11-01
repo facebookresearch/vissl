@@ -56,11 +56,11 @@ update_gcc7: &update_gcc7
 
 install_fairscale: &install_fairscale
   - run:
-      name: Install ClassyVision
+      name: Install Fairscale
       working_directory: ~/
       command: |
-        !pip uninstall -y fairscale
-        !pip install fairscale@https://github.com/facebookresearch/fairscale/tarball/df7db85cef7f9c30a5b821007754b96eb1f977b6
+        pip uninstall -y fairscale
+        pip install fairscale@https://github.com/facebookresearch/fairscale/tarball/df7db85cef7f9c30a5b821007754b96eb1f977b6
 
 
 install_classy_vision: &install_classy_vision
