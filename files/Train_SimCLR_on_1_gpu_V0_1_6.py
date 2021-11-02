@@ -33,6 +33,10 @@ print(version_str)
 !pip uninstall -y classy_vision
 !pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d
 
+# Update fairscale to commit compatible with v0.1.6
+!pip uninstall -y fairscale
+!pip install fairscale@https://github.com/facebookresearch/fairscale/tarball/df7db85cef7f9c30a5b821007754b96eb1f977b6
+
 # install vissl dev mode (e stands for editable)
 !pip install -e .[dev]
 

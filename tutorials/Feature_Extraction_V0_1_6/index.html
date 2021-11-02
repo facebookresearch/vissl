@@ -152,6 +152,10 @@
 <span class="o">!</span>pip uninstall -y classy_vision
 <span class="o">!</span>pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d
 
+<span class="c1"># Update fairscale to commit compatible with v0.1.6</span>
+<span class="o">!</span>pip uninstall -y fairscale
+<span class="o">!</span>pip install fairscale@https://github.com/facebookresearch/fairscale/tarball/df7db85cef7f9c30a5b821007754b96eb1f977b6
+
 <span class="c1"># install vissl dev mode (e stands for editable)</span>
 <span class="o">!</span>pip install -e .<span class="o">[</span>dev<span class="o">]</span>
 </pre></div>
@@ -949,7 +953,7 @@ sys.platform         linux
 Python               3.7.12 (default, Sep 10 2021, 00:21:48) [GCC 7.5.0]
 numpy                1.19.5
 Pillow               7.1.2
-vissl                0.1.5 @/content/vissl/vissl
+vissl                0.1.6 @/content/vissl/vissl
 GPU available        True
 GPU 0                Tesla K80
 CUDA_HOME            /usr/local/cuda
@@ -2322,7 +2326,7 @@ sys.platform         linux
 Python               3.7.12 (default, Sep 10 2021, 00:21:48) [GCC 7.5.0]
 numpy                1.19.5
 Pillow               7.1.2
-vissl                0.1.5 @/content/vissl/vissl
+vissl                0.1.6 @/content/vissl/vissl
 GPU available        True
 GPU 0                Tesla K80
 CUDA_HOME            /usr/local/cuda

@@ -213,6 +213,9 @@ pip install opencv-python
 <span class="c1"># update classy vision install to current main.</span>
 pip uninstall -y classy_vision
 pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
+<span class="c1"># Update fairscale to commit compatible with vissl main.</span>
+!pip uninstall -y fairscale
+!pip install fairscale@https://github.com/facebookresearch/fairscale/tarball/df7db85cef7f9c30a5b821007754b96eb1f977b6
 <span class="c1"># install vissl dev mode (e stands for editable)</span>
 pip install -e .<span class="o">[</span>dev<span class="o">]</span>
 <span class="c1"># verify installation</span>
