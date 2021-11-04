@@ -63,13 +63,13 @@ class _EuroSAT:
         self.images = []
         self.targets = []
         self.labels = sorted(os.listdir(self.image_folder))
-        random.seed(42)
+        split_generator = random.Random(42)
 
         # There is no train/val split in the EUROSAT dataset, so we have to create it
         for i, label in enumerate(self.labels):
             label_path = os.path.join(self.image_folder, label)
             files = sorted(os.listdir(label_path))
-            files = random.sample(files, 1500)
+            files = split_generator.sample(files, self.TRAIN_SAMPLES + self.VALID_SAMPLES)
             if train:
                 self.images.extend(files[: self.TRAIN_SAMPLES])
                 self.targets.extend([i] * self.TRAIN_SAMPLES)

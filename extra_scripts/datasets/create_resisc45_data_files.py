@@ -12,19 +12,30 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
+RESISC45_URL = "https://1drv.ms/u/s!AmgKYzARBl5ca3HNaHIlzp_IXjs"
+
+
 def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i",
         "--input",
         type=str,
-        help="Path to the expanded NWPU-RESISC45.rar archive (download from: https://1drv.ms/u/s!AmgKYzARBl5ca3HNaHIlzp_IXjs)",
+        help="Path to the expanded NWPU-RESISC45.rar archive (download from: {})".format(RESISC45_URL),
     )
     parser.add_argument(
         "-o",
         "--output",
         type=str,
         help="Folder where the classification dataset will be written",
+    )
+    parser.add_argument(
+        "-d",
+        "--download",
+        action="store_const",
+        const=True,
+        default=False,
+        help="To download the original dataset and decompress it in the input folder",
     )
     return parser
 
@@ -44,12 +55,13 @@ class _RESISC45:
         self.images = []
         self.targets = []
         self.labels = sorted(os.listdir(self.input_path))
-        random.seed(42)
+        split_generator = random.Random(42)
 
         # There is no train/val split in the RESISC45 dataset, so we have to create it
         for i, label in enumerate(self.labels):
             label_path = os.path.join(self.input_path, label)
             files = sorted(os.listdir(label_path))
+            files = split_generator.shuffle(files)
             train_samples = int(self.TRAIN_SPLIT_PERCENT * len(files))
             test_samples = int(self.TEST_SPLIT_PERCENT * len(files))
             if train:
@@ -112,4 +124,6 @@ if __name__ == "__main__":
     ```
     """
     args = get_argument_parser().parse_args()
+    if args.download:
+        raise Exception("Cannot automatically download RESISC45. You can manually download the archive at {}".format(RESISC45_URL))
     create_resisc_disk_folder(args.input, args.output)
