@@ -95,6 +95,22 @@
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
     },
+    "iwilds_cam_val_filelist": {
+        "train": ["<path to train_images.npy>", "<path to train_label.npy>"],
+        "val": ["<path to val_images.npy>", "<path to val_label.npy>"]
+    },
+    "iwilds_cam_id_val_filelist": {
+        "train": ["<path to train_images.npy>", "<path to train_label.npy>"],
+        "val": ["<path to id_val_images.npy>", "<path to id_val_label.npy>"]
+    },
+    "iwilds_cam_test_filelist": {
+        "train": ["<path to train_images.npy>", "<path to train_label.npy>"],
+        "val": ["<path to test_images.npy>", "<path to test_labels.npy>"]
+    },
+    "iwilds_cam_id_test_filelist": {
+        "train": ["<path to train_images.npy>", "<path to train_label.npy>"],
+        "val": ["<path to id_test_images.npy>", "<path to id_test_labels.npy>"]
+    },
     "kitti_dist_folder": {
         "train": ["<img_path>", "<lbl_path>"],
         "val": ["<img_path>", "<lbl_path>"]
