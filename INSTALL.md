@@ -5,8 +5,8 @@ Our installation is simple and we provide pre-built binaries (pip, conda) and al
 ## Table of Contents
 - [Requirements](#requirements)
 - [Installing VISSL from source](#Installing-VISSL-from-source)
-    - [Install from source in PIP environment](#Install-from-source-in-PIP-environment)
     - [Install from source in Conda environment](#Install-from-source-in-Conda-environment)
+    - [Install from source in PIP environment](#Install-from-source-in-PIP-environment)
 - [Installing VISSL from pre-built binaries](#Installing-VISSL-from-pre-built-binaries)
    - [Install VISSL conda package](#Install-VISSL-conda-package)
    - [Install VISSL pip package](#Install-VISSL-pip-package)
@@ -40,7 +40,7 @@ source activate vissl_env
 #### Step 2: Install PyTorch (conda)
 
 ```bash
-conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
+conda install pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cudatoolkit=10.2 -c pytorch
 ```
 
 #### Step 3: Install APEX (conda)
