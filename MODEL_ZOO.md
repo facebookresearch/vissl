@@ -30,7 +30,7 @@ VISSL is 100% compatible with TorchVision ResNet models. It's easy to use torchv
 
 ### Converting VISSL to Torchvision
 
-All the ResNe(X)t models in VISSL can be converted to Torchvision weights. This involves simply removing the `_features_blocks.` prefix from all the weights. VISSL provides a convenience script for this:
+All the ResNe(X)t models in VISSL can be converted to Torchvision weights. This involves simply removing the `_feature_blocks.` prefix from all the weights. VISSL provides a convenience script for this:
 
 ```bash
 python extra_scripts/convert_vissl_to_torchvision.py \
