@@ -60,7 +60,10 @@ def is_feature_extractor_model(model_config):
     """
     return (
         model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-        and model_config.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
+        and (
+            model_config.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
+            or model_config.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_AND_HEAD
+        )
         and len(model_config.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP) > 0
     )
 

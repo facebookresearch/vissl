@@ -1,6 +1,10 @@
 # @package _global_
 config:
   MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res5", ["AdaptiveAvgPool2d", [[1, 1]]]],
+      ]
     TRUNK:
       NAME: regnet  # This could be overriden by command line to be regnet_fsdp
       REGNET:

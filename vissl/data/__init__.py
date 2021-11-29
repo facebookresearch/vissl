@@ -186,6 +186,11 @@ def build_dataloader(
     if dataset_config["USE_DEBUGGING_SAMPLER"]:
         worker_init_fn = debugging_worker_init_fn
 
+    # Load the labels of the dataset before creating the data loader
+    # or else the load of files will happen on each data loader separately
+    # decreasing performance / hitting quota on data source
+    dataset.load_labels()
+
     # Create the pytorch dataloader
     dataloader = DataLoader(
         dataset=dataset,

@@ -500,7 +500,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
             )
 
     def init_model_from_weights_params_file(
-        self, config: AttrDict, checkpoint: Dict[str, Any]
+        self, config: AttrDict, checkpoint: Dict[str, Any], strict: bool = False
     ):
         """
         We initialize the weights from this checkpoint. However, we don't care
@@ -547,6 +547,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                 skip_layers=skip_layers,
                 replace_prefix=replace_prefix,
                 append_prefix=append_prefix,
+                strict=strict,
             )
 
     def is_clustering_model(self):

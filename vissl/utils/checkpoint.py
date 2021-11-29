@@ -9,6 +9,7 @@ import os
 from enum import Enum, auto
 from typing import Any, Dict, List
 
+import numpy as np
 import torch
 import torch.distributed as dist
 from classy_vision.generic.util import (
@@ -761,6 +762,15 @@ def check_model_compatibilty(config: AttrDict, state_dict: Dict[str, Any]):
         )
 
 
+def is_feature_extractor_state_dict(state_dict: Dict[str, Any]):
+    """
+    We check if the trunk state dict is already a feature extractor state dict.
+    If it is, return True otherwise return False.
+    """
+    contains_prefix = [key.startswith("base_model.") for (key, _) in state_dict.items()]
+    return np.all(contains_prefix)
+
+
 def get_checkpoint_model_state_dict(config: AttrDict, state_dict: Dict[str, Any]):
     """
     Given a specified pre-trained VISSL model (composed of head and trunk),
@@ -778,8 +788,18 @@ def get_checkpoint_model_state_dict(config: AttrDict, state_dict: Dict[str, Any]
 
     classy_state_dict = state_dict["base_model"]["model"]
     trunk_append_prefix, heads_append_prefix = "trunk.", "heads."
-    if is_feature_extractor_model(config.MODEL):
+    # if the model is being loaded for feature extraction, we check
+    # that the model is not already a feature extractor trunk. If
+    # not, we add the appropriate prefix to append.
+    if is_feature_extractor_model(config.MODEL) and not is_feature_extractor_state_dict(
+        classy_state_dict["trunk"]
+    ):
         trunk_append_prefix = "trunk.base_model."
+    elif not is_feature_extractor_model(config.MODEL):
+        # Getting rid of the feature extractor prefix if we do not need it
+        classy_state_dict["trunk"] = replace_module_prefix(
+            classy_state_dict["trunk"], "base_model.", ""
+        )
 
     trunk_state_dict = append_module_prefix(
         classy_state_dict["trunk"], trunk_append_prefix
@@ -801,6 +821,7 @@ def init_model_from_consolidated_weights(
     skip_layers: List[str],
     replace_prefix=None,
     append_prefix=None,
+    strict: bool = False,
 ):
     """
     Initialize the model from any given params file. This is particularly useful
@@ -816,6 +837,7 @@ def init_model_from_consolidated_weights(
         replace_prefix (string): remove these prefixes from the layer names (executed first)
         append_prefix (string): append the prefix to the layer names
                                 (executed after replace_prefix)
+        strict (bool): whether or not to raise an error in case layers are not initialized
 
     Returns:
         model (object): the model initialized from the weights file
@@ -842,14 +864,19 @@ def init_model_from_consolidated_weights(
 
     # load the checkpoint now
     all_layers = model.state_dict()
+    missing_layers = []
 
     local_rank, _ = get_machine_local_and_dist_rank()
     max_len_model = max(len(key) for key in all_layers.keys())
     for layername in all_layers.keys():
+
+        # Ignore layers in "skip_layers"
         if len(skip_layers) > 0 and any(item in layername for item in skip_layers):
             if local_rank == 0:
                 logging.info(f"Ignored layer:\t{layername}")
             continue
+
+        # Otherwise initialize the layer
         if layername in state_dict:
             param = state_dict[layername]
             if not isinstance(param, torch.Tensor):
@@ -886,18 +913,29 @@ def init_model_from_consolidated_weights(
                         f"Loaded: {layername: <{max_len_model}} of "
                         f"shape: {all_layers[layername].size()} from checkpoint"
                     )
+
+            # In case the layer is ignored by settings
             else:
                 if local_rank == 0:
                     logging.info(f"Ignored layer:\t{layername}")
+
+        # In case the layer cannot be found
         else:
+            missing_layers.append(layername)
             if local_rank == 0:
                 logging.info(f"Not found:\t\t{layername}, not initialized")
+
+    # Raise an error if some layers are not initialized
+    if strict and len(missing_layers) > 0:
+        raise ValueError(f"Layers not initialized: {missing_layers}")
+
     if local_rank == 0:
-        extra_layers = []
         # go through the checkpoint state_dict and print what extra layers exist in checkpoint
-        for layername in state_dict.keys():
-            if layername not in all_layers:
-                extra_layers.append(layername)
+        extra_layers = [
+            layer_name
+            for layer_name in state_dict.keys()
+            if layer_name not in all_layers
+        ]
         logging.info(f"Extra layers not loaded from checkpoint: {extra_layers}")
 
     ####################### DEBUG ############################

@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import gc
+import itertools
 import logging
 import os
 import socket
@@ -332,14 +333,21 @@ class SelfSupervisionTrainer(object):
         local_rank, _ = get_machine_local_and_dist_rank()
         logging.info(f"Phase advanced. Rank: {local_rank}")
 
-    def extract(self, output_folder: str) -> None:
+    def extract(
+        self,
+        output_folder: str,
+        extract_features: bool = True,
+        extract_predictions: bool = False,
+    ) -> None:
         """
-        Extract workflow supports multi-gpu feature extraction. Since we are only extracting
-        features, only the model is built (and initialized from some model weights file
-        if specified by user). The model is set to the eval mode fully.
+        Extract workflow supports multi-gpu feature extraction and also extracting
+        predicted labels. Since we are only extracting features or label predictions,
+        only the model is built (and initialized from some model weights file
+        if specified by user). Optionally the meters are built if the labels
+        are being extracted. The model is set to the eval mode fully.
 
-        The features are extracted for whatever data splits (train, val, test) etc that user
-        wants.
+        The features / labels are extracted for whatever data splits (train, val, test)
+        the user wants.
         """
         # support feature extraction on gpu only.
         assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
@@ -349,7 +357,7 @@ class SelfSupervisionTrainer(object):
         self._add_dummy_layer()
         self.task.init_distributed_data_parallel_model()
         if is_primary():
-            logging.info("Model is:\n {}".format(self.task.model))
+            logging.info(f"Model is:\n {self.task.model}")
 
         # Get the names of the features that we are extracting. If user doesn't
         # specify the features to evaluate, we get the full model output and freeze
@@ -360,12 +368,197 @@ class SelfSupervisionTrainer(object):
 
         for split in self.task.available_splits:
             logging.info(f"============== Split: {split} =======================")
-            logging.info(f"Extracting features for partition: {split.lower()}")
             self.task.data_iterator = iter(self.task.dataloaders[split.lower()])
-            self._extract_split_features(feat_names, self.task, split, output_folder)
-            logging.info(f"Done getting features for partition: {split.lower()}")
+            if extract_features:
+                logging.info(f"Extracting features for partition: {split.lower()}")
+                self._extract_split_features(
+                    feat_names, self.task, split, output_folder
+                )
+                logging.info(f"Done getting features for partition: {split.lower()}")
+            if extract_predictions:
+                logging.info(f"Extracting predictions for partition: {split.lower()}")
+                self._extract_split_label_predictions(
+                    feat_names, self.task, split, output_folder
+                )
+                logging.info(f"Done getting predictions for partition: {split.lower()}")
 
         self._cleanup_task()
+
+    def _to_unique_feature_names(self, feat_names: List[str]) -> List[str]:
+        """
+        We may have multiple head with different average pooling for
+        the same features. In case of export, we want to make sure to
+        export the outputs of these heads with different names.
+
+        This function will rename the features in the following way:
+        ["res4", "res4", "res5"] -> ["res4", "res4_1", "res5"]
+
+        No effect if there are no duplicate feature names.
+        """
+        counter = {}
+        new_feat_names = []
+        for feat_name in feat_names:
+            index = counter.get(feat_name, 0)
+            if index > 0:
+                new_feat_names.append(f"{feat_name}_{index}")
+            else:
+                new_feat_names.append(feat_name)
+            counter[feat_name] = index + 1
+        return new_feat_names
+
+    def _extract_split_label_predictions(
+        self,
+        feat_names: List[str],
+        task: ClassyTask,
+        split_name: str,
+        output_folder: str,
+    ):
+        task.model.eval()
+        logging.info("Model set to eval mode during feature extraction...")
+        dist_rank = torch.distributed.get_rank()
+
+        feat_names = self._to_unique_feature_names(feat_names)
+        out_predictions, out_targets, out_scores = {}, {}, {}
+        for feat_name in feat_names:
+            out_predictions[feat_name] = {}
+            out_scores[feat_name] = {}
+            out_targets[feat_name] = {}
+
+        assert len(task.meters) > 0, "Please specify one meter to extract predictions"
+        assert len(task.meters) == 1, "Please use only one meter to extract predictions"
+        for meter in task.meters:
+            assert hasattr(
+                meter, "get_predictions"
+            ), f"Meter {meter.name} doesn't implement get_predictions function"
+
+        for count in itertools.count(start=0, step=1):
+            try:
+                if count % 100 == 0:
+                    logging.info(f"Label prediction extraction iteration: {count}")
+                sample = next(task.data_iterator)
+                assert isinstance(sample, dict)
+                assert "data_idx" in sample, "Indices not passed"
+                input_sample = {
+                    "input": torch.cat(sample["data"]).cuda(non_blocking=True),
+                    "target": torch.cat(sample["label"]).cpu().numpy(),
+                    "inds": torch.cat(sample["data_idx"]).cpu().numpy(),
+                }
+                with torch.no_grad():
+                    model_output = task.model(input_sample["input"])
+
+                    # get the model predictions using the meter
+                    if isinstance(model_output, list):
+                        model_output_cpu = [x.cpu() for x in model_output]
+                    else:
+                        model_output_cpu = model_output.cpu()
+                    for meter in task.meters:
+                        meter.update(
+                            model_output_cpu, sample["label"][0].detach().cpu()
+                        )
+                    predictions, pred_scores = task.meters[0].get_predictions(
+                        model_output_cpu
+                    )
+                    num_images = input_sample["inds"].shape[0]
+                    for num, layer_name in enumerate(feat_names):
+                        pred = predictions[num]
+                        score = pred_scores[num]
+                        targets = input_sample["target"]
+                        for idx in range(num_images):
+                            index = input_sample["inds"][idx]
+                            if not (index in out_predictions[layer_name]):
+                                out_targets[layer_name][index] = targets[idx].reshape(
+                                    -1
+                                )
+                                out_predictions[layer_name][index] = pred[idx]
+                                out_scores[layer_name][index] = score[idx]
+            except StopIteration:
+                break
+
+        # print the meters results. This can offer a validation
+        # of the extracted predictions.
+        self._sync_and_print_meters(task)
+        # save the predictions, targets and image indices now
+        self._save_extracted_label_predictions(
+            predictions=out_predictions,
+            confidence_scores=out_scores,
+            targets=out_targets,
+            dist_rank=dist_rank,
+            split=split_name,
+            output_folder=output_folder,
+        )
+
+    @staticmethod
+    def _save_extracted_label_predictions(
+        predictions,
+        confidence_scores,
+        targets,
+        dist_rank: int,
+        split: str,
+        output_folder: str,
+    ):
+        output = {}
+        for layer_name in predictions.keys():
+            predictions[layer_name] = dict(sorted(predictions[layer_name].items()))
+            targets[layer_name] = dict(sorted(targets[layer_name].items()))
+            confidence_scores[layer_name] = dict(
+                sorted(confidence_scores[layer_name].items())
+            )
+            preds = np.array(torch.stack(list(predictions[layer_name].values())))
+            scores = np.array(torch.stack(list(confidence_scores[layer_name].values())))
+            N = preds.shape[0]
+            output[layer_name] = {
+                "predictions": preds.reshape(N, -1),
+                "confidence_scores": scores.reshape(N, -1),
+                "targets": np.array(list(targets[layer_name].values())),
+                "inds": np.array(list(predictions[layer_name].keys())),
+            }
+
+        split = split.lower()
+        for layer_name, layer_prediction in output.items():
+            out_pred_file = (
+                f"{output_folder}/rank{dist_rank}_{split}_{layer_name}_predictions.npy"
+            )
+            out_scores_file = (
+                f"{output_folder}/rank{dist_rank}_{split}_{layer_name}_conf_scores.npy"
+            )
+            out_target_file = (
+                f"{output_folder}/rank{dist_rank}_{split}_{layer_name}_targets.npy"
+            )
+            out_inds_file = (
+                f"{output_folder}/rank{dist_rank}_{split}_{layer_name}_inds.npy"
+            )
+
+            logging.info(
+                f"For {layer_name}, "
+                f"saving predictions: {layer_prediction['predictions'].shape}, "
+                f"saving scores: {layer_prediction['confidence_scores'].shape}, "
+                f"targets: {layer_prediction['targets'].shape}, "
+                f"inds: {layer_prediction['inds'].shape}"
+            )
+            save_file(layer_prediction["predictions"], out_pred_file)
+            save_file(layer_prediction["confidence_scores"], out_scores_file)
+            save_file(layer_prediction["targets"], out_target_file)
+            save_file(layer_prediction["inds"], out_inds_file)
+
+    def _sync_and_print_meters(self, task):
+        for meter in task.meters:
+            meter.sync_state()
+            logging.info("Meters synced")
+        if is_primary():
+            rank, _ = get_machine_local_and_dist_rank()
+            for meter in task.meters:
+                if len(task.meters) > 0 and (
+                    (task.train and task.config["METERS"]["enable_training_meter"])
+                    or (not task.train)
+                ):
+                    meter_value = meter.value
+                    metric_key = f"{meter.name}"
+                    if metric_key not in task.metrics:
+                        task.metrics[metric_key] = []
+                    task.metrics[metric_key].append(meter_value)
+                    logging.info(
+                        f"Rank: {rank}, name: {metric_key}, value: {meter_value}"
+                    )
 
     @staticmethod
     def _flatten_features_list(features: Dict[str, Any]):

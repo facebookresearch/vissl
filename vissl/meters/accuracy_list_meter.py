@@ -165,6 +165,33 @@ class AccuracyListMeter(ClassyMeter):
         for (meter, output) in zip(self._meters, model_output):
             meter.update(output, target)
 
+    def get_predictions(self, model_output: Union[torch.Tensor, List[torch.Tensor]]):
+        """
+        Return the model topk predictions given model output list and targets.
+        Predictions are the class numbers.
+
+        Args:
+            model_output: list of tensors of shape (B, C) where each value is
+                          either logit or class probability.
+
+        NOTE: For binary classification, C=2.
+        """
+        if isinstance(model_output, torch.Tensor):
+            model_output = [model_output]
+        assert isinstance(model_output, list)
+        assert (
+            len(model_output) == self._num_meters
+        ), "Model output and number of meters don't match"
+        predictions, out_scores = [], []
+        for output in model_output:
+            scores = output.float().softmax(dim=1)
+            _, pred = output.float().topk(
+                max(self._topk_values), dim=1, largest=True, sorted=True
+            )
+            predictions.append(pred)
+            out_scores.append(scores)
+        return predictions, out_scores
+
     def reset(self):
         """
         Reset all the meters

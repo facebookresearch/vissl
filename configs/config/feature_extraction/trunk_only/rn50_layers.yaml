@@ -18,3 +18,5 @@ config:
       NAME: resnet
       RESNETS:
         DEPTH: 50
+    HEAD:
+      PARAMS: []

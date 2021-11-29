@@ -63,7 +63,7 @@ class TorchvisionDataset(Dataset):
             stl_split = "train" if is_train_split else "test"
             return SVHN(root=self.path, split=stl_split)
         else:
-            raise ValueError(f"Unsupported dataset {self.dataset_name: str}")
+            raise ValueError(f"Unsupported dataset {self.dataset_name}")
 
     def num_samples(self) -> int:
         """

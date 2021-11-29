@@ -55,7 +55,7 @@ def convert_to_attrdict(
 
     # assert the config and infer
     config = cfg.config
-    infer_and_assert_hydra_config(config)
+    infer_and_assert_hydra_config(config, cfg.engine_name)
     if dump_config:
         save_attrdict_to_disk(config)
     convert_fsdp_dtypes(config)
@@ -116,9 +116,9 @@ def compose_hydra_configuration(overrides: List[str]):
     # Backward compatibility with previous hydra versions:
     # In Hydra 1.1 and above, the compose API is not experimental anymore
     if get_hydra_version() >= (1, 1, 0):
-        from hydra import initialize_config_module, compose
+        from hydra import compose, initialize_config_module
     else:
-        from hydra.experimental import initialize_config_module, compose
+        from hydra.experimental import compose, initialize_config_module
 
     # Compose the overrides with "vissl/config/defaults.yaml"
     with initialize_config_module(config_module="vissl.config"):
@@ -544,7 +544,7 @@ def infer_fsdp(cfg):
     return cfg
 
 
-def infer_and_assert_hydra_config(cfg):
+def infer_and_assert_hydra_config(cfg, engine_name: str):
     """
     Infer values of few parameters in the config file using the value of other config parameters
     1. Inferring losses
@@ -593,30 +593,22 @@ def infer_and_assert_hydra_config(cfg):
         ]
 
         for meter_name in meter_names:
-            # Add appropriate meters for each feature extractor layer specified.
-            if meter_name in valid_meters and is_feature_extractor_model(cfg.MODEL):
-                cfg.METERS[meter_name]["num_meters"] = len(
+            if meter_name in valid_meters:
+                feat_eval_ops_map = (
                     cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
                 )
-                cfg.METERS[meter_name]["meter_names"] = [
-                    item[0]
-                    for item in cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP
-                ]
-
-    # in case of feature evaluation mode, we freeze the trunk. The Feature evaluation mode
-    # is used for the feature extraction of trunk as well. VISSL supports distributed feature
-    # extraction to speed up the extraction time. Since the model needs to be DDP for the
-    # distributed extraction, we need some dummy parameters in the model otherwise model
-    # can't be converted to DDP. So we attach some dummy head to the model.
-    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
-    if (
-        cfg.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-        and cfg.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY
-        and cfg.MODEL.FEATURE_EVAL_SETTINGS.EXTRACT_TRUNK_FEATURES_ONLY
-        and world_size > 1
-        and len(cfg.MODEL.HEAD.PARAMS) == 0
-    ):
-        cfg.MODEL.HEAD.PARAMS = [["mlp", {"dims": [2048, 1000]}]]
+                all_meter_names = [item[0] for item in feat_eval_ops_map]
+                if is_feature_extractor_model(cfg.MODEL):
+                    cfg.METERS[meter_name]["num_meters"] = len(feat_eval_ops_map)
+                    cfg.METERS[meter_name]["meter_names"] = all_meter_names
+                elif engine_name == "extract_label_predictions":
+                    if len(feat_eval_ops_map) > 0:
+                        cfg.METERS[meter_name]["num_meters"] = len(feat_eval_ops_map)
+                        cfg.METERS[meter_name]["meter_names"] = all_meter_names
+                    else:
+                        # if user is not extracting from multiple layers, we assume
+                        # the model head is being used.
+                        cfg.METERS[meter_name]["num_meters"] = 1
 
     # in SSL, during pre-training we don't want to use annotated labels or during feature
     # extraction, we don't have annotated labels for some datasets. In such cases, we set

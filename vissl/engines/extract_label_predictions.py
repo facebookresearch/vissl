@@ -24,8 +24,8 @@ from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
 
 
-@register_engine("extract_features")
-class ExtractFeatureEngine(Engine):
+@register_engine("extract_label_predictions")
+class ExtractLabelPredictionsEngine(Engine):
     def run_engine(
         self,
         cfg: AttrDict,
@@ -36,12 +36,12 @@ class ExtractFeatureEngine(Engine):
         node_id: int = 0,
         hook_generator: Callable[[Any], List[ClassyHook]] = default_hook_generator,
     ):
-        extract_features_main(
+        extract_label_predictions_main(
             cfg, dist_run_id, checkpoint_folder, local_rank=local_rank, node_id=node_id
         )
 
 
-def extract_features_main(
+def extract_label_predictions_main(
     cfg: AttrDict,
     dist_run_id: str,
     checkpoint_folder: str,
@@ -49,11 +49,12 @@ def extract_features_main(
     node_id: int = 0,
 ):
     """
-    Sets up and executes feature extraction workflow per machine.
+    Sets up and executes label predictions workflow per machine. Runs the
+    model in eval mode only to extract the label predicted per class.
 
     Args:
         cfg (AttrDict): user specified input config that has optimizer, loss, meters etc
-                        settings relevant to the training
+                        settings relevant for the feature extraction.
         dist_run_id (str): For multi-gpu training with PyTorch, we have to specify
                            how the gpus are going to rendezvous. This requires specifying
                            the communication method: file, tcp and the unique rendezvous
@@ -62,9 +63,6 @@ def extract_features_main(
                                 1) for 1node: use init_method=tcp and run_id=auto
                                 2) for multi-node, use init_method=tcp and specify
                                 run_id={master_node}:{port}
-        checkpoint_folder (str): what directory to use for checkpointing. This folder
-                                 will be used to output the extracted features as well
-                                 in case config.EXTRACT_FEATURES.OUTPUT_DIR is not set
         local_rank (int): id of the current device on the machine. If using gpus,
                         local_rank = gpu number on the current machine
         node_id (int): id of the current machine. starts from 0. valid for multi-gpu
@@ -77,14 +75,8 @@ def extract_features_main(
     # setup logging
     setup_logging(__name__, output_dir=checkpoint_folder, rank=dist_rank)
 
-    logging.info(f"Env set for rank: {local_rank}, dist_rank: {dist_rank}")
-    # print the environment info for the current node
-    if local_rank == 0:
-        current_env = os.environ.copy()
-        print_system_env_info(current_env)
-
-    # setup the multiprocessing to be forkserver.
-    # See https://fb.quip.com/CphdAGUaM5Wf
+    # setup the multiprocessing to be forkserver. See https://fb.quip.com/CphdAGUaM5Wf
+    logging.info(f"Setting multiprocessing method: {cfg.MULTI_PROCESSING_METHOD}")
     setup_multiprocessing_method(cfg.MULTI_PROCESSING_METHOD)
 
     # set seeds
@@ -98,15 +90,19 @@ def extract_features_main(
         torch.cuda.set_device(local_rank)
 
     # print the training settings and system settings
+    # print the environment info for the current node
+    logging.info(f"Env set for rank: {local_rank}, dist_rank: {dist_rank}")
     if local_rank == 0:
+        current_env = os.environ.copy()
+        print_system_env_info(current_env)
         print_cfg(cfg)
-        logging.info("System config:\n{}".format(collect_env_info()))
+        logging.info(f"System config:\n{collect_env_info()}")
 
     trainer = SelfSupervisionTrainer(cfg, dist_run_id)
     trainer.extract(
         output_folder=cfg.EXTRACT_FEATURES.OUTPUT_DIR or checkpoint_folder,
-        extract_features=True,
-        extract_predictions=False,
+        extract_features=False,
+        extract_predictions=True,
     )
 
     logging.info("All Done!")

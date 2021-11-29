@@ -14,7 +14,9 @@ from vissl.data import dataset_catalog
 from vissl.data.data_helper import balanced_sub_sampling, unbalanced_sub_sampling
 from vissl.data.ssl_transforms import get_transform
 from vissl.data.vissl_dataset_base import VisslDatasetBase
+from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.env import get_machine_local_and_dist_rank
+from vissl.utils.io import save_file
 
 
 def _convert_lbl_to_long(lbl):
@@ -187,6 +189,15 @@ class GenericSSLDataset(VisslDatasetBase):
                 labels = np.load(fopen, allow_pickle=True)
         return labels
 
+    def _save_label_cls_idx_map(self, cls_idx_map: Dict[str, int], split: str):
+        local_rank, dist_rank = get_machine_local_and_dist_rank()
+        if dist_rank == 0:
+            checkpoint_folder = get_checkpoint_folder(self.cfg)
+            class_idx_file_path = (
+                f"{checkpoint_folder}/{split.lower()}_label_to_index_map.json"
+            )
+            save_file(cls_idx_map, class_idx_file_path)
+
     def _convert_to_numeric_ids(self, labels: np.ndarray) -> np.ndarray:
         """
         VISSL disk_filelist support targets as strings or integers
@@ -197,6 +208,7 @@ class GenericSSLDataset(VisslDatasetBase):
         if isinstance(labels[0], str):
             unique_labels = sorted(set(labels))
             label_to_id = {label: idx for idx, label in enumerate(unique_labels)}
+            self._save_label_cls_idx_map(cls_idx_map=label_to_id, split=self.split)
             return np.array([label_to_id[label] for label in labels])
         else:
             return labels
@@ -242,6 +254,13 @@ class GenericSSLDataset(VisslDatasetBase):
                 # We do not create it again since it can be an expensive operation.
                 labels = [x[1] for x in self.data_objs[idx].image_dataset.samples]
                 labels = np.array(labels).astype(np.int64)
+                # we save the class-idx-map to the disk here for convenience
+                # so that the prediction labels can be mapped to class names
+                # easily.
+                self._save_label_cls_idx_map(
+                    cls_idx_map=self.data_objs[idx].image_dataset.class_to_idx,
+                    split=self.split,
+                )
             elif label_source == "torchvision_dataset":
                 labels = np.array(self.data_objs[idx].get_labels()).astype(np.int64)
             elif label_source == "synthetic":

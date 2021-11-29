@@ -17,11 +17,7 @@ from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMod
 from iopath.common.file_io import g_pathmgr
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
-from vissl.data import (
-    build_dataloader,
-    build_dataset,
-    print_sampler_config,
-)
+from vissl.data import build_dataloader, build_dataset, print_sampler_config
 from vissl.models import build_model, convert_sync_bn
 from vissl.optimizers import get_optimizer_param_groups
 from vissl.utils.activation_checkpointing import manual_gradient_reduction
@@ -415,7 +411,7 @@ class SelfSupervisionTask(ClassificationTask):
 
         return meters
 
-    def _restore_model_weights(self, model):
+    def _restore_model_weights(self, model, strict: bool = False):
         """
         If using a weights file to initialize the model, we load the weights
         and initialize the model. Since the weights file specified
@@ -433,10 +429,12 @@ class SelfSupervisionTask(ClassificationTask):
                 checkpoint_path=init_weights_path, device=torch.device("cpu")
             )
             logging.info(f"Checkpoint loaded: {init_weights_path}...")
-            model.init_model_from_weights_params_file(self.config, checkpoint)
+            model.init_model_from_weights_params_file(
+                self.config, checkpoint, strict=strict
+            )
         return model
 
-    def _build_model(self):
+    def _build_model(self, strict_load: bool = False):
         """
         - Builds and returns model used for task. The returned model is not copied to
           gpu yet (if using gpu) and neither wrapped with DDP yet. This is done later
@@ -497,7 +495,7 @@ class SelfSupervisionTask(ClassificationTask):
             and self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
             and g_pathmgr.exists(self.config["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"])
         ):
-            model = self._restore_model_weights(model)
+            model = self._restore_model_weights(model, strict=strict_load)
 
         return model
 
@@ -799,7 +797,9 @@ class SelfSupervisionTask(ClassificationTask):
         """
         self.datasets, self.data_and_label_keys = self.build_datasets()
         self.dataloaders = self.build_dataloaders(pin_memory=pin_memory)
-        self.base_model = self._build_model()
+        # build the meters in case the extraction is for predictions.
+        self.meters = self._build_meters()
+        self.base_model = self._build_model(strict_load=True)
         if self.device.type == "cuda":
             self.base_model = copy_model_to_gpu(self.base_model)
         return self
