@@ -189,4 +189,11 @@ class TestRegnetFSDP(unittest.TestCase):
                     result[3] = round(result[3], 5)
                     result[4] = round(result[4], 4)
                     results.append(result)
-            self.assertEqual(results[0], results[1], "DDP vs FSDP (LARC)")
+
+            self.assertEqual(
+                len(results[0]), len(results[1]), "DDP vs FSDP (LARC) Loss Lengths"
+            )
+
+            for i, ddp_result in enumerate(results[0]):
+                fsdp_result = results[1][i]
+                self.assertAlmostEqual(ddp_result, fsdp_result, places=5)
