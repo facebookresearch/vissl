@@ -13,7 +13,7 @@ config:
       MONITOR_PERF_STATS: True
       ROLLING_BTIME_FREQ: 313
     TENSORBOARD_SETUP:
-        USE_TENSORBOARD: False
+        USE_TENSORBOARD: True
         EXPERIMENT_LOG_DIR: "byol_reference"
         LOG_PARAMS: False
         FLUSH_EVERY_N_MIN: 20
@@ -30,23 +30,6 @@ config:
         - name: RandomResizedCrop
           size: 224
           interpolation: 3
-        - name: RandomHorizontalFlip
-          p: 0.5
-        - name: ImgPilColorDistortion
-          strength: 0.5
-          saturation: 0.4
-        - name: ImgPilMultiCropRandomApply
-          transforms:
-            - name: ImgPilGaussianBlur
-              p: 1
-              radius_min: 0.1
-              radius_max: 2.0
-          prob: [ 1.0, 0.1 ]
-        - name: ImgPilMultiCropRandomApply
-          transforms:
-            - name: ImgPilRandomSolarize
-              p: 1.0
-          prob: [ 0.0, 0.2 ]
         - name: ToTensor
         - name: Normalize
           mean: [ 0.485, 0.456, 0.406 ]
@@ -83,15 +66,15 @@ config:
         embedding_dim: 256
         momentum: 0.99
   OPTIMIZER:
-      name: lars # CHECKED
+      name: lars
       eta: 0.001
-      weight_decay: 1.0e-6 # CHECKED
-      momentum: 0.9 # CHECKED
-      nesterov: False # CHECKED
-      num_epochs: 300 # CHECKED
-      regularize_bn: False # CHECKED
-      regularize_bias: False # CHECKED
-      exclude_bias_and_norm: True # CHECKED
+      weight_decay: 1.0e-6
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 300
+      regularize_bn: False
+      regularize_bias: False
+      exclude_bias_and_norm: True
       param_schedulers:
         lr:
           auto_lr_scaling:

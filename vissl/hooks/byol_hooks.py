@@ -28,6 +28,16 @@ class BYOLHook(ClassyHook):
     on_end = ClassyHook._noop
     on_update = ClassyHook._noop
 
+    def __init__(self, base_momentum: float, shuffle_batch: bool = True):
+        super().__init__()
+        self.base_momentum = base_momentum
+        self.is_distributed = False
+        self.shuffle_batch = shuffle_batch
+
+        self.momentum = None
+        self.inv_momentum = None
+        self.total_iters = None
+
     @staticmethod
     def cosine_decay(training_iter, max_iters, initial_value) -> float:
         """

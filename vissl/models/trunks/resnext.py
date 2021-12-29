@@ -25,6 +25,7 @@ from vissl.models.trunks import register_model_trunk
 
 # For more depths, add the block config here
 BLOCK_CONFIG = {
+    18: [2, 2, 2, 2],
     50: (3, 4, 6, 3),
     101: (3, 4, 23, 3),
     152: (3, 8, 36, 3),
@@ -33,6 +34,7 @@ BLOCK_CONFIG = {
 
 
 class SUPPORTED_DEPTHS(int, Enum):
+    RN18 = 18
     RN50 = 50
     RN101 = 101
     RN152 = 152

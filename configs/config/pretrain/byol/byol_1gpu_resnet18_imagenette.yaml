@@ -20,15 +20,15 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [disk_filelist]
-      DATASET_NAMES: [imagenet1k_filelist]
-      BATCHSIZE_PER_REPLICA: 64
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenette_160_folder]
+      BATCHSIZE_PER_REPLICA: 256
       LABEL_TYPE: sample_index    # Just an implementation detail. Label isn't used
       TRANSFORMS:                 # BYOL Paper - Page 16 - Appendix B
         - name: ImgReplicatePil
           num_times: 2
         - name: RandomResizedCrop
-          size: 224
+          size: 128
           interpolation: 3
         - name: RandomHorizontalFlip
           p: 0.5
@@ -65,8 +65,8 @@ config:
     TRUNK:
       NAME: resnet
       RESNETS:
-        DEPTH: 50
-        ZERO_INIT_RESIDUAL: True
+        DEPTH: 18
+        ZERO_INIT_RESIDUAL: False
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 4096, 256], "use_relu": True, "use_bn": True}],
@@ -83,36 +83,36 @@ config:
         embedding_dim: 256
         momentum: 0.99
   OPTIMIZER:
-      name: lars # CHECKED
+      name: lars
       eta: 0.001
-      weight_decay: 1.0e-6 # CHECKED
-      momentum: 0.9 # CHECKED
-      nesterov: False # CHECKED
-      num_epochs: 300 # CHECKED
-      regularize_bn: False # CHECKED
-      regularize_bias: False # CHECKED
-      exclude_bias_and_norm: True # CHECKED
+      weight_decay: 1.0e-6
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 1000
+      regularize_bn: False
+      regularize_bias: False
+      exclude_bias_and_norm: True
       param_schedulers:
         lr:
           auto_lr_scaling:
             auto_scale: true
-            base_value: 0.3
+            base_value: 2.0
             base_lr_batch_size: 256
           name: composite
           schedulers:
             - name: linear
-              start_value: 0.00001
-              end_value: 0.3 # Automatically rescaled if needed
+              start_value: 0.00002
+              end_value: 2.0 # Automatically rescaled if needed
             - name: cosine
-              start_value: 0.3 # Automatically rescaled if needed
-              end_value: 0.000003 # Automatically rescaled if needed
+              start_value: 2.0 # Automatically rescaled if needed
+              end_value: 0.000002 # Automatically rescaled if needed
           update_interval: step
           interval_scaling: [rescaled, rescaled]
-          lengths: [0.0334, 0.9666] # 10ep
+          lengths: [0.001, 0.999] # 10ep
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 8
-    NUM_PROC_PER_NODE: 8
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
