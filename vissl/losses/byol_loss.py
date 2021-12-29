@@ -15,8 +15,7 @@ def regression_loss(x, y):
     """
     This function is used for computing loss between the prediction
     from the Online network and projection from the target network.
-    We can either use L2 normalized Root mean squared or
-    Cosine similarity. This implementation uses Cosine similarity.
+    This is simply the euclidean distance squared.
     """
     normed_x, normed_y = F.normalize(x, dim=1), F.normalize(y, dim=1)
     # Euclidean Distance squared.
