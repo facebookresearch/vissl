@@ -225,6 +225,7 @@ def standard_train_step(task):
                 task.amp_grad_scaler.update()
             else:
                 task.optimizer.step(where=task.where)
+
         task.run_hooks(SSLClassyHookFunctions.on_update.name)
         task.num_updates += task.get_global_batchsize()
 

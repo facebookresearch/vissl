@@ -93,6 +93,7 @@ class BYOLLoss(ClassyLoss):
         # Compute losses
         loss1 = regression_loss(online_view1, target_view2)
         loss2 = regression_loss(online_view2, target_view1)
+
         loss = (loss1 + loss2).mean()
 
         return loss

@@ -29,7 +29,6 @@ config:
           num_times: 2
         - name: RandomResizedCrop
           size: 224
-          interpolation: 3
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
@@ -74,7 +73,8 @@ config:
       ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: pytorch
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 0
     AMP_PARAMS:
       USE_AMP: False
   LOSS:        # BYOL Paper - Page 33 - Appendix J.1
@@ -84,7 +84,7 @@ config:
         momentum: 0.99
   OPTIMIZER:
       name: lars # CHECKED
-      eta: 0.001
+      eta: 0.001 # CHECKED
       weight_decay: 1.0e-6 # CHECKED
       momentum: 0.9 # CHECKED
       nesterov: False # CHECKED
@@ -98,12 +98,13 @@ config:
           # NB: Cannot use autoscale LR, since it sets linear start_value too high.
           schedulers:
             - name: linear
-              start_value: 0.00048
+              start_value: 2e-05
               end_value: 4.8
             - name: cosine
               start_value: 4.8
-              end_value: 0.00048
+              end_value: 2e-05
           update_interval: step
+          interval_scaling: [fixed, fixed]
           lengths: [0.0334, 0.9666] # 10ep
   DISTRIBUTED:
     BACKEND: nccl
