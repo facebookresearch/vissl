@@ -1,0 +1,129 @@
+# @package _global_
+# BYOL:Bootstrap Your Own Latent - https://arxiv.org/abs/2006.07733
+# Configuration based on BYOL paper - Appendix C -- C.1
+config:
+  VERBOSE: True
+  LOG_FREQUENCY: 200
+  TEST_ONLY: False
+  TEST_EVERY_NUM_EPOCH: 1
+  TEST_MODEL: True
+  SEED_VALUE: 1
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+          interpolation: 3
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 5
+      topk_values: [1, 5]
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["conv1", ["AvgPool2d", [[10, 10], 10, 4]]],
+        ["res2", ["AvgPool2d", [[16, 16], 8, 0]]],
+        ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
+        ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
+        ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+      ]
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 64, "dims": [9216, 1000]}],
+        ["eval_mlp", {"in_channels": 256, "dims": [9216, 1000]}],
+        ["eval_mlp", {"in_channels": 512, "dims": [8192, 1000]}],
+        ["eval_mlp", {"in_channels": 1024, "dims": [9216, 1000]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "specify the model weights"
+      STATE_DICT_KEY_NAME: classy_state_dict
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: False
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
+      ignore_index: -1
+  OPTIMIZER:
+      name: sgd
+      momentum: 0.9
+      num_epochs: 80
+      weight_decay: 0
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            # if set to True, learning rate will be scaled.
+            auto_scale: True
+            # base learning rate value that will be scaled.
+            base_value: 0.2
+            # batch size for which the base learning rate is specified. The current batch size
+            # is used to determine how to scale the base learning rate value.
+            # scaled_lr = ((batchsize_per_gpu * world_size) * base_value ) / base_lr_batch_size
+            base_lr_batch_size: 256
+            # scaling_type can be set to "sqrt" to reduce the impact of scaling on the base value
+            scaling_type: "linear"
+          name: constant
+          update_interval: "epoch"
+          value: 0.2
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 4
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 1

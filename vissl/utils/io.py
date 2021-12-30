@@ -266,7 +266,7 @@ def copy_dir(input_dir, destination_dir, num_threads):
     complete_flag = f"{destination_dir}/copy_complete"
     if g_pathmgr.isfile(complete_flag):
         logging.info(f"Found Data already copied: {destination_dir}...")
-        return destination_dir
+        return destination_dir, destination_dir
     logging.info(
         f"Copying {input_dir} to dir {destination_dir} using {num_threads} threads"
     )

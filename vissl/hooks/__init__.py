@@ -8,6 +8,7 @@ from typing import List
 
 from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.config import AttrDict
+from vissl.hooks.byol_hooks import BYOLHook  # noqa
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
 from vissl.hooks.dino_hooks import DINOHook
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
@@ -81,6 +82,14 @@ def add_loss_hooks(hooks, loss_cfg, cfg):
                 MoCoHook(
                     cfg.LOSS["moco_loss"]["momentum"],
                     shuffle_batch=(not cfg.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN),
+                )
+            ]
+        )
+    if cfg.LOSS.name == "byol_loss":
+        hooks.extend(
+            [
+                BYOLHook(
+                    cfg.LOSS["byol_loss"]["momentum"],
                 )
             ]
         )
