@@ -58,6 +58,9 @@ class SelfSupervisionFSDPTask(SelfSupervisionTask):
         for module in self.base_model.trunk.modules():
             if isinstance(module, FSDP):
                 module._is_root = None
+        for module in self.base_model.heads.modules():
+            if isinstance(module, FSDP):
+                module._is_root = None
 
         # Then, wrap the whole model. We replace the base_model since it is used
         # when checkpoint is taken.
