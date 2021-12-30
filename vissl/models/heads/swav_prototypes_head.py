@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
-from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.fsdp_utils import fsdp_wrapper, fsdp_auto_wrap_bn
 
 
 @register_model_head("swav_head")
@@ -154,15 +154,16 @@ def SwavPrototypesHeadFSDP(
         skip_last_bn=skip_last_bn,
         normalize_feats=normalize_feats,
     )
+    head = fsdp_auto_wrap_bn(head)
 
-    fp32_fsdp_config = model_config.FSDP_CONFIG.copy()
-    fp32_fsdp_config["flatten_parameters"] = False
-    fp32_fsdp_config["mixed_precision"] = False
-    fp32_fsdp_config["fp32_reduce_scatter"] = False
-    fp32_fsdp_config["compute_dtype"] = torch.float32
-
+    prototypes_fp32_fsdp_config = model_config.FSDP_CONFIG.copy()
+    prototypes_fp32_fsdp_config["flatten_parameters"] = False
+    prototypes_fp32_fsdp_config["mixed_precision"] = False
+    prototypes_fp32_fsdp_config["fp32_reduce_scatter"] = False
+    prototypes_fp32_fsdp_config["compute_dtype"] = torch.float32
     for j in range(head.nmb_heads):
         module = getattr(head, "prototypes" + str(j))
-        module = fsdp_wrapper(module, **fp32_fsdp_config)
+        module = fsdp_wrapper(module, **prototypes_fp32_fsdp_config)
         setattr(head, "prototypes" + str(j), module)
+
     return fsdp_wrapper(head, **model_config.FSDP_CONFIG)
