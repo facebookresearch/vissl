@@ -1,0 +1,123 @@
+# @package _global_
+# BYOL: Bootstrap Your Own Latent - https://arxiv.org/pdf/2006.07733.pdf
+# Official BYOL implementation - https://github.com/deepmind/deepmind-research/blob/master/byol
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 200
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 1337  # BYOL Paper - Page 33 - Appendix J.1
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      ROLLING_BTIME_FREQ: 313
+    TENSORBOARD_SETUP:
+        USE_TENSORBOARD: False
+        EXPERIMENT_LOG_DIR: "byol_reference"
+        LOG_PARAMS: False
+        FLUSH_EVERY_N_MIN: 20
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
+      BATCHSIZE_PER_REPLICA: 128
+      LABEL_TYPE: sample_index    # Just an implementation detail. Label isn't used
+      TRANSFORMS:                 # BYOL Paper - Page 16 - Appendix B
+        - name: ImgReplicatePil
+          num_times: 2
+        - name: RandomResizedCrop
+          size: 224
+          interpolation: 3
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 0.5
+          saturation: 0.4
+        - name: ImgPilMultiCropRandomApply
+          transforms:
+            - name: ImgPilGaussianBlur
+              p: 1
+              radius_min: 0.1
+              radius_max: 2.0
+          prob: [ 1.0, 0.1 ]
+        - name: ImgPilMultiCropRandomApply
+          transforms:
+            - name: ImgPilRandomSolarize
+              p: 1.0
+          prob: [ 0.0, 0.2 ]
+        - name: ToTensor
+        - name: Normalize
+          mean: [ 0.485, 0.456, 0.406 ]
+          std: [ 0.229, 0.224, 0.225 ]
+      COLLATE_FUNCTION: simclr_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
+      USE_DEBUGGING_SAMPLER: False
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:    # BYOL Paper - Page 5 - 3.3 Implementation details -- Architecture
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+        ZERO_INIT_RESIDUAL: True
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 4096, 256], "use_relu": True, "use_bn": True}],
+        ["mlp", {"dims": [256, 4096, 256], "use_relu": True, "use_bn": True}]
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+    AMP_PARAMS:
+      USE_AMP: False
+  LOSS:        # BYOL Paper - Page 33 - Appendix J.1
+      name: byol_loss
+      byol_loss:
+        embedding_dim: 256
+        momentum: 0.99
+  OPTIMIZER:
+      name: lars # CHECKED
+      eta: 0.001
+      weight_decay: 1.0e-6 # CHECKED
+      momentum: 0.9 # CHECKED
+      nesterov: False # CHECKED
+      num_epochs: 300 # CHECKED
+      regularize_bn: False # CHECKED
+      regularize_bias: False # CHECKED
+      exclude_bias_and_norm: True # CHECKED
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.3
+            base_lr_batch_size: 256
+          name: composite
+          schedulers:
+            - name: linear
+              start_value: 0.00001
+              end_value: 0.3 # Automatically rescaled if needed
+            - name: cosine
+              start_value: 0.3 # Automatically rescaled if needed
+              end_value: 0.000003 # Automatically rescaled if needed
+          update_interval: step
+          interval_scaling: [rescaled, rescaled]
+          lengths: [0.0334, 0.9666] # 10ep
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 8
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 10
+    CHECKPOINT_ITER_FREQUENCY: -1  # set this variable to checkpoint every few iterations

@@ -22,7 +22,7 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       DATASET_NAMES: [imagenet1k_filelist]
-      BATCHSIZE_PER_REPLICA: 64
+      BATCHSIZE_PER_REPLICA: 128
       LABEL_TYPE: sample_index    # Just an implementation detail. Label isn't used
       TRANSFORMS:                 # BYOL Paper - Page 16 - Appendix B
         - name: ImgReplicatePil
@@ -94,24 +94,20 @@ config:
       exclude_bias_and_norm: True # CHECKED
       param_schedulers:
         lr:
-          auto_lr_scaling:
-            auto_scale: true
-            base_value: 0.3
-            base_lr_batch_size: 256
           name: composite
+          # NB: Cannot use autoscale LR, since it sets linear start_value too high.
           schedulers:
             - name: linear
-              start_value: 0.00001
-              end_value: 0.3 # Automatically rescaled if needed
+              start_value: 0.00048
+              end_value: 4.8
             - name: cosine
-              start_value: 0.3 # Automatically rescaled if needed
-              end_value: 0.000003 # Automatically rescaled if needed
+              start_value: 4.8
+              end_value: 0.00048
           update_interval: step
-          interval_scaling: [rescaled, rescaled]
           lengths: [0.0334, 0.9666] # 10ep
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 8
+    NUM_NODES: 4
     NUM_PROC_PER_NODE: 8
     INIT_METHOD: tcp
     RUN_ID: auto

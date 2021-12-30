@@ -175,6 +175,7 @@ def resolve_linear_schedule(cfg, param_schedulers):
     # check if linear warmup should be removed as its not meaningul
     if remove_linear_idx >= 0:
         del param_schedulers["schedulers"][remove_linear_idx]
+
     # if after removing linear warmup, there's only one scheduler, then a composite
     # schedule is no longer needed. The remaining scheduler becomes the primary
     # scheduler
@@ -233,6 +234,7 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
         for idx in range(len(param_schedulers["schedulers"])):
             if param_schedulers["schedulers"][idx]["name"] == "linear":
                 has_linear_warmup = True
+
             scheduler = get_scaled_lr_scheduler(
                 cfg, param_schedulers["schedulers"][idx], scaled_lr
             )
@@ -252,6 +254,7 @@ def get_scaled_lr_scheduler(cfg, param_schedulers, scaled_lr):
         raise RuntimeError(
             f"Unknow param_scheduler: {param_schedulers['name']}. NOT scaling linearly"
         )
+
     return param_schedulers
 
 
@@ -295,6 +298,7 @@ def infer_learning_rate(cfg):
         if scaling_type == "sqrt":
             scale_factor = scale_factor ** 0.5
         scaled_lr = base_lr * scale_factor
+
         cfg.OPTIMIZER.param_schedulers.lr = get_scaled_lr_scheduler(
             cfg, param_schedulers, scaled_lr
         )
