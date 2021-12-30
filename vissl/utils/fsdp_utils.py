@@ -52,6 +52,14 @@ def fsdp_auto_wrap_bn(module):
     )
 
 
+def is_fsdp_model(model):
+    if isinstance(model, FSDP):
+        return True
+    if hasattr(model, "trunk") and isinstance(model.trunk, FSDP):
+        return True
+    return False
+
+
 def fsdp_wrapper(module, **kwargs):
     """
     Customer FSDP wrapper, adding the missing options

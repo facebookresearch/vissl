@@ -20,7 +20,8 @@ from vissl.utils.activation_checkpointing import (
     manual_gradient_all_reduce,
     manual_sync_params,
 )
-from vissl.utils.misc import is_apex_available
+from vissl.utils.fsdp_utils import is_fsdp_model
+from vissl.utils.misc import is_apex_available, torch_version
 from vissl.utils.perf_stats import PerfTimer
 from vissl.utils.profiler import record_function
 
@@ -225,6 +226,12 @@ def standard_train_step(task):
                 task.amp_grad_scaler.update()
             else:
                 task.optimizer.step(where=task.where)
+
+            # set the model grads to None to save memory
+            # only in case of FSDP model
+            if is_fsdp_model(task.model):
+                zero_grad(task.model)
+
         task.run_hooks(SSLClassyHookFunctions.on_update.name)
         task.num_updates += task.get_global_batchsize()
 
@@ -232,3 +239,11 @@ def standard_train_step(task):
     timer_train_step.record()
 
     return task
+
+
+def zero_grad(model: torch.nn.Module) -> None:
+    if torch_version() >= (1, 7, 0):
+        model.zero_grad(set_to_none=True)
+    else:
+        for p in model.parameters():
+            p.grad = None

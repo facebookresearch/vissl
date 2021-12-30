@@ -11,6 +11,7 @@ import sys
 import tempfile
 import time
 from functools import partial, wraps
+from typing import Tuple
 
 import numpy as np
 import pkg_resources
@@ -390,3 +391,19 @@ def recursive_dict_merge(dict1, dict2):
         else:
             dict1[k] = dict2[k]
     return dict1
+
+
+def torch_version() -> Tuple[int, ...]:
+    numbering = torch.__version__.split("+")[0].split(".")[:3]
+
+    # Catch torch version if run against internal pre-releases, like `1.8.0a0fb`,
+    if not numbering[2].isnumeric():
+        # Two options here:
+        # - either skip this version (minor number check is not relevant)
+        # - or check that our codebase is not broken by this ongoing development.
+
+        # Assuming that we're interested in the second usecase more than the first,
+        # return the pre-release or dev numbering
+        numbering[2] = "0"
+
+    return tuple(int(n) for n in numbering)
