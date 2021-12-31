@@ -188,7 +188,6 @@ def standard_train_step(task):
     # Run backward now and update the optimizer
     if task.train:
         with PerfTimer("backward", perf_stats), record_function("backward"):
-
             task.optimizer.zero_grad()
             if task.amp_type == AmpType.APEX:
                 with apex.amp.scale_loss(
@@ -206,7 +205,6 @@ def standard_train_step(task):
                 local_loss.backward()
                 if task.enable_manual_gradient_reduction:
                     manual_gradient_all_reduce(task.model)
-
         task.run_hooks(SSLClassyHookFunctions.on_backward.name)
 
         # Stepping the optimizer also updates learning rate, momentum etc

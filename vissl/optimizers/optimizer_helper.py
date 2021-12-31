@@ -290,6 +290,7 @@ def get_optimizer_param_groups(
     head_regularized_params = _filter_trainable(head_regularized_params)
     head_unregularized_params = _filter_trainable(head_unregularized_params)
     regularized_params = _filter_trainable(regularized_params)
+
     logging.info(
         f"\nTrainable params: {len(trainable_params)}, \n"
         f"Non-Trainable params: {len(non_trainable_params)}, \n"

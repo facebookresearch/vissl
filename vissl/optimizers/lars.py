@@ -93,6 +93,8 @@ class _LARS(optim.Optimizer):
 
     @staticmethod
     def _exclude_bias_and_norm(p):
+        # Exclude bias, and BN parameters which in a ResNet are the only 1-dimensional weights.
+        # TODO: Improve this, potentially error prone.
         return p.ndim == 1
 
     @torch.no_grad()
@@ -104,26 +106,39 @@ class _LARS(optim.Optimizer):
                 if dp is None:
                     continue
 
-                dp = dp.add(p, alpha=g["weight_decay"])
-
                 if not g["exclude"] or not self._exclude_bias_and_norm(p):
                     param_norm = torch.norm(p)
-                    update_norm = torch.norm(dp)
+                    grad_norm = torch.norm(dp)
 
-                    one = torch.ones_like(param_norm)
-                    q = torch.where(
-                        param_norm > 0.0,
-                        torch.where(
-                            update_norm > 0, (g["eta"] * param_norm / update_norm), one
-                        ),
-                        one,
-                    )
-                    dp = dp.mul(q)
+                    # Compute local learning rate for this layer
+                    local_lr = g["eta"] * param_norm / \
+                        (grad_norm + g["weight_decay"] * param_norm)
+
+                    # In case norms are zero, set local_learning_rate to 1.
+                    # TODO: Is this correct? See equation 6: https://arxiv.org/abs/1708.03888
+                    # If param_norm is zero, equation should be 0.
+                    # If grad_norm is zero, then equation should be: eta / weight_decay
+                    # If both are zero, equation is invalid (dividing by 0) -- probably want 0 for this, as function maps perfectly
+                    # to output and does not need updated, unlikely to ever happen.
+                    # one = torch.ones_like(param_norm)
+                    # local_lr = torch.where(
+                    #     param_norm > 0.0,
+                    #     torch.where(
+                    #         grad_norm > 0, (g["eta"] * param_norm / (param_norm + g["weight_decay"] * grad_norm)), one
+                    #     ),
+                    #     one,
+                    # )
+                else:
+                    local_lr = 1
+
+                actual_lr = local_lr * g["lr"]
+                dp = dp.add(p, alpha=g["weight_decay"]).mul(actual_lr)
 
                 param_state = self.state[p]
                 if "mu" not in param_state:
                     param_state["mu"] = torch.zeros_like(p)
+
                 mu = param_state["mu"]
                 mu.mul_(g["momentum"]).add_(dp)
 
-                p.add_(mu, alpha=-g["lr"])
+                p.add_(-mu)
