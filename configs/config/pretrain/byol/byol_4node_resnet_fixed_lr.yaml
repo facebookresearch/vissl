@@ -36,15 +36,17 @@ config:
           saturation: 0.4
         - name: ImgPilMultiCropRandomApply
           transforms:
-            - name: ImgPilGaussianBlur
+            - name: ImgPilGaussianBlurCV2
               p: 1
-              radius_min: 0.1
-              radius_max: 2.0
+              sigma_min: 0.1
+              sigma_max: 2.0
+              kernel_size: 23
           prob: [ 1.0, 0.1 ]
         - name: ImgPilMultiCropRandomApply
           transforms:
-            - name: ImgPilRandomSolarize
+            - name: ImgPilSolarize
               p: 1.0
+              threshold: 128
           prob: [ 0.0, 0.2 ]
         - name: ToTensor
         - name: Normalize
@@ -104,7 +106,7 @@ config:
               start_value: 4.8
               end_value: 2e-05
           update_interval: step
-          interval_scaling: [fixed, fixed]
+          interval_scaling: [rescaled, rescaled]
           lengths: [0.0334, 0.9666] # 10ep
   DISTRIBUTED:
     BACKEND: nccl
