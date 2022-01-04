@@ -6,12 +6,92 @@
 import logging
 import os
 
+import torch
+import torch.nn as nn
 from classy_vision import tasks
 from classy_vision.hooks.classy_hook import ClassyHook
+from fairscale.nn import FullyShardedDataParallel
+from fairscale.nn.misc import FlattenParamsWrapper
+from torch.nn import SyncBatchNorm
 from vissl.config.attr_dict import AttrDict
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.layer_memory_tracking import LayerwiseMemoryTracker
 from vissl.utils.profiler import create_runtime_profiler
+
+
+class CudaSynchronizeHook(ClassyHook):
+    """
+    Hook used to call torch.cuda.synchronize() between layer computations,
+    slowing the performance down but decreasing the memory usage when using FSDP
+    """
+
+    on_loss_and_meter = ClassyHook._noop
+    on_forward = ClassyHook._noop
+    on_backward = ClassyHook._noop
+    on_step = ClassyHook._noop
+    on_phase_start = ClassyHook._noop
+    on_phase_end = ClassyHook._noop
+    on_update = ClassyHook._noop
+
+    @staticmethod
+    def is_enabled(model_config: AttrDict):
+        return model_config.FSDP_CONFIG.FORCE_SYNC_CUDA
+
+    def __init__(self):
+        super().__init__()
+        self._hooks = []
+
+    def on_start(self, task: "tasks.ClassyTask") -> None:
+        model = task.base_model
+        for module_name, m in model.named_modules():
+            if self._should_sync_module(module_name, m):
+                self._hooks.append(m.register_forward_pre_hook(self._pre_forward_hook))
+                self._hooks.append(m.register_forward_hook(self._post_forward_hook))
+                self._hooks.append(m.register_backward_hook(self._backward_hook))
+
+    def _should_sync_module(self, module_name: str, m: nn.Module) -> bool:
+        """
+        Only sync the FSDP modules, so that two successive FSDP module
+        do not overlap each other, and other modules should run as fast
+        as they can.
+
+        We ignore the SyncBN for each of them is wrapped in an FSDP
+        module to switch them back to fp32, and not because they contain
+        a lot of parameters
+        """
+        if isinstance(m, FullyShardedDataParallel):
+            wrapped = m._fsdp_wrapped_module
+            if isinstance(wrapped, SyncBatchNorm):
+                return False
+            if isinstance(wrapped, FlattenParamsWrapper):
+                if isinstance(wrapped._fpw_module, SyncBatchNorm):
+                    return False
+            return True
+        else:
+            return False
+
+    def on_exception(self, task: "tasks.ClassyTask") -> None:
+        self._cleanup()
+
+    def on_end(self, task: "tasks.ClassyTask") -> None:
+        self._cleanup()
+
+    def _cleanup(self) -> None:
+        for h in self._hooks:
+            h.remove()
+        self._hooks.clear()
+
+    @staticmethod
+    def _pre_forward_hook(module: nn.Module, inputs):
+        torch.cuda.synchronize()
+
+    @staticmethod
+    def _post_forward_hook(module: nn.Module, inputs, outputs):
+        torch.cuda.synchronize()
+
+    @staticmethod
+    def _backward_hook(module: nn.Module, grad_input, grad_output):
+        torch.cuda.synchronize()
 
 
 class ProfilingHook(ClassyHook):

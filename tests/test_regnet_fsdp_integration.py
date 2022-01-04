@@ -27,6 +27,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         with_activation_checkpointing: bool,
         with_mixed_precision: bool,
         auto_wrap_threshold: int,
+        force_sync_all_gather: bool = False,
     ):
         cfg = compose_hydra_configuration(
             [
@@ -47,6 +48,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
                 "config.LOG_FREQUENCY=1",
                 "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
                 "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
+                f"config.MODEL.FSDP_CONFIG.FORCE_SYNC_CUDA={force_sync_all_gather}",
             ]
         )
         args, config = convert_to_attrdict(cfg)
@@ -119,6 +121,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         with_activation_checkpointing: bool,
         with_mixed_precision: bool,
         auto_wrap_threshold: int = 0,
+        force_sync_all_gather: bool = False,
     ):
         with in_temporary_directory():
             config = self._create_pretraining_config(
@@ -126,6 +129,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
                 with_activation_checkpointing=with_activation_checkpointing,
                 with_mixed_precision=with_mixed_precision,
                 auto_wrap_threshold=auto_wrap_threshold,
+                force_sync_all_gather=force_sync_all_gather,
             )
             result = run_integration_test(config)
             return result.get_losses()
@@ -153,17 +157,20 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
             with_fsdp=True,
             with_activation_checkpointing=True,
             with_mixed_precision=False,
+            force_sync_all_gather=True,
         )
         fsdp_losses_2 = self.run_pretraining(
             with_fsdp=True,
             with_activation_checkpointing=False,
             with_mixed_precision=False,
+            force_sync_all_gather=False,
         )
         fsdp_losses_3 = self.run_pretraining(
             with_fsdp=True,
             with_activation_checkpointing=False,
             with_mixed_precision=False,
             auto_wrap_threshold=100,
+            force_sync_all_gather=False,
         )
         ddp_losses = self.run_pretraining(
             with_fsdp=False,

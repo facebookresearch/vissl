@@ -12,6 +12,7 @@ from classy_vision.hooks import ClassyHook
 from vissl.config import AttrDict
 from vissl.engines.engine_registry import Engine, register_engine
 from vissl.hooks import default_hook_generator
+from vissl.hooks.profiling_hook import CudaSynchronizeHook
 from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import (
@@ -98,7 +99,13 @@ def extract_label_predictions_main(
         print_cfg(cfg)
         logging.info(f"System config:\n{collect_env_info()}")
 
-    trainer = SelfSupervisionTrainer(cfg, dist_run_id)
+    # Identify the hooks to run for the extract label engine
+    # TODO - we need to plug this better with the engine registry
+    #  - we either need to use the global hooks registry
+    #  - or we need to create specific hook registry by engine
+    hooks = extract_label_hook_generator(cfg)
+
+    trainer = SelfSupervisionTrainer(cfg, dist_run_id, hooks=hooks)
     trainer.extract(
         output_folder=cfg.EXTRACT_FEATURES.OUTPUT_DIR or checkpoint_folder,
         extract_features=False,
@@ -108,3 +115,10 @@ def extract_label_predictions_main(
     logging.info("All Done!")
     # close the logging streams including the filehandlers
     shutdown_logging()
+
+
+def extract_label_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
+    hooks = []
+    if cfg.MODEL.FSDP_CONFIG.FORCE_SYNC_CUDA:
+        hooks.append(CudaSynchronizeHook())
+    return hooks

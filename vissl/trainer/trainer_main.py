@@ -366,6 +366,8 @@ class SelfSupervisionTrainer(object):
         if len(feat_names) == 0:
             feat_names = ["heads"]
 
+        self.task.train = False
+        self.task.run_hooks(SSLClassyHookFunctions.on_start.name)
         for split in self.task.available_splits:
             logging.info(f"============== Split: {split} =======================")
             self.task.data_iterator = iter(self.task.dataloaders[split.lower()])
@@ -381,6 +383,7 @@ class SelfSupervisionTrainer(object):
                     feat_names, self.task, split, output_folder
                 )
                 logging.info(f"Done getting predictions for partition: {split.lower()}")
+        self.task.run_hooks(SSLClassyHookFunctions.on_end.name)
 
         self._cleanup_task()
 

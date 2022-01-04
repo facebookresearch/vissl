@@ -21,7 +21,7 @@ from vissl.hooks.log_hooks import (  # noqa
 )
 from vissl.hooks.moco_hooks import MoCoHook  # noqa
 from vissl.hooks.model_output_mask_hook import ModelOutputMaskHook
-from vissl.hooks.profiling_hook import ProfilingHook
+from vissl.hooks.profiling_hook import CudaSynchronizeHook, ProfilingHook
 from vissl.hooks.state_update_hooks import (  # noqa
     CheckNanLossHook,
     CheckNanModelOutputHook,
@@ -149,6 +149,9 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         if cfg.HOOKS.PERF_STATS.ROLLING_BTIME_FREQ > 0
         else None
     )
+
+    if CudaSynchronizeHook.is_enabled(cfg.MODEL):
+        hooks.append(CudaSynchronizeHook())
 
     if ProfilingHook.is_enabled(cfg.PROFILING):
         hooks.append(ProfilingHook(profiling_config=cfg.PROFILING))

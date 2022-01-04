@@ -552,6 +552,11 @@ config:
       # parameters that serves as threshold to decide if a layer is "big"
       AUTO_WRAP_THRESHOLD: 0
       AMP_TYPE: "01"
+      # Whether or not to force synchronize between layers:
+      # Useful for debugging memory issues with FSDP, beware that setting
+      # this flag will disable asynchronous overlap of communication and
+      # computation, decreasing performance sometimes significantly
+      FORCE_SYNC_CUDA: False
       # Parameters of fairscale FSDP
       flatten_parameters: True
       mixed_precision: True

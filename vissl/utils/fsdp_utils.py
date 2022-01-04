@@ -73,7 +73,7 @@ def fsdp_wrapper(module, **kwargs):
         fsdp_config["process_group"] = ProcessGroupTracker(fsdp_config["process_group"])
 
     # Remove keys that are not supported in FSDP
-    for key in {"_TRACK_COMMUNICATIONS", "AUTO_WRAP_THRESHOLD"}:
+    for key in {"_TRACK_COMMUNICATIONS", "AUTO_WRAP_THRESHOLD", "FORCE_SYNC_CUDA"}:
         fsdp_config.pop(key, None)
 
     return FSDP(module, **fsdp_config)
