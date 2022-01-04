@@ -24,7 +24,7 @@ config:
       DATASET_NAMES: [imagenet1k_filelist]
       BATCHSIZE_PER_REPLICA: 128
       LABEL_TYPE: sample_index    # Just an implementation detail. Label isn't used
-      TRANSFORMS:                 # BYOL Paper - Page 16 - Appendix B
+      TRANSFORMS: # BYOL Paper - Page 16 - Appendix B
         - name: ImgReplicatePil
           num_times: 2
         - name: RandomResizedCrop
@@ -100,11 +100,11 @@ config:
           # NB: Cannot use autoscale LR, since it sets linear start_value too high.
           schedulers:
             - name: linear
-              start_value: 2e-05
+              start_value: 0.0
               end_value: 4.8
             - name: cosine
               start_value: 4.8
-              end_value: 2e-05
+              end_value: 0.0
           update_interval: step
           interval_scaling: [rescaled, rescaled]
           lengths: [0.0334, 0.9666] # 10ep

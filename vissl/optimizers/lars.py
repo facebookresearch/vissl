@@ -93,7 +93,7 @@ class _LARS(optim.Optimizer):
 
     @staticmethod
     def _exclude_bias_and_norm(p):
-        # Exclude bias, and BN parameters which in a ResNet are the only 1-dimensional weights.
+        # Exclude Bias, and BN parameters which in a ResNet are the only 1-dimensional weights.
         # TODO: Improve this, potentially error prone.
         return p.ndim == 1
 
@@ -111,8 +111,8 @@ class _LARS(optim.Optimizer):
                     grad_norm = torch.norm(dp)
 
                     # Compute local learning rate for this layer
-                    local_lr = g["eta"] * param_norm / \
-                        (grad_norm + g["weight_decay"] * param_norm)
+                    # local_lr = g["eta"] * param_norm / \
+                    #     (grad_norm + g["weight_decay"] * param_norm)
 
                     # In case norms are zero, set local_learning_rate to 1.
                     # TODO: Is this correct? See equation 6: https://arxiv.org/abs/1708.03888
@@ -120,14 +120,12 @@ class _LARS(optim.Optimizer):
                     # If grad_norm is zero, then equation should be: eta / weight_decay
                     # If both are zero, equation is invalid (dividing by 0) -- probably want 0 for this, as function maps perfectly
                     # to output and does not need updated, unlikely to ever happen.
-                    # one = torch.ones_like(param_norm)
-                    # local_lr = torch.where(
-                    #     param_norm > 0.0,
-                    #     torch.where(
-                    #         grad_norm > 0, (g["eta"] * param_norm / (param_norm + g["weight_decay"] * grad_norm)), one
-                    #     ),
-                    #     one,
-                    # )
+                    one = torch.ones_like(param_norm)
+                    local_lr = torch.where(
+                        param_norm > 0.0 and grad_norm > 0.0,
+                        grad_norm > 0, (g["eta"] * param_norm / (grad_norm + g["weight_decay"] * param_norm)),
+                        one
+                    )
                 else:
                     local_lr = 1
 
