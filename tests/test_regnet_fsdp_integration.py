@@ -194,20 +194,42 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
             )
             run_integration_test(config)
 
-            # Consolidate the weights
+            # Consolidate the weights (2 different ways)
             CheckpointFormatConverter.sharded_to_consolidated_checkpoint(
                 "checkpoint.torch", "checkpoint_conso.torch"
             )
+            CheckpointFormatConverter.sharded_to_sliced_checkpoint(
+                "checkpoint.torch", "checkpoint_sliced.torch"
+            )
 
-            # Load the checkpoint and perform a linear evaluation on it
-            losses = self.run_linear_eval(
-                checkpoint_path=os.path.join(pretrain_dir, "checkpoint_conso.torch"),
+            # Load the sharded checkpoint and perform a inear evaluation on it
+            ref_losses = self.run_linear_eval(
+                checkpoint_path=os.path.join(pretrain_dir, "checkpoint.torch"),
                 with_fsdp=True,
                 with_mixed_precision=False,
                 auto_wrap_threshold=0,
             )
-            self.assertEqual(8, len(losses))
-            print(losses)
+            self.assertEqual(8, len(ref_losses))
+
+            # Then check that the results are the same for the other kind of
+            # checkpoints after consolidation has taken place
+            for checkpoint_name in [
+                "checkpoint_conso.torch",
+                "checkpoint_sliced.torch",
+            ]:
+                losses = self.run_linear_eval(
+                    checkpoint_path=os.path.join(pretrain_dir, checkpoint_name),
+                    with_fsdp=True,
+                    with_mixed_precision=False,
+                    auto_wrap_threshold=0,
+                )
+                self.assertEqual(8, len(losses))
+                self.assertAlmostEqual(
+                    losses[0],
+                    ref_losses[0],
+                    places=4,
+                    msg=f"Failed for {checkpoint_name}",
+                )
 
     @gpu_test(gpu_count=2)
     def test_fsdp_integration_mixed_precision(self):

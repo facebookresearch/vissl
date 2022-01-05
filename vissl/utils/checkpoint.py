@@ -11,7 +11,6 @@ from typing import Any, Dict, List
 
 import numpy as np
 import torch
-import torch.distributed as dist
 from classy_vision.generic.util import (
     load_and_broadcast_checkpoint,
     load_checkpoint,
@@ -156,21 +155,53 @@ class CheckpointLoader:
         model: FullyShardedDataParallel,
         checkpoint: Dict[str, Any],
         weights_path: List[str],
+        strict: bool = True,
+        head_index: int = -1,
     ):
         """
         Load the weights of the checkpoint to the FSDP model:
-        Take into account the type of checkpoint to decide how
-        to perform the load (sharded or consolidated load)
+        - Take into account the type of checkpoint to decide on how
+          to perform the load (sharded or consolidated load)
+        - Takes into account the head_index (-1 if trunk else >= 0)
+          to find the appropriate weights for the head
         """
-
         if checkpoint["type"] == CheckpointItemType.slice_list.name:
-            SlicedCheckpointLoader.init_model_weights(model, checkpoint)
+            # Hack for checkpoints consolidated with the "layers" format
+            # instead of the new "classy_state_dict" format: in that case
+            # the slices are directly saved under "layers" and do not take
+            # into account the 'weights_path' variable
+            if "classy_state_dict" not in checkpoint:
+                weights = checkpoint["layers"]
+            else:
+                weights = cls._extract_weights(checkpoint, weights_path, head_index)
+            if weights is not None:
+                SlicedCheckpointLoader.load_slice_state_dict(
+                    model, weights, strict=strict
+                )
+            else:
+                raise ValueError(f"Could not find weights path: {weights_path}")
         elif checkpoint["type"] == CheckpointItemType.consolidated.name:
-            weights = cls._extract_weights(checkpoint, weights_path)
-            model.load_state_dict(weights)
+            weights = cls._extract_weights(checkpoint, weights_path, head_index)
+            if weights is not None:
+                out = model.load_state_dict(weights, strict=False)
+                cls._check_load_state_dict_out(out, strict=strict)
+            elif strict:
+                raise ValueError(f"Could not find weights path: {weights_path}")
         else:
-            weights = cls._extract_weights(checkpoint, weights_path)
-            model.load_local_state_dict(weights)
+            weights = cls._extract_weights(checkpoint, weights_path, head_index)
+            if weights is not None:
+                out = model.load_local_state_dict(weights, strict=False)
+                cls._check_load_state_dict_out(out, strict=strict)
+            elif strict:
+                raise ValueError(f"Could not find weights path: {weights_path}")
+
+    @staticmethod
+    def _check_load_state_dict_out(out, strict: bool):
+        logging.info(f"Extra layers not loaded: {out.unexpected_keys}")
+        if strict and len(out.missing_keys) > 0:
+            raise ValueError(f"Could not load keys: {out.missing_keys}")
+        elif len(out.missing_keys) > 0:
+            logging.info(f"Could not load keys: {out.missing_keys}")
 
     @classmethod
     def load_and_broadcast_init_weights(cls, checkpoint_path: str, device):
@@ -209,11 +240,31 @@ class CheckpointLoader:
         checkpoint.setdefault("type", CheckpointItemType.consolidated.name)
 
     @staticmethod
-    def _extract_weights(checkpoint: Dict[str, Any], weights_path: List[str]):
+    def _extract_weights(
+        checkpoint: Dict[str, Any], weights_path: List[str], head_index: int = -1
+    ):
         weights = checkpoint
         for key in weights_path:
-            weights = weights[key]
-        return weights
+            weights = weights.get(key, None)
+            if weights is None:
+                return weights
+
+        # If it is the trunk, we already found the correct weights
+        if head_index < 0:
+            return weights
+
+        # If it is a head, we have two different formats:
+        # - either it is a list and we simply have to index with the 'head_index'
+        # - or we have a dictionary and so we extract weights with the correct prefix
+        if isinstance(weights, list):
+            return weights[head_index]
+        elif isinstance(weights, dict):
+            prefix = CheckpointFormatConverter.to_head_prefix(head_index)
+            return {
+                k[len(prefix) :]: v for k, v in weights.items() if k.startswith(prefix)
+            }
+        else:
+            return None
 
 
 class CheckpointFormatConverter:
@@ -233,12 +284,26 @@ class CheckpointFormatConverter:
         This function does not copy the optimizer state nor the head
         state as these states are not used for evaluation
         """
-        weights, metadata = cls._read_shards(input_checkpoint_path)
-        full_weights = cls._consolidate_shards(weights, metadata)
+        weights, metadata, heads_weights, heads_metadata = cls._read_shards(
+            input_checkpoint_path
+        )
+        full_trunk_weights = cls._consolidate_shards(weights, metadata)
+        if heads_metadata:
+            full_heads_weights = {
+                cls.to_head_prefix(head_index) + param_name: param
+                for head_index, head_weights in heads_weights.items()
+                for param_name, param in cls._consolidate_shards(
+                    head_weights, heads_metadata[head_index]
+                ).items()
+            }
+        else:
+            full_heads_weights = {}
         consolidated_checkpoint = {
             "type": CheckpointItemType.consolidated.name,
             "classy_state_dict": {
-                "base_model": {"model": {"trunk": full_weights, "heads": {}}}
+                "base_model": {
+                    "model": {"trunk": full_trunk_weights, "heads": full_heads_weights}
+                }
             },
         }
         logging.info(f"Saving consolidated checkpoint at: {output_checkpoint_path}")
@@ -258,23 +323,50 @@ class CheckpointFormatConverter:
         This function does not copy the optimizer state nor the head
         state as these states are not used for evaluation
         """
-        weights, metadata = cls._read_shards(input_checkpoint_path)
-        saved_parameters = {}
-        full_weights = cls._consolidate_shards(weights, metadata)
+        trunk_weights, trunk_metadata, heads_weights, heads_metadata = cls._read_shards(
+            input_checkpoint_path
+        )
 
-        logging.info(f"Saving sliced checkpoint at: {output_checkpoint_path}")
-        for param_path, param in full_weights.items():
+        saved_trunk_parameters = {}
+        trunk_weights = cls._consolidate_shards(trunk_weights, trunk_metadata)
+        for param_path, param in trunk_weights.items():
             file_path = SlicedCheckpointLoader.save_slice(
                 output_checkpoint_path, param_path, param
             )
-            saved_parameters[param_path] = file_path
+            saved_trunk_parameters[param_path] = file_path
+
+        saved_head_parameters = {}
+        for head_index, head_weights in heads_weights.items():
+            conso_weights = cls._consolidate_shards(
+                head_weights, heads_metadata[head_index]
+            )
+            for param_path, param in conso_weights.items():
+                full_param_path = cls.to_head_prefix(head_index) + param_path
+                file_path = SlicedCheckpointLoader.save_slice(
+                    output_checkpoint_path, full_param_path, param
+                )
+                saved_head_parameters[full_param_path] = file_path
+
         checkpoint_list = {
             "type": CheckpointItemType.slice_list.name,
-            "layers": saved_parameters,
+            "classy_state_dict": {
+                "base_model": {
+                    "model": {
+                        "trunk": saved_trunk_parameters,
+                        "heads": saved_head_parameters,
+                    }
+                }
+            },
         }
+
+        logging.info(f"Saving sliced checkpoint at: {output_checkpoint_path}")
         with g_pathmgr.open(output_checkpoint_path, "wb") as f:
             torch.save(checkpoint_list, f)
         logging.info(f"Done! Checkpoint available at: {output_checkpoint_path}")
+
+    @staticmethod
+    def to_head_prefix(head_index: int) -> str:
+        return str(head_index) + "."
 
     @classmethod
     def _read_shards(cls, input_checkpoint_path: str, device="cpu"):
@@ -283,7 +375,9 @@ class CheckpointFormatConverter:
             checkpoint = torch.load(f, map_location=device)
 
         assert checkpoint["type"] == CheckpointItemType.shard_list.name
-        weights, metadata = [], []
+        trunk_weights, trunk_metadata = [], []
+        head_weights, head_metadata = {}, {}
+
         for shard_path in checkpoint["shards"]:
             if not os.path.isabs(shard_path):
                 checkpoint_folder = os.path.split(input_checkpoint_path)[0]
@@ -292,15 +386,24 @@ class CheckpointFormatConverter:
             with g_pathmgr.open(shard_path, "rb") as f:
                 shard_content = torch.load(f, map_location=device)
 
-            trunk_data = shard_content["classy_state_dict"]["base_model"]["model"][
-                "trunk"
-            ]
-            trunk_meta = shard_content["classy_state_dict"]["base_model"]["meta"][
-                "trunk"
-            ]
-            weights.append(trunk_data)
-            metadata.append(trunk_meta)
-        return weights, metadata
+            # Consolidate the trunk weights based on the meta-data
+            shard_data = shard_content["classy_state_dict"]["base_model"]["model"]
+            shard_meta = shard_content["classy_state_dict"]["base_model"]["meta"]
+            trunk_weights.append(shard_data["trunk"])
+            trunk_metadata.append(shard_meta["trunk"])
+
+            # In case there are meta-data about the head, consolidate the head as well
+            if "heads" in shard_meta:
+                assert (
+                    "heads" in shard_data
+                ), f"Expected head weights in checkpoint: {shard_path}"
+                heads_data = shard_data["heads"]
+                heads_meta = shard_meta["heads"]
+                for i, (head_data, head_meta) in enumerate(zip(heads_data, heads_meta)):
+                    head_weights.setdefault(i, []).append(head_data)
+                    head_metadata.setdefault(i, []).append(head_meta)
+
+        return trunk_weights, trunk_metadata, head_weights, head_metadata
 
     @classmethod
     def _consolidate_shards(
@@ -316,34 +419,6 @@ class SlicedCheckpointLoader:
     them on the fly, summoning the minimum number of FSDP parameters
     possible along the way.
     """
-
-    @classmethod
-    def save_model_weights(cls, model: FullyShardedDataParallel, checkpoint_path: str):
-        """
-        From a FSDP model, save a sliced checkpoint:
-        - create a folder that will contain all parts of the checkpoint
-        - in this folder, save one file for each layer of the model
-        - use model.summon_full_params(recurse=Fase) to summon the parameters
-          to be saved for the duration of the save and discard them afterwards
-          much FSDP does for the forward
-        - save a final checkpoint that contains the list of all parts
-        """
-        rank = dist.get_rank()
-        saved_parameters = {}
-        for path, module in cls._recursive_visit(model):
-            if rank == 0:
-                for param_path, param in module.named_parameters(
-                    prefix=path, recurse=False
-                ):
-                    file_path = cls.save_slice(checkpoint_path, param_path, param)
-                    saved_parameters[param_path] = file_path
-        if rank == 0:
-            checkpoint_list = {
-                "type": CheckpointItemType.slice_list.name,
-                "layers": saved_parameters,
-            }
-            with g_pathmgr.open(checkpoint_path, "wb") as f:
-                torch.save(checkpoint_list, f)
 
     @classmethod
     def save_slice(cls, checkpoint_path: str, param_path: str, param) -> str:
@@ -364,29 +439,50 @@ class SlicedCheckpointLoader:
         return file_path
 
     @classmethod
-    def init_model_weights(
-        cls, model: FullyShardedDataParallel, checkpoint: Dict[str, Any]
+    def load_slice_state_dict(
+        cls,
+        model: FullyShardedDataParallel,
+        slice_state_dict: Dict[str, str],
+        strict: bool = True,
     ):
         """
-        Given a checkpoint of type "layer_list", initialize the weights of the
-        model layer by layer, summoning of parameters on the fly to avoid OOM
+        Given a static dict associating parameter names to the path of the
+        file containing the corresponding weights (for lazy loading),
+        initialize the weights of the model layer by layer, summoning the
+        parameters on the fly to avoid OOM
         """
-        assert checkpoint["type"] == CheckpointItemType.slice_list.name
         for path, module in cls._recursive_visit(model):
             for param_path, param in module.named_parameters(
                 prefix=path, recurse=False
             ):
-                cls._init_weight_from_slice(param_path, param.data, checkpoint)
+                cls._init_weight_from_slice(
+                    param_path, param.data, slice_state_dict, strict=strict
+                )
             for buffer_path, buffer in module.named_buffers(prefix=path, recurse=False):
-                cls._init_weight_from_slice(buffer_path, buffer.data, checkpoint)
+                cls._init_weight_from_slice(
+                    buffer_path, buffer.data, slice_state_dict, strict=strict
+                )
 
     @classmethod
     def _init_weight_from_slice(
-        cls, weight_path: str, weight: torch.Tensor, checkpoint: Dict[str, Any]
+        cls,
+        weight_path: str,
+        weight: torch.Tensor,
+        slice_state_dict: Dict[str, str],
+        strict: bool = True,
     ):
         weight_path = cls._clean_path(weight_path)
-        file_name = checkpoint["layers"].get(weight_path, None)
-        assert file_name is not None, f"Could not find buffer: {weight_path}"
+        file_name = slice_state_dict.get(weight_path, None)
+        if file_name is None:
+            message = f"Could not find weights: {weight_path}"
+            logging.info(message)
+            if strict:
+                raise ValueError(
+                    f"Could not find weights: {weight_path} among:\n{slice_state_dict.keys()}"
+                )
+            return
+
+        logging.info(f"Loading weights: {weight_path}")
         with g_pathmgr.open(file_name, "rb") as f:
             layer_checkpoint = torch.load(f)
         assert layer_checkpoint["type"] == CheckpointItemType.slice.name
@@ -658,18 +754,7 @@ def print_loaded_dict_info(
             logging.info(f"Ignored layer:\t{layername}")
             continue
         if layername in state_dict:
-            if (
-                not ("heads" in layername)
-                or (
-                    "heads" in layername
-                    and not model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-                )
-                or (
-                    "heads" in layername
-                    and model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-                    and model_config.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
-                )
-            ):
+            if ("heads" not in layername) or should_init_head_weights(model_config):
                 logging.info(
                     f"Loaded: {layername: <{max_len_model}} of "
                     f"shape: {model_state_dict[layername].size()} from checkpoint"
@@ -813,6 +898,22 @@ def get_checkpoint_model_state_dict(config: AttrDict, state_dict: Dict[str, Any]
     return state_dict
 
 
+def should_init_head_weights(model_config: AttrDict) -> bool:
+    """
+    Indicates whether or not we should load the weights of the head
+    based on the evaluation mode and evaluation settings
+    """
+    # Fine-tuning
+    if not model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON:
+        return True
+
+    # Extraction of features or label prediction at head
+    return (
+        model_config.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
+        and model_config.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
+    )
+
+
 def init_model_from_consolidated_weights(
     config: AttrDict,
     model,
@@ -884,17 +985,8 @@ def init_model_from_consolidated_weights(
             # if we are initializing the heads and the feature eval mode is on, we check
             # if we are evaluating the heads as well or not. If not, we don't initialize
             # the heads. Otherwise we initialize the heads.
-            if (
-                not ("heads" in layername)
-                or (
-                    "heads" in layername
-                    and not config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-                )
-                or (
-                    "heads" in layername
-                    and config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON
-                    and config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_TRUNK_AND_HEAD
-                )
+            if not ("heads" in layername) or (
+                "heads" in layername and should_init_head_weights(config.MODEL)
             ):
                 # Accommodate changing position embeddings. Fine-tuning at a
                 # different resolution than that which a model was pretrained

@@ -29,6 +29,7 @@ class TestFineTuning(unittest.TestCase):
                 "config=test/integration_test/quick_swav",
                 "+config/test/integration_test/models=swav_regnet_fsdp",
                 "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_IMAGES=True",
                 "config.DATA.TRAIN.DATA_LIMIT=40",
                 "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
                 "config.SEED_VALUE=0",
@@ -36,7 +37,7 @@ class TestFineTuning(unittest.TestCase):
                 f"config.DISTRIBUTED.NUM_PROC_PER_NODE={num_gpu}",
                 "config.LOG_FREQUENCY=1",
                 "config.OPTIMIZER.construct_single_param_group_only=True",
-            ],
+            ]
         )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
@@ -58,16 +59,27 @@ class TestFineTuning(unittest.TestCase):
         construct_single_param_group_only: bool = False,
         with_fsdp: bool = False,
         fsdp_flatten_parameters: bool = False,
+        with_partial_head: bool = False,
     ):
+        architecture_config = (
+            "+config/test/integration_test/models=finetune_regnet_fsdp"
+        )
+        if with_partial_head:
+            architecture_config = (
+                "+config/test/integration_test/models=finetune_regnet_fsdp_head"
+            )
+
         cfg = compose_hydra_configuration(
             [
                 "config=test/integration_test/quick_eval_finetune_in1k",
-                "+config/test/integration_test/models=finetune_regnet_fsdp",
+                architecture_config,
                 f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
                 "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
                 "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
                 "config.DATA.TEST.DATA_SOURCES=[synthetic]",
                 "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_IMAGES=True",
                 "config.DATA.TRAIN.DATA_LIMIT=40",
                 "config.DATA.TEST.DATA_LIMIT=20",
                 "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
@@ -87,13 +99,21 @@ class TestFineTuning(unittest.TestCase):
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
-            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp_fsdp"
+            if with_partial_head:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head_fsdp"
+                config["MODEL"]["HEAD"]["PARAMS"][1][0] = "mlp_fsdp"
+            else:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp_fsdp"
             config.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
             config.MODEL.FSDP_CONFIG.flatten_parameters = fsdp_flatten_parameters
             config.MODEL.FSDP_CONFIG.mixed_precision = False
         else:
             config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
-            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp"
+            if with_partial_head:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head"
+                config["MODEL"]["HEAD"]["PARAMS"][1][0] = "mlp"
+            else:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp"
         return config
 
     @staticmethod
@@ -267,13 +287,22 @@ class TestFineTuning(unittest.TestCase):
             )
             run_integration_test(pretrain_config)
             sharded_checkpoint_path = os.path.join(pretrain_dir, "checkpoint.torch")
+
+            # Consolidate the checkpoint of the FSDP model
+            conso_checkpoint_path = os.path.join(pretrain_dir, "consolidated.torch")
+            CheckpointFormatConverter.sharded_to_sliced_checkpoint(
+                input_checkpoint_path=sharded_checkpoint_path,
+                output_checkpoint_path=conso_checkpoint_path,
+            )
+
+            # Consolidate the checkpoint of the FSDP model (sliced version)
             sliced_checkpoint_path = os.path.join(pretrain_dir, "sliced.torch")
             CheckpointFormatConverter.sharded_to_sliced_checkpoint(
                 input_checkpoint_path=sharded_checkpoint_path,
                 output_checkpoint_path=sliced_checkpoint_path,
             )
 
-            # Create a separate directly in which to run the fine-tuning
+            # Create a separate directory in which to run the fine-tuning
             with in_temporary_directory():
                 finetune_config = self._create_finetuning_config(
                     sliced_checkpoint_path,
@@ -281,7 +310,42 @@ class TestFineTuning(unittest.TestCase):
                     regularize_bias=False,
                     with_fsdp=True,
                     fsdp_flatten_parameters=False,
+                    with_partial_head=False,
                 )
                 result = run_integration_test(finetune_config)
+                accuracies = result.get_accuracies(from_metrics_file=True)
+                self.assertEqual(4, len(accuracies))
+
+            # Create a separate directory in which we run the fine-tuning
+            # with a partial head loading (sliced checkpoint)
+            with in_temporary_directory():
+                finetune_config = self._create_finetuning_config(
+                    sliced_checkpoint_path,
+                    construct_single_param_group_only=False,
+                    regularize_bias=False,
+                    with_fsdp=True,
+                    fsdp_flatten_parameters=False,
+                    with_partial_head=True,
+                )
+                result = run_integration_test(finetune_config)
+                losses = result.get_losses()
+                first_loss_sliced = losses[0]
+                accuracies = result.get_accuracies(from_metrics_file=True)
+                self.assertEqual(4, len(accuracies))
+
+            # Create a separate directory in which we run the fine-tuning
+            # with a partial head loading (consolidated checkpoint)
+            with in_temporary_directory():
+                finetune_config = self._create_finetuning_config(
+                    conso_checkpoint_path,
+                    construct_single_param_group_only=False,
+                    regularize_bias=False,
+                    with_fsdp=True,
+                    fsdp_flatten_parameters=False,
+                    with_partial_head=True,
+                )
+                result = run_integration_test(finetune_config)
+                losses = result.get_losses()
+                self.assertAlmostEqual(first_loss_sliced, losses[0], places=4)
                 accuracies = result.get_accuracies(from_metrics_file=True)
                 self.assertEqual(4, len(accuracies))

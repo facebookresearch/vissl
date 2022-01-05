@@ -43,7 +43,7 @@ class TestCheckpointConversion(unittest.TestCase):
                 "config.MODEL.FSDP_CONFIG.fp32_reduce_scatter=False",
                 "config.MODEL.FSDP_CONFIG.compute_dtype=float32",
                 "config.OPTIMIZER.construct_single_param_group_only=True",
-            ],
+            ]
         )
         args, config = convert_to_attrdict(cfg)
         if with_fsdp:
@@ -56,7 +56,7 @@ class TestCheckpointConversion(unittest.TestCase):
         return config
 
     @staticmethod
-    def _worker(gpu_id: int, sync_file: str, world_size: int):
+    def _worker(gpu_id: int, sync_file: str, world_size: int, with_heads: bool):
         torch.manual_seed(0)
         os.environ["RANK"] = str(gpu_id)
         init_distributed_on_file(
@@ -102,11 +102,22 @@ class TestCheckpointConversion(unittest.TestCase):
         content = {
             "classy_state_dict": {
                 "base_model": {
-                    "model": {"trunk": model.trunk.local_state_dict()},
-                    "meta": {"trunk": model.trunk.local_metadata_dict()},
+                    "model": {
+                        "trunk": model.trunk.local_state_dict(),
+                        "heads": [head.local_state_dict() for head in model.heads],
+                    },
+                    "meta": {
+                        "trunk": model.trunk.local_metadata_dict(),
+                        "heads": [head.local_metadata_dict() for head in model.heads],
+                    },
                 }
             }
         }
+
+        if not with_heads:
+            del content["classy_state_dict"]["base_model"]["model"]["heads"]
+            del content["classy_state_dict"]["base_model"]["meta"]["heads"]
+
         checkpoint_writer.save_sharded_checkpoint(
             content, shard_rank=gpu_id, world_size=world_size
         )
@@ -176,9 +187,14 @@ class TestCheckpointConversion(unittest.TestCase):
                 ref_out, slice_out
             ), f"{ref_out.sum()} vs {slice_out.sum()}"
 
-    @gpu_test(gpu_count=1)
+    @gpu_test(gpu_count=2)
     def test_checkpoint_consolidation(self):
         with in_temporary_directory():
-            with with_temp_files(count=1) as sync_file:
-                world_size = 2
-                mp.spawn(self._worker, (sync_file, world_size), nprocs=world_size)
+            for with_heads in [True, False]:
+                with with_temp_files(count=1) as sync_file:
+                    world_size = 2
+                    mp.spawn(
+                        self._worker,
+                        (sync_file, world_size, with_heads),
+                        nprocs=world_size,
+                    )

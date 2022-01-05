@@ -24,6 +24,7 @@ from vissl.models.trunks.feature_extractor import FeatureExtractorModel
 from vissl.utils.checkpoint import (
     CheckpointLoader,
     init_model_from_consolidated_weights,
+    should_init_head_weights,
 )
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.fsdp_utils import fsdp_recursive_reset_lazy_init
@@ -417,12 +418,17 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                 head.local_state_dict() if isinstance(head, FSDP) else head.state_dict()
                 for head in self.heads
             ]
+            heads_metadata_dict = [
+                head.local_metadata_dict() if isinstance(head, FSDP) else {}
+                for head in self.heads
+            ]
         else:
             heads_state_dict = self.heads.state_dict()
+            heads_metadata_dict = []
 
         model_state_dict = {
             "model": {"trunk": trunk_state_dict, "heads": heads_state_dict},
-            "meta": {"trunk": trunk_metadata_dict},
+            "meta": {"trunk": trunk_metadata_dict, "heads": heads_metadata_dict},
         }
         if deep_copy:
             model_state_dict = copy.deepcopy(model_state_dict)
@@ -508,29 +514,38 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         So the method only reads the state_dict
         """
 
-        # TODO (Quentin) - support: different number of nodes + different checkpoint
-        # formats + fine tuning
-        # Special cases in which we want to evaluate a model trained with FSDP:
-        # - we need to benchmark it in FSDP mode as well and with the same number of
-        #   workers
-        # - we need to have it trained with VISSL (no support for other checkpoint
-        #   types for now)
+        # Specific case for FSDP trunks:
+        # - models have to be created with VISSL
+        # - checkpoints have to be created with VISSL
         if isinstance(self.trunk, FeatureExtractorModel) and isinstance(
             self.trunk.base_model, FSDP
         ):
+            # Linear evaluation / extraction from FSDP models:
+            # - load the trunk (complete strict load)
+            # - load the head (optional and partial load supported)
+            logging.info("Loading FSDP trunk in extraction mode")
             CheckpointLoader.init_fsdp_model_from_weights(
                 self.trunk.base_model,
                 checkpoint,
                 weights_path=["classy_state_dict", "base_model", "model", "trunk"],
             )
             fsdp_recursive_reset_lazy_init(self.trunk.base_model)
+            if should_init_head_weights(config.MODEL):
+                self._init_fsdp_model_heads_from_weights_params_file(checkpoint)
+
         elif isinstance(self.trunk, FSDP):
+            # Fine-tuning of FSDP models:
+            # - load the trunk (complete strict load)
+            # - load the head (optional and partial load supported)
+            logging.info("Loading FSDP trunk")
             CheckpointLoader.init_fsdp_model_from_weights(
                 self.trunk,
                 checkpoint,
                 weights_path=["classy_state_dict", "base_model", "model", "trunk"],
             )
             fsdp_recursive_reset_lazy_init(self.trunk)
+            if should_init_head_weights(config.MODEL):
+                self._init_fsdp_model_heads_from_weights_params_file(checkpoint)
 
         # General case: support for multiple format of checkpoint
         else:
@@ -549,6 +564,21 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                 append_prefix=append_prefix,
                 strict=strict,
             )
+
+    def _init_fsdp_model_heads_from_weights_params_file(
+        self, checkpoint: Dict[str, Any]
+    ):
+        for i, head in enumerate(self.heads):
+            logging.info(f"Loading FSDP head {i}")
+            if isinstance(head, FSDP):
+                CheckpointLoader.init_fsdp_model_from_weights(
+                    head,
+                    checkpoint,
+                    weights_path=["classy_state_dict", "base_model", "model", "heads"],
+                    strict=False,
+                    head_index=i,
+                )
+                fsdp_recursive_reset_lazy_init(head)
 
     def is_clustering_model(self):
         """
