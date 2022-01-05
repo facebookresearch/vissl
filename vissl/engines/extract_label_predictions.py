@@ -11,6 +11,7 @@ import torch
 from classy_vision.hooks import ClassyHook
 from vissl.config import AttrDict
 from vissl.engines.engine_registry import Engine, register_engine
+from vissl.hooks.model_output_mask_hook import ModelOutputMaskHook
 from vissl.hooks import default_hook_generator
 from vissl.hooks.profiling_hook import CudaSynchronizeHook
 from vissl.trainer import SelfSupervisionTrainer
@@ -119,6 +120,8 @@ def extract_label_predictions_main(
 
 def extract_label_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
     hooks = []
+    if cfg.METERS.model_output_mask:
+        hooks.append(ModelOutputMaskHook())
     if cfg.MODEL.FSDP_CONFIG.FORCE_SYNC_CUDA:
         hooks.append(CudaSynchronizeHook())
     return hooks

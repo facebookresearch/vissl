@@ -30,6 +30,7 @@ from vissl.trainer.train_steps import get_train_step
 from vissl.utils.distributed_utils import all_gather_heterogeneous, all_gather_sizes
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
+from types import SimpleNamespace
 
 
 def build_task(config):
@@ -447,7 +448,15 @@ class SelfSupervisionTrainer(object):
                     "inds": torch.cat(sample["data_idx"]).cpu().numpy(),
                 }
                 with torch.no_grad():
+                    # Send the input sample to the model, tracking also the
+                    # last batch for the hooks to refer to
+                    task.last_batch = SimpleNamespace()
                     model_output = task.model(input_sample["input"])
+                    task.last_batch.sample = input_sample
+                    task.last_batch.model_output = model_output
+
+                    # Run hooks on forward pass
+                    task.run_hooks(SSLClassyHookFunctions.on_forward.name)
 
                     # get the model predictions using the meter
                     if isinstance(model_output, list):
