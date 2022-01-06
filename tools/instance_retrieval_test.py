@@ -396,14 +396,23 @@ def get_transforms(cfg, dataset_name):
             ]
         )
     else:
-        transforms = torchvision.transforms.Compose(
-            [
-                torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        transforms = [
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize(
+                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+            ),
+        ]
+
+        if cfg.IMG_RETRIEVAL.CENTER_CROP:
+            transforms = [
+                torchvision.transforms.Resize(
+                    int((256 / 224) * cfg.IMG_RETRIEVAL.RESIZE_IMG)
                 ),
-            ]
-        )
+                torchvision.transforms.CenterCrop(cfg.IMG_RETRIEVAL.RESIZE_IMG),
+            ] + transforms
+
+        transforms = torchvision.transforms.Compose(transforms)
+
     return transforms
 
 
@@ -523,7 +532,9 @@ def instance_retrieval_test(args, cfg):
     transforms = get_transforms(cfg, eval_dataset_name)
 
     # Create the image helper
-    image_helper = InstanceRetrievalImageLoader(S=resize_img, transforms=transforms)
+    image_helper = InstanceRetrievalImageLoader(
+        S=resize_img, transforms=transforms, center_crop=cfg.IMG_RETRIEVAL.CENTER_CROP
+    )
 
     # Build the model on gpu and set in the eval mode
     model = build_retrieval_model(cfg)
