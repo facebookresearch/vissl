@@ -1376,6 +1376,7 @@ config:
     # Whether or not to apply L2 norm after the features have been post-processed.
     # Normalization is heavily recommended based on experiments run.
     NORMALIZE_FEATURES: True
+    CENTER_CROP: False
     ######################## Misc #######################
     # Whether or not to save the retrieval ranking scores (metrics, rankings, similarity scores)
     SAVE_RETRIEVAL_RANKINGS_SCORES: True

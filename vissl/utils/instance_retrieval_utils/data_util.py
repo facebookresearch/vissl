@@ -475,9 +475,10 @@ class InstanceRetrievalImageLoader:
     The custom loader for the Paris and Oxford Instance Retrieval datasets.
     """
 
-    def __init__(self, S, transforms):
+    def __init__(self, S, transforms, center_crop):
         self.S = S
         self.transforms = transforms
+        self.center_crop = center_crop
 
     def apply_img_transform(self, im):
         """
@@ -494,10 +495,15 @@ class InstanceRetrievalImageLoader:
         else:
             ratio = float(self.S) / np.max(im_size_hw)
         new_size = tuple(np.round(im_size_hw * ratio).astype(np.int32))
-        im_resized = self.transforms(
-            im.resize((new_size[1], new_size[0]), Image.BILINEAR)
-        )
-        return im_resized, ratio
+
+        if not self.center_crop:
+            # Center crop resizes image using pytorch transform,
+            # which resizes smallest side, as opposed to largest side.
+            im = im.resize((new_size[1], new_size[0]), Image.BILINEAR)
+
+        im = self.transforms(im)
+
+        return im, ratio
 
     def load_and_prepare_whitening_image(self, fname):
         """
