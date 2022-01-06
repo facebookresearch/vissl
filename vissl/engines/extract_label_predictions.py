@@ -11,8 +11,8 @@ import torch
 from classy_vision.hooks import ClassyHook
 from vissl.config import AttrDict
 from vissl.engines.engine_registry import Engine, register_engine
-from vissl.hooks.model_output_mask_hook import ModelOutputMaskHook
 from vissl.hooks import default_hook_generator
+from vissl.hooks.model_output_mask_hook import ModelOutputMaskHook
 from vissl.hooks.profiling_hook import CudaSynchronizeHook
 from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.collect_env import collect_env_info

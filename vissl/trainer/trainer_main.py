@@ -9,6 +9,7 @@ import logging
 import os
 import socket
 import time
+from types import SimpleNamespace
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -30,7 +31,6 @@ from vissl.trainer.train_steps import get_train_step
 from vissl.utils.distributed_utils import all_gather_heterogeneous, all_gather_sizes
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
-from types import SimpleNamespace
 
 
 def build_task(config):

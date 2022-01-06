@@ -69,7 +69,9 @@ class ModelOutputMaskHook(ClassyHook):
         for out, mask in zip(model_outputs, model_output_masks):
             out.masked_fill_(mask, -math.inf)
 
-    def _create_model_output_masks(self, model_outputs: Union[torch.Tensor, List[torch.Tensor]]):
+    def _create_model_output_masks(
+        self, model_outputs: Union[torch.Tensor, List[torch.Tensor]]
+    ):
         if self.model_output_masks is not None:
             return self.model_output_masks
 
