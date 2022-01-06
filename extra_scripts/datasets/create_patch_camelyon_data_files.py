@@ -165,7 +165,9 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/datasets/create_patch_camelyon_data_files.py -i /path/to/pcam -o /output_path/to/pcam -d
+    python extra_scripts/datasets/create_patch_camelyon_data_files.py \
+        -i /path/to/patch_camelyon \
+        -o /output_path/to/patch_camelyon -d
     ```
     """
     args = get_argument_parser().parse_args()
