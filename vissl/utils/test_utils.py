@@ -9,7 +9,7 @@ import re
 import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, Callable, List, Tuple
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 import torch.distributed as dist
@@ -209,14 +209,30 @@ class IntegrationTestLogs:
         log_path = os.path.join(self.run_dir, "log.txt")
         return parse_losses_from_log_file(log_path)
 
-    def get_accuracies(self, from_metrics_file: bool = False) -> List[str]:
+    def get_accuracies(self, from_metrics_file: bool = False) -> List[Union[dict, str]]:
         if from_metrics_file:
+            import json
+
             metrics_path = os.path.join(self.run_dir, "metrics.json")
-            with open(metrics_path, "r") as f:
-                return [l.strip() for l in f]
+            with open(metrics_path, "r") as file:
+                accuracies = []
+                for line in file:
+                    line = line.strip()
+                    accuracies.append(json.loads(line))
+                return accuracies
         else:
             log_path = os.path.join(self.run_dir, "log.txt")
             return parse_accuracies_from_log_file(log_path)
+
+    def get_final_accuracy(self, layer_name: str, metric: str = "top_1") -> float:
+        accuracies = self.get_accuracies(from_metrics_file=True)
+        try:
+            final_accuracy = accuracies[-1]["test_accuracy_list_meter"][metric][
+                layer_name
+            ]
+            return final_accuracy
+        except KeyError:
+            raise ValueError(f"Missing key {layer_name} in: {accuracies[-1]}")
 
 
 def run_integration_test(

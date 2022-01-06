@@ -2,6 +2,7 @@
 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+from typing import List
 
 import numpy as np
 from PIL import Image, ImageFilter
@@ -59,6 +60,15 @@ class SyntheticImageDataset(Dataset):
             img = get_mean_image(crop_size)
         is_success = True
         return img, is_success
+
+    def get_image_paths(self) -> List[str]:
+        return [f"fake_path_{i}" for i in range(self.num_samples())]
+
+    def get_labels(self) -> List[int]:
+        if self.cfg.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS:
+            return [i % 2 for i in range(self.num_samples())]
+        else:
+            return [0 for _ in range(self.num_samples())]
 
     @staticmethod
     def generate_image(seed: int, crop_size: int):

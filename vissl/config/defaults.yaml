@@ -268,6 +268,7 @@ config:
       # generate gray images or random images (only makes an effect if the
       # data source is synthetic)
       RANDOM_SYNTHETIC_IMAGES: False
+      RANDOM_SYNTHETIC_LABELS: False
       # number of unique samples in minibatch per gpu (or per device)
       BATCHSIZE_PER_REPLICA: 256
       # list of data transforms to apply on the data
@@ -387,6 +388,7 @@ config:
       MMAP_MODE: True
       DEFAULT_GRAY_IMG_SIZE: 224
       RANDOM_SYNTHETIC_IMAGES: False
+      RANDOM_SYNTHETIC_LABELS: False
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"

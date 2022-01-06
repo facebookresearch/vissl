@@ -5,6 +5,7 @@
 import os
 import unittest
 
+import numpy as np
 import torch
 from vissl.utils.checkpoint import CheckpointFormatConverter
 from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
@@ -41,6 +42,8 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
                 "config.LOSS.swav_loss.epsilon=0.03",
                 "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
                 "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS=True",
                 "config.DATA.TRAIN.DATA_LIMIT=32",
                 "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
                 "config.OPTIMIZER.use_larc=False",
@@ -84,13 +87,190 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
                 "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
                 "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
                 "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS=True",
                 "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
                 "config.DATA.TRAIN.DATA_LIMIT=32",
                 "config.DATA.TEST.DATA_SOURCES=[synthetic]",
                 "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_LABELS=True",
                 "config.DATA.TEST.BATCHSIZE_PER_REPLICA=4",
                 "config.DATA.TEST.DATA_LIMIT=32",
                 "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
+                "config.OPTIMIZER.use_larc=False",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.LOG_FREQUENCY=1",
+                "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
+                "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
+            ]
+        )
+        args, config = convert_to_attrdict(cfg)
+        if with_fsdp:
+            config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
+            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "eval_mlp_fsdp"
+            config.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
+            config.MODEL.FSDP_CONFIG.mixed_precision = with_mixed_precision
+            config.MODEL.FSDP_CONFIG.fp32_reduce_scatter = with_mixed_precision
+            config.MODEL.FSDP_CONFIG.compute_dtype = torch.float32
+            config.MODEL.FSDP_CONFIG.AUTO_WRAP_THRESHOLD = auto_wrap_threshold
+        else:
+            config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
+            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "eval_mlp"
+        config.MODEL.AMP_PARAMS.USE_AMP = with_mixed_precision
+        config.MODEL.TRUNK.REGNET.stage_checkpoints = [[2], [4], [6, 11], []]
+        config.MODEL.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING = False
+        return config
+
+    @staticmethod
+    def _create_finetuning_config(
+        checkpoint_path: str,
+        auto_wrap_threshold: int,
+        with_fsdp: bool = False,
+        with_partial_head: bool = False,
+        with_mixed_precision: bool = False,
+        with_activation_checkpointing: bool = False,
+    ):
+        architecture_config = (
+            "+config/test/integration_test/models=finetune_regnet_fsdp"
+        )
+        if with_partial_head:
+            architecture_config = (
+                "+config/test/integration_test/models=finetune_regnet_fsdp_head"
+            )
+
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_eval_finetune_in1k",
+                architecture_config,
+                f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS=True",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_LABELS=True",
+                "config.DATA.TRAIN.DATA_LIMIT=32",
+                "config.DATA.TEST.DATA_LIMIT=32",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
+                "config.SEED_VALUE=0",
+                "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
+                "config.LOG_FREQUENCY=1",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.OPTIMIZER.num_epochs=2",
+                "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.base_value=0.01",
+                "config.OPTIMIZER.param_schedulers.lr.auto_lr_scaling.base_lr_batch_size=2",
+                "config.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.base_value=0.1",
+                "config.OPTIMIZER.param_schedulers.lr_head.auto_lr_scaling.base_lr_batch_size=2",
+                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+            ]
+        )
+        args, config = convert_to_attrdict(cfg)
+        if with_fsdp:
+            config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
+            if with_partial_head:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head_fsdp"
+                config["MODEL"]["HEAD"]["PARAMS"][1][0] = "mlp_fsdp"
+            else:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp_fsdp"
+            config.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
+            config.MODEL.FSDP_CONFIG.mixed_precision = with_mixed_precision
+            config.MODEL.FSDP_CONFIG.fp32_reduce_scatter = with_mixed_precision
+            config.MODEL.FSDP_CONFIG.compute_dtype = torch.float32
+            config.MODEL.FSDP_CONFIG.AUTO_WRAP_THRESHOLD = auto_wrap_threshold
+        else:
+            config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
+            if with_partial_head:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head"
+                config["MODEL"]["HEAD"]["PARAMS"][1][0] = "mlp"
+            else:
+                config["MODEL"]["HEAD"]["PARAMS"][0][0] = "mlp"
+
+        config.MODEL.AMP_PARAMS.USE_AMP = with_mixed_precision
+        config.MODEL.TRUNK.REGNET.stage_checkpoints = [[2], [4], [6, 11], []]
+        config.MODEL.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING = (
+            with_activation_checkpointing
+        )
+        return config
+
+    def _create_extract_label_prediction_finetuned_config(
+        self, with_fsdp: bool, with_mixed_precision: bool, auto_wrap_threshold: int
+    ):
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_extract_label_predictions",
+                "+config/test/integration_test/models=extract_label_pred_regnet_fsdp_fine_tuned",
+                "config.SEED_VALUE=0",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS=True",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TRAIN.DATA_LIMIT=32",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_LABELS=True",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.DATA_LIMIT=32",
+                "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
+                "config.LOG_FREQUENCY=1",
+                "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
+                "config.DISTRIBUTED.NUM_PROC_PER_NODE=2",
+            ]
+        )
+        args, config = convert_to_attrdict(cfg)
+        if with_fsdp:
+            config["MODEL"]["TRUNK"]["NAME"] = "regnet_fsdp"
+            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "swav_head_fsdp"
+            config["MODEL"]["HEAD"]["PARAMS"][1][0] = "mlp_fsdp"
+            config.TRAINER.TASK_NAME = "self_supervision_fsdp_task"
+            config.MODEL.FSDP_CONFIG.mixed_precision = with_mixed_precision
+            config.MODEL.FSDP_CONFIG.fp32_reduce_scatter = with_mixed_precision
+            config.MODEL.FSDP_CONFIG.compute_dtype = torch.float32
+            config.MODEL.FSDP_CONFIG.AUTO_WRAP_THRESHOLD = auto_wrap_threshold
+        else:
+            config["MODEL"]["TRUNK"]["NAME"] = "regnet_v2"
+            config["MODEL"]["HEAD"]["PARAMS"][0][0] = "eval_mlp"
+        config.MODEL.AMP_PARAMS.USE_AMP = with_mixed_precision
+        config.MODEL.TRUNK.REGNET.stage_checkpoints = [[2], [4], [6, 11], []]
+        config.MODEL.ACTIVATION_CHECKPOINTING.USE_ACTIVATION_CHECKPOINTING = False
+        return config
+
+    def _create_extract_label_prediction_config(
+        self, with_fsdp: bool, with_mixed_precision: bool, auto_wrap_threshold: int
+    ):
+        cfg = compose_hydra_configuration(
+            [
+                "config=test/integration_test/quick_extract_label_predictions",
+                "+config/test/integration_test/models=extract_label_pred_regnet_fsdp",
+                "config.SEED_VALUE=0",
+                "config.MODEL.SYNC_BN_CONFIG.CONVERT_BN_TO_SYNC_BN=True",
+                "config.MODEL.SYNC_BN_CONFIG.SYNC_BN_TYPE=pytorch",
+                "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
+                "config.MODEL.FSDP_CONFIG.flatten_parameters=True",
+                "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS=True",
+                "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TRAIN.DATA_LIMIT=32",
+                "config.DATA.TEST.DATA_SOURCES=[synthetic]",
+                "config.DATA.TEST.LABEL_SOURCES=[synthetic]",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_IMAGES=True",
+                "config.DATA.TEST.RANDOM_SYNTHETIC_LABELS=True",
+                "config.DATA.TEST.BATCHSIZE_PER_REPLICA=4",
+                "config.DATA.TEST.DATA_LIMIT=32",
+                "config.DATA.TRAIN.USE_DEBUGGING_SAMPLER=True",
+                "config.OPTIMIZER.num_epochs=1",
                 "config.OPTIMIZER.use_larc=False",
                 "config.OPTIMIZER.construct_single_param_group_only=True",
                 "config.LOG_FREQUENCY=1",
@@ -255,3 +435,130 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
 
         print(ddp_losses)
         print(fsdp_losses)
+
+    @gpu_test(gpu_count=2)
+    def test_fsdp_extract_label_predictions(self):
+        with in_temporary_directory() as pretrain_dir:
+
+            # Start pre-training and consolidate the checkpoint
+            config = self._create_pretraining_config(
+                with_fsdp=True,
+                with_activation_checkpointing=True,
+                with_mixed_precision=False,
+                auto_wrap_threshold=0,
+            )
+            run_integration_test(config)
+            CheckpointFormatConverter.sharded_to_sliced_checkpoint(
+                "checkpoint.torch", "checkpoint_sliced.torch"
+            )
+
+            with in_temporary_directory() as fine_tune_dir:
+
+                # Run fine-tuning on the consolidated checkpoint
+                finetune_config = self._create_finetuning_config(
+                    checkpoint_path=os.path.join(
+                        pretrain_dir, "checkpoint_sliced.torch"
+                    ),
+                    auto_wrap_threshold=True,
+                    with_fsdp=True,
+                    with_partial_head=True,
+                    with_mixed_precision=True,
+                    with_activation_checkpointing=True,
+                )
+                finetune_config.OPTIMIZER.num_epochs = 1
+                results = run_integration_test(finetune_config)
+                fine_tune_accuracy = results.get_final_accuracy(layer_name="0")
+
+                # Consolidate the fine-tuned evaluation checkpoint
+                CheckpointFormatConverter.sharded_to_sliced_checkpoint(
+                    "checkpoint.torch", "checkpoint_sliced.torch"
+                )
+
+                # Run label extract on top of fine-tuned checkpoint
+                # Run label extraction on both sharded and consolidated checkpoint
+                for checkpoint_name in ["checkpoint.torch", "checkpoint_sliced.torch"]:
+                    with in_temporary_directory() as extract_dir:
+                        extract_config = self._create_extract_label_prediction_finetuned_config(
+                            with_fsdp=True,
+                            with_mixed_precision=False,
+                            auto_wrap_threshold=True,
+                        )
+                        extract_config.MODEL.WEIGHTS_INIT.PARAMS_FILE = os.path.join(
+                            fine_tune_dir, checkpoint_name
+                        )
+                        run_integration_test(
+                            extract_config, engine_name="extract_label_predictions"
+                        )
+
+                        accuracy, preds, targets = self._read_accuracy(
+                            extract_dir, layer="heads"
+                        )
+                        print(targets)
+                        print(preds)
+                        print("Accuracy:", accuracy)
+                        self.assertAlmostEqual(
+                            accuracy * 100.0, fine_tune_accuracy, places=3
+                        )
+
+            with in_temporary_directory() as lin_eval_dir:
+
+                # Run linear evaluation on the consolidated checkpoint
+                config = self._create_linear_evaluation_config(
+                    with_fsdp=True, with_mixed_precision=True, auto_wrap_threshold=True
+                )
+                config.OPTIMIZER.num_epochs = 1
+                config.OPTIMIZER.param_schedulers.lr.values = [0.01]
+                config.OPTIMIZER.param_schedulers.lr.milestones = []
+                config.MODEL.WEIGHTS_INIT.PARAMS_FILE = os.path.join(
+                    pretrain_dir, "checkpoint_sliced.torch"
+                )
+                results = run_integration_test(config)
+                linear_accuracy = results.get_final_accuracy("res5")
+
+                # Consolidate the linear evaluation checkpoint
+                CheckpointFormatConverter.sharded_to_sliced_checkpoint(
+                    "checkpoint.torch", "checkpoint_sliced.torch"
+                )
+
+                # Run label extraction on both sharded and consolidated checkpoint
+                for checkpoint_name in ["checkpoint.torch", "checkpoint_sliced.torch"]:
+                    with in_temporary_directory() as extract_dir:
+                        extract_config = self._create_extract_label_prediction_config(
+                            with_fsdp=True,
+                            with_mixed_precision=False,
+                            auto_wrap_threshold=True,
+                        )
+                        extract_config.MODEL.WEIGHTS_INIT.PARAMS_FILE = os.path.join(
+                            lin_eval_dir, checkpoint_name
+                        )
+                        run_integration_test(
+                            extract_config, engine_name="extract_label_predictions"
+                        )
+
+                        # Read the predictions and verify that they match
+                        # the linear evaluation results
+                        accuracy, preds, targets = self._read_accuracy(
+                            extract_dir, layer="res5"
+                        )
+                        print(targets)
+                        print(preds)
+                        print("Accuracy:", accuracy)
+                        self.assertAlmostEqual(
+                            accuracy * 100.0, linear_accuracy, places=3
+                        )
+
+    def _read_accuracy(self, extract_dir: str, layer: str):
+        print(os.listdir(extract_dir))
+        targets, preds = [], []
+        for file in sorted(os.listdir(extract_dir)):
+            if f"test_{layer}_targets.npy" in file:
+                targets.append(np.load(file))
+                print(file)
+            elif f"test_{layer}_predictions.npy" in file:
+                preds.append(np.load(file))
+                print(file)
+        targets = np.squeeze(np.concatenate(targets, axis=0))
+        preds = np.squeeze(np.concatenate(preds, axis=0))
+        correct = (targets == preds).sum()
+        accuracy = correct / targets.shape[0]
+        return accuracy, preds, targets

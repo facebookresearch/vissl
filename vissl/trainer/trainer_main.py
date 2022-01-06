@@ -435,6 +435,13 @@ class SelfSupervisionTrainer(object):
                 meter, "get_predictions"
             ), f"Meter {meter.name} doesn't implement get_predictions function"
 
+        dataset = task.datasets[split_name.lower()]
+        all_image_paths = dataset.get_image_paths()
+        assert (
+            len(all_image_paths) == 1
+        ), "Multi-dataset not supported yet for label predictions."
+        all_image_paths = all_image_paths[0]
+
         for count in itertools.count(start=0, step=1):
             try:
                 if count % 100 == 0:
@@ -491,6 +498,7 @@ class SelfSupervisionTrainer(object):
         self._sync_and_print_meters(task)
         # save the predictions, targets and image indices now
         self._save_extracted_label_predictions(
+            all_image_paths=all_image_paths,
             predictions=out_predictions,
             confidence_scores=out_scores,
             targets=out_targets,
@@ -501,9 +509,10 @@ class SelfSupervisionTrainer(object):
 
     @staticmethod
     def _save_extracted_label_predictions(
-        predictions,
-        confidence_scores,
-        targets,
+        all_image_paths: List[str],
+        predictions: Dict[str, Dict[int, Any]],
+        confidence_scores: Dict[str, Dict[str, Any]],
+        targets: Dict[str, Dict[int, Any]],
         dist_rank: int,
         split: str,
         output_folder: str,
@@ -517,12 +526,15 @@ class SelfSupervisionTrainer(object):
             )
             preds = np.array(torch.stack(list(predictions[layer_name].values())))
             scores = np.array(torch.stack(list(confidence_scores[layer_name].values())))
+            indices = np.array(list(predictions[layer_name].keys()))
+            image_paths = np.array([all_image_paths[i] for i in indices])
             N = preds.shape[0]
             output[layer_name] = {
                 "predictions": preds.reshape(N, -1),
                 "confidence_scores": scores.reshape(N, -1),
                 "targets": np.array(list(targets[layer_name].values())),
-                "inds": np.array(list(predictions[layer_name].keys())),
+                "inds": indices,
+                "image_paths": image_paths,
             }
 
         split = split.lower()
@@ -539,18 +551,23 @@ class SelfSupervisionTrainer(object):
             out_inds_file = (
                 f"{output_folder}/rank{dist_rank}_{split}_{layer_name}_inds.npy"
             )
+            out_images_file = (
+                f"{output_folder}/rank{dist_rank}_{split}_{layer_name}_images.npy"
+            )
 
             logging.info(
                 f"For {layer_name}, "
                 f"saving predictions: {layer_prediction['predictions'].shape}, "
                 f"saving scores: {layer_prediction['confidence_scores'].shape}, "
                 f"targets: {layer_prediction['targets'].shape}, "
-                f"inds: {layer_prediction['inds'].shape}"
+                f"inds: {layer_prediction['inds'].shape}, "
+                f"images: {layer_prediction['image_paths'].shape}"
             )
             save_file(layer_prediction["predictions"], out_pred_file)
             save_file(layer_prediction["confidence_scores"], out_scores_file)
             save_file(layer_prediction["targets"], out_target_file)
             save_file(layer_prediction["inds"], out_inds_file)
+            save_file(layer_prediction["image_paths"], out_images_file)
 
     def _sync_and_print_meters(self, task):
         for meter in task.meters:
