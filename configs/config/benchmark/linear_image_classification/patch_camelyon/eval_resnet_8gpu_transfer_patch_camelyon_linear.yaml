@@ -1,7 +1,7 @@
 # @package _global_
 config:
   VERBOSE: True
-  LOG_FREQUENCY: 100
+  LOG_FREQUENCY: 200
   TEST_ONLY: False
   TEST_EVERY_NUM_EPOCH: 1
   TEST_MODEL: True
@@ -15,10 +15,7 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [pcam_folder]
-      DATA_LIMIT: 1000
-      DATA_LIMIT_SAMPLING:
-        IS_BALANCED: True
+      DATASET_NAMES: [patch_camelyon_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -30,11 +27,11 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/pcam/
+      COPY_DESTINATION_DIR: /tmp/patch_camelyon/
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [pcam_folder]
+      DATASET_NAMES: [patch_camelyon_folder]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
@@ -45,7 +42,7 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/pcam/
+      COPY_DESTINATION_DIR: /tmp/patch_camelyon/
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
@@ -56,41 +53,54 @@ config:
   MODEL:
     FEATURE_EVAL_SETTINGS:
       EVAL_MODE_ON: True
-      EVAL_TRUNK_AND_HEAD: False
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[3, 3]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["res5avg", ["Identity", []]],
+      ]
     TRUNK:
       NAME: resnet
       RESNETS:
         DEPTH: 50
     HEAD:
+      # 2 classes only for PatchCamelyon (presence or absence)
       PARAMS: [
-        ["mlp", {"dims": [2048, 2]}],
+        ["eval_mlp", {"in_channels": 1024, "dims": [9216, 2]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 2]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 2]}],
       ]
     WEIGHTS_INIT:
-      PARAMS_FILE: "specify model weights"
+      PARAMS_FILE: "specify the model weights"
       STATE_DICT_KEY_NAME: classy_state_dict
-      APPEND_PREFIX: trunk.
+      # STATE_DICT_KEY_NAME: model_state_dict
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
   LOSS:
     name: cross_entropy_multiple_output_single_target
     cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
-    name: sgd
-    weight_decay: 0.0005
-    momentum: 0.9
-    num_epochs: 90
-    nesterov: True
-    regularize_bn: False
-    regularize_bias: True
-    param_schedulers:
-      lr:
-        auto_lr_scaling:
-          auto_scale: true
-          base_value: 0.1
-          base_lr_batch_size: 256
-        values: [0.1, 0.01, 0.001]
-        milestones: [30, 60]
-        name: multistep
-        update_interval: epoch
+      name: sgd
+      weight_decay: 0.3
+      momentum: 0.9
+      num_epochs: 30
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.01
+            base_lr_batch_size: 256
+          values: [0.01, 0.001, 0.0001, 0.00001]
+          milestones: [8, 16, 24]
+          name: multistep
+          update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
