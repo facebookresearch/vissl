@@ -832,3 +832,17 @@ class SelfSupervisionTask(ClassificationTask):
         """
         dataset = self.datasets[phase_type.lower()]
         return dataset.num_samples()
+
+    def add_dummy_layer(self):
+        """
+        In case of feature evaluation mode, if we are freezing both trunk and
+        head, DDP won't work as there are no parameters in the model. Adding
+        the dummy head will lead to features being not right. So we rather
+        add the dummy layer to the model and use DDP. We copy the model to
+        gpu (if using gpus) after the new dummy layer addition.
+        """
+        fully_frozen_model = self.base_model.is_fully_frozen_model()
+        if fully_frozen_model:
+            self.base_model.dummy_layer = torch.nn.Linear(4, 4)
+            if self.device.type == "cuda":
+                self.base_model = copy_model_to_gpu(self.base_model)

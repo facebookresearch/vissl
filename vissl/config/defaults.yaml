@@ -268,7 +268,9 @@ config:
       # generate gray images or random images (only makes an effect if the
       # data source is synthetic)
       RANDOM_SYNTHETIC_IMAGES: False
-      RANDOM_SYNTHETIC_LABELS: False
+      # how many different labels we want for the synthetic dataset
+      # only useful for testing
+      RANDOM_SYNTHETIC_LABELS: 0
       # number of unique samples in minibatch per gpu (or per device)
       BATCHSIZE_PER_REPLICA: 256
       # list of data transforms to apply on the data
@@ -388,7 +390,7 @@ config:
       MMAP_MODE: True
       DEFAULT_GRAY_IMG_SIZE: 224
       RANDOM_SYNTHETIC_IMAGES: False
-      RANDOM_SYNTHETIC_LABELS: False
+      RANDOM_SYNTHETIC_LABELS: 0
       BATCHSIZE_PER_REPLICA: 256
       TRANSFORMS: []
       COLLATE_FUNCTION: "default_collate"
@@ -1394,3 +1396,11 @@ config:
     TOPK: 200
     # if the features should be l2 normalized, set this to True
     L2_NORM_FEATS: False
+    # whether or not to store the features on GPU
+    USE_CUDA: True
+    # whether or not to use the implementation with low memory usage
+    OPTIMIZE_MEMORY: False
+    # Where to find the extracted features and whether or not we should extract them
+    FEATURES:
+      # If empty, will run the extract features, if not, use the path to find the features
+      PATH: ""

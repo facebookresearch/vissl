@@ -1,0 +1,23 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+        ["flatten", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: anynet
+        depths: [2, 4, 11, 1]
+        widths: [224, 448, 1232, 3024]
+        group_widths: [112, 112, 112, 112]
+        bottleneck_multipliers: [1.0, 1.0, 1.0, 1.0]
+        strides: [2, 2, 2, 2]
+    HEAD:
+      PARAMS: []

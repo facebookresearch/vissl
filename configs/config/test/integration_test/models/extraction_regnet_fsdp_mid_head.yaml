@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: anynet
+        depths: [2, 4, 11, 1]
+        widths: [224, 448, 1232, 3024]
+        group_widths: [112, 112, 112, 112]
+        bottleneck_multipliers: [1.0, 1.0, 1.0, 1.0]
+        strides: [2, 2, 2, 2]
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [3024, 3024], "use_bn": False, "num_clusters": []}],
+      ]

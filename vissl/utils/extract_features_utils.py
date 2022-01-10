@@ -49,7 +49,10 @@ class ExtractedFeaturesLoader:
 
     @staticmethod
     def get_shard_file_names(
-        input_dir: str, split: str, layer: str
+        input_dir: str,
+        split: str,
+        layer: str,
+        sorted: bool = True,
     ) -> List[ExtractedFeaturesShardPaths]:
         """
         Get the list of files needed to load the extracted features
@@ -63,6 +66,11 @@ class ExtractedFeaturesLoader:
             match = feature_regex.match(file_path)
             if match is not None:
                 prefixes.append(match.group(1))
+
+        # Sort the shards by file name if required: it might be useful
+        # if the algorithm that uses the shards is influenced by ordering
+        if sorted:
+            prefixes.sort()
 
         # Yield all the files needed to merge the features dumped on
         # the different GPUs

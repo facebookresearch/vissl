@@ -38,6 +38,13 @@ class SelfSupervisionFSDPTask(SelfSupervisionTask):
         self.amp_grad_scaler = ShardedGradScaler()
         logging.info("Setting AMP: using ShardedGradScaler")
 
+    def add_dummy_layer(self):
+        """
+        Unlike DDP, FSDP works fine even no parameter requires any gradient.
+        So we can disable the hack done for DDP.
+        """
+        pass
+
     def init_distributed_data_parallel_model(self):
         """
         This method overloads the ClassificationTask class's method from ClassyVision.

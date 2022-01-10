@@ -66,7 +66,8 @@ class SyntheticImageDataset(Dataset):
 
     def get_labels(self) -> List[int]:
         if self.cfg.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS:
-            return [i % 2 for i in range(self.num_samples())]
+            num_labels = self.cfg.DATA.TRAIN.RANDOM_SYNTHETIC_LABELS
+            return [i % num_labels for i in range(self.num_samples())]
         else:
             return [0 for _ in range(self.num_samples())]
 
