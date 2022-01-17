@@ -1,0 +1,85 @@
+# @package _global_
+config:
+  TEST_MODEL: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TEST:
+      BATCHSIZE_PER_REPLICA: 64
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      ENABLE_QUEUE_DATASET: False
+      TRANSFORMS:
+      - name: Resize
+        size: 256
+      - name: CenterCrop
+        size: 224
+      - name: ToTensor
+      - mean:
+        - 0.485
+        - 0.456
+        - 0.406
+        name: Normalize
+        std:
+        - 0.229
+        - 0.224
+        - 0.225
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      ENABLE_QUEUE_DATASET: False
+
+      DATASET_NAMES:
+      - imagenet1k_folder
+      DATA_SOURCES:
+      - disk_folder
+      TRANSFORMS:
+      - name: Resize
+        size: 256
+      - name: CenterCrop
+        size: 224
+      - name: ToTensor
+      - mean:
+        - 0.485
+        - 0.456
+        - 0.406
+        name: Normalize
+        std:
+        - 0.229
+        - 0.224
+        - 0.225
+  DISTRIBUTED:
+    BACKEND: nccl
+    INIT_METHOD: tcp
+    NCCL_DEBUG: true
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 1
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: true
+      EXTRACT_TRUNK_FEATURES_ONLY: true
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["norm", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.1
+        HIDDEN_DIM: 384
+        IMAGE_SIZE: 224
+        MLP_DIM: 1532
+        NUM_HEADS: 6
+        NUM_LAYERS: 12
+        PATCH_SIZE: 16
+        QKV_BIAS: true
+    WEIGHTS_INIT:
+      PARAM_FILE: {}
+engine_name: extract_features
