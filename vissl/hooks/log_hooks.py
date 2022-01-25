@@ -319,11 +319,12 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         if has_nan:
             _, dist_rank = get_machine_local_and_dist_rank()
             logging.info(f"Infinite Model output or NaN at iteration={task.iteration}.")
-            self._checkpoint_model(
+            self.checkpoint_model(
                 task,
                 mode_frequency=1,
                 mode_num=task.iteration,
                 mode="iteration",
+                world_size=self.world_size,
             )
             model_output_file = (
                 f"{task.checkpoint_folder}/rank{dist_rank}_model_output.pth"
@@ -346,11 +347,12 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         """
         checkpoint_frequency = task.config["CHECKPOINT"]["CHECKPOINT_ITER_FREQUENCY"]
         if checkpoint_frequency > 0:
-            self._checkpoint_model(
+            self.checkpoint_model(
                 task,
                 mode_frequency=checkpoint_frequency,
                 mode_num=task.iteration,
                 mode="iteration",
+                world_size=self.world_size,
             )
 
     def on_phase_end(self, task: "tasks.ClassyTask") -> None:
@@ -361,16 +363,18 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         if is_primary():
             self._print_and_save_meters(task, task.train_phase_idx)
         checkpoint_frequency = task.config["CHECKPOINT"]["CHECKPOINT_FREQUENCY"]
-        self._checkpoint_model(
+        self.checkpoint_model(
             task,
+            world_size=self.world_size,
             mode_frequency=checkpoint_frequency,
             mode_num=task.train_phase_idx,
             mode="phase",
         )
 
-    def _checkpoint_model(
-        self,
+    @staticmethod
+    def checkpoint_model(
         task: "tasks.ClassyTask",
+        world_size: int,
         mode_frequency: int,
         mode_num: int,
         mode: str = "phase",
@@ -466,7 +470,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     checkpoint_writer.save_sharded_checkpoint(
                         content=checkpoint_content,
                         shard_rank=rank,
-                        world_size=self.world_size,
+                        world_size=world_size,
                     )
                 else:
                     checkpoint_writer.save_consolidated_checkpoint(checkpoint_content)

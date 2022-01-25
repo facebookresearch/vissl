@@ -130,6 +130,10 @@ class CheckNanModelOutputHook(ClassyHook):
     on_update = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
 
+    def __init__(self, world_size: int):
+        super().__init__()
+        self.world_size = world_size
+
     def on_forward(self, task: "tasks.ClassyTask") -> None:
         """
         Called each time a model forward is done and make sure that
@@ -150,8 +154,12 @@ class CheckNanModelOutputHook(ClassyHook):
         if has_nan:
             _, dist_rank = get_machine_local_and_dist_rank()
             logging.info(f"Infinite Model output or NaN at iteration={task.iteration}.")
-            self._checkpoint_model(
+
+            # TODO - this code was broken during a refactoring: improve it
+            from vissl.hooks.log_hooks import LogLossMetricsCheckpointHook
+            LogLossMetricsCheckpointHook.checkpoint_model(
                 task,
+                world_size=self.world_size,
                 mode_frequency=1,
                 mode_num=task.iteration,
                 mode="iteration",

@@ -172,6 +172,6 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         hooks.extend([ModelOutputMaskHook()])
 
     if cfg.HOOKS.CHECK_NAN:
-        hooks.extend([CheckNanLossHook(), CheckNanModelOutputHook()])
+        hooks.extend([CheckNanLossHook(), CheckNanModelOutputHook(world_size)])
 
     return hooks
