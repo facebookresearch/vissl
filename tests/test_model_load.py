@@ -8,9 +8,9 @@ import unittest
 
 from parameterized import parameterized
 from utils import (
-    BENCHMARK_CONFIGS,
+    BENCHMARK_MODEL_CONFIGS,
     INTEGRATION_TEST_CONFIGS,
-    PRETRAIN_CONFIGS,
+    PRETRAIN_MODEL_CONFIGS,
     SSLHydraConfig,
 )
 from vissl.models import build_model
@@ -21,8 +21,8 @@ logger = logging.getLogger("__name__")
 
 
 class TestBenchmarkModel(unittest.TestCase):
-    @parameterized.expand(BENCHMARK_CONFIGS)
-    def test_benchmark_model(self, filepath):
+    @parameterized.expand(BENCHMARK_MODEL_CONFIGS)
+    def test_benchmark_model(self, filepath: str):
         logger.info(f"Loading {filepath}")
         cfg = SSLHydraConfig.from_configs(
             [filepath, "config.DISTRIBUTED.NUM_PROC_PER_NODE=1"]
@@ -32,8 +32,8 @@ class TestBenchmarkModel(unittest.TestCase):
 
 
 class TestPretrainModel(unittest.TestCase):
-    @parameterized.expand(PRETRAIN_CONFIGS)
-    def test_pretrain_model(self, filepath):
+    @parameterized.expand(PRETRAIN_MODEL_CONFIGS)
+    def test_pretrain_model(self, filepath: str):
         logger.info(f"Loading {filepath}")
         cfg = SSLHydraConfig.from_configs([filepath])
         _, config = convert_to_attrdict(cfg.default_cfg)
@@ -42,7 +42,7 @@ class TestPretrainModel(unittest.TestCase):
 
 class TestIntegrationTestModel(unittest.TestCase):
     @parameterized.expand(INTEGRATION_TEST_CONFIGS)
-    def test_integration_test_model(self, filepath):
+    def test_integration_test_model(self, filepath: str):
         logger.info(f"Loading {filepath}")
         cfg = SSLHydraConfig.from_configs([filepath])
         _, config = convert_to_attrdict(cfg.default_cfg)
