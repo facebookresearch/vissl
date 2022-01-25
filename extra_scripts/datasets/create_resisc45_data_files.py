@@ -10,7 +10,9 @@ import shutil
 
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from vissl.utils.download import download_and_extract_archive
+
+
+RESISC45_URL = "https://1drv.ms/u/s!AmgKYzARBl5ca3HNaHIlzp_IXjs"
 
 
 def get_argument_parser():
@@ -19,7 +21,7 @@ def get_argument_parser():
         "-i",
         "--input",
         type=str,
-        help="Path to the folder containing expanded EuroSAT.zip archive",
+        help="Path to the expanded NWPU-RESISC45.rar archive (download from: {})".format(RESISC45_URL),
     )
     parser.add_argument(
         "-o",
@@ -38,46 +40,38 @@ def get_argument_parser():
     return parser
 
 
-def download_dataset(root: str):
-    """
-    Download the EuroSAT dataset archive and expand it in the folder provided as parameter
-    """
-    URL = "http://madm.dfki.de/files/sentinel/EuroSAT.zip"
-    download_and_extract_archive(url=URL, download_root=root)
-
-
-class _EuroSAT:
+class _RESISC45:
     """
     Dataset used to parallelize the transformation of the dataset via a DataLoader
     """
 
-    IMAGE_FOLDER = "2750"
-    TRAIN_SAMPLES = 1000
-    VALID_SAMPLES = 500
+    TRAIN_SPLIT_PERCENT = .8
+    TEST_SPLIT_PERCENT = .2
 
     def __init__(self, input_path: str, output_path: str, train: bool):
         self.input_path = input_path
         self.output_path = output_path
         self.train = train
-        self.image_folder = os.path.join(self.input_path, self.IMAGE_FOLDER)
         self.images = []
         self.targets = []
-        self.labels = sorted(os.listdir(self.image_folder))
+        self.labels = sorted(os.listdir(self.input_path))
         split_generator = random.Random(42)
 
-        # There is no train/val split in the EUROSAT dataset, so we have to create it
+        # There is no train/val split in the RESISC45 dataset, so we have to create it
         for i, label in enumerate(self.labels):
-            label_path = os.path.join(self.image_folder, label)
+            label_path = os.path.join(self.input_path, label)
             files = sorted(os.listdir(label_path))
-            files = split_generator.sample(files, self.TRAIN_SAMPLES + self.VALID_SAMPLES)
+            files = split_generator.shuffle(files)
+            train_samples = int(self.TRAIN_SPLIT_PERCENT * len(files))
+            test_samples = int(self.TEST_SPLIT_PERCENT * len(files))
             if train:
-                self.images.extend(files[: self.TRAIN_SAMPLES])
-                self.targets.extend([i] * self.TRAIN_SAMPLES)
+                self.images.extend(files[: train_samples])
+                self.targets.extend([i] * train_samples)
             else:
                 self.images.extend(
-                    files[self.TRAIN_SAMPLES : self.TRAIN_SAMPLES + self.VALID_SAMPLES]
+                    files[train_samples: train_samples + test_samples]
                 )
-                self.targets.extend([i] * self.VALID_SAMPLES)
+                self.targets.extend([i] * test_samples)
 
     def __len__(self):
         return len(self.targets)
@@ -85,17 +79,17 @@ class _EuroSAT:
     def __getitem__(self, idx: int) -> bool:
         image_name = self.images[idx]
         target = self.labels[self.targets[idx]]
-        image_path = os.path.join(self.image_folder, target, image_name)
-        split_name = "train" if self.train else "val"
+        image_path = os.path.join(self.input_path, target, image_name)
+        split_name = "train" if self.train else "test"
         shutil.copy(
             image_path, os.path.join(self.output_path, split_name, target, image_name)
         )
         return True
 
 
-def create_disk_folder_split(dataset: _EuroSAT, split_path: str):
+def create_disk_folder_split(dataset: _RESISC45, split_path: str):
     """
-    Create one split (example: "train" or "val") of the disk_folder hierarchy
+    Create one split (example: "train" or "test") of the disk_folder hierarchy
     """
     for label in dataset.labels:
         os.makedirs(os.path.join(split_path, label), exist_ok=True)
@@ -105,19 +99,19 @@ def create_disk_folder_split(dataset: _EuroSAT, split_path: str):
             progress_bar.update(1)
 
 
-def create_euro_sat_disk_folder(input_path: str, output_path: str):
+def create_resisc_disk_folder(input_path: str, output_path: str):
     """
-    Read the EUROSAT dataset at 'input_path' and transform it to a disk folder at 'output_path'
+    Read the RESISC45 dataset at 'input_path' and transform it to a disk folder at 'output_path'
     """
     print("Creating the training split...")
     create_disk_folder_split(
-        dataset=_EuroSAT(input_path, output_path=output_path, train=True),
+        dataset=_RESISC45(input_path, output_path=output_path, train=True),
         split_path=os.path.join(output_path, "train"),
     )
     print("Creating the validation split...")
     create_disk_folder_split(
-        dataset=_EuroSAT(input_path, output_path=output_path, train=False),
-        split_path=os.path.join(output_path, "val"),
+        dataset=_RESISC45(input_path, output_path=output_path, train=False),
+        split_path=os.path.join(output_path, "test"),
     )
 
 
@@ -126,10 +120,10 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/datasets/create_ucf101_data_files.py -i /path/to/euro_sat -o /output_path/to/euro_sat -d
+    python extra_scripts/datasets/create_resisc45_data_files.py -i /path/to/resisc45 -o /output_path/to/resisc45
     ```
     """
     args = get_argument_parser().parse_args()
     if args.download:
-        download_dataset(args.input)
-    create_euro_sat_disk_folder(args.input, args.output)
+        raise Exception("Cannot automatically download RESISC45. You can manually download the archive at {}".format(RESISC45_URL))
+    create_resisc_disk_folder(args.input, args.output)
