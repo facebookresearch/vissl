@@ -16,6 +16,7 @@ from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.distributed_launcher import launch_distributed
 from vissl.utils.env import set_env_vars
+from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 from vissl.utils.hydra_config import (
     compose_hydra_configuration,
     convert_to_attrdict,
@@ -23,31 +24,33 @@ from vissl.utils.hydra_config import (
 )
 from vissl.utils.io import load_file
 from vissl.utils.logger import setup_logging, shutdown_logging
-from vissl.utils.misc import merge_features
 from vissl.utils.svm_utils.svm_trainer import SVMTrainer
 
 
 def train_svm(cfg: AttrDict, output_dir: str, layername: str):
     # setup the environment variables
     set_env_vars(local_rank=0, node_id=0, cfg=cfg)
+    features_dir = cfg.SVM_FEATURES_PATH
 
     # train the svm
     logging.info(f"Training SVM for layer: {layername}")
     trainer = SVMTrainer(cfg["SVM"], layer=layername, output_dir=output_dir)
-    train_data = merge_features(output_dir, "train", layername)
-    train_features, train_targets = train_data["features"], train_data["targets"]
-    trainer.train(train_features, train_targets)
+    train_data = ExtractedFeaturesLoader.load_features(
+        features_dir, "train", layername, flatten_features=True
+    )
+    trainer.train(train_data["features"], train_data["targets"])
 
     # test the svm
-    test_data = merge_features(output_dir, "test", layername)
-    test_features, test_targets = test_data["features"], test_data["targets"]
-    trainer.test(test_features, test_targets)
+    test_data = ExtractedFeaturesLoader.load_features(
+        features_dir, "test", layername, flatten_features=True
+    )
+    trainer.test(test_data["features"], test_data["targets"])
     logging.info("All Done!")
 
 
 def main(args: Namespace, config: AttrDict):
     # setup logging
-    setup_logging(__name__)
+    setup_logging(__name__, output_dir=get_checkpoint_folder(config))
 
     # print the coniguration used
     print_cfg(config)
@@ -57,13 +60,16 @@ def main(args: Namespace, config: AttrDict):
         "Set config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON=True "
         "in your config or from command line."
     )
+
     # extract the features
-    launch_distributed(
-        config,
-        args.node_id,
-        engine_name="extract_features",
-        hook_generator=default_hook_generator,
-    )
+    if not config.SVM_FEATURES_PATH:
+        launch_distributed(
+            config,
+            args.node_id,
+            engine_name="extract_features",
+            hook_generator=default_hook_generator,
+        )
+        config.SVM_FEATURES_PATH = get_checkpoint_folder(config)
 
     # Get the names of the features that we extracted features for. If user doesn't
     # specify the features to evaluate, we get the full model output and freeze

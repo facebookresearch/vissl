@@ -485,8 +485,10 @@ class SlicedCheckpointLoader:
         logging.info(f"Loading weights: {weight_path}")
         with g_pathmgr.open(file_name, "rb") as f:
             layer_checkpoint = torch.load(f)
+
         assert layer_checkpoint["type"] == CheckpointItemType.slice.name
         weight.copy_(layer_checkpoint["weight"])
+        logging.info(f"Loaded parameters '{weight_path}' from: {file_name}")
 
     @classmethod
     def _recursive_visit(cls, model: FullyShardedDataParallel):

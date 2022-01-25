@@ -1328,6 +1328,9 @@ config:
       # low shot values to consider. k=2 means 2 positives for a class and 2 negative from every
       # remaining class
       k_values: [1, 2, 4, 8, 16, 32, 64, 96]
+  # If empty, SVM will run extract features and run SVM on these
+  # If not empty, SVM will use the path to find the features
+  SVM_FEATURES_PATH: ""
 
   # ----------------------------------------------------------------------------------- #
   # INSTANCE RETRIEVAL (benchmark)
