@@ -157,6 +157,7 @@ class CheckNanModelOutputHook(ClassyHook):
 
             # TODO - this code was broken during a refactoring: improve it
             from vissl.hooks.log_hooks import LogLossMetricsCheckpointHook
+
             LogLossMetricsCheckpointHook.checkpoint_model(
                 task,
                 world_size=self.world_size,
