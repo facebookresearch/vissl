@@ -43,16 +43,22 @@ class SGD_FSDP(SGD):
             )
 
 
-class LARC_FSDP(object):
+class LARC_FSDP:
     """
     A version of the LARC optimizer which works with FSDP:
     https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py
 
     Args:
         optimizer: Pytorch optimizer to wrap and modify learning rate for.
-        distributed_norm: if False, revert to the same computations as APEX LARC, if True computed the norm in a distributed fashion
-        trust_coefficient: Trust coefficient for calculating the lr. See https://arxiv.org/abs/1708.03888
-        clip: Decides between clipping or scaling mode of LARC. If `clip=True` the learning rate is set to `min(optimizer_lr, local_lr)` for each parameter. If `clip=False` the learning rate is set to `local_lr*optimizer_lr`.
+        distributed_norm:
+            if True compute the norm in a distributed fashion
+            if False, revert to the same computations as APEX LARC
+        trust_coefficient:
+            Trust coefficient for calculating the lr.
+            See https://arxiv.org/abs/1708.03888
+        clip: Decides between clipping or scaling mode of LARC.
+            If `clip=True` the learning rate is set to `min(optimizer_lr, local_lr)` for each parameter.
+            If `clip=False` the learning rate is set to `local_lr*optimizer_lr`.
         eps: epsilon kludge to help with numerical stability while calculating adaptive_lr
     """
 
@@ -144,7 +150,8 @@ class LARC_FSDP(object):
 
                         # clip learning rate for LARC
                         if self.clip:
-                            # calculation of adaptive_lr so that when multiplied by lr it equals `min(adaptive_lr, lr)`
+                            # calculation of adaptive_lr so that when multiplied by lr
+                            # it is equal to `min(adaptive_lr, lr)`
                             adaptive_lr = min(adaptive_lr / group["lr"], 1)
 
                         p.grad.data += weight_decay * p.data
