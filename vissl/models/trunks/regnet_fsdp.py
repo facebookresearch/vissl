@@ -147,7 +147,7 @@ class RegnetBlocksFactory:
             group_width,
             bottleneck_multiplier,
             params.se_ratio,
-        ).cuda()
+        )
         init_weights(block)
         return block
 
@@ -444,7 +444,7 @@ def RegNetFSDP(model_config: AttrDict, model_name: str):
     Wrap the entire trunk since we need to load checkpoint before
     train_fsdp_task.py wrapping happens.
     """
-    module = _RegNetFSDP(model_config, model_name).cuda()
+    module = _RegNetFSDP(model_config, model_name)
     return fsdp_wrapper(module, **model_config.FSDP_CONFIG)
 
 
