@@ -1,0 +1,41 @@
+# @package _global_
+config:
+  TRAINER:
+    TASK_NAME: self_supervision_fsdp_task
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet_fsdp
+      REGNET:
+        block_type: res_bottleneck_block
+        depth: 27
+        group_width: 1010
+        w_0: 1744
+        w_a: 620.83
+        w_m: 2.52
+        stage_checkpoints: [[2], [7], [9, 17], []]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [28280, 20]}]]
+    FSDP_CONFIG:
+      AUTO_WRAP_THRESHOLD: 100000000
+      flatten_parameters: False
+      compute_dtype: float32
+      mixed_precision: False
+      fp32_reduce_scatter: False
+    ACTIVATION_CHECKPOINTING:
+      USE_ACTIVATION_CHECKPOINTING: False
+  SVM:
+    normalize: True
+    loss: "squared_hinge"
+    penalty: "l2"
+    dual: True
+  # We recommend to do a feature extraction and then run SVM so that
+  # the feature extract is made common for all hyper-parameter SVM runs
+  # To do so, run an extract features and set the path below to the
+  # folder in which the extract was done
+  SVM_FEATURES_PATH: ""

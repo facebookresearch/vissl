@@ -1,0 +1,60 @@
+# @package _global_
+config:
+  TRAINER:
+    TASK_NAME: self_supervision_fsdp_task
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res3", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["res4", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet_fsdp
+      REGNET:
+        block_type: res_bottleneck_block
+        depth: 27
+        group_width: 1010
+        w_0: 1744
+        w_a: 620.83
+        w_m: 2.52
+        stage_checkpoints: [[2], [7], [9, 17], []]
+    HEAD:
+      PARAMS: []
+    SYNC_BN_CONFIG:
+      # No sync BN needed in eval mode
+      CONVERT_BN_TO_SYNC_BN: False
+      SYNC_BN_TYPE: pytorch
+    FSDP_CONFIG:
+      AUTO_WRAP_THRESHOLD: 100000000
+      flatten_parameters: False
+      compute_dtype: float32
+      mixed_precision: False
+      fp32_reduce_scatter: False
+    AMP_PARAMS:
+      # No AMP used in extraction mode
+      USE_AMP: False
+      AMP_TYPE: pytorch
+    ACTIVATION_CHECKPOINTING:
+      # With feature extraction, we do not need activation checkpointing
+      # because the trunk is used in evaluation mode and does not need
+      # to accumulate any gradient
+      USE_ACTIVATION_CHECKPOINTING: False
+  NEAREST_NEIGHBOR:
+    SIGMA: 0.07
+    TOPK: 20
+    L2_NORM_FEATS: True
+    USE_CUDA: False
+    # Big features with big datasets require to use the optimized memory
+    # version of KNN, which is a bit slower but will avoid OOM
+    OPTIMIZE_MEMORY: True
+    FEATURES:
+      # We recommend to do a feature extraction and then run KNN so that
+      # the feature extract is made common for all hyper-parameter KNN runs
+      # To do so, run an extract features and set the path below to the
+      # folder in which the extract was done
+      PATH: ""
