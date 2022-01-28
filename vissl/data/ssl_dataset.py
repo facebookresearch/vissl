@@ -407,7 +407,15 @@ class GenericSSLDataset(VisslDatasetBase):
             if not getattr(source, "get_image_paths", 0):
                 msg = f"Cannot retrieve image paths for source {self.data_sources[i]}"
                 raise ValueError(msg)
-            image_paths.append(source.get_image_paths())
+
+            data_obj_paths = source.get_image_paths()
+            if self.data_limit >= 0 and self._can_random_subset_data_sources():
+                if not self._subset_initialized:
+                    self._init_image_and_label_subset()
+                data_obj_paths = [
+                    data_obj_paths[idx] for idx in self.image_and_label_subset
+                ]
+            image_paths.append(data_obj_paths)
         return image_paths
 
     def get_available_splits(self, dataset_config):

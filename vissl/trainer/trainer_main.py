@@ -710,7 +710,7 @@ class SelfSupervisionTrainer(object):
             del self.task.dataloaders
             gc.collect()
 
-    def extract_clusters(self) -> Dict[str, Dict[int, int]]:
+    def extract_clusters(self, output_folder: str) -> Dict[str, Dict[int, int]]:
         """
         Workflow to extract multi-gpu cluster extraction for pre-trained models
         based on clusterization (SwAV, DeepCluster, etc).
@@ -739,7 +739,7 @@ class SelfSupervisionTrainer(object):
             msg = f"Extracting cluster assignment for partition: {split}"
             logging.info(msg)
             cluster_assignment[split] = self._get_cluster_assignment_for_split(
-                self.task, split
+                self.task, split, output_folder=output_folder
             )
             logging.info("Done: " + msg)
         self._cleanup_task()
@@ -747,35 +747,93 @@ class SelfSupervisionTrainer(object):
         # Merge the cluster assignments and group by cluster
         return self._merge_cluster_assignments(cluster_assignment)
 
-    def _get_cluster_assignment_for_split(self, task: ClassyTask, split: str):
+    def _get_cluster_assignment_for_split(
+        self, task: ClassyTask, split: str, output_folder: str
+    ):
         task.model.eval()
         logging.info("Model set to eval mode during feature extraction...")
+        dist_rank = torch.distributed.get_rank()
 
         cluster_assignments = {}
+        soft_cluster_assignments = {}
+        image_indices = []
+        chunk_index, buffer_size = 0, 0
+
         task.data_iterator = iter(self.task.dataloaders[split.lower()])
         while True:
             try:
                 sample = next(task.data_iterator)
                 assert isinstance(sample, dict)
                 assert "data_idx" in sample, "Indices not passed"
-
                 input_sample = {
                     "images": torch.cat(sample["data"]).cuda(non_blocking=True),
                     "indices": torch.cat(sample["data_idx"]).cpu().numpy(),
                 }
-
                 with torch.no_grad():
-                    features = task.model(input_sample["images"])
-                    features = features[0]
-                    prototype_score = features[1]
+                    outputs = task.model(input_sample["images"])
+                    prototype_score = outputs[0][1]
                     prototype_index = prototype_score.argmax(dim=-1)
                     num_images = input_sample["indices"].shape[0]
+                    buffer_size += num_images
                     for idx in range(num_images):
                         image_index = input_sample["indices"][idx]
                         cluster_assignments[image_index] = prototype_index[idx].item()
+                        soft_cluster_assignments[
+                            image_index
+                        ] = prototype_score.cpu().numpy()
+                        image_indices.append(image_index)
+
+                if buffer_size >= self.cfg.EXTRACT_FEATURES.CHUNK_THRESHOLD >= 0:
+                    self._save_extracted_prototypes(
+                        soft_assignments=soft_cluster_assignments,
+                        out_indices=image_indices,
+                        dist_rank=dist_rank,
+                        chunk_index=chunk_index,
+                        split=split,
+                        output_folder=output_folder,
+                    )
+                    soft_cluster_assignments.clear()
+                    image_indices.clear()
+                    chunk_index += 1
+                    buffer_size = 0
+
             except StopIteration:
+                if buffer_size:
+                    self._save_extracted_prototypes(
+                        soft_assignments=soft_cluster_assignments,
+                        out_indices=image_indices,
+                        dist_rank=dist_rank,
+                        chunk_index=chunk_index,
+                        split=split,
+                        output_folder=output_folder,
+                    )
                 break
         return cluster_assignments
+
+    @staticmethod
+    def _save_extracted_prototypes(
+        soft_assignments: Dict[int, np.ndarray],
+        out_indices: List[int],
+        dist_rank: int,
+        chunk_index: int,
+        split: str,
+        output_folder: str,
+    ):
+        out_indices = np.array(out_indices)
+        out_protos = np.concatenate([soft_assignments[i] for i in out_indices], axis=0)
+        out_proto_file = os.path.join(
+            output_folder,
+            f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_heads_protos.npy",
+        )
+        out_inds_file = os.path.join(
+            output_folder,
+            f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_heads_inds.npy",
+        )
+        logging.info(
+            f"Saving features: {out_protos.shape}, " f"inds: {out_indices.shape}"
+        )
+        save_file(out_protos, out_proto_file)
+        save_file(out_indices, out_inds_file)
 
     @staticmethod
     def _merge_cluster_assignments(

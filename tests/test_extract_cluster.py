@@ -8,6 +8,7 @@ import os
 import shutil
 import unittest
 
+import numpy as np
 from vissl.utils.cluster_utils import ClusterAssignmentLoader
 from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.test_utils import (
@@ -109,8 +110,29 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                     with_fsdp=with_fsdp,
                     checkpoint_path=os.path.join(pretrain_dir, "checkpoint.torch"),
                 )
+                extract_config.EXTRACT_FEATURES.CHUNK_THRESHOLD = 10
                 run_integration_test(extract_config, engine_name="extract_cluster")
-                self.assertIn("cluster_assignments.torch", os.listdir(extract_dir))
+                extraction_outputs = os.listdir(extract_dir)
+
+                # Check that the cluster assignments are computed in both
+                # compact format and dataset disk_filelist format
+                self.assertIn("cluster_assignments.torch", extraction_outputs)
+                self.assertIn("train_images.npy", extraction_outputs)
+                self.assertIn("train_labels.npy", extraction_outputs)
+                self.assertIn("test_images.npy", extraction_outputs)
+                self.assertIn("test_labels.npy", extraction_outputs)
+
+                # Check that the soft assignments (on prototypes) are exported
+                for rank in range(2):
+                    for chunk in range(2):
+                        file_name = f"rank{rank}_chunk{chunk}_train_heads_protos.npy"
+                        self.assertIn(file_name, extraction_outputs)
+                        self.assertEqual(np.load(file_name).shape[1], 3000)
+                    file_name = f"rank{rank}_chunk0_test_heads_protos.npy"
+                    self.assertIn(file_name, extraction_outputs)
+                    self.assertEqual(np.load(file_name).shape[1], 3000)
+
+                # Copy the cluster assignments
                 shutil.move(
                     src=os.path.join(extract_dir, "cluster_assignments.torch"),
                     dst=os.path.join(pretrain_dir, "cluster_assignments.torch"),

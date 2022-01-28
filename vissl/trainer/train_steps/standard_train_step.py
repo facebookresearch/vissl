@@ -35,7 +35,7 @@ if is_apex_available():
 LastBatchInfo = SimpleNamespace
 
 
-def construct_sample_for_model(batch_data, task):
+def construct_sample_for_model(batch_data, sample_key_names):
     """
     Given the input batch from the dataloader, verify the input is
     as expected: the input data and target data is present in the
@@ -44,7 +44,6 @@ def construct_sample_for_model(batch_data, task):
     is in right format i.e. the multiple input should be nested
     under a common key "input".
     """
-    sample_key_names = task.data_and_label_keys
     inp_key, target_key = sample_key_names["input"], sample_key_names["target"]
     all_keys = inp_key + target_key
 
@@ -120,7 +119,7 @@ def standard_train_step(task):
     with PerfTimer("read_sample", perf_stats):
         sample = next(task.data_iterator)
 
-    sample = construct_sample_for_model(sample, task)
+    sample = construct_sample_for_model(sample, task.data_and_label_keys)
 
     # Only need gradients during training
     grad_context = torch.enable_grad() if task.train else torch.no_grad()

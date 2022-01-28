@@ -89,15 +89,19 @@ def extract_clusters(
     # Build the SSL trainer to set up distributed training and then
     # extract the cluster assignments for all entries in the dataset
     trainer = SelfSupervisionTrainer(cfg, dist_run_id)
-    cluster_assignments = trainer.extract_clusters()
+    output_folder = get_checkpoint_folder(cfg)
+    cluster_assignments = trainer.extract_clusters(output_folder=output_folder)
 
     # Save the cluster assignments in the output folder
     if dist_rank == 0:
+        assignment = ClusterAssignment(
+            config=cfg, cluster_assignments=cluster_assignments
+        )
         ClusterAssignmentLoader.save_cluster_assignment(
-            output_dir=get_checkpoint_folder(cfg),
-            assignments=ClusterAssignment(
-                config=cfg, cluster_assignments=cluster_assignments
-            ),
+            output_dir=output_folder, assignments=assignment
+        )
+        ClusterAssignmentLoader.save_cluster_assignment_as_dataset(
+            output_dir=output_folder, assignments=assignment
         )
 
     # close the logging streams including the file handlers
