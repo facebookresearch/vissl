@@ -222,6 +222,28 @@ class SelfSupervisionTask(ClassificationTask):
         assert iteration >= 0, "Iteration number must be positive"
         self.iteration = iteration
 
+    @property
+    def enable_manual_gradient_reduction(self) -> bool:
+        """
+        Lazily initial the enable flag once when model is not None.
+        """
+        if self._enable_manual_gradient_reduction is None and self.model is not None:
+            self.set_manual_gradient_reduction()
+        if self._enable_manual_gradient_reduction:
+            return True
+        return False
+
+    def set_manual_gradient_reduction(self) -> None:
+        """
+        Called during __init__ to set a flag if manual gradient reduction is enabled.
+        """
+        assert self.model is not None
+        self._enable_manual_gradient_reduction = manual_gradient_reduction(
+            self.model, self.config["DISTRIBUTED"]["MANUAL_GRADIENT_REDUCTION"]
+        )
+        if self._enable_manual_gradient_reduction:
+            logging.info("Enabling manual gradient reduction")
+
     @classmethod
     def from_config(cls, config):
         """
@@ -499,6 +521,45 @@ class SelfSupervisionTask(ClassificationTask):
 
         return model
 
+    def set_epoch(
+        self, phase_type: str, epoch: int, start_iter: int, train_phase_idx: int
+    ):
+        if hasattr(self.dataloaders[phase_type], "sampler"):
+            sampler = self.dataloaders[phase_type].sampler
+            # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler
+            # Resume from the iteration if valid
+            self.set_train_epoch_start_iter(sampler, epoch, start_iter, train_phase_idx)
+            print_sampler_config(sampler)
+
+        # call set_epoch and set_start_iter for AirstoreDataset since it handles
+        # shuffle and sample skipping behavior internally
+        dataset = self.datasets[phase_type]
+        if hasattr(dataset, "data_objs"):
+            for data_obj in dataset.data_objs:
+                self.set_train_epoch_start_iter(
+                    data_obj, epoch, start_iter, train_phase_idx
+                )
+
+    def set_train_epoch_start_iter(
+        self, dataset_or_sampler, epoch: int, start_iter: int, train_phase_idx: int
+    ):
+        # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler
+        if hasattr(dataset_or_sampler, "set_epoch"):
+            dataset_or_sampler.set_epoch(epoch)
+        # Resume from the iteration if valid
+        if hasattr(dataset_or_sampler, "set_start_iter"):
+            dataset_or_sampler.set_start_iter(start_iter)
+
+        if hasattr(dataset_or_sampler, "set_train_phase_idx"):
+            dataset_or_sampler.set_train_phase_idx(train_phase_idx)
+
+    def num_phase_samples(self, phase_type: str) -> int:
+        """
+        Number of samples in a phase.
+        """
+        dataset = self.datasets[phase_type.lower()]
+        return dataset.num_samples()
+
     def _compute_start_iter_from_checkpoint(self, phase_type) -> int:
         # used for calculating the start iteration (count from current epoch) when resuming
         # from checkpoint
@@ -758,38 +819,6 @@ class SelfSupervisionTask(ClassificationTask):
 
         return self._update_classy_state(vissl_state_dict)
 
-    def set_epoch(
-        self, phase_type: str, epoch: int, start_iter: int, train_phase_idx: int
-    ):
-        if hasattr(self.dataloaders[phase_type], "sampler"):
-            sampler = self.dataloaders[phase_type].sampler
-            # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler
-            # Resume from the iteration if valid
-            self.set_train_epoch_start_iter(sampler, epoch, start_iter, train_phase_idx)
-            print_sampler_config(sampler)
-
-        # call set_epoch and set_start_iter for AirstoreDataset since it handles
-        # shuffle and sample skipping behavior internally
-        dataset = self.datasets[phase_type]
-        if hasattr(dataset, "data_objs"):
-            for data_obj in dataset.data_objs:
-                self.set_train_epoch_start_iter(
-                    data_obj, epoch, start_iter, train_phase_idx
-                )
-
-    def set_train_epoch_start_iter(
-        self, dataset_or_sampler, epoch: int, start_iter: int, train_phase_idx: int
-    ):
-        # (Re-)Shuffle data: set epoch of distributed (or fairstore) sampler
-        if hasattr(dataset_or_sampler, "set_epoch"):
-            dataset_or_sampler.set_epoch(epoch)
-        # Resume from the iteration if valid
-        if hasattr(dataset_or_sampler, "set_start_iter"):
-            dataset_or_sampler.set_start_iter(start_iter)
-
-        if hasattr(dataset_or_sampler, "set_train_phase_idx"):
-            dataset_or_sampler.set_train_phase_idx(train_phase_idx)
-
     def prepare_extraction(self, pin_memory: bool = False):
         """
         Prepares a light-weight task for feature extraction on multi-gpu. The model
@@ -803,35 +832,6 @@ class SelfSupervisionTask(ClassificationTask):
         if self.device.type == "cuda":
             self.base_model = copy_model_to_gpu(self.base_model)
         return self
-
-    @property
-    def enable_manual_gradient_reduction(self) -> bool:
-        """
-        Lazily initial the enable flag once when model is not None.
-        """
-        if self._enable_manual_gradient_reduction is None and self.model is not None:
-            self.set_manual_gradient_reduction()
-        if self._enable_manual_gradient_reduction:
-            return True
-        return False
-
-    def set_manual_gradient_reduction(self) -> None:
-        """
-        Called during __init__ to set a flag if manual gradient reduction is enabled.
-        """
-        assert self.model is not None
-        self._enable_manual_gradient_reduction = manual_gradient_reduction(
-            self.model, self.config["DISTRIBUTED"]["MANUAL_GRADIENT_REDUCTION"]
-        )
-        if self._enable_manual_gradient_reduction:
-            logging.info("Enabling manual gradient reduction")
-
-    def num_phase_samples(self, phase_type: str) -> int:
-        """
-        Number of samples in a phase.
-        """
-        dataset = self.datasets[phase_type.lower()]
-        return dataset.num_samples()
 
     def add_dummy_layer(self):
         """
