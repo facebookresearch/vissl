@@ -1,0 +1,57 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+          interpolation: 3
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["concatCLS4", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK: # S-8
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 8
+        HIDDEN_DIM: 384
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 1536, "dims": [1536, 102]}],
+        ["eval_mlp", {"in_channels": 384, "dims": [384, 102]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/dino_deitsmall8_pretrain.pth"
+      APPEND_PREFIX: trunk.base_model.
+      STATE_DICT_KEY_NAME: ''
+  OPTIMIZER:
+      regularize_bn: True

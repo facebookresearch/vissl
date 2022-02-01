@@ -1,0 +1,32 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+          ["res4", ["AdaptiveAvgPool2d", [[2, 2]]]],
+          ["res4", ["AdaptiveAvgPool2d", [[1, 4]]]],
+          ["res4", ["AdaptiveAvgPool2d", [[4, 1]]]],
+
+          ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
+          ["res5", ["AdaptiveAvgPool2d", [[2, 1]]]],
+
+          ["res5avg", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 200
+        WIDTH_MULTIPLIER: 2
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 47]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 47]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 47]}],
+
+        ["eval_mlp", {"in_channels": 4096, "dims": [8192, 47]}],
+        ["eval_mlp", {"in_channels": 4096, "dims": [8192, 47]}],
+
+        ["eval_mlp", {"in_channels": 4096, "dims": [4096, 47]}],
+      ]
+    WEIGHTS_INIT:
+      STATE_DICT_KEY_NAME: ""
