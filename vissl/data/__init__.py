@@ -41,6 +41,7 @@ DATASET_SOURCE_MAP = {
     "airstore": AirstoreDataset,
     "disk_filelist": DiskImageDataset,
     "disk_folder": DiskImageDataset,
+    "disk_roi_annotations": DiskImageDataset,
     "torchvision_dataset": TorchvisionDataset,
     "synthetic": SyntheticImageDataset,
 }
@@ -49,6 +50,7 @@ DATASET_SOURCE_MAP = {
 DATA_SOURCES_WITH_SUBSET_SUPPORT = {
     "disk_filelist",
     "disk_folder",
+    "disk_roi_annotations",
     "torchvision_dataset",
     "synthetic",
 }

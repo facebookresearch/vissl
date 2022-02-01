@@ -16,7 +16,8 @@ class DiskImageDataset(QueueDataset):
     """
     Base Dataset class for loading images from Disk.
     Can load a predefined list of images or all images inside
-    a folder.
+    a folder. And also a json file containing the image path
+    and the RoI annotation for the image.
 
     Inherits from QueueDataset class in VISSL to provide better
     handling of the invalid images by replacing them with the
@@ -30,6 +31,9 @@ class DiskImageDataset(QueueDataset):
                In this case `data_source = "disk_filelist"`
             2. A folder such that folder/split contains images.
                In this case `data_source = "disk_folder"`
+            3. A .json file containing list of dictionary where
+               each dictionary has "img_path" and "bbox" entry.
+               In this case `data_source = "disk_roi_annotations"`
         split (string): specify split for the dataset.
                         Usually train/val/test.
                         Used to read images if reading from a folder `path` and retrieve
@@ -52,26 +56,32 @@ class DiskImageDataset(QueueDataset):
         assert data_source in [
             "disk_filelist",
             "disk_folder",
+            "disk_roi_annotations",
         ], "data_source must be either disk_filelist or disk_folder"
         if data_source == "disk_filelist":
             assert g_pathmgr.isfile(path), f"File {path} does not exist"
         elif data_source == "disk_folder":
             assert g_pathmgr.isdir(path), f"Directory {path} does not exist"
+        elif data_source == "disk_roi_annotations":
+            assert g_pathmgr.isfile(path), f"File {path} does not exist"
+            assert path.endswith("json"), "Annotations must be in json format"
         self.cfg = cfg
         self.split = split
         self.dataset_name = dataset_name
         self.data_source = data_source
         self._path = path
         self.image_dataset = []
+        self.image_roi_bbox = []
         self.is_initialized = False
         self._load_data(path)
         self._num_samples = len(self.image_dataset)
         self._remove_prefix = cfg["DATA"][self.split]["REMOVE_IMG_PATH_PREFIX"]
         self._new_prefix = cfg["DATA"][self.split]["NEW_IMG_PATH_PREFIX"]
-        if self.data_source == "disk_filelist":
+        if self.data_source in ["disk_filelist", "disk_roi_annotations"]:
             # Set dataset to null so that workers dont need to pickle this file.
             # This saves memory when disk_filelist is large, especially when memory mapping.
             self.image_dataset = []
+            self.image_roi_bbox = []
         # whether to use QueueDataset class to handle invalid images or not
         self.enable_queue_dataset = cfg["DATA"][self.split]["ENABLE_QUEUE_DATASET"]
 
@@ -89,6 +99,12 @@ class DiskImageDataset(QueueDataset):
             # Creating ImageFolder dataset can be expensive because of repeated os.listdir calls
             # Avoid creating it over and over again.
             self.is_initialized = True
+        elif self.data_source == "disk_roi_annotations":
+            # we load the annotations and then parse the image paths and the image roi
+            self.image_dataset, self.image_roi_bbox = [], []
+            json_annotations = load_file(path)
+            self.image_dataset = [item["path"] for item in json_annotations]
+            self.image_roi_bbox = [item["bbox"] for item in json_annotations]
 
     def num_samples(self):
         """
@@ -148,6 +164,26 @@ class DiskImageDataset(QueueDataset):
                     img = Image.open(fopen).convert("RGB")
             elif self.data_source == "disk_folder":
                 img = self.image_dataset[idx][0]
+            elif self.data_source == "disk_roi_annotations":
+                with g_pathmgr.open(image_path, "rb") as fopen:
+                    bbox = [float(item) for item in self.image_roi_bbox[idx]]
+                    img = Image.open(fopen).crop(bbox).convert("RGB")
+                # TODO: move the below to a dedicated transform
+                # applicable to openimages dataset only
+                width, height = img.size
+                bbox_size = min(img.size)
+                ratio = max(img.size) / min(img.size)
+                if ratio >= 1.2:
+                    if width < height:  # bigger height
+                        bbox = (0, 0, bbox_size, bbox_size)
+                    else:  # bigger width.
+                        bbox = (
+                            int((width - bbox_size) / 2),
+                            0,
+                            int((width - bbox_size) / 2) + bbox_size,
+                            height,
+                        )
+                    img = img.crop(bbox)
             if is_success and self.enable_queue_dataset:
                 self.on_sucess(img)
         except Exception as e:
