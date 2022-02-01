@@ -1,0 +1,16 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: resnet
+      ######## resnext101-32x8d #######
+      RESNETS:
+        DEPTH: 101
+        GROUPS: 32
+        WIDTH_PER_GROUP: 8
+    HEAD:
+      PARAMS: [['mlp', {'dims': [2048, 619]}]]

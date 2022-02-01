@@ -45,18 +45,9 @@ config:
       TRUNK_PARAMS:
         RESNETS:
           DEPTH: 50
-    HEAD:
-      PARAMS: [
-        ["mlp", {"dims": [2048, 1000]}],
-      ]
     WEIGHTS_INIT:
       PARAMS_FILE: "specify the model weights"
       STATE_DICT_KEY_NAME: classy_state_dict
-  METERS:
-    name: accuracy_list_meter
-    accuracy_list_meter:
-      num_meters: 1
-      topk_values: [1]
   DISTRIBUTED:
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8

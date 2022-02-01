@@ -1,0 +1,47 @@
+# @package _global_
+engine: extract_features
+config:
+  TEST_ONLY: True
+  TEST_MODEL: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 8
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [hateful_memes_img]
+      LABEL_SOURCES: []
+      LABEL_PATHS: []
+      LABEL_TYPE: sample_index
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/hateful_memes_img/
+      DROP_LAST: False
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [hateful_memes_img]
+      LABEL_SOURCES: []
+      LABEL_PATHS: []
+      LABEL_TYPE: sample_index
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/hateful_memes_img/
+      DROP_LAST: False
