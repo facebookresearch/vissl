@@ -649,6 +649,9 @@ class DropPath(nn.Module):
     def forward(self, x):
         return drop_path(x, self.drop_prob, self.training)
 
+    def extra_repr(self) -> str:
+        return "p={}".format(self.drop_prob)
+
 
 to_1tuple = _ntuple(1)
 to_2tuple = _ntuple(2)
