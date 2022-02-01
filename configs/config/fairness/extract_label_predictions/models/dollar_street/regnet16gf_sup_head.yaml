@@ -1,0 +1,16 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: regnet_y_16gf
+    HEAD:
+      PARAMS: [['mlp', {'dims': [3024, 108]}]]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
