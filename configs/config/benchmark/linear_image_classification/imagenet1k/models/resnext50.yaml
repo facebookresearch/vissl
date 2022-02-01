@@ -8,6 +8,8 @@
           ["res3", ["AvgPool2d", [[13, 13], 5, 0]]],
           ["res4", ["AvgPool2d", [[8, 8], 3, 0]]],
           ["res5", ["AvgPool2d", [[6, 6], 1, 0]]],
+          ["res5", ["AdaptiveAvgPool2d", [[2, 2]]]],
+          ["res5avg", ["Identity", []]],
       ]
     TRUNK:
       NAME: resnet
@@ -29,4 +31,6 @@
         ["eval_mlp", {"in_channels": 512, "dims": [8192, 1000]}],
         ["eval_mlp", {"in_channels": 1024, "dims": [9216, 1000]}],
         ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [8192, 1000]}],
+        ["eval_mlp", {"in_channels": 2048, "dims": [2048, 1000]}],
       ]
