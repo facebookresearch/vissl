@@ -13,6 +13,7 @@ from vissl.config import AttrDict
 from vissl.engines.engine_registry import Engine, register_engine
 from vissl.hooks import default_hook_generator
 from vissl.hooks.profiling_hook import CudaSynchronizeHook
+from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.trainer import SelfSupervisionTrainer
 from vissl.utils.collect_env import collect_env_info
 from vissl.utils.env import (
@@ -20,6 +21,7 @@ from vissl.utils.env import (
     print_system_env_info,
     set_env_vars,
 )
+from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 from vissl.utils.hydra_config import print_cfg
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import set_seeds, setup_multiprocessing_method
@@ -111,11 +113,31 @@ def extract_features_main(
 
     # Run the label prediction extraction
     trainer = SelfSupervisionTrainer(cfg, dist_run_id, hooks=hooks)
+    output_dir = cfg.EXTRACT_FEATURES.OUTPUT_DIR or checkpoint_folder
     trainer.extract(
         output_folder=cfg.EXTRACT_FEATURES.OUTPUT_DIR or checkpoint_folder,
         extract_features=True,
         extract_predictions=False,
     )
+
+    # TODO (prigoyal): merge this function with _extract_features
+    if dist_rank == 0 and cfg.EXTRACT_FEATURES.MAP_FEATURES_TO_IMG_NAME:
+        # Get the names of the features that we extracted features for. If user doesn't
+        # specify the features to evaluate, we get the full model output and freeze
+        # head/trunk both as caution.
+        layers = get_trunk_output_feature_names(cfg.MODEL)
+        if len(layers) == 0:
+            layers = ["heads"]
+        available_splits = [item.lower() for item in trainer.task.available_splits]
+        for split in available_splits:
+            image_paths = trainer.task.datasets[split].get_image_paths()[0]
+            for layer in layers:
+                ExtractedFeaturesLoader.map_features_to_img_filepath(
+                    image_paths=image_paths,
+                    input_dir=output_dir,
+                    split=split,
+                    layer=layer,
+                )
 
     logging.info("All Done!")
     # close the logging streams including the filehandlers
