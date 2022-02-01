@@ -1,0 +1,9 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: regnet_y_256gf
+    HEAD:
+      PARAMS: [['mlp', {'dims': [5088, 12893]}]]
