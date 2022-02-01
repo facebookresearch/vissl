@@ -1,0 +1,15 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: regnet_y_32gf
+    HEAD:
+      PARAMS: [['mlp', {'dims': [3712, 8142]}]]
+  DATA:
+    # to reduce the training time, we use 64img/gpu (16GB machine)
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32

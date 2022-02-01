@@ -1,0 +1,25 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK: # B-16
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 768
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        MLP_DIM: 3072
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [768, 12893]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/dino_vitbase16_pretrain.pth"
+      APPEND_PREFIX: trunk.
+      STATE_DICT_KEY_NAME: ''

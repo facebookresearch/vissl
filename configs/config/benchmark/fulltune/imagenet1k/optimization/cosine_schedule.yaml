@@ -1,0 +1,18 @@
+# @package _global_
+config:
+  OPTIMIZER:
+      name: sgd
+      weight_decay: 0.000
+      momentum: 0.9
+      num_epochs: 100
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: False
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: false
+          name: cosine
+          start_value: 0.5 # bs=512 but we will sweep
+          end_value: 5e-7
+          update_interval: step
