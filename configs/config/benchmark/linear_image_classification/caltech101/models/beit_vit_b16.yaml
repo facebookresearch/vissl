@@ -1,0 +1,62 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+          interpolation: 3
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["concatCLS4", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK: # B-16
+      NAME: beit
+      BEIT:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_RATIO: 4.0
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QKV_BIAS: True
+        QK_SCALE: False # Scale
+        USE_ABS_POS_EMB: True
+        USE_REL_POS_BIAS: True
+        USE_SHARED_REL_POS_BIAS: False
+        USE_MEAN_POOLING: False
+        INIT_VALUES: 0.1
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 3072, "dims": [3072, 102]}],
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 102]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/oss_beit_base_patch16_224_pt22k.pth"
+      APPEND_PREFIX: trunk.base_model.
+      STATE_DICT_KEY_NAME: 'model'
+  OPTIMIZER:
+      regularize_bn: True
