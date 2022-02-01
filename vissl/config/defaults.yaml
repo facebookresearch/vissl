@@ -1464,3 +1464,15 @@ config:
     FEATURES:
       # If empty, will run the extract features, if not, use the path to find the features
       PATH: ""
+
+  # ----------------------------------------------------------------------------------- #
+  # Geo Localization (benchmark)
+  # ----------------------------------------------------------------------------------- #
+  GEO_LOCALIZATION:
+    # Benchmark Details:
+    #   Step1: Take a model and extract the model label predictions on test data.
+    #   Step2: Find the corresponding latitude/longitude predictions using the json mapping for train set.
+    #   Step3: find the ground truth latitute/longitude and compute the metric following the code.
+    TRAIN_LABEL_MAPPING: "/path/to/.json"
+    # [1, 25, 200, 750, 2500] -> [street, city, region, country, continent]
+    ACC_KM_THRESHOLDS: [1, 25, 200, 750, 2500]
