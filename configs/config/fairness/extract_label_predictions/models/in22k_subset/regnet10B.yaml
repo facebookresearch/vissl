@@ -1,0 +1,53 @@
+# @package _global_
+config:
+  TRAINER:
+    TASK_NAME: self_supervision_fsdp_task
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 8
+    TEST:
+      BATCHSIZE_PER_REPLICA: 8
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [10]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: regnet_fsdp
+      REGNET:
+        block_type: res_bottleneck_block
+        depth: 27
+        group_width: 1010
+        w_0: 1744
+        w_a: 620.83
+        w_m: 2.52
+        stage_checkpoints: [[2], [7], [9, 17], [1]]
+        stage_checkpointing: [[True], [True], [True, False], [False]]
+    HEAD:
+      PARAMS: [
+        ['mlp_fsdp', {'dims': [28280, 619]}]
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: False
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 0  # global sync
+    FSDP_CONFIG:
+      AUTO_SETUP_FSDP: False
+      AUTO_WRAP_THRESHOLD: 100000000
+      flatten_parameters: False
+      compute_dtype: float32
+      mixed_precision: False
+      fp32_reduce_scatter: False
+    AMP_PARAMS:
+      USE_AMP: False
+      AMP_TYPE: pytorch
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: True
+      CLEAR_FREQ: 5000
+    ACTIVATION_CHECKPOINTING:
+      USE_ACTIVATION_CHECKPOINTING: False
