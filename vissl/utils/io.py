@@ -12,6 +12,7 @@ import time
 from urllib.parse import urlparse
 
 import numpy as np
+import pandas as pd
 import yaml
 from iopath.common.download import download
 from iopath.common.file_io import g_pathmgr, file_lock
@@ -130,6 +131,9 @@ def load_file(filename, mmap_mode=None):
     elif file_ext == ".yaml":
         with g_pathmgr.open(filename, "r") as fopen:
             data = yaml.load(fopen, Loader=yaml.FullLoader)
+    elif file_ext == ".csv":
+        with g_pathmgr.open(filename, "r") as fopen:
+            data = pd.read_csv(fopen)
     else:
         raise Exception(f"Reading from {file_ext} is not supported yet")
     return data
