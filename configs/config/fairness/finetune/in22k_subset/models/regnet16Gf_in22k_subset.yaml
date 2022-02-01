@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 16
+    TEST:
+      BATCHSIZE_PER_REPLICA: 16
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: regnet_y_16gf
+    HEAD:
+      PARAMS: [['mlp', {'dims': [3024, 619]}]]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
