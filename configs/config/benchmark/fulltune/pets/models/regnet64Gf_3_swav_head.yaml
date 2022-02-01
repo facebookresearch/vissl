@@ -1,0 +1,22 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 20
+        w_0: 352
+        w_a: 147.48
+        w_m: 2.4
+        group_width: 328
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [4920, 8192], "num_clusters": []}],
+        ['mlp', {'dims': [8192, 37]}]
+      ]
+  DATA:
+    # to reduce the training time, we use 64img/gpu (16GB machine)
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+    TEST:
+      BATCHSIZE_PER_REPLICA: 64
