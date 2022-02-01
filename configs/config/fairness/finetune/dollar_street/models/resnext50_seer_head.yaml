@@ -1,0 +1,30 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+        ######## resnext50-32x4d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 4
+        ######## resnext50-32x8d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 8
+        ######## resnext50-32x16d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 16
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [2048, 4096], "num_clusters": []}],
+        ['mlp', {'dims': [4096, 108]}]
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+  DATA:
+    # to reduce the training time, we use 64img/gpu (16GB machine)
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+    TEST:
+      BATCHSIZE_PER_REPLICA: 64

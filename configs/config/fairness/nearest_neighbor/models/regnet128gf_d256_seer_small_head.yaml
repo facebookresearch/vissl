@@ -1,0 +1,23 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 27
+        w_0: 456
+        w_a: 160.83
+        w_m: 2.52
+        group_width: 264
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [7392, 7392, 256], "use_bn": False, "num_clusters": []}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/prigoyal/checkpoints/f307367425/seer_ig1m_1000ep_rg128gf_bs16_node32_sinkhorn10_proto3k_syncBN32_2x224_4x96_swav_quick_ig_05_11_21/model_final_checkpoint_phase999.torch"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      SKIP_LAYERS: ["num_batches_tracked"]

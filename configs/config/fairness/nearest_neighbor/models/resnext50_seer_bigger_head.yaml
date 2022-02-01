@@ -1,0 +1,28 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+      EXTRACT_TRUNK_FEATURES_ONLY: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+        ######## resnext50-32x4d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 4
+        ######## resnext50-32x8d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 8
+        ######## resnext50-32x16d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 16
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [2048, 4096, 4096, 256], "use_bn": True, "num_clusters": []}],
+      ]
+    WEIGHTS_INIT:
+      SKIP_LAYERS: ["num_batches_tracked"]
