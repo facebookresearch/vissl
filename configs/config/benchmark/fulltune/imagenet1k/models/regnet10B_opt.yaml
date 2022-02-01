@@ -1,0 +1,52 @@
+# @package _global_
+config:
+  TRAINER:
+    TASK_NAME: self_supervision_fsdp_task
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 8
+    TEST:
+      BATCHSIZE_PER_REPLICA: 8
+  OPTIMIZER:
+    use_larc: False
+    regularize_bn: False
+    regularize_bias: True
+    construct_single_param_group_only: False
+  MODEL:
+    TRUNK:
+      NAME: regnet_fsdp
+      REGNET:
+        block_type: res_bottleneck_block
+        depth: 27
+        group_width: 1010
+        w_0: 1744
+        w_a: 620.83
+        w_m: 2.52
+        stage_checkpoints: [[2], [7], [9, 17], [1]]
+        stage_checkpointing: [[True], [True], [True, True], [False]]
+    HEAD:
+      PARAMS: [
+        ['mlp_fsdp', {'dims': [28280, 1000]}]
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 0  # global sync
+    FSDP_CONFIG:
+      # Disabling AUTO_SETUP_FSDP so that:
+      # - flatten_parameters is not forced to True
+      # - construct_single_param_group_only is not forced to True
+      AUTO_SETUP_FSDP: False
+      AUTO_WRAP_THRESHOLD: 100000000
+      flatten_parameters: False
+      compute_dtype: float16
+      mixed_precision: True
+      fp32_reduce_scatter: False
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_TYPE: pytorch
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: True
+      CLEAR_FREQ: 5000
+    ACTIVATION_CHECKPOINTING:
+      USE_ACTIVATION_CHECKPOINTING: True
