@@ -693,6 +693,34 @@ config:
         QK_SCALE: False # Scale
 
       # ------------------------------------------------------------- #
+      # BEiT.
+      # https://github.com/microsoft/unilm/blob/master/beit/modeling_finetune.py
+      # https://arxiv.org/pdf/2106.08254.pdf
+      # ------------------------------------------------------------- #
+      BEIT:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_RATIO: 4.0
+        # MLP and projection layer dropout rate
+        DROPOUT_RATE: 0
+        # Attention dropout rate
+        ATTENTION_DROPOUT_RATE: 0
+        # Stochastic depth dropout rate. Turning on stochastic depth and
+        # using aggressive augmentation is essentially the difference
+        # between a DeiT and a ViT.
+        DROP_PATH_RATE: 0
+        QKV_BIAS: False # Bias for QKV in attention layers.
+        QK_SCALE: False # Scale
+        USE_ABS_POS_EMB: True
+        USE_REL_POS_BIAS: False
+        USE_SHARED_REL_POS_BIAS: False
+        USE_MEAN_POOLING: True
+        INIT_VALUES: False
+
+      # ------------------------------------------------------------- #
       # Parameters unique to the ConViT and not used for standard vision
       # transformers
       # -------------------------------------------------------------
