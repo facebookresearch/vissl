@@ -684,6 +684,7 @@ config:
         HIDDEN_DIM: 384
         NUM_LAYERS: 12
         NUM_HEADS: 8
+        MLP_RATIO: 4.0
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
         DROP_PATH_RATE: 0.05
