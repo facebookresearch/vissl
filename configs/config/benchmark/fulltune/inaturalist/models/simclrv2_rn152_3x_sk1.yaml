@@ -7,11 +7,17 @@ config:
       BATCHSIZE_PER_REPLICA: 16
   MODEL:
     TRUNK:
-      NAME: regnet
-      REGNET:
-        name: regnet_y_128gf
+      NAME: resnet_sk
+      RESNETS_SK:
+        DEPTH: 152
+        WIDTH_MULTIPLIER: 3
+        SK_RATIO: 0.0625
     HEAD:
-      PARAMS: [['mlp', {'dims': [7392, 2]}]]
+      PARAMS: [['mlp', {'dims': [6144, 8142]}]]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 0
   DISTRIBUTED:
     NUM_NODES: 2  # we can't fit the model on 16GB machine so instead use 2 nodes
     INIT_METHOD: tcp
