@@ -1,0 +1,23 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+        ######## resnext50-32x4d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 4
+        ######## resnext50-32x8d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 8
+        ######## resnext50-32x16d #######
+        # GROUPS: 32
+        # WIDTH_PER_GROUP: 16
+    HEAD:
+      PARAMS: []
