@@ -51,8 +51,9 @@ def download_dataset(root: str):
 
 def create_clevr_distance_disk_folder(input_path: str, output_path: str):
     """
-    Transform the CLEVR_v1.0 dataset in folder 'input_path' to a classifcation dataset following the
-    disk_folder format at 'output_path' where the goal is to estimate the distance of the closest object
+    Transform the CLEVR_v1.0 dataset in folder 'input_path' to a classifcation dataset
+    following the disk_folder format at 'output_path' where the goal is to estimate the
+    distance of the closest object.
     """
     thresholds = np.array([8.0, 8.5, 9.0, 9.5, 10.0, 100.0])
     target_labels = [f"below_{threshold}" for threshold in thresholds]
@@ -91,7 +92,8 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/datasets/create_clevr_dist_data_files.py -i /path/to/clevr/ -o /output_path/to/clevr_dist
+    python extra_scripts/datasets/create_clevr_dist_data_files.py -i /path/to/clevr/ \
+        -o /output_path/to/clevr_dist
     ```
     """
     args = get_argument_parser().parse_args()
