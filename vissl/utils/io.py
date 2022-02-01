@@ -100,7 +100,10 @@ def load_file(filename, mmap_mode=None):
     """
     logging.info(f"Loading data from file: {filename}")
     file_ext = os.path.splitext(filename)[1]
-    if file_ext in [".pkl", ".pickle"]:
+    if file_ext == ".txt":
+        with g_pathmgr.open(filename, "r") as fopen:
+            data = fopen.readlines()
+    elif file_ext in [".pkl", ".pickle"]:
         with g_pathmgr.open(filename, "rb") as fopen:
             data = pickle.load(fopen, encoding="latin1")
     elif file_ext == ".npy":
