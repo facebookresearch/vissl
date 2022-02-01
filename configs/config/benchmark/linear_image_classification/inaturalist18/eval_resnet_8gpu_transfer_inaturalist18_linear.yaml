@@ -81,11 +81,9 @@ config:
     WEIGHTS_INIT:
       PARAMS_FILE: "specify the model weights"
       STATE_DICT_KEY_NAME: classy_state_dict
-      # STATE_DICT_KEY_NAME: model_state_dict
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
-      GROUP_SIZE: 8
+      SYNC_BN_TYPE: pytorch
   LOSS:
     name: cross_entropy_multiple_output_single_target
     cross_entropy_multiple_output_single_target:
