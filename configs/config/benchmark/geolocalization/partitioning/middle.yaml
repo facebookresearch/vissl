@@ -1,0 +1,4 @@
+# @package _global_
+config:
+  GEO_LOCALIZATION:
+    TRAIN_LABEL_MAPPING: "manifold://ssl_framework/tree/datasets/im2gps_parsed_data/s2_cells/cells_50_2000.csv"
