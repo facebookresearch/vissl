@@ -41,6 +41,7 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                 "config.OPTIMIZER.construct_single_param_group_only=True",
                 "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
                 "config.OPTIMIZER.use_larc=False",
+                "config.EXTRACT_FEATURES.CHUNK_THRESHOLD=0",
             ]
         )
         args, config = convert_to_attrdict(cfg)
@@ -64,6 +65,7 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                 "config.OPTIMIZER.construct_single_param_group_only=True",
                 "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
                 "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
+                "config.EXTRACT_FEATURES.CHUNK_THRESHOLD=0",
             ]
         )
         args, config = convert_to_attrdict(cfg)
@@ -88,6 +90,7 @@ class TestExtractClusterWorkflow(unittest.TestCase):
                 "config.DATA.TRAIN.BATCHSIZE_PER_REPLICA=4",
                 "config.DATA.TEST.BATCHSIZE_PER_REPLICA=2",
                 "config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False",
+                "config.EXTRACT_FEATURES.CHUNK_THRESHOLD=0",
             ],
         )
         args, config = convert_to_attrdict(cfg)
