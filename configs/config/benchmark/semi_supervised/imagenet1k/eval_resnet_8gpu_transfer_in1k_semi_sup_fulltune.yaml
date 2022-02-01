@@ -71,23 +71,23 @@ config:
     cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
-      name: sgd
-      weight_decay: 0.000
-      momentum: 0.9
-      num_epochs: 70
-      nesterov: True
-      regularize_bn: False
-      regularize_bias: True
-      param_schedulers:
-        lr:
-          auto_lr_scaling:
-            auto_scale: true
-            base_value: 0.05
-            base_lr_batch_size: 256
-          name: multistep
-          values: [0.05, 0.005]
-          milestones: [30]
-          update_interval: epoch
+    name: sgd
+    weight_decay: 0.000
+    momentum: 0.9
+    num_epochs: 70
+    nesterov: True
+    regularize_bn: False
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.05
+          base_lr_batch_size: 256
+        name: multistep
+        values: [0.05, 0.005]
+        milestones: [30]
+        update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
