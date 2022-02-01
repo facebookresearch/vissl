@@ -653,9 +653,10 @@ class SelfSupervisionTrainer(object):
         for feat_name in feat_names:
             out_features[feat_name], out_targets[feat_name] = {}, {}
 
-        chunk_index = 0
-        feature_buffer_size = 0
+        chunk_index, feature_buffer_size, count = 0, 0, 0
         while True:
+            if count % 100 == 0:
+                logging.info(f"Feature extraction iteration: {count}")
             try:
                 sample = next(task.data_iterator)
                 assert isinstance(sample, dict)
@@ -706,6 +707,7 @@ class SelfSupervisionTrainer(object):
                     output_folder=output_folder,
                 )
                 break
+            count += 1
 
     def _cleanup_task(self):
         if hasattr(self.task, "data_iterator"):
