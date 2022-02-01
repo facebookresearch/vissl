@@ -196,7 +196,8 @@ class GenericSSLDataset(VisslDatasetBase):
             class_idx_file_path = (
                 f"{checkpoint_folder}/{split.lower()}_label_to_index_map.json"
             )
-            save_file(cls_idx_map, class_idx_file_path)
+            if not g_pathmgr.exists(class_idx_file_path):
+                save_file(cls_idx_map, class_idx_file_path, append_to_json=False)
 
     def _convert_to_numeric_ids(self, labels: np.ndarray) -> np.ndarray:
         """
