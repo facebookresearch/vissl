@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
+    TRUNK:
+      NAME: resnet_sk
+      RESNETS_SK:
+        DEPTH: 152
+        WIDTH_MULTIPLIER: 3
+        SK_RATIO: 0.0625
+    HEAD:
+      PARAMS: []

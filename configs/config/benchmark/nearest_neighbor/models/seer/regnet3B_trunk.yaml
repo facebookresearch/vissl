@@ -1,0 +1,58 @@
+# @package _global_
+config:
+  TRAINER:
+    TASK_NAME: self_supervision_fsdp_task
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+  OPTIMIZER:
+    use_larc: False
+    regularize_bn: False
+    regularize_bias: True
+    construct_single_param_group_only: True
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+    TRUNK:
+      NAME: regnet_fsdp
+      REGNET:
+        name: anynet
+        # depths: [3, 10, 23, 1]  # 10B version of this model
+        depths: [1, 4, 4, 1]  # 3B model
+        widths: [1840, 3680, 10120, 25760]
+        group_widths: [920, 920, 920, 920]
+        bottleneck_multipliers: [1.0, 1.0, 1.0, 1.0]
+        strides: [2, 2, 2, 2]
+        stage_checkpoints: [[1], [4], [4], [1]]
+    HEAD:
+      PARAMS: []
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 0  # global sync
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_TYPE: pytorch
+    FSDP_CONFIG:
+      # Disabling AUTO_SETUP_FSDP so that:
+      # - flatten_parameters is not forced to True
+      # - construct_single_param_group_only is not forced to True
+      AUTO_SETUP_FSDP: False
+      AUTO_WRAP_THRESHOLD: 100000000
+      flatten_parameters: False
+      compute_dtype: float16
+      mixed_precision: True
+      fp32_reduce_scatter: False
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: True
+      CLEAR_FREQ: 5000
+    ACTIVATION_CHECKPOINTING:
+      # With linear evaluation, we do not need activation checkpointing
+      # because the trunk is used in evaluation mode and does not need
+      # to accumulate any gradient
+      USE_ACTIVATION_CHECKPOINTING: False
