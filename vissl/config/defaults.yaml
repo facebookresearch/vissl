@@ -1200,6 +1200,21 @@ config:
       DIMENSIONALITY_REDUCTION: 0
 
   # ----------------------------------------------------------------------------------- #
+  # Ranking features using faiss
+  # ----------------------------------------------------------------------------------- #
+  RANKING:
+    USE_GPU: False
+    # currently we only support faiss backend ranking.
+    RANKING_BACKEND: "faiss"
+    NORMALIZE_FEATS: True
+    APPLY_PCA: False
+    PCA_DIM: 128
+    FEATURES:
+      DATA_PARTITION: "TRAIN"
+      DATASET_NAME: ""
+      LAYER_NAME: ""
+
+  # ----------------------------------------------------------------------------------- #
   # TRAINER (define your train step)
   # ----------------------------------------------------------------------------------- #
   TRAINER:
