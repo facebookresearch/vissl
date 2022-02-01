@@ -1,0 +1,8 @@
+# @package _global_
+config:
+  DATA:
+    TEST:
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: []
+      LABEL_TYPE: sample_index
+      DATASET_NAMES: [im2gps_3k_test_filelist]
