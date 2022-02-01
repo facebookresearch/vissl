@@ -1163,7 +1163,7 @@ config:
     #   as soon as they are computed (accumulate none in memory)
     # - if set to -1, the extract_engine engine will dump features
     #   at the very end (accumulate all in memory)
-    CHUNK_THRESHOLD: 0
+    CHUNK_THRESHOLD: -1
     # if user wants to save the extracted features as img_filename.npy
     # we simply save the features that way
     MAP_FEATURES_TO_IMG_NAME: False
