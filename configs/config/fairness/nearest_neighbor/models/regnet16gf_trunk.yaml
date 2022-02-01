@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: regnet_y_16gf
+    HEAD:
+      PARAMS: []
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/checkpoints/f232070198/swav_ig1b_regnet16Gf_cosine_bs32_node16_sinkhorn10_proto16k_syncBN32_warmup2x/model_iteration244000.torch"
+      STATE_DICT_KEY_NAME: classy_state_dict

@@ -1,0 +1,25 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+      EXTRACT_TRUNK_FEATURES_ONLY: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 27
+        w_0: 456
+        w_a: 160.83
+        w_m: 2.52
+        group_width: 264
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [7392, 7392, 128], "use_bn": True, "num_clusters": []}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/regnet_swav_in1k/regnet128_swav_epoch230_with_heads_2.torch"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      SKIP_LAYERS: ["num_batches_tracked"]

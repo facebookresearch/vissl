@@ -1,0 +1,30 @@
+# @package _global_
+config:
+  TEST_MODEL: True
+  TEST_ONLY: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TEST:
+      DATA_SOURCES: [disk_roi_annotations]
+      LABEL_SOURCES: []
+      LABEL_PATHS: []
+      DATASET_NAMES: [openimages_miap_bbox100_val]
+      BATCHSIZE_PER_REPLICA: 32
+      LABEL_TYPE: "zero"
+      TRANSFORMS:
+        - name: Resize
+          size: [224, 224]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/openimages_miap_bbox100_val/
+      DROP_LAST: False
+      DATA_LIMIT: -1
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 3
+      topk_values: [10]

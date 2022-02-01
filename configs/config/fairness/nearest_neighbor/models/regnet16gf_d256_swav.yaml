@@ -1,0 +1,21 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+      EXTRACT_TRUNK_FEATURES_ONLY: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: regnet_y_16gf
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [3024, 3024, 256], "use_bn": False, "num_clusters": []}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/ssl_framework/swav_ig1M_1000ep_rg16gf_cosine_bs32_node32_sinkhorn5_proto3k_syncBN32_warmup2x_swav_quick_ig_09_10_20.738a30c4/model_final_checkpoint_phase999.torch"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      SKIP_LAYERS: ["num_batches_tracked"]
