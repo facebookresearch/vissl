@@ -1,0 +1,21 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[7, 1]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[3, 1]]]],
+        ["avgpool", ["Identity", []]],
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        name: regnet_y_32gf
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 1392, "dims": [9744, 397]}],
+        ["eval_mlp", {"in_channels": 3712, "dims": [11136, 397]}],
+        ["eval_mlp", {"in_channels": 3712, "dims": [3712, 397]}],
+        ["mlp", {"dims": [3712, 397]}],
+      ]

@@ -3,13 +3,17 @@ config:
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
-      num_meters: 4
-      topk_values: [1]
+      num_meters: 5
+      topk_values: [1, 5]
   MODEL:
     FEATURE_EVAL_SETTINGS:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
         ["res4", ["AdaptiveAvgPool2d", [[3, 1]]]],
+        ["res4", ["AdaptiveAvgPool2d", [[1, 3]]]],
+        ["res4", ["AdaptiveAvgPool2d", [[4, 1]]]],
+        ["res4", ["AdaptiveAvgPool2d", [[1, 4]]]],
         ["res5", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
         ["avgpool", ["Identity", []]],
         ["avgpool", ["Identity", []]],
       ]
@@ -20,6 +24,10 @@ config:
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 2904, "dims": [8712, 8]}],
+        ["eval_mlp", {"in_channels": 2904, "dims": [8712, 8]}],
+        ["eval_mlp", {"in_channels": 2904, "dims": [11616, 8]}],
+        ["eval_mlp", {"in_channels": 2904, "dims": [11616, 8]}],
+        ["eval_mlp", {"in_channels": 7392, "dims": [14784, 8]}],
         ["eval_mlp", {"in_channels": 7392, "dims": [14784, 8]}],
         ["eval_mlp", {"in_channels": 7392, "dims": [7392, 8]}],
         ["mlp", {"dims": [7392, 8]}],

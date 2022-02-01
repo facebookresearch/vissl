@@ -1,0 +1,34 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK: # B-16
+      NAME: beit
+      BEIT:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_RATIO: 4.0
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QKV_BIAS: True
+        QK_SCALE: False # Scale
+        USE_ABS_POS_EMB: True
+        USE_REL_POS_BIAS: True
+        USE_SHARED_REL_POS_BIAS: False
+        USE_MEAN_POOLING: False
+        INIT_VALUES: 0.1
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 1000]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/oss_beit_base_patch16_224_pt22k.pth"
+      APPEND_PREFIX: trunk.base_model.
+      STATE_DICT_KEY_NAME: 'model'
