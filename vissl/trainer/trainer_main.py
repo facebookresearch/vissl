@@ -629,6 +629,11 @@ class SelfSupervisionTrainer(object):
                 output_folder,
                 f"rank{dist_rank}_chunk{chunk_index}_{split.lower()}_{layer_name}_inds.npy",
             )
+            logging.info(
+                f"Saving features: {layer_features['features'].shape}, "
+                f"targets: {layer_features['targets'].shape}, "
+                f"inds: {layer_features['inds'].shape}"
+            )
             save_file(layer_features["features"], out_feat_file)
             save_file(layer_features["targets"], out_target_file)
             save_file(layer_features["inds"], out_inds_file)
