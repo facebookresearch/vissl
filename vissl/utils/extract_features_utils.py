@@ -11,7 +11,7 @@ from typing import List, NamedTuple
 
 import numpy as np
 from iopath.common.file_io import g_pathmgr
-from vissl.utils.io import load_file
+from vissl.utils.io import load_file, makedir
 
 
 class ExtractedFeaturesShardPaths(NamedTuple):
@@ -158,6 +158,40 @@ class ExtractedFeaturesLoader:
         logging.info(f"Targets: {output['targets'].shape}")
         logging.info(f"Indices: {output['inds'].shape}")
         return output
+
+    @classmethod
+    def map_features_to_img_filepath(
+        cls, image_paths: List[str], input_dir: str, split: str, layer: str
+    ):
+        """
+        Map the features across all GPUs to the respective filenames.
+
+        Args:
+            image_paths (List[str]): list of image paths. Obtained by dataset.get_image_paths()
+            input_dir (str): input path where the features are dumped
+            split (str): whether the features are train or test data features
+            layer (str): the features correspond to what layer of the model
+
+        """
+        logging.info(f"Merging features: {split} {layer}")
+
+        output_dir = f"{input_dir}/features_to_image/{split}/{layer}"
+        makedir(output_dir)
+        logging.info(f"Saving the mapped features to dir: {output_dir} ...")
+        shard_paths = cls.get_shard_file_names(input_dir, split=split, layer=layer)
+        if not shard_paths:
+            raise ValueError(f"No features found for {split} {layer}")
+        for shard_path in shard_paths:
+            shard_content = cls.load_feature_shard(shard_path)
+            for idx in range(shard_content.num_samples):
+                img_index = shard_content.indices[idx]
+                img_feat = shard_content.features[idx]
+                img_filename = os.path.splitext(
+                    os.path.basename(image_paths[img_index])
+                )[0]
+                out_feat_filename = os.path.join(output_dir, img_filename + ".npy")
+                with g_pathmgr.open(out_feat_filename, "wb") as fopen:
+                    np.save(fopen, np.expand_dims(img_feat, axis=0))
 
     @classmethod
     def sample_features(
