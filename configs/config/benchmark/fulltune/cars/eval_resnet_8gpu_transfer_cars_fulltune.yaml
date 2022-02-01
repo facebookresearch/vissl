@@ -5,7 +5,7 @@ config:
   TEST_ONLY: False
   TEST_EVERY_NUM_EPOCH: 1
   TEST_MODEL: True
-  SEED_VALUE: 0
+  SEED_VALUE: 1
   MULTI_PROCESSING_METHOD: forkserver
   HOOKS:
     PERF_STATS:
@@ -15,31 +15,28 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [patch_camelyon_filelist]
+      DATASET_NAMES: [stanford_cars_filelist]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
         - name: RandomHorizontalFlip
-        - name: ColorJitter
-          brightness: 0.4
-          contrast: 0.4
-          saturation: 0.4
-          hue: 0.4
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/patch_camelyon/
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
     TEST:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
-      DATASET_NAMES: [patch_camelyon_filelist]
+      DATASET_NAMES: [stanford_cars_filelist]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
+          size: 256
+        - name: CenterCrop
           size: 224
         - name: ToTensor
         - name: Normalize
@@ -47,12 +44,12 @@ config:
           std: [0.229, 0.224, 0.225]
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
-      COPY_DESTINATION_DIR: /tmp/patch_camelyon/
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
       num_meters: 1
-      topk_values: [1]
+      topk_values: [1, 5]
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
@@ -65,7 +62,7 @@ config:
         DEPTH: 50
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2]}],
+        ["mlp", {"dims": [2048, 196]}],
       ]
     WEIGHTS_INIT:
       PARAMS_FILE: "specify model weights"
@@ -76,33 +73,32 @@ config:
     cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
-    name: sgd
-    weight_decay: 0.0005
-    momentum: 0.9
-    num_epochs: 105
-    nesterov: True
-    regularize_bn: False
-    regularize_bias: True
-    param_schedulers:
-      lr:
-        auto_lr_scaling:
-          auto_scale: true
-          base_value: 0.01
-          base_lr_batch_size: 256
-        milestones: [30, 60, 90] # epochs at which to drop the learning rate (N vals)
-        values: [0.01, 0.001, 0.0001, 0.00001] # the exact values of learning rate (N+1 vals)
-        name: multistep
-        update_interval: epoch
+      name: sgd
+      weight_decay: 0.000
+      momentum: 0.9
+      num_epochs: 105
+      nesterov: True
+      regularize_bn: False
+      regularize_bias: True
+      param_schedulers:
+        lr:
+          auto_lr_scaling:
+            auto_scale: true
+            base_value: 0.1
+            base_lr_batch_size: 256
+          values: [0.1, 0.01, 0.001, 0.0001, 0.00001]
+          milestones: [30, 60, 90, 100]
+          name: multistep
+          update_interval: epoch
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
     INIT_METHOD: tcp
     RUN_ID: auto
-    # BROADCAST_BUFFERS: False
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
     DIR: "."
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 5
+    CHECKPOINT_FREQUENCY: 1

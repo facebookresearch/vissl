@@ -1,0 +1,24 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 8
+    TEST:
+      BATCHSIZE_PER_REPLICA: 8
+  MODEL:
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 27
+        w_0: 640
+        w_a: 230.83
+        w_m: 2.53
+        group_width: 373
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"normalize_feats": False, "skip_last_bn": False, "use_bn": True, "dims": [10444, 8192], "num_clusters": []}],
+        ['mlp', {'dims': [8192, 37]}]
+      ]
+  DISTRIBUTED:
+    NUM_NODES: 2  # we can't fit the model on 16GB machine so instead use 2 nodes
+    INIT_METHOD: tcp
