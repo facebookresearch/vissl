@@ -1,0 +1,29 @@
+# @package _global_
+config:
+  TEST_MODEL: True
+  TEST_ONLY: True
+  DATA:
+    NUM_DATALOADER_WORKERS: 8
+    TEST:
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [utk_faces_race_filelist]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: RandomCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: True
+      COPY_DESTINATION_DIR: /tmp/utk_faces_race_filelist/
+      DROP_LAST: False
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 3
+      topk_values: [5]

@@ -1,0 +1,18 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 20
+        w_0: 352
+        w_a: 147.48
+        w_m: 2.4
+        group_width: 328
+    HEAD:
+      PARAMS: []

@@ -1,0 +1,23 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 27
+        w_0: 456
+        w_a: 160.83
+        w_m: 2.52
+        group_width: 264
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [7392, 8192, 8192, 256], "use_bn": False, "num_clusters": []}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/checkpoints/f233924476/swav_ig1b_regnet128Gf_cnstant_bs32_node16_sinkhorn10_proto16k_syncBN64_warmup8k/model_final_checkpoint_phase0.torch"
+      STATE_DICT_KEY_NAME: classy_state_dict
+      SKIP_LAYERS: ["num_batches_tracked"]

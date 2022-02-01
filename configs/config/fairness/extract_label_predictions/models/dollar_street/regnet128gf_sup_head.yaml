@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 27
+        w_0: 456
+        w_a: 160.83
+        w_m: 2.52
+        group_width: 264
+    HEAD:
+      PARAMS: [['mlp', {'dims': [7392, 108]}]]
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/prigoyal/checkpoints/f292523259/regnet128gf_ig1b_finetune_in22k_ig_rcv_eval_resnet_8gpu_transfer_in22k_ig_rcv_fulltune_18_08_21/model_phase62.torch"
+      STATE_DICT_KEY_NAME: classy_state_dict

@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet22k-ig-rcv-everstore-correct-custom]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet22k-ig-rcv-everstore-correct-custom/
+    TEST:
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet22k-ig-rcv-everstore-correct-custom]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet22k-ig-rcv-everstore-correct-custom/

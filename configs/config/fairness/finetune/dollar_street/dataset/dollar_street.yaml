@@ -1,0 +1,18 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet22k-dollarstreet-everstore]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet22k_dollarstreet_everstore/
+    TEST:
+      DATA_SOURCES: [everstore]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet22k-dollarstreet-everstore]
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet22k_dollarstreet_everstore/

@@ -1,0 +1,22 @@
+# @package _global_
+config:
+  MODEL:
+    INPUT_TYPE: bgr
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+    TRUNK:
+      NAME: regnet
+      REGNET:
+        depth: 27
+        w_0: 456
+        w_a: 160.83
+        w_m: 2.52
+        group_width: 264
+    HEAD:
+      PARAMS: []
+    WEIGHTS_INIT:
+      PARAMS_FILE: "manifold://ssl_framework/tree/checkpoints/regnet_supervised_vissl/imnetlabels_regnety128gf_vissl_converted_bgr.torch"
+      STATE_DICT_KEY_NAME: classy_state_dict
