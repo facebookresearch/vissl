@@ -587,6 +587,8 @@ config:
       # if we want to evaluate the full model, this requires loading the head weights as well
       # from model weights file. In this case, set the following to True.
       EVAL_TRUNK_AND_HEAD: False
+      # whether to assert that the head layers shape matches exactly
+      ASSERT_HEAD_LAYER_SHAPE_INIT: True
       # whether features should be flattened to result in N x D feature shape
       SHOULD_FLATTEN_FEATS: True
       # model features that should be evaluated for linear classification and what
@@ -633,6 +635,14 @@ config:
         # for the pixel-wise task. Torchvision default is stride=2 and all other models
         # use this so we set the default as 2.
         LAYER4_STRIDE: 2
+
+      # ------------------------------------------------------------- #
+      # SimCLR-v2 ResNet params that includes selective kernel
+      # ------------------------------------------------------------- #
+      RESNETS_SK:
+        DEPTH: 152
+        WIDTH_MULTIPLIER: 3
+        SK_RATIO: 0.0625
 
       # ------------------------------------------------------------- #
       # EfficientNet params
