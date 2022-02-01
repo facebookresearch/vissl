@@ -9,9 +9,13 @@ config:
     TRUNK:
       NAME: regnet
       REGNET:
-        name: regnet_y_128gf
+        depth: 27
+        w_0: 640
+        w_a: 230.83
+        w_m: 2.53
+        group_width: 373
     HEAD:
-      PARAMS: [['mlp', {'dims': [7392, 2]}]]
+      PARAMS: [['mlp', {'dims': [10444, 37]}]]
   DISTRIBUTED:
     NUM_NODES: 2  # we can't fit the model on 16GB machine so instead use 2 nodes
     INIT_METHOD: tcp

@@ -1,0 +1,80 @@
+# @package _global_
+config:
+  # cooldown_epochs=10, decay_epochs=30, decay_rate=0.1,
+  # gpu=0, hidden_dim=2048, inat_category='name', input_size=224, lr=0.0005, lr_noise=None,
+  # lr_noise_pct=0.67, lr_noise_std=1.0, min_lr=1e-05, mixup=0.8, mixup_mode='batch',
+  # mixup_prob=1.0, mixup_switch_prob=0.5, model='deit_base_patch16_224', momentum=0.9,
+  # multi_last_layer=0.001, num_workers=10, opt='adamw', opt_betas=None, opt_eps=1e-08,
+  # patience_epochs=10, pin_mem=True, recount=1, remode='pixel', repeated_aug=True,
+  # reprob=0.25, resplit=False, resume='', sched='cosine', seed=0, smoothing=0.1,
+  # warmup_epochs=5, warmup_lr=1e-06
+  DATA:
+    TRAIN:
+      DROP_LAST: True
+      BATCHSIZE_PER_REPLICA: 64
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+          interpolation: 3
+        - name: RandomHorizontalFlip
+        - name: RandAugment
+          magnitude: 9
+          magnitude_std: 0.5
+          increasing_severity: True
+        - name: ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.4
+        - name: ToTensor
+        - name: RandomErasing
+          p: 0.25
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: cutmixup_collator
+      COLLATE_FUNCTION_PARAMS: {
+        "mixup_alpha": 0.8, # mixup alpha value, mixup is active if > 0.
+        "cutmix_alpha": 1.0, # cutmix alpha value, cutmix is active if > 0.
+        "prob": 1.0, # probability of applying mixup or cutmix per batch or element
+        "switch_prob": 0.5, # probability of switching to cutmix instead of mixup when both are active
+        "mode": "batch", # how to apply mixup/cutmix params (per 'batch', 'pair' (pair of elements), 'elem' (element)
+        "correct_lam": True, # apply lambda correction when cutmix bbox clipped by image borders
+        "label_smoothing": 0.1, # apply label smoothing to the mixed target tensor
+        "num_classes": 1000 # number of classes for target
+      }
+    TEST:
+      BATCHSIZE_PER_REPLICA: 64
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  OPTIMIZER:
+    name: adamw
+    weight_decay: 0.05
+    num_epochs: 300
+    regularize_bn: False
+    regularize_bias: False
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: True
+          base_value: 0.0005
+          base_lr_batch_size: 512
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.000001
+            end_value: 0.0005
+          - name: cosine
+            start_value: 0.0005
+            end_value: 0.000001
+        interval_scaling: [rescaled, fixed]
+        update_interval: step
+        lengths: [0.017, 0.983]
