@@ -126,6 +126,7 @@ class ExtractedFeaturesLoader:
             output (Dict): contains features, targets, inds as the keys
         """
         logging.info(f"Merging features: {split} {layer}")
+        logging.info(f"input_dir: {input_dir}")
 
         # Reassemble each feature shard (dumped by a given rank)
         output_feats, output_targets = {}, {}
