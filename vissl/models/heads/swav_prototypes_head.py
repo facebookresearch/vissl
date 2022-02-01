@@ -63,7 +63,8 @@ class SwAVPrototypesHead(nn.Module):
 
                         This could be particularly useful when performing full finetuning on
                         hidden layers.
-            use_weight_norm_prototypes (bool): whether to use weight norm module for the prototypes layers.
+            use_weight_norm_prototypes (bool): whether to use weight norm module for the
+            prototypes layers.
         """
 
         super().__init__()

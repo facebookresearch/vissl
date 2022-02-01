@@ -997,16 +997,33 @@ def init_model_from_consolidated_weights(
                     param = interpolate_position_embeddings(
                         model, all_layers[layername], param
                     )
-                assert all_layers[layername].shape == param.shape, (
-                    f"{layername} have different shapes: "
-                    f"checkpoint: {param.shape}, model: {all_layers[layername].shape}"
-                )
-                all_layers[layername].copy_(param)
-                if local_rank == 0:
-                    logging.info(
-                        f"Loaded: {layername: <{max_len_model}} of "
-                        f"shape: {all_layers[layername].size()} from checkpoint"
+                if (
+                    "heads" in layername
+                    and not config.MODEL.FEATURE_EVAL_SETTINGS.ASSERT_HEAD_LAYER_SHAPE_INIT
+                ):
+                    if local_rank == 0:
+                        logging.info(
+                            f"Ignore shape check: {layername} "
+                            f"checkpoint: {param.shape}, model: {all_layers[layername].shape}"
+                        )
+                    if all_layers[layername].shape == param.shape:
+                        all_layers[layername].copy_(param)
+                        if local_rank == 0:
+                            logging.info(
+                                f"Loaded: {layername: <{max_len_model}} of "
+                                f"shape: {all_layers[layername].size()} from checkpoint"
+                            )
+                else:
+                    assert all_layers[layername].shape == param.shape, (
+                        f"{layername} have different shapes: "
+                        f"checkpoint: {param.shape}, model: {all_layers[layername].shape}"
                     )
+                    all_layers[layername].copy_(param)
+                    if local_rank == 0:
+                        logging.info(
+                            f"Loaded: {layername: <{max_len_model}} of "
+                            f"shape: {all_layers[layername].size()} from checkpoint"
+                        )
 
             # In case the layer is ignored by settings
             else:
