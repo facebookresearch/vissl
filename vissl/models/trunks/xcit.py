@@ -11,7 +11,6 @@ import copy
 import logging
 import math
 from functools import partial
-from functools import partial
 
 import torch
 import torch.nn as nn
@@ -113,9 +112,10 @@ class ConvPatchEmbed(nn.Module):
 
 class LPI(nn.Module):
     """
-    Local Patch Interaction module that allows explicit communication between tokens in 3x3 windows
-    to augment the implicit communcation performed by the block diagonal scatter attention.
-    Implemented using 2 layers of separable 3x3 convolutions with GeLU and BatchNorm2d
+    Local Patch Interaction module that allows explicit communication between tokens in 3x3
+    windows to augment the implicit communcation performed by the block diagonal
+    scatter attention. Implemented using 2 layers of separable 3x3 convolutions with
+    GeLU and BatchNorm2d
     """
 
     def __init__(
@@ -250,7 +250,8 @@ class ClassAttentionBlock(nn.Module):
         else:
             self.gamma1, self.gamma2 = 1.0, 1.0
 
-        # FIXME: A hack for models pre-trained with layernorm over all the tokens not just the CLS
+        # FIXME: A hack for models pre-trained with layernorm over all the tokens not just
+        # the CLS
         self.tokens_norm = tokens_norm
 
     def forward(self, x, H, W, mask=None):
@@ -269,9 +270,9 @@ class ClassAttentionBlock(nn.Module):
 
 
 class XCA(nn.Module):
-    """Cross-Covariance Attention (XCA) operation where the channels are updated using a weighted
-     sum. The weights are obtained from the (softmax normalized) Cross-covariance
-    matrix (Q^T K \\in d_h \\times d_h)
+    """Cross-Covariance Attention (XCA) operation where the channels are updated using
+    a weighted sum. The weights are obtained from the (softmax normalized)
+    Cross-covariance matrix (Q^T K \\in d_h \\times d_h)
     """
 
     def __init__(
@@ -396,7 +397,7 @@ class XCiT(nn.Module):
         embed_dim = trunk_config.hidden_dim
         depth = trunk_config.num_layers
         num_heads = trunk_config.num_heads
-        mlp_ratio = 4.0
+        mlp_ratio = trunk_config.mlp_ratio
         qkv_bias = trunk_config.qkv_bias
         qk_scale = trunk_config.qk_scale
         drop_rate = trunk_config.dropout_rate
