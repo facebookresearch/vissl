@@ -123,7 +123,8 @@ if __name__ == "__main__":
     Example usage:
 
     ```
-    python extra_scripts/datasets/create_ucf101_data_files.py -i /path/to/euro_sat -o /output_path/to/euro_sat -d
+    python extra_scripts/datasets/create_ucf101_data_files.py -i /path/to/euro_sat \
+        -o /output_path/to/euro_sat -d
     ```
     """
     args = get_argument_parser().parse_args()
