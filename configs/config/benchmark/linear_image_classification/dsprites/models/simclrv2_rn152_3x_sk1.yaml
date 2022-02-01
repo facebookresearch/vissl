@@ -1,0 +1,19 @@
+ # @package _global_
+ config:
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1, 5]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
+    TRUNK:
+      NAME: resnet_sk
+      RESNETS_SK:
+        DEPTH: 152
+        WIDTH_MULTIPLIER: 3
+        SK_RATIO: 0.0625
+    HEAD:
+      # PARAMS: [["mlp", {"dims": [6144, 16]}]]
+      PARAMS: [["eval_mlp", {"in_channels": 6144, "dims": [6144, 16]}]]

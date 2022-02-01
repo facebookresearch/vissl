@@ -1,0 +1,57 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+          interpolation: 3
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK: # B-16
+      NAME: classy_vit
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 768
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        MLP_DIM: 3072
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 1000]}],
+      ]
+    WEIGHTS_INIT:
+      PARAMS_FILE: ""
+      APPEND_PREFIX: trunk.base_model.
+      STATE_DICT_KEY_NAME: ''
+  OPTIMIZER:
+      regularize_bn: True
