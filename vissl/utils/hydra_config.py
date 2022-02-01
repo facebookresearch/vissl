@@ -474,7 +474,7 @@ def assert_transforms(cfg):
                     assert is_augly_available(), "Please pip install augly."
 
 
-def infer_fsdp(cfg):
+def infer_fsdp_setup(cfg):
     """
     inference for the FSDP settings. Conditions are:
     1) use the FSDP task
@@ -657,7 +657,7 @@ def infer_and_assert_hydra_config(cfg, engine_name: str):
         del cfg.OPTIMIZER.base_optimizer["head_optimizer_params"]
 
     # Infer fsdp settings
-    cfg = infer_fsdp(cfg)
+    cfg = infer_fsdp_setup(cfg)
 
     if cfg.DATA.TRAIN.BASE_DATASET == "generic_ssl":
         assert (

@@ -333,6 +333,10 @@ class SelfSupervisionTrainer(object):
         local_rank, _ = get_machine_local_and_dist_rank()
         logging.info(f"Phase advanced. Rank: {local_rank}")
 
+    # ----------------------------------------------------------------------------------- #
+    # Parent function that calls features OR label predictions functions
+    # and utility functions.
+    # ----------------------------------------------------------------------------------- #
     def extract(
         self,
         output_folder: str,
@@ -349,7 +353,7 @@ class SelfSupervisionTrainer(object):
         The features / labels are extracted for whatever data splits (train, val, test)
         the user wants.
         """
-        # support feature extraction on gpu only.
+        # support feature/label predictions extraction on gpu only.
         assert self.task.device.type == "cuda", "Set MACHINE.DEVICE = gpu"
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
 
@@ -409,6 +413,9 @@ class SelfSupervisionTrainer(object):
             counter[feat_name] = index + 1
         return new_feat_names
 
+    # ----------------------------------------------------------------------------------- #
+    # Extracting label predictions and utility functions.
+    # ----------------------------------------------------------------------------------- #
     def _extract_split_label_predictions(
         self,
         feat_names: List[str],
@@ -588,6 +595,9 @@ class SelfSupervisionTrainer(object):
                         f"Rank: {rank}, name: {metric_key}, value: {meter_value}"
                     )
 
+    # ----------------------------------------------------------------------------------- #
+    # Extracting features and utility functions.
+    # ----------------------------------------------------------------------------------- #
     @staticmethod
     def _flatten_features_list(features: Dict[str, Any]):
         assert isinstance(features, list), "features must be of type list"
@@ -709,6 +719,10 @@ class SelfSupervisionTrainer(object):
                 break
             count += 1
 
+    # ----------------------------------------------------------------------------------- #
+    # Extracting cluster assignments for SSL approaches
+    # that assign clusters such as SwAV and utility functions.
+    # ----------------------------------------------------------------------------------- #
     def _cleanup_task(self):
         if hasattr(self.task, "data_iterator"):
             del self.task.data_iterator
@@ -731,8 +745,9 @@ class SelfSupervisionTrainer(object):
         self.task.prepare_extraction(pin_memory=self.cfg.DATA.PIN_MEMORY)
 
         # Assert that the model support extract of clusters
-        error_message = "Extracting clusters is only available for pre-training methods based on clusters"  # NOQA
-        assert self.task.base_model.is_clustering_model(), error_message
+        assert (
+            self.task.base_model.is_clustering_model()
+        ), "Extracting clusters is only available for cluster based pre-training methods"
 
         # Create distributed model
         self.task.add_dummy_layer()
