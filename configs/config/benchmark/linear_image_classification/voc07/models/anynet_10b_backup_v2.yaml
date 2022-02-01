@@ -1,0 +1,41 @@
+# @package _global_
+config:
+  TRAINER:
+    TASK_NAME: self_supervision_fsdp_task
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["res5", ["AdaptiveAvgPool2d", [[1, 2]]]],
+        ["avgpool", ["Identity", []]],
+      ]
+    TRUNK:
+      NAME: regnet_fsdp
+      REGNET:
+        # Same stage checkpoints and parameters as in the configuration
+        # config/fb/pretrain/swav/models/arch_10b=anynet_10b_backup_v2
+        block_type: res_bottleneck_block
+        depth: 27
+        group_width: 1010
+        w_0: 1744
+        w_a: 620.83
+        w_m: 2.52
+        stage_checkpoints: [[2], [7], [9, 17], []]
+    HEAD:
+      PARAMS: [["mlp", {"dims": [28280, 20]}]]
+
+    FSDP_CONFIG:
+      # Disabling AUTO_SETUP_FSDP so that:
+      # - flatten_parameters is not forced to True
+      # - construct_single_param_group_only is not forced to True
+      AUTO_SETUP_FSDP: False
+      AUTO_WRAP_THRESHOLD: 100000000
+      flatten_parameters: False
+      compute_dtype: float32
+      mixed_precision: False
+      fp32_reduce_scatter: False
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: True
+      CLEAR_FREQ: 5000
+    ACTIVATION_CHECKPOINTING:
+      USE_ACTIVATION_CHECKPOINTING: False
