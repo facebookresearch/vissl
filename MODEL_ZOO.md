@@ -141,7 +141,7 @@ To reproduce the numbers below, the experiment configuration is provided in json
 
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
-| [NPID++](https://arxiv.org/abs/1912.01991)      |    RN50 - 32k negatives - 800 epochs - cosine LR       |      ImageNet-1K      | 56.68 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/npid_4node_800ep_32kneg_cosine_npid++_4nodes_resnet_23_07_20.75432662/model_final_checkpoint_phase799.torch)
+| [NPID++](https://arxiv.org/abs/1912.01991)      |    RN50 - 32k negatives - 800 epochs - cosine LR       |      ImageNet-1K      | 56.68 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/npid_pp/4node_800ep_32kneg_cosine_resnet_23_07_20.75432662/model_final_checkpoint_phase799.torch)
 | [NPID++](https://arxiv.org/abs/1912.01991)      |    RN50-w2 - 32k negatives - 800 epochs - cosine LR    |      ImageNet-1K      | 62.73 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/npid_4node_800ep_32kneg_cosine_rn50w2_npid++_4nodes_resnet_27_07_20.b7f4016c/model_final_checkpoint_phase799.torch)
 
 ### PIRL
