@@ -29,7 +29,8 @@ class Profiler:
             self._exit_actions(exc_type, exc_val, exc_tb)
 
     def step(self):
-        self.profiler.step()
+        if self.started:
+            self.profiler.step()
 
     def dump(self, folder: str, rank: int):
         if self.dumped:
