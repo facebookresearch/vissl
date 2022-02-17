@@ -374,12 +374,15 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
             )
             run_integration_test(config)
 
-            # Consolidate the weights (2 different ways)
+            # Consolidate the weights (3 different ways)
             CheckpointFormatConverter.sharded_to_consolidated_checkpoint(
                 "checkpoint.torch", "checkpoint_conso.torch"
             )
             CheckpointFormatConverter.sharded_to_sliced_checkpoint(
                 "checkpoint.torch", "checkpoint_sliced.torch"
+            )
+            CheckpointFormatConverter.consolidated_to_sliced_checkpoint(
+                "checkpoint_conso.torch", "checkpoint_sliced_2.torch"
             )
 
             # Load the sharded checkpoint and perform a inear evaluation on it
@@ -396,6 +399,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
             for checkpoint_name in [
                 "checkpoint_conso.torch",
                 "checkpoint_sliced.torch",
+                "checkpoint_sliced_2.torch",
             ]:
                 losses = self.run_linear_eval(
                     checkpoint_path=os.path.join(pretrain_dir, checkpoint_name),
@@ -478,12 +482,10 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
                 # Run label extraction on both sharded and consolidated checkpoint
                 for checkpoint_name in ["checkpoint.torch", "checkpoint_sliced.torch"]:
                     with in_temporary_directory() as extract_dir:
-                        extract_config = (
-                            self._create_extract_label_prediction_finetuned_config(
-                                with_fsdp=True,
-                                with_mixed_precision=False,
-                                auto_wrap_threshold=True,
-                            )
+                        extract_config = self._create_extract_label_prediction_finetuned_config(
+                            with_fsdp=True,
+                            with_mixed_precision=False,
+                            auto_wrap_threshold=True,
                         )
                         extract_config.MODEL.WEIGHTS_INIT.PARAMS_FILE = os.path.join(
                             fine_tune_dir, checkpoint_name

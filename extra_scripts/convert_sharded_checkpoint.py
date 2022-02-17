@@ -54,7 +54,7 @@ def convert_checkpoint(input_path: str, output_path: str, output_type: str):
             input_path, output_path
         )
     elif output_type == CheckpointType.sliced.name:
-        CheckpointFormatConverter.sharded_to_sliced_checkpoint(input_path, output_path)
+        CheckpointFormatConverter.to_sliced_checkpoint(input_path, output_path)
     shutdown_logging()
 
 

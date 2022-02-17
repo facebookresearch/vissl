@@ -7,7 +7,7 @@ import hashlib
 import logging
 import os
 from enum import Enum, auto
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -312,6 +312,76 @@ class CheckpointFormatConverter:
         logging.info(f"Done! Checkpoint available at: {output_checkpoint_path}")
 
     @classmethod
+    def to_sliced_checkpoint(
+        cls, input_checkpoint_path: str, output_checkpoint_path: str
+    ):
+        """
+        Given a path to either a consolidated or sharded checkpoint, create a sliced
+        checkpoint in which the weights of the trunk are saved in separate files
+        """
+        with g_pathmgr.open(input_checkpoint_path, "rb") as f:
+            cp = torch.load(f, map_location="cpu")
+
+        cp_type = cp.get("type", CheckpointItemType.consolidated.name)
+        if cp_type == CheckpointItemType.consolidated.name:
+            logging.info(
+                f"Start slicing consolidated checkpoint {input_checkpoint_path}..."
+            )
+            cls.consolidated_to_sliced_checkpoint(
+                input_checkpoint_path, output_checkpoint_path, pre_loaded_checkpoint=cp
+            )
+        else:
+            logging.info(f"Start slicing sharded checkpoint {input_checkpoint_path}...")
+            cls.sharded_to_sliced_checkpoint(
+                input_checkpoint_path, output_checkpoint_path
+            )
+
+    @classmethod
+    def consolidated_to_sliced_checkpoint(
+        cls,
+        input_checkpoint_path: str,
+        output_checkpoint_path: str,
+        pre_loaded_checkpoint: Optional[dict] = None,
+    ):
+        """
+        Given a path to a consolidated checkpoint, create a sliced checkpoint
+        in which the weights of the trunk are saved in separate files
+
+        This is particularly useful for FSDP models, when you have a consolidated
+        checkpoint that cannot be loaded at once because of limiting GPU memory
+        but can be loaded incrementally.
+        """
+        if pre_loaded_checkpoint is not None:
+            # If checkpoint has already been loaded to check its type,
+            # use the loaded checkpoint instead of loading it again
+            conso_cp = pre_loaded_checkpoint
+        else:
+            with g_pathmgr.open(input_checkpoint_path, "rb") as f:
+                conso_cp = torch.load(f, map_location="cpu")
+
+        assert conso_cp["type"] == CheckpointItemType.consolidated.name
+        trunk_weights = conso_cp["classy_state_dict"]["base_model"]["model"]["trunk"]
+        head_weights = conso_cp["classy_state_dict"]["base_model"]["model"]["heads"]
+
+        saved_trunk_parameters = {}
+        for param_path, param in trunk_weights.items():
+            file_path = SlicedCheckpointLoader.save_slice(
+                output_checkpoint_path, param_path, param
+            )
+            saved_trunk_parameters[param_path] = file_path
+
+        saved_head_parameters = {}
+        for param_path, param in head_weights.items():
+            file_path = SlicedCheckpointLoader.save_slice(
+                output_checkpoint_path, param_path, param
+            )
+            saved_head_parameters[param_path] = file_path
+
+        cls._save_slice_list(
+            saved_trunk_parameters, saved_head_parameters, output_checkpoint_path
+        )
+
+    @classmethod
     def sharded_to_sliced_checkpoint(
         cls, input_checkpoint_path: str, output_checkpoint_path: str
     ):
@@ -347,6 +417,17 @@ class CheckpointFormatConverter:
                 )
                 saved_head_parameters[full_param_path] = file_path
 
+        cls._save_slice_list(
+            saved_trunk_parameters, saved_head_parameters, output_checkpoint_path
+        )
+
+    @classmethod
+    def _save_slice_list(
+        cls,
+        saved_trunk_parameters: Dict[str, str],
+        saved_head_parameters: Dict[str, str],
+        output_checkpoint_path: str,
+    ):
         checkpoint_list = {
             "type": CheckpointItemType.slice_list.name,
             "classy_state_dict": {
