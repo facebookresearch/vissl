@@ -482,10 +482,12 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
                 # Run label extraction on both sharded and consolidated checkpoint
                 for checkpoint_name in ["checkpoint.torch", "checkpoint_sliced.torch"]:
                     with in_temporary_directory() as extract_dir:
-                        extract_config = self._create_extract_label_prediction_finetuned_config(
-                            with_fsdp=True,
-                            with_mixed_precision=False,
-                            auto_wrap_threshold=True,
+                        extract_config = (
+                            self._create_extract_label_prediction_finetuned_config(
+                                with_fsdp=True,
+                                with_mixed_precision=False,
+                                auto_wrap_threshold=True,
+                            )
                         )
                         extract_config.MODEL.WEIGHTS_INIT.PARAMS_FILE = os.path.join(
                             fine_tune_dir, checkpoint_name
