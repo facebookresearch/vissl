@@ -4,7 +4,11 @@
 
 ## What's New
 Below we share, in reverse chronological order, the updates and new releases in VISSL. All VISSL releases are available [here](https://github.com/facebookresearch/vissl/releases).
-- **[Oct 2021]**: [Vissl Release 0.1.6](https://github.com/facebookresearch/vissl/releases/tag/v0.1.6) We have released a new version of VISSL! Please see our [release notes](https://github.com/facebookresearch/vissl/releases/tag/v0.1.6) for more information.
+- **[Feb 2022]**: Releasing [SEER 10B parameters](https://arxiv.org/abs/2202.08360) model [implementation and model weights](projects/SEER/README.md).
+- **[Feb 2022]**: Releasing [implementation of Fairness Benchmarks](projects/fairness_indicators/README.md) for computer vision models proposed in [the paper](http://arxiv.org/abs/2202.07603).
+- **[Jan 2022]**: [Implementation for Geolocalization test](https://github.com/facebookresearch/vissl/commit/d372304c22482bc5521fbaf422ea936ff1dcc531) (gps prediction for an image) released in VISSL.
+- **[Jan 2022]**: Add [BEiT](https://arxiv.org/pdf/2106.08254.pdf) transformer [implementation](https://github.com/facebookresearch/vissl/commit/722a7ccb35561d9b536cc756b3c000dddf5a1806) and [ClassyVision ViT](https://github.com/facebookresearch/vissl/commit/dc59f077449b7582cd3135f6996dc42930cc5247).
+- **[Nov 2021]**: [Vissl Release 0.1.6](https://github.com/facebookresearch/vissl/releases/tag/v0.1.6) We have released a new version of VISSL. Please see our [release notes](https://github.com/facebookresearch/vissl/releases/tag/v0.1.6) for more information.
 - **[Oct 2021]**: [AugLy](https://github.com/facebookresearch/AugLy) data augmentations support introduced in this [commit](https://github.com/facebookresearch/vissl/commit/dd9971a0c1fb17c96fd4994d73ebbda6f82c8f03).
 - **[Oct 2021]**: [XCiT: Cross-Covariance Image Transformers](https://arxiv.org/pdf/2106.09681.pdf) code released in this [commit](https://github.com/facebookresearch/vissl/commit/056e695a84ed1e1c63320ddeecb577a9e03cde63).
 - **[Sept 2021]**: VISSL master branch renamed to main in this [PR](https://github.com/facebookresearch/vissl/pull/425) in VISSL.

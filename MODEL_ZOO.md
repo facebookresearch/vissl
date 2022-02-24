@@ -18,8 +18,11 @@ VISSL provides reference implementation of a large number of self-supervision ap
    - [NPID++](#NPID++)
    - [PIRL](#PIRL)
    - [SimCLR](#SimCLR)
+   - [SimCLRv2](#SimCLRv2)
+   - [BYOL](#BYOL)
    - [DeepClusterV2](#DeepClusterV2)
    - [SwAV](#SwAV)
+   - [SEER](#SEER)
    - [MoCoV2](#MoCoV2)
    - [Barlow Twins](#BarlowTwins)
    - [DINO](#DINO)
@@ -54,12 +57,17 @@ To reproduce the numbers below, the experiment configuration is provided in json
 
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
-| Supervised      |    [RN50 - Torchvision](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)                             |     ImageNet      | 76.1 | [model](https://download.pytorch.org/models/resnet50-19c8e357.pth)
-| Supervised      |    [RN101 - Torchvision](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)                            |     ImageNet      | 77.21 | [model](https://download.pytorch.org/models/resnet101-5d3b4d8f.pth)
-| Supervised      |    [RN50 - Caffe2](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md#models)         |     ImageNet      | 75.88 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_supervised_in1k_caffe2.torch)
-| Supervised      |    [RN50 - Caffe2](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md#models)         |     Places205     | 58.49 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_supervised_places205_caffe2.torch)
-| Supervised      |    [Alexnet BVLC - Caffe2](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md#models) |     ImageNet      | 49.54 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_caffenet_bvlc_in1k_supervised.torch)
-| Supervised      |    RN50 - VISSL - 105 epochs                                                                                                    |     ImageNet      | 75.45 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/sup_rn50_in1k_ep105_supervised_8gpu_resnet_17_07_20.733dbdee/model_final_checkpoint_phase208.torch)
+| Supervised     |    [RN50 - Torchvision](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)                             |     ImageNet      | 76.1 | [model](https://download.pytorch.org/models/resnet50-19c8e357.pth)
+| Supervised     |    [RN101 - Torchvision](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)                            |     ImageNet      | 77.21 | [model](https://download.pytorch.org/models/resnet101-5d3b4d8f.pth)
+| Supervised     |    [RN50 - Caffe2](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md#models)         |     ImageNet      | 75.88 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_supervised_in1k_caffe2.torch)
+| Supervised     |    [RN50 - Caffe2](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md#models)         |     Places205     | 58.49 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_vissl_rn50_supervised_places205_caffe2.torch)
+| Supervised     |    [Alexnet BVLC - Caffe2](https://github.com/facebookresearch/fair_self_supervision_benchmark/blob/master/MODEL_ZOO.md#models) |     ImageNet      | 49.54 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/converted_caffenet_bvlc_in1k_supervised.torch)
+| Supervised     |    RN50 - VISSL - 105 epochs                                                                                                    |     ImageNet      | 75.45 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/sup_rn50_in1k_ep105_supervised_8gpu_resnet_17_07_20.733dbdee/model_final_checkpoint_phase208.torch)
+| Supervised     |    ViT/B16 - 90 epochs (*) |     ImageNet-22K     | 83.38 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/baselines/vit_b16_p16_in22k_ep90_supervised.torch)
+| Supervised     |    RegNetY-64Gf - BGR input | ImageNet | 80.55 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/sup_regnet64/imnetlabels_regnety64gf_3_vissl_converted_bgr.torch)
+| Supervised     |    RegNetY-128Gf - BGR input | ImageNet |  80.57 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/sup_regnet128_in1k/imnetlabels_regnety128gf_vissl_converted_bgr.torch)
+
+_(*) This specific checkpoint for ViT/B16 requires the following options to be added in command line to be loaded by VISSL: `config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model. config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=classy_state_dict`_
 
 ### Semi-weakly and Semi-supervised
 
@@ -172,6 +180,24 @@ To reproduce the numbers below, the experiment configuration is provided in json
 | [SimCLR](https://arxiv.org/abs/2002.05709)      |    RN101 - 100 epochs      |      ImageNet-1K      | 62.76 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn101_100ep_simclr_8node_resnet_16_07_20.1ff6cb4b/model_final_checkpoint_phase99.torch)
 | [SimCLR](https://arxiv.org/abs/2002.05709)      |    RN101 - 1000 epochs     |      ImageNet-1K      | 71.56 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn101_1000ep_simclr_8node_resnet_16_07_20.35063cea/model_final_checkpoint_phase999.torch)
 
+### SimCLRv2
+
+The following models are converted from the TensorFlow format of the [official repository](https://github.com/google-research/simclr) to VISSL compatible format.
+
+| Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
+| ------ | ----- | ---------------- | ------------------- | --- |
+| [SimCLRv2](https://arxiv.org/abs/2006.10029) | [RN152-w3-sk SimCLRv2 repository](https://github.com/google-research/simclr) | ImageNet-1K | 80.0 |  [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/baselines/converted_simclr_v2_r152_3x_sk1_ema.torch) |
+
+### BYOL
+
+The following models are converted from the TensorFlow format of the [official repository](https://github.com/deepmind/deepmind-research/tree/master/byol) to VISSL compatible format.
+
+| Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
+| ------ | ----- | ---------------- | ------------------- | --- |
+| [BYOL](https://arxiv.org/abs/2006.07733) | [RN200-w2 BYOL repository](https://github.com/deepmind/deepmind-research/tree/master/byol) (*) | ImageNet-1K | 78.34 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/baselines/converted_byol_pretrain_res200w2.torch) |
+
+_(*) This specific checkpoint requires the following command line options to be provided to VISSL to be correctly loaded by VISSL: `config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model._feature_blocks. config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=''`_
+
 ### DeepClusterV2
 
 To reproduce the numbers below, the experiment configuration is provided in json format for each model [here](https://github.com/facebookresearch/vissl/tree/main/configs/config/model_zoo/benchmark_in1k_linear_deepclusterv2_swav.json).
@@ -188,8 +214,8 @@ To reproduce the numbers below, the experiment configuration is provided in json
 
 There is some standard deviation in linear results if we run the same eval several times and pre-train a SwAV model several times. The evals reported below are for 1 run.
 
-| Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
-| ------ | ----- | ---------------- | ------------------- | --- |
+| Method | Model | PreTrain dataset | ImageNet top-1 linear acc. | URL |
+| ------ | ----- | ---------------- |:--------------------------:| --- |
 | [SwAV](https://arxiv.org/abs/2006.09882)   |    RN50 - 100 epochs - 2x224+6x96 - 4096 batch-size    |    ImageNet-1K      | 71.99 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_in1k_rn50_100ep_swav_8node_resnet_27_07_20.7e6fc6bf/model_final_checkpoint_phase99.torch)
 | [SwAV](https://arxiv.org/abs/2006.09882)   |    RN50 - 200 epochs - 2x224+6x96 - 4096 batch-size    |    ImageNet-1K      | 73.85 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_in1k_rn50_200ep_swav_8node_resnet_27_07_20.bd595bb0/model_final_checkpoint_phase199.torch)
 | [SwAV](https://arxiv.org/abs/2006.09882)   |    RN50 - 400 epochs - 2x224+6x96 - 4096 batch-size    |    ImageNet-1K      | 74.81 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_in1k_rn50_400ep_swav_8node_resnet_27_07_20.a5990fc9/model_final_checkpoint_phase399.torch)
@@ -199,14 +225,37 @@ There is some standard deviation in linear results if we run the same eval sever
 | [SwAV](https://arxiv.org/abs/2006.09882)   |    RN50 - 400 epochs - 2x224 - 4096 batch-size         |    ImageNet-1K      | 69.53 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_8node_2x224_rn50_in1k_swav_8node_resnet_30_07_20.c8fd7169/model_final_checkpoint_phase399.torch)
 | [SwAV](https://arxiv.org/abs/2006.09882)   |    RN50-w2 - 400 epochs - 2x224+6x96 - 4096 batch-size |    ImageNet-1K      | 77.01 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_rn50w2_in1k_bs32_16node_400ep_swav_8node_resnet_30_07_20.93563e51/model_final_checkpoint_phase399.torch)
 | [SwAV](https://arxiv.org/abs/2006.09882)   |    RN50-w4 - 400 epochs - 2x224+6x96 - 2560 batch-size |    ImageNet-1K      | 77.03 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_rn50w4_in1k_bs40_8node_400ep_swav_8node_resnet_30_07_20.1736135b/model_final_checkpoint_phase399.torch)
+| [SwAV](https://arxiv.org/abs/2006.09882)   |    RN50-w5 - 300 epochs - 2x224+6x96 - 2560 batch-size (*)   |    ImageNet-1K      | 78.5  | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_rn50w5/swav_RN50w5_400ep_pretrain.pth.tar)
+| [SwAV](https://arxiv.org/abs/2006.09882)   |    RegNetY-16Gf - 800 epochs - 2x224+6x96 - 4096 batch-size  |    ImageNet-1K      | 76.15 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_regnet16_in1k/swav_in1k_regnet16gf_model_final_checkpoint_phase799.torch)
+| [SwAV](https://arxiv.org/abs/2006.09882)   |    RegNetY-128Gf - 400 epochs - 2x224+6x96 - 4096 batch-size |    ImageNet-1K      | 78.36 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_regnet128_in1k/model_phase230.torch)
 
 **NOTE:** Please see [projects/SwAV/README.md](https://github.com/facebookresearch/vissl/blob/main/projects/SwAV/README.md) for more SwAV models provided by authors.
+
+_(*) This specific RN50-w5 checkpoint requires the following options to be added to be loaded by VISSL: `config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk.base_model._feature_blocks. config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME='' config.MODEL.WEIGHTS_INIT.REMOVE_PREFIX=module.`_
+
+### SEER
+
+| Method | Model | PreTrain dataset | ImageNet top-1 linear acc. | ImageNet top-1 fine-tuned acc. | URL |
+| ------ | ----- | ---------------- |:-------------------:|:---:| --- |
+| [SEER]() | RegNetY-32Gf  | IG-1B public images, non EU | 74.03 (res5) | 83.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/seer_regnet32d/seer_regnet32gf_model_iteration244000.torch) |
+| [SEER]() | RegNetY-64Gf  | IG-1B public images, non EU | 75.25 (res5avg) | 84.0 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/seer_regnet64/seer_regnet64gf_model_final_checkpoint_phase0.torch) |
+| [SEER]() | RegNetY-128Gf | IG-1B public images, non EU | 75.96 (res5avg) | 84.5 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_ig1b_regnet128Gf_cnstant_bs32_node16_sinkhorn10_proto16k_syncBN64_warmup8k/model_final_checkpoint_phase0.torch) |
+| [SEER]() | RegNetY-256Gf | IG-1B public images, non EU | 77.51 (res5avg) | 85.2 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_ig1b_cosine_rg256gf_noBNhead_wd1e5_fairstore_bs16_node64_sinkhorn10_proto16k_apex_syncBN64_warmup8k/model_final_checkpoint_phase0.torch) |
+| [SEER]() | RegNet10B   | IG-1B public images, non EU | 79.8 (res4) | 85.8 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/seer_regnet10B/model_iteration124500_conso.torch) |
+
+**NOTE:** Please see [projects/SEER/README.md](/projects/SEER/README.md) for more SwAV models provided by authors.
 
 ### MoCoV2
 
 | Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
 | [MoCo-v2](https://arxiv.org/abs/2003.04297)   |    RN50 - 200 epochs - 256 batch-size         |    ImageNet-1K      | 66.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/moco_v2_1node_lr.03_step_b32_zero_init/model_final_checkpoint_phase199.torch)
+
+### MoCoV3
+
+| Method | Model | PreTrain dataset | ImageNet top-1 acc. | URL |
+| ------ | ----- | ---------------- | ------------------- | --- |
+| [MoCo-v3](https://arxiv.org/abs/2104.02057)  |    ViT-B/16 - 300 epochs        |    ImageNet-1K      | 75.79 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_rn50w5/mocov3-vit-b-300ep.pth.tar)
 
 ### BarlowTwins
 
@@ -218,6 +267,7 @@ There is some standard deviation in linear results if we run the same eval sever
 ### DINO
 
 The ViT-small model is obtained with [this config](https://github.com/facebookresearch/vissl/blob/main/configs/config/pretrain/dino/dino_16gpus_deits16.yaml).
+
 | Method | Model | PreTrain dataset | ImageNet k-NN acc. | URL |
 | ------ | ----- | ---------------- | ------------------- | --- |
 | [DINO](https://arxiv.org/abs/2104.14294)   |    ViT-S/16 - 300 epochs - 1024 batch-size         |    ImageNet-1K      | 73.4 | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/dino_300ep_deitsmall16/model_final_checkpoint_phase299.torch)
