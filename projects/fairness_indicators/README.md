@@ -1,5 +1,5 @@
 # Fairness Indicators for Systematic Assessments of Visual Feature Extractors
-[[arxiv]()] , [[blogpost]()]
+[[arxiv](http://arxiv.org/abs/2202.07603)] , [[blogpost](https://ai.facebook.com/blog/meta-ai-research-explores-new-public-fairness-benchmarks-for-computer-vision-models)]
 
 ![indicators](static/img/indicators.jpg)
 
