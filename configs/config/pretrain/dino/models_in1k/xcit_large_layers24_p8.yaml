@@ -1,0 +1,135 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      PERF_STAT_FREQUENCY: 40
+      ROLLING_BTIME_FREQ: 5
+  DATA:
+    NUM_DATALOADER_WORKERS: 10
+    TRAIN:
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
+      REMOVE_IMG_PATH_PREFIX: 'manifold://'
+      NEW_IMG_PATH_PREFIX: 'memcache_manifold://'
+      BATCHSIZE_PER_REPLICA: 4
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 10
+          size_crops: [224, 96]
+          num_crops: [2, 8]
+          crop_scales: [[0.32, 1], [0.05, 0.32]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 0.5
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilGaussianBlur", "p": 1., "radius_min": 0.1, "radius_max": 2.0}]
+          prob: [1., 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilRandomSolarize", "p": 1.}]
+          prob: [0., 0.2, 0., 0., 0, 0, 0, 0, 0, 0]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
+      MMAP_MODE: True
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: xcit
+      XCIT:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 8
+        HIDDEN_DIM: 768
+        NUM_LAYERS: 24
+        NUM_HEADS: 16
+        MLP_RATIO: 4.0
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.3
+        ETA: 1e-5
+        TOKENS_NORM: True
+        QKV_BIAS: True
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"use_weight_norm_prototypes": True, "dims": [768, 2048, 2048, 256], "use_bn": False, "return_embeddings": False, "activation_name": "GELU", "num_clusters": [65536]}],
+      ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+        ['module.heads.0.prototypes0.weight_v', 1251],
+        ['module.heads.0.prototypes0.weight_g', 1251],
+      ]
+    AMP_PARAMS:
+      USE_AMP: True
+      AMP_TYPE: pytorch
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+  LOSS:
+    name: dino_loss
+    dino_loss:
+      momentum: 0.996
+      teacher_temp_warmup_iters: 37530 # 30 epochs
+      teacher_temp_min: 0.04
+      teacher_temp_max: 0.07
+      ema_center: 0.9
+      normalize_last_layer: false
+  OPTIMIZER:
+      name: adamw
+      momentum: 0.9
+      nesterov: False
+      num_epochs: 300
+      regularize_bn: False
+      regularize_bias: False
+      head_optimizer_params:
+        use_different_lr: False
+        use_different_wd: False
+      param_schedulers:
+        lr:
+          name: composite
+          auto_lr_scaling:
+            # LR for batch size = 256 should be 0.00025.
+            # we fix it and disable auto scaling
+            auto_scale: False
+          schedulers:
+            - name: linear
+              start_value: 0.00001
+              end_value: 0.0005
+            - name: cosine
+              start_value: 0.0005
+              end_value: 0.00001
+          update_interval: step
+          interval_scaling: [rescaled, fixed]
+          lengths: [0.0333, 0.9667]
+        weight_decay:
+          name: cosine
+          start_value: 0.04
+          end_value: 0.4
+          update_interval: step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 16
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 5
+    OVERWRITE_EXISTING: true
