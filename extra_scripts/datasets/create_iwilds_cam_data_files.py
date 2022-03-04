@@ -43,7 +43,9 @@ def get_argument_parser():
 
 def download_dataset(root: str):
     """
-    Download the
+    Download the iWildCam2020 dataset
+    URL taken from:
+    https://github.com/p-lambda/wilds/blob/main/wilds/datasets/iwildcam_dataset.py
     """
     URL = "https://worksheets.codalab.org/rest/bundles/0x6313da2b204647e79a14b468131fcd64/contents/blob/"
     download_and_extract_archive(url=URL, download_root=root, filename="archive.tar.gz")
