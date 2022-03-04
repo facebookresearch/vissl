@@ -59,7 +59,3 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
-    WEIGHTS_INIT:
-      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/dino_deitsmall16_pretrain.pth"
-      APPEND_PREFIX: trunk.base_model.
-      STATE_DICT_KEY_NAME: ''
