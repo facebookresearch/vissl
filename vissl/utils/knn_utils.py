@@ -10,10 +10,18 @@ import numpy as np
 import torch
 from torch import nn
 from vissl.config import AttrDict
+from vissl.hooks import default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
 from vissl.utils.checkpoint import get_checkpoint_folder
+from vissl.utils.distributed_launcher import (
+    create_submitit_executor,
+    launch_distributed,
+)
+from vissl.utils.env import set_env_vars
 from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
+from vissl.utils.hydra_config import print_cfg
 from vissl.utils.io import save_file
+from vissl.utils.logger import setup_logging, shutdown_logging
 
 
 class MaxSimilarityPriorityQueue:
@@ -350,3 +358,55 @@ def run_knn_at_all_layers(config: AttrDict):
         else:
             top1, top5, _ = run_knn_at_layer(config, layer_name=layer)
         logging.info(f"layer: {layer} Top1: {top1}, Top5: {top5}")
+
+
+def extract_features_and_run_knn(node_id: int, config: AttrDict):
+    setup_logging(__name__)
+    print_cfg(config)
+    set_env_vars(local_rank=0, node_id=0, cfg=config)
+
+    # Extract the features if no path to the extract features is provided
+    if not config.NEAREST_NEIGHBOR.FEATURES.PATH:
+        launch_distributed(
+            config,
+            node_id,
+            engine_name="extract_features",
+            hook_generator=default_hook_generator,
+        )
+        config.NEAREST_NEIGHBOR.FEATURES.PATH = get_checkpoint_folder(config)
+
+    # Run KNN on all the extract features
+    run_knn_at_all_layers(config)
+
+    # close the logging streams including the file handlers
+    shutdown_logging()
+
+
+class _ResumableNearestNeighborSlurmJob:
+    def __init__(self, config: AttrDict):
+        self.config = config
+
+    def __call__(self):
+        import submitit
+
+        environment = submitit.JobEnvironment()
+        node_id = environment.global_rank
+        master_ip = environment.hostnames[0]
+        master_port = self.config.SLURM.PORT_ID
+        self.config.DISTRIBUTED.INIT_METHOD = "tcp"
+        self.config.DISTRIBUTED.RUN_ID = f"{master_ip}:{master_port}"
+        extract_features_and_run_knn(node_id=node_id, config=self.config)
+
+    def checkpoint(self):
+        import submitit
+
+        trainer = _ResumableNearestNeighborSlurmJob(config=self.config)
+        return submitit.helpers.DelayedSubmission(trainer)
+
+
+def extract_features_and_run_knn_on_slurm(cfg):
+    executor = create_submitit_executor(cfg)
+    trainer = _ResumableNearestNeighborSlurmJob(config=cfg)
+    job = executor.submit(trainer)
+    print(f"SUBMITTED: {job.job_id}")
+    return job

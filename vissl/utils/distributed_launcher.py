@@ -229,20 +229,16 @@ class _ResumableSlurmJob:
         return submitit.helpers.DelayedSubmission(trainer)
 
 
-def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
+def create_submitit_executor(cfg: AttrDict):
     """
-    Launch a distributed training on SLURM, allocating the nodes and GPUs as described in
-    the configuration, and calls the function "launch_on_local_node" appropriately on each
-    of the nodes.
+    Utility function to create a SLURM submitit executor, which
+    is able to schedule arbitrary functions on a SLURM cluster
 
-    Args:
-        cfg (AttrDict): the configuration of the experiment
-        engine_name (str): the name of the engine to run (train or extract_features)
+    The configuration of the executor is derived from the SLURM part
+    of the VISSL configuration provided as parameter
     """
-
     import submitit
 
-    # setup the log folder
     log_folder = cfg.SLURM.LOG_FOLDER
     makedir(log_folder)
     assert g_pathmgr.exists(
@@ -265,8 +261,21 @@ def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
         mem_gb=cfg.SLURM.MEM_GB,
         slurm_additional_parameters=cfg.SLURM.ADDITIONAL_PARAMETERS,
     )
+    return executor
+
+
+def launch_distributed_on_slurm(cfg: AttrDict, engine_name: str):
+    """
+    Launch a distributed training on SLURM, allocating the nodes and GPUs as described in
+    the configuration, and calls the function "launch_on_local_node" appropriately on each
+    of the nodes.
+
+    Args:
+        cfg (AttrDict): the configuration of the experiment
+        engine_name (str): the name of the engine to run (train or extract_features)
+    """
+    executor = create_submitit_executor(cfg)
     trainer = _ResumableSlurmJob(engine_name=engine_name, config=cfg)
     job = executor.submit(trainer)
     print(f"SUBMITTED: {job.job_id}")
-
     return job
