@@ -12,7 +12,7 @@ from classy_vision.tasks import register_task
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
 from vissl.trainer.train_task import SelfSupervisionTask
-from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.fsdp_utils import fsdp_wrapper, is_valid_fsdp_model
 from vissl.utils.misc import is_fairscale_sharded_available
 
 
@@ -74,3 +74,4 @@ class SelfSupervisionFSDPTask(SelfSupervisionTask):
         fsdp_config = self.config["MODEL"]["FSDP_CONFIG"]
         self.base_model = fsdp_wrapper(self.base_model, **fsdp_config)
         self.distributed_model = self.base_model
+        assert is_valid_fsdp_model(self.distributed_model), "FSDP is not setup correctly"
