@@ -74,4 +74,6 @@ class SelfSupervisionFSDPTask(SelfSupervisionTask):
         fsdp_config = self.config["MODEL"]["FSDP_CONFIG"]
         self.base_model = fsdp_wrapper(self.base_model, **fsdp_config)
         self.distributed_model = self.base_model
-        assert is_valid_fsdp_model(self.distributed_model), "FSDP is not setup correctly"
+        assert is_valid_fsdp_model(
+            self.distributed_model
+        ), "FSDP is not setup correctly"
