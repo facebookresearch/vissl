@@ -50,24 +50,41 @@ config:
     name: ""
   MODEL:
     TRUNK:
-      NAME: vision_transformer
-      VISION_TRANSFORMERS:
+      NAME: xcit
+      XCIT:
         IMAGE_SIZE: 224
         PATCH_SIZE: 16
-        NUM_LAYERS: 12
-        NUM_HEADS: 6
         HIDDEN_DIM: 384
-        MLP_DIM: 1532
-        CLASSIFIER: token
+        NUM_LAYERS: 12
+        NUM_HEADS: 8
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.05
+        ETA: 1
+        TOKENS_NORM: True
         QKV_BIAS: True
-        DROP_PATH_RATE: 0 # stochastic depth dropout probability
+        QK_SCALE: False
     HEAD:
       PARAMS: [
-        ["swav_head", {"use_weight_norm_prototypes": False, "dims": [384, 2048, 2048, 256], "use_bn": False, "return_embeddings": False, "activation_name": "GELU", "num_clusters": [65536]}],
+        ["swav_head", {
+          "use_weight_norm_prototypes": True,
+          "dims": [384, 2048, 2048, 256],
+          "use_bn": False,
+          "return_embeddings": False,
+          "activation_name": "GELU",
+          "num_clusters": [65536]
+        }],
       ]
-    TEMP_FROZEN_PARAMS_ITER_MAP: [['module.heads.0.prototypes0.weight', 2]]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+      ['module.heads.0.prototypes0.weight_v', 2],
+      ['module.heads.0.prototypes0.weight_g', 2],
+      ['_fsdp_wrapped_module.heads.0._fsdp_wrapped_module._fpw_module.prototypes0._fsdp_wrapped_module.weight_v', 2],
+      ['_fsdp_wrapped_module.heads.0._fsdp_wrapped_module._fpw_module.prototypes0._fsdp_wrapped_module.weight_g', 2],
+
+      # To use if "use_weight_norm_prototypes = False"
+      # ['module.heads.0.prototypes0.weight', 2],
+      # ['_fsdp_wrapped_module.heads.0._fsdp_wrapped_module._fpw_module.prototypes0._fsdp_wrapped_module.weight', 2]
+    ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch

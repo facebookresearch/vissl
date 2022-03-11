@@ -10,6 +10,7 @@ import torch
 from classy_vision import tasks
 from classy_vision.hooks.classy_hook import ClassyHook
 from torch import nn
+from torch.nn.parallel import DistributedDataParallel
 from vissl.models import build_model
 from vissl.models.model_helpers import get_no_ddp_model
 
@@ -43,17 +44,13 @@ class DINOHook(ClassyHook):
         """
         logging.info("Building momentum encoder")
 
-        # - same architecture but do not apply stochastic depth
+        # Same architecture but do not apply stochastic depth
         # TODO: make drop_path_rate configurable for teacher
-        task.config["MODEL"]["TRUNK"]["VISION_TRANSFORMERS"]["DROP_PATH_RATE"] = 0
+        task.config["MODEL"]["TRUNK"]["VISION_TRANSFORMERS"]["DROP_PATH_RATE"] = 0.0
         task.loss.momentum_teacher = build_model(
             task.config["MODEL"], task.config["OPTIMIZER"]
         )
         task.loss.momentum_teacher.to(task.device)
-
-        # no gradients for teacher model
-        for p in task.loss.momentum_teacher.parameters():
-            p.requires_grad = False
 
         # Restore an hypothetical checkpoint
         if task.loss.checkpoint is not None:
@@ -64,16 +61,17 @@ class DINOHook(ClassyHook):
             teacher_model = get_no_ddp_model(task.loss.momentum_teacher)
             teacher_model.load_state_dict(task_model.state_dict())
 
+        # Setup SyncBN (useful for the XCiT)
         task.loss.momentum_teacher = nn.SyncBatchNorm.convert_sync_batchnorm(
             task.loss.momentum_teacher
         )
+        task.loss.momentum_teacher = DistributedDataParallel(
+            task.loss.momentum_teacher, device_ids=[task.device]
+        )
 
-        # Newer PyTorch versions throw error for using DDP with a model that
-        # has zero trainable parameters
-        # if get_world_size() > 1:
-        #     task.loss.momentum_teacher = init_distributed_data_parallel_model(
-        #         task.loss.momentum_teacher
-        #     )
+        # no gradients for teacher model
+        for p in task.loss.momentum_teacher.parameters():
+            p.requires_grad = False
 
     @torch.no_grad()
     def _update_momentum_network(self, task: tasks.ClassyTask) -> None:

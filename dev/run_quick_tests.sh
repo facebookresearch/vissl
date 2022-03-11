@@ -13,6 +13,8 @@ SRC_DIR=$(dirname "${SRC_DIR}")
 # -----------------------------------------------------------------------------
 
 TEST_LIST=(
+    "test_dino_deit.py"
+    "test_dino_xcit.py"
     "test_extract_cluster.py"
     "test_extract_features.py"
     "test_finetuning.py"

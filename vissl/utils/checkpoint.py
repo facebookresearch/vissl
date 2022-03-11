@@ -913,21 +913,17 @@ def check_model_compatibilty(config: AttrDict, state_dict: Dict[str, Any]):
     if is_feature_extractor_model(config.MODEL):
         trunk_append_prefix = "trunk.base_model._feature_blocks."
 
-    is_compatible = True
     for layername in state_dict.keys():
         if not (
             layername.startswith(trunk_append_prefix)
             or layername.startswith(heads_append_prefix)
         ):
-            is_compatible = False
-            break
-    if not is_compatible:
-        raise Exception(
-            "Model provided in config.MODEL.WEIGHTS_INIT.PARAMS_FILE is not compatible "
-            "with VISSL. Please set config.MODEL.WEIGHTS_INIT.APPEND_PREFIX and "
-            "config.MODEL.WEIGHTS_INIT.REMOVE_PREFIX for making model compatible. "
-            f"Expected trunk prefix: {trunk_append_prefix}"
-        )
+            raise Exception(
+                "Model provided in config.MODEL.WEIGHTS_INIT.PARAMS_FILE is not compatible "
+                "with VISSL. Please set config.MODEL.WEIGHTS_INIT.APPEND_PREFIX and "
+                "config.MODEL.WEIGHTS_INIT.REMOVE_PREFIX for making model compatible. "
+                f"Expected trunk prefix: {trunk_append_prefix} and got {layername}"
+            )
 
 
 def is_feature_extractor_state_dict(state_dict: Dict[str, Any]):
