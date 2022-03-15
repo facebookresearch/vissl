@@ -106,7 +106,9 @@ class _BigConvAutoWrapPolicy:
     def __init__(self, threshold: int):
         self.threshold = threshold
 
-    def __call__(self, module: nn.Module, recurse: bool, unwrapped_params: int):
+    def __call__(
+        self, module: nn.Module, recurse: bool, unwrapped_params: int, **kwargs
+    ):
         is_large = unwrapped_params >= self.threshold
         force_leaf_modules = default_auto_wrap_policy.FORCE_LEAF_MODULES
         if recurse:

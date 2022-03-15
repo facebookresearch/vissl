@@ -60,7 +60,7 @@ install_fairscale: &install_fairscale
       working_directory: ~/
       command: |
         pip uninstall -y fairscale
-        pip install fairscale@https://github.com/facebookresearch/fairscale/tarball/df7db85cef7f9c30a5b821007754b96eb1f977b6
+        pip install fairscale==0.4.6
 
 
 install_classy_vision: &install_classy_vision
@@ -112,7 +112,8 @@ install_vissl_dep: &install_vissl_dep
       name: Install Dependencies
       working_directory: ~/vissl
       command: |
-        pip install --progress-bar off torch==1.7.1 torchvision==0.8.2 opencv-python==3.4.2.17
+        pip install --progress-bar off torch==1.8.1+cu102 torchvision==0.9.1+cu102 -f https://download.pytorch.org/whl/torch_stable.html
+        pip install --progress-bar off opencv-python==3.4.2.17
         pip install --progress-bar off -r requirements.txt
         # Update this since classy_vision seems to need it.
         pip install --progress-bar off --upgrade iopath

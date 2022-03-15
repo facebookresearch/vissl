@@ -57,8 +57,6 @@ config:
       ]
     TEMP_FROZEN_PARAMS_ITER_MAP: [
       ['module.heads.0.prototypes0.weight', 313],
-      # TODO (Min): FSDP need to return the original param name from named_parameters().
-      ['_fsdp_wrapped_module.heads.0._fsdp_wrapped_module._fpw_module.prototypes0._fsdp_wrapped_module.weight', 313]
     ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True

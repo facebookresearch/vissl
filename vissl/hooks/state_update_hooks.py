@@ -247,21 +247,28 @@ class FreezeParametersHook(ClassyHook):
                 )
             return
 
-        world_size = (
-            task.config.DISTRIBUTED.NUM_NODES
-            * task.config.DISTRIBUTED.NUM_PROC_PER_NODE
-        )
-        match_param_prefix = "module." if world_size == 1 else ""
         num_matched_named_params = 0
         for name, p in task.model.named_parameters():
-            match_param_name = f"{match_param_prefix}{name}"
+            match_param_name = self._clean_param_path(name)
             if (
                 match_param_name in map_params_to_iters
             ) and task.iteration < map_params_to_iters[match_param_name]:
                 num_matched_named_params += 1
                 p.grad = None
+
         # TODO (Min): we need to check the exact target number.
         assert num_matched_named_params > 0, (
             f"Didn't find expected number of layers: "
             f"{num_matched_named_params} vs.  {len(map_params_to_iters)}"
         )
+
+    @staticmethod
+    def _clean_param_path(param_name: str) -> str:
+        # Remove FSDP path artifacts
+        paths_to_remove = ["_fsdp_wrapped_module.", "_fpw_module."]
+        for path_to_remove in paths_to_remove:
+            param_name = param_name.replace(path_to_remove, "")
+        # Add the missing "module." prefix if missing (DDP prefix)
+        if not param_name.startswith("module."):
+            param_name = f"module.{param_name}"
+        return param_name

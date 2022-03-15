@@ -139,12 +139,28 @@ class TestLayerMemoryTracking(unittest.TestCase):
             if t.all_gathered > 0
         ]
         assert all_gathered_traces == [
-            ("_fsdp_wrapped_module.0", 440, 440),
-            ("_fsdp_wrapped_module.2._fsdp_wrapped_module", 440, 880),
-            ("_fsdp_wrapped_module.4._fsdp_wrapped_module._fpw_module", 440, 880),
-            ("_fsdp_wrapped_module.4._fsdp_wrapped_module._fpw_module", 440, 0),
-            ("_fsdp_wrapped_module.2._fsdp_wrapped_module", 440, 0),
-        ]
+            ("_fsdp_wrapped_module._fpw_module.0", 440, 440),
+            (
+                "_fsdp_wrapped_module._fpw_module.2._fsdp_wrapped_module._fpw_module",
+                440,
+                880,
+            ),
+            (
+                "_fsdp_wrapped_module._fpw_module.4._fsdp_wrapped_module._fpw_module",
+                440,
+                880,
+            ),
+            (
+                "_fsdp_wrapped_module._fpw_module.4._fsdp_wrapped_module._fpw_module",
+                440,
+                0,
+            ),
+            (
+                "_fsdp_wrapped_module._fpw_module.2._fsdp_wrapped_module._fpw_module",
+                440,
+                0,
+            ),
+        ], f"Expected {all_gathered_traces}"
 
     @gpu_test(gpu_count=2)
     def test_memory_tracking_fsdp(self):
