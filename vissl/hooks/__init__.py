@@ -10,6 +10,7 @@ from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.config import AttrDict
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
 from vissl.hooks.dino_hooks import DINOHook
+from vissl.hooks.ema_hooks import EmaHook
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
 from vissl.hooks.log_hooks import (  # noqa
     DumpMemoryOnException,
@@ -173,5 +174,16 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
 
     if cfg.HOOKS.CHECK_NAN:
         hooks.extend([CheckNanLossHook(), CheckNanModelOutputHook(world_size)])
+
+    if cfg.HOOKS.EMA_MODEL.ENABLE_EMA_METERS or cfg.HOOKS.EMA_MODEL.SAVE_EMA_MODEL:
+        hooks.extend(
+            [
+                EmaHook(
+                    enable_ema_meters=cfg.HOOKS.EMA_MODEL.ENABLE_EMA_METERS,
+                    update_iter=cfg.HOOKS.EMA_MODEL.UPDATE_ITER,
+                    warmup=cfg.HOOKS.EMA_MODEL.WARMUP,
+                )
+            ]
+        )
 
     return hooks

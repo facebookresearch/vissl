@@ -91,6 +91,19 @@ config:
     # Whether or not to check if the loss or model_output is NaN.
     # ----------------------------------------------------------------------------------- #
     CHECK_NAN: True
+    EMA_MODEL:
+      # Save an exponential moving average of the model weights.
+      SAVE_EMA_MODEL: False
+      # Calculate the meters for the model.
+      ENABLE_EMA_METERS: False
+      # after how many iterations should you update the EMA.
+      UPDATE_ITER: 1
+      # Decimal after what percent of the training to start the EMA. Defaults is 0.05 or 5%.
+      WARMUP: 0.05
+      # decay to use for the exponential moving average.
+      DECAY: 0.9999
+      # device to put EMA model on: gpu | cpu.
+      EMA_DEVICE: gpu
 
     # ----------------------------------------------------------------------------------- #
     # Perf hooks for several steps of model training
