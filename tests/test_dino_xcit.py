@@ -45,8 +45,8 @@ class TestDINO_XCIT(unittest.TestCase):
     def _create_dino_linear_eval_config(checkpoint_path: str, gpu_count: int = 2):
         cfg = compose_hydra_configuration(
             [
-                "config=test/integration_test/quick_eval_in1k_linear.yaml",
-                "+config/benchmark/linear_image_classification/imagenet1k/models=dino_deit_s16",
+                "config=test/integration_test/quick_eval_in1k_linear",
+                "+config/benchmark/linear_image_classification/imagenet1k/models=dino_xcit_s16",
                 f"config.MODEL.WEIGHTS_INIT.PARAMS_FILE={checkpoint_path}",
                 f"config.DISTRIBUTED.NUM_PROC_PER_NODE={gpu_count}",
                 # Datasets
@@ -99,6 +99,10 @@ class TestDINO_XCIT(unittest.TestCase):
             config = self._create_dino_pretraining_config(
                 with_mixed_precision=False, gpu_count=2
             )
+
+            # For deterministic computing
+            config.MODEL.TRUNK.XCIT.DROP_PATH_RATE = 0.0
+
             result = run_integration_test(config)
             losses_before = result.get_losses()
 
@@ -112,5 +116,4 @@ class TestDINO_XCIT(unittest.TestCase):
             losses_after = result.get_losses()
             print(losses_before)
             print(losses_after)
-            # TODO - The DEIT version supports more precision after restart - investigate why
-            self.assertAlmostEqual(losses_after[-1], losses_before[-1], places=3)
+            self.assertAlmostEqual(losses_after[-1], losses_before[-1], places=4)
