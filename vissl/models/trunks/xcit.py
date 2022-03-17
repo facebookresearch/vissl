@@ -7,7 +7,6 @@
 Code modified from https://github.com/facebookresearch/xcit/blob/main/xcit.py # NOQA
 """
 
-import copy
 import logging
 import math
 from functools import partial
@@ -387,82 +386,87 @@ class XCiT(nn.Module):
         super().__init__()
 
         assert model_config.INPUT_TYPE in ["rgb", "bgr"], "Input type not supported"
-        trunk_config = copy.deepcopy(model_config.TRUNK.XCIT)
+        trunk_config = model_config.TRUNK.XCIT
 
         logging.info("Building model: XCiT from yaml config")
-        # Hacky workaround
-        trunk_config = AttrDict({k.lower(): v for k, v in trunk_config.items()})
-        img_size = trunk_config.image_size
-        patch_size = trunk_config.patch_size
-        embed_dim = trunk_config.hidden_dim
-        depth = trunk_config.num_layers
-        num_heads = trunk_config.num_heads
-        mlp_ratio = trunk_config.mlp_ratio
-        qkv_bias = trunk_config.qkv_bias
-        qk_scale = trunk_config.qk_scale
-        drop_rate = trunk_config.dropout_rate
-        attn_drop_rate = trunk_config.attention_dropout_rate
-        drop_path_rate = trunk_config.drop_path_rate
-        eta = trunk_config.eta
-        tokens_norm = trunk_config.tokens_norm
-        norm_layer = partial(nn.LayerNorm, eps=1e-6)
-        self.num_features = (
-            self.embed_dim
-        ) = embed_dim  # num_features for consistency with other models
+        self.model_config = model_config
+        self.img_size = trunk_config.IMAGE_SIZE
+        self.patch_size = trunk_config.PATCH_SIZE
+        self.embed_dim = trunk_config.HIDDEN_DIM
+        self.depth = trunk_config.NUM_LAYERS
+        self.num_heads = trunk_config.NUM_HEADS
+        self.mlp_ratio = trunk_config.MLP_RATIO
+        self.qkv_bias = trunk_config.QKV_BIAS
+        self.qk_scale = trunk_config.QK_SCALE
+        self.drop_rate = trunk_config.DROPOUT_RATE
+        self.attn_drop_rate = trunk_config.ATTENTION_DROPOUT_RATE
+        self.drop_path_rate = trunk_config.DROP_PATH_RATE
+        self.eta = trunk_config.ETA
+        self.tokens_norm = trunk_config.TOKENS_NORM
+
+        # num_features for consistency with other models
+        self.num_features = self.embed_dim
+
         self.patch_embed = ConvPatchEmbed(
-            img_size=img_size, embed_dim=embed_dim, patch_size=patch_size
+            img_size=self.img_size, embed_dim=self.embed_dim, patch_size=self.patch_size
         )
-        num_patches = self.patch_embed.num_patches
+        self.num_patches = self.patch_embed.num_patches
 
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_drop = nn.Dropout(p=drop_rate)
+        norm_layer = partial(nn.LayerNorm, eps=1e-6)
 
-        dpr = [drop_path_rate for i in range(depth)]
-        self.blocks = nn.ModuleList(
-            [
-                XCABlock(
-                    dim=embed_dim,
-                    num_heads=num_heads,
-                    mlp_ratio=mlp_ratio,
-                    qkv_bias=qkv_bias,
-                    qk_scale=qk_scale,
-                    drop=drop_rate,
-                    attn_drop=attn_drop_rate,
-                    drop_path=dpr[i],
-                    norm_layer=norm_layer,
-                    num_tokens=num_patches,
-                    eta=eta,
-                )
-                for i in range(depth)
-            ]
-        )
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
+        self.pos_drop = nn.Dropout(p=self.drop_rate)
 
-        cls_attn_layers = 2
-        self.cls_attn_blocks = nn.ModuleList(
-            [
-                ClassAttentionBlock(
-                    dim=embed_dim,
-                    num_heads=num_heads,
-                    mlp_ratio=mlp_ratio,
-                    qkv_bias=qkv_bias,
-                    qk_scale=qk_scale,
-                    drop=drop_rate,
-                    attn_drop=attn_drop_rate,
-                    norm_layer=norm_layer,
-                    eta=eta,
-                    tokens_norm=tokens_norm,
-                )
-                for i in range(cls_attn_layers)
-            ]
-        )
-        self.norm = norm_layer(embed_dim)
+        self.blocks = self._create_xca_blocks(norm_layer)
 
-        self.pos_embeder = PositionalEncodingFourier(dim=embed_dim)
+        self.cls_attn_blocks = self._create_cls_attn_blocks(norm_layer)
+        self.norm = norm_layer(self.embed_dim)
+
+        self.pos_embeder = PositionalEncodingFourier(dim=self.embed_dim)
         self.use_pos = True
 
-        # Classifier head
+        # Initialize weights
         trunc_normal_(self.cls_token, std=0.02)
         self.apply(self._init_weights)
+
+    def _create_xca_blocks(self, norm_layer):
+        return nn.ModuleList(
+            [
+                XCABlock(
+                    dim=self.embed_dim,
+                    num_heads=self.num_heads,
+                    mlp_ratio=self.mlp_ratio,
+                    qkv_bias=self.qkv_bias,
+                    qk_scale=self.qk_scale,
+                    drop=self.drop_rate,
+                    attn_drop=self.attn_drop_rate,
+                    drop_path=self.drop_path_rate,
+                    norm_layer=norm_layer,
+                    num_tokens=self.num_patches,
+                    eta=self.eta,
+                )
+                for _ in range(self.depth)
+            ]
+        )
+
+    def _create_cls_attn_blocks(self, norm_layer, depth: int = 2):
+        return nn.ModuleList(
+            [
+                ClassAttentionBlock(
+                    dim=self.embed_dim,
+                    num_heads=self.num_heads,
+                    mlp_ratio=self.mlp_ratio,
+                    qkv_bias=self.qkv_bias,
+                    qk_scale=self.qk_scale,
+                    drop=self.drop_rate,
+                    attn_drop=self.attn_drop_rate,
+                    norm_layer=norm_layer,
+                    eta=self.eta,
+                    tokens_norm=self.tokens_norm,
+                )
+                for _ in range(depth)
+            ]
+        )
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -490,19 +494,20 @@ class XCiT(nn.Module):
 
         x = self.pos_drop(x)
 
+        # Go through the XCA blocks
         for blk in self.blocks:
             x = blk(x, Hp, Wp)
 
+        # Add the class token and go through the class attention blocks
         cls_tokens = self.cls_token.expand(B, -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
-
         for blk in self.cls_attn_blocks:
             x = blk(x, Hp, Wp)
 
+        # Select the class token and returns it
         x = self.norm(x)[:, 0]
         return x
 
     def forward(self, x, out_feat_keys=None):
         x = self.forward_features(x)
-        x = x.unsqueeze(0)
-        return x
+        return [x]
