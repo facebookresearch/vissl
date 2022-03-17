@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 import torch
 import torch.nn as nn
-from classy_vision.models import ClassyModel
+from classy_vision.models import ClassyModel, ClassyModelHeadExecutorWrapper
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
@@ -29,6 +29,24 @@ from vissl.utils.checkpoint import (
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.fsdp_utils import fsdp_recursive_reset_lazy_init
 from vissl.utils.misc import set_torch_seed
+
+
+class VisslClassyModelHeadExecutorWrapper(ClassyModelHeadExecutorWrapper):
+    """
+    Temporary fix for ClassyVision:
+    - ClassyModel overrides via meta class the __setattr__ and __getattr__
+      but the __delattr__ is not overridden
+    - This leads to a crash when wrapping a model with FSDP because FSDP
+      uses extensively setattr, getattr, hasattr and delattr
+    - This also leads to asymmetries in which hasattr will return True but
+      delattr will crash
+    """
+
+    def __delattr__(self, name):
+        if name not in ["classy_model", "forward"] and hasattr(self, "classy_model"):
+            delattr(self.classy_model, name)
+        else:
+            super().__delattr__(name)
 
 
 @register_model("multi_input_output_model")
@@ -55,6 +73,9 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         MULTI_INPUT_HEAD_MAPPING. See the _setup_multi_input_head_mapping()
         function for details.
     """
+
+    # Temporary fix around ClassyVision to support delattr property
+    wrapper_cls = VisslClassyModelHeadExecutorWrapper
 
     def __init__(self, model_config, optimizer_config):
         self.model_config = model_config
