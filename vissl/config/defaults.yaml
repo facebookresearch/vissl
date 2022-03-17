@@ -745,6 +745,15 @@ config:
         INIT_VALUES: False
 
       # ------------------------------------------------------------- #
+      # Parameters unique to the ConvNext
+      # https://arxiv.org/pdf/2201.03545.pdf
+      # -------------------------------------------------------------
+      CONVNEXT:
+        DEPTH: [3, 3, 27, 3]
+        DIMS: [96, 192, 384, 768]
+        DROP_PATH_RATE: 0.0
+
+      # ------------------------------------------------------------- #
       # Parameters unique to the ConViT and not used for standard vision
       # transformers
       # -------------------------------------------------------------

@@ -1,0 +1,21 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK:
+      NAME: convnext
+      CONVNEXT:
+        DEPTH: [3, 3, 27, 3]
+        DIMS: [128, 256, 512, 1024]
+        DROP_PATH_RATE: 0.0
+    HEAD:
+      PARAMS: []
+    AMP_PARAMS:
+      USE_AMP: False

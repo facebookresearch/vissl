@@ -1,0 +1,19 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK:
+      NAME: convnext
+      CONVNEXT:
+        DEPTH: [3, 3, 27, 3]
+        DIMS: [192, 384, 768, 1536]
+        DROP_PATH_RATE: 0.0
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 1536, "dims": [1536, 1000]}],
+      ]
+  OPTIMIZER:
+    regularize_bn: True

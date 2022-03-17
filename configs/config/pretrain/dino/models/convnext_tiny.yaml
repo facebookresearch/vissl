@@ -1,0 +1,28 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 64
+  MODEL:
+    TRUNK:
+      NAME: convnext
+      CONVNEXT:
+        DEPTH: [3, 3, 9, 3]
+        DIMS: [96, 192, 384, 768]
+        DROP_PATH_RATE: 0.0
+    HEAD:
+      PARAMS: [
+        ["swav_head", {
+          "use_weight_norm_prototypes": True,
+          "dims": [768, 2048, 2048, 256],
+          "use_bn": False,
+          "return_embeddings": False,
+          "activation_name": "GELU",
+          "num_clusters": [65536]
+        }],
+      ]
+  DISTRIBUTED:
+    NUM_NODES: 2
+    NUM_PROC_PER_NODE: 8
+  SLURM:
+    CONSTRAINT: volta32gb
