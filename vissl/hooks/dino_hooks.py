@@ -83,6 +83,7 @@ class DINOHook(ClassyHook):
         m = 1 - 0.5 * (1 - task.loss.loss_config.momentum) * (
             math.cos(math.pi * task.iteration / task.max_iteration) + 1
         )
+        task.additional_log_data["dino_teacher_momentum"] = m
 
         task_model = get_no_ddp_model(task.model)
         teacher_model = get_no_ddp_model(task.loss.momentum_teacher)
@@ -113,7 +114,10 @@ class DINOHook(ClassyHook):
                     * teacher_temp_max,
                 )
             )
-        task.loss.teacher_temp = self.teacher_temp_schedule[task.iteration].item()
+
+        teacher_temp = self.teacher_temp_schedule[task.iteration].item()
+        task.loss.teacher_temp = teacher_temp
+        task.additional_log_data["dino_teacher_temp"] = teacher_temp
 
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:

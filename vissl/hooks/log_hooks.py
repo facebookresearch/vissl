@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+
 """
 All the hooks involved in human-readable logging
 """
@@ -12,10 +13,10 @@ import datetime
 import json
 import logging
 import time
-from typing import Optional, List
+from typing import List, Optional
 
 import torch
-from classy_vision import tasks, meters
+from classy_vision import meters, tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
 from classy_vision.hooks.classy_hook import ClassyHook
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
@@ -187,9 +188,16 @@ class LogLossLrEtaHook(ClassyHook):
             self.json_stdout_logger = g_pathmgr.open(
                 f"{checkpoint_folder}/stdout.json",
                 mode="a",
-                buffering=10 * 1024,  # 10KB
             )
             atexit.register(self.json_stdout_logger.close)
+
+    def on_start(self, task: "tasks.ClassyTask") -> None:
+        """
+        At the creation of the training loop, initialize a dictionary
+        that can be used to set additional information to log at each
+        epoch. This dictionary will be reset after each log.
+        """
+        task.additional_log_data = {}
 
     def on_update(self, task: "tasks.ClassyTask") -> None:
         """
@@ -204,78 +212,88 @@ class LogLossLrEtaHook(ClassyHook):
         Set the btime_freq input using cfg.HOOKS.PERF_STATS.PERF_STAT_FREQUENCY=N
         ensuring that cfg.HOOKS.PERF_STATS.MONITOR_PERF_STATS = True.
         """
-        phase_type = "train" if task.train else "test"
-        if is_primary() and phase_type == "train":
-            train_phase_idx = task.train_phase_idx
-            log_freq = task.config["LOG_FREQUENCY"]
-            iteration = task.iteration
+        if is_primary() and task.train:
+            # Only log during training and on primary
+            self._log_training_epoch(task)
+        task.additional_log_data.clear()
 
-            if torch.cuda.is_available():
-                peak_mem_used = int(torch.cuda.max_memory_allocated() / 1024.0 / 1024.0)
+    def _log_training_epoch(self, task):
+        train_phase_idx = task.train_phase_idx
+        log_freq = task.config["LOG_FREQUENCY"]
+        iteration = task.iteration
+        if torch.cuda.is_available():
+            peak_mem_used = int(torch.cuda.max_memory_allocated() / 1024.0 / 1024.0)
+        else:
+            peak_mem_used = -1
+
+        if (
+            (iteration == 1)
+            or (iteration % log_freq == 0)
+            or (iteration <= 100 and iteration % 5 == 0)
+        ):
+            loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
+            if len(task.batch_time) > 0:
+                batch_times = task.batch_time
             else:
-                peak_mem_used = -1
+                batch_times = [0]
+            avg_time = sum(batch_times) / len(batch_times)
 
-            if (
-                (iteration == 1)
-                or (iteration % log_freq == 0)
-                or (iteration <= 100 and iteration % 5 == 0)
-            ):
-                loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
-                if len(task.batch_time) > 0:
-                    batch_times = task.batch_time
-                else:
-                    batch_times = [0]
-                avg_time = sum(batch_times) / len(batch_times)
+            eta_secs = avg_time * (task.max_iteration - iteration)
+            eta_string = str(datetime.timedelta(seconds=int(eta_secs)))
+            if isinstance(task.optimizer.options_view.lr, (set, list)):
+                lr_val = list(task.optimizer.options_view.lr)
+            else:
+                lr_val = round(task.optimizer.options_view.lr, 5)
+            if isinstance(task.optimizer.options_view.weight_decay, (set, list)):
+                wd_val = list(task.optimizer.options_view.weight_decay)
+            else:
+                wd_val = round(task.optimizer.options_view.weight_decay, 5)
+            batch_time = int(1000.0 * avg_time)
+            rank = get_rank()
 
-                eta_secs = avg_time * (task.max_iteration - iteration)
-                eta_string = str(datetime.timedelta(seconds=int(eta_secs)))
-                if isinstance(task.optimizer.options_view.lr, (set, list)):
-                    lr_val = list(task.optimizer.options_view.lr)
-                else:
-                    lr_val = round(task.optimizer.options_view.lr, 5)
-                batch_time = int(1000.0 * avg_time)
-                rank = get_rank()
-                log_data = {
-                    "Rank": rank,
-                    "ep": train_phase_idx,
-                    "iter": iteration,
-                    "lr": lr_val,
-                    "loss": loss_val,
-                    "btime(ms)": batch_time,
-                    "eta": eta_string,
-                    "peak_mem(M)": peak_mem_used,
-                }
+            log_data = {
+                "Rank": rank,
+                "ep": train_phase_idx,
+                "iter": iteration,
+                "lr": lr_val,
+                "loss": loss_val,
+                "btime(ms)": batch_time,
+                "eta": eta_string,
+                "peak_mem(M)": peak_mem_used,
+                "weight_decay": wd_val,
+            }
 
-                if iteration == 1:
-                    # Set max iterations. Currently used in benchmark_suite_scheduler.py
-                    log_data["max_iterations"] = task.max_iteration
+            # Add customized data registered by other hooks
+            log_data.update(task.additional_log_data)
 
-                if self.btime_freq and len(batch_times) >= self.btime_freq:
-                    rolling_avg_time = (
-                        sum(batch_times[-self.btime_freq :]) / self.btime_freq
-                    )
-                    rolling_eta_secs = int(
-                        rolling_avg_time * (task.max_iteration - iteration)
-                    )
-                    rolling_eta_str = str(
-                        datetime.timedelta(seconds=int(rolling_eta_secs))
-                    )
-                    rolling_btime = int(1000.0 * rolling_avg_time)
-                    log_data[f"btime({self.btime_freq}iters)(ms)"] = rolling_btime
-                    log_data["rolling_eta"] = rolling_eta_str
+            if iteration == 1:
+                # Set max iterations. Currently used in benchmark_suite_scheduler.py
+                log_data["max_iterations"] = task.max_iteration
 
-                # to maintain the backwards compatibility with the log.txt
-                # logs, we convert the json to the previous format.
-                # the stdout.json can be used to use the json format of logs.
-                stdout_data = ""
-                for key, value in log_data.items():
-                    stdout_data = (
-                        f"{stdout_data}[{key}: {value}] "
-                        if key == "ep"
-                        else f"{stdout_data}{key}: {value}; "
-                    )
-                logging.info(stdout_data.strip())
-                self.json_stdout_logger.write(json.dumps(log_data) + "\n")
+            if self.btime_freq and len(batch_times) >= self.btime_freq:
+                rolling_avg_time = (
+                    sum(batch_times[-self.btime_freq :]) / self.btime_freq
+                )
+                rolling_eta_secs = int(
+                    rolling_avg_time * (task.max_iteration - iteration)
+                )
+                rolling_eta_str = str(datetime.timedelta(seconds=int(rolling_eta_secs)))
+                rolling_btime = int(1000.0 * rolling_avg_time)
+                log_data[f"btime({self.btime_freq}iters)(ms)"] = rolling_btime
+                log_data["rolling_eta"] = rolling_eta_str
+
+            # to maintain the backwards compatibility with the log.txt
+            # logs, we convert the json to the previous format.
+            # the stdout.json can be used to use the json format of logs.
+            stdout_data = ""
+            for key, value in log_data.items():
+                stdout_data = (
+                    f"{stdout_data}[{key}: {value}] "
+                    if key == "ep"
+                    else f"{stdout_data}{key}: {value}; "
+                )
+            logging.info(stdout_data.strip())
+            self.json_stdout_logger.write(json.dumps(log_data) + "\n")
 
 
 class LogLossMetricsCheckpointHook(ClassyHook):

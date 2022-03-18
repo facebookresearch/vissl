@@ -209,6 +209,17 @@ class IntegrationTestLogs:
         log_path = os.path.join(self.run_dir, "log.txt")
         return parse_losses_from_log_file(log_path)
 
+    def get_stdout(self) -> List[dict]:
+        import json
+
+        stdout_path = os.path.join(self.run_dir, "stdout.json")
+        with open(stdout_path, "r") as file:
+            lines = []
+            for line in file:
+                line = line.strip()
+                lines.append(json.loads(line))
+            return lines
+
     def get_accuracies(self, from_metrics_file: bool = False) -> List[Union[dict, str]]:
         if from_metrics_file:
             import json
