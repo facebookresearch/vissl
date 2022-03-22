@@ -31,7 +31,7 @@ All SEER models are pretrained on 1 Billion _random_ and _uncurated_ subset of I
 | SEER  | RG-10B    | 10B         | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/seer_regnet10B/model_iteration124500_conso.torch)        | [model](https://dl.fbaipublicfiles.com/vissl/model_zoo/seer_finetuned/seer_10b_finetuned_in1k_model_phase28_conso.torch)                                                                                                             | **85.8**            | **84.7**            | **69.0**         | **90.6**                        |
 ## Model Documentation & License
 
-We provide [model documentation]((./MODEL_DOCUMENTATION.md)) detailing how SEER was created and its intended uses. The use of SEER model weights is subject to the [Model License](./MODEL_LICENSE).
+We provide [model documentation](MODEL_DOCUMENTATION.md) detailing how SEER was created and its intended uses. The use of SEER model weights is subject to the [Model License](./MODEL_LICENSE).
 
 ## Citation
 
