@@ -423,9 +423,8 @@ class LayerwiseMemoryTracker:
         provided as parameters
         """
         if isinstance(xs, torch.Tensor):
-            x = xs
-            p = cls._get_dtype_size(x)
-            for x in x.shape:
+            p = cls._get_dtype_size(xs)
+            for x in xs.shape:
                 p *= x
             return p
         elif isinstance(xs, tuple) or isinstance(xs, list):

@@ -171,8 +171,8 @@ class SSLTensorboardHook(ClassyHook):
         if is_primary():
             phase_type = "Training" if task.train else "Testing"
             for meter in task.meters:
-                for metric_name, val in meter.value.items():
-                    for i, val in val.items():
+                for metric_name, vals in meter.value.items():
+                    for i, val in vals.items():
                         tag_name = f"{phase_type}/{meter.name}_{metric_name}_Output_{i}"
                         self.tb_writer.add_scalar(
                             tag=tag_name,
