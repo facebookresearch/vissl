@@ -94,19 +94,20 @@ class ExtractedFeaturesLoader:
 
     @classmethod
     def load_feature_shard(
-        cls, paths: ExtractedFeaturesShardPaths
+        cls, paths: ExtractedFeaturesShardPaths, verbose=True
     ) -> ExtractedFeatures:
         """
         Load a shard of the extracted features and returns its content:
         features, targets and indices.
         """
-        logging.info(
-            f"Loading:\n{paths.feature_file}\n{paths.targets_file}\n{paths.indices_file}"
-        )
+        if verbose:
+            logging.info(
+                f"Loading:\n{paths.feature_file}\n{paths.targets_file}\n{paths.indices_file}"
+            )
         return ExtractedFeatures(
-            features=load_file(paths.feature_file),
-            targets=load_file(paths.targets_file),
-            indices=load_file(paths.indices_file),
+            features=load_file(paths.feature_file, verbose=verbose),
+            targets=load_file(paths.targets_file, verbose=verbose),
+            indices=load_file(paths.indices_file, verbose=verbose),
         )
 
     @classmethod
@@ -126,7 +127,6 @@ class ExtractedFeaturesLoader:
             output (Dict): contains features, targets, inds as the keys
         """
         logging.info(f"Merging features: {split} {layer}")
-        logging.info(f"input_dir: {input_dir}")
 
         # Reassemble each feature shard (dumped by a given rank)
         output_feats, output_targets = {}, {}
@@ -143,7 +143,8 @@ class ExtractedFeaturesLoader:
 
         # Sort the entries by sample index
         indices = np.array(sorted(output_targets.keys()))
-        features = np.array([output_feats[i] for i in indices])
+        # Use #tolist() in case output features have different dimensions.
+        features = np.array([output_feats[i].tolist() for i in indices])
         targets = np.array([output_targets[i] for i in indices])
 
         # Return the outputs
@@ -172,7 +173,6 @@ class ExtractedFeaturesLoader:
             input_dir (str): input path where the features are dumped
             split (str): whether the features are train or test data features
             layer (str): the features correspond to what layer of the model
-
         """
         logging.info(f"Merging features: {split} {layer}")
 

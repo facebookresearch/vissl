@@ -15,12 +15,15 @@ import torchvision
 from classy_vision.generic.util import copy_model_to_gpu, load_checkpoint
 from iopath.common.file_io import g_pathmgr
 from vissl.config import AttrDict
+from vissl.hooks import default_hook_generator
 from vissl.models import build_model
 from vissl.utils.checkpoint import (
     get_checkpoint_folder,
     init_model_from_consolidated_weights,
 )
-from vissl.utils.env import set_env_vars
+from vissl.utils.distributed_launcher import launch_distributed
+from vissl.utils.env import set_env_vars, setup_path_manager
+from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 from vissl.utils.hydra_config import (
     compose_hydra_configuration,
     convert_to_attrdict,
@@ -109,7 +112,7 @@ def extract_activation_maps(img, model, img_scalings):
     return activation_maps
 
 
-def get_train_features(
+def extract_train_features(
     cfg,
     temp_dir,
     train_dataset_name,
@@ -197,7 +200,51 @@ def get_train_features(
 
     train_features = np.vstack([x.reshape(-1, x.shape[-1]) for x in train_features])
     logging.info(f"Train features size: {train_features.shape}")
+
     return train_features
+
+
+def post_process_image(
+    cfg,
+    model_output,
+    pca=None,
+):
+    train_feature = np.array(
+        [m if isinstance(m, list) else m.tolist() for m in model_output]
+    )
+    train_feature = [torch.from_numpy(np.expand_dims(train_feature, axis=0))]
+
+    if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
+        descriptor = get_rmac_descriptors(
+            train_feature[0],
+            cfg.IMG_RETRIEVAL.SPATIAL_LEVELS,
+            normalize=cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES,
+            pca=pca,
+        )
+    elif cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "gem":
+        descriptor = get_average_gem(
+            train_feature,
+            p=cfg.IMG_RETRIEVAL.GEM_POOL_POWER,
+            add_bias=True,
+        )
+    else:
+        descriptor = torch.mean(torch.stack(train_feature), dim=0)
+        descriptor = descriptor.reshape(descriptor.shape[0], -1)
+
+    # Optionally l2 normalize the features.
+    if (
+        cfg.IMG_RETRIEVAL.NORMALIZE_FEATURES
+        and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac"
+    ):
+        # RMAC performs normalization within the algorithm, hence we skip it here.
+        descriptor = l2n(descriptor, dim=1)
+
+    # Optionally apply pca.
+    if pca and cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE != "rmac":
+        # RMAC performs pca within the algorithm, hence we skip it here.
+        descriptor = pca.apply(descriptor)
+
+    return descriptor.data.numpy()
 
 
 def process_eval_image(
@@ -229,7 +276,6 @@ def process_eval_image(
         print(
             f"Example eval image raw activation map shape: { activation_maps[0].shape }"  # NOQA
         )
-
     with PerfTimer("post_process_features", PERF_STATS):
         # process the features: rmac | l2 norm
         if cfg.IMG_RETRIEVAL.FEATS_PROCESSING_TYPE == "rmac":
@@ -264,6 +310,7 @@ def process_eval_image(
 
     if fname_out:
         save_file(descriptors.data.numpy(), fname_out, verbose=False)
+
     return descriptors.data.numpy()
 
 
@@ -314,8 +361,6 @@ def get_dataset_features(
             )
         features_dataset.append(db_feature)
 
-    features_dataset = np.vstack(features_dataset)
-    logging.info(f"Dataset Features Size: {features_dataset.shape}")
     return features_dataset
 
 
@@ -377,8 +422,6 @@ def get_queries_features(
             )
         features_queries.append(query_feature)
 
-    features_queries = np.vstack(features_queries)
-    logging.info(f"Queries Features Size: {features_queries.shape}")
     return features_queries
 
 
@@ -498,9 +541,56 @@ def get_eval_dataset(cfg, root_dataset_path, eval_dataset_name, eval_binary_path
     return eval_dataset
 
 
+def load_and_process_features(cfg, input_dir, split, pca=None):
+    # Choose only the first layer.
+    layer = cfg.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP[0][0]
+    shard_file_names = ExtractedFeaturesLoader.get_shard_file_names(
+        input_dir, split, layer
+    )
+
+    all_inds = []
+    all_feats = []
+
+    for shard in shard_file_names:
+        # Load the feature shard.
+        feature_shard = ExtractedFeaturesLoader.load_feature_shard(shard, verbose=False)
+        features = feature_shard.features
+        inds = feature_shard.indices
+
+        # Post-process (rmac | gem | l2) each image from the the feature shard .
+        for i, feat in enumerate(features):
+            ind = inds[i]
+
+            if ind in all_inds:
+                # TODO: Sometimes load_feature_shard returns duplicate features.
+                # Feature already processed.
+                continue
+
+            processed_feat = post_process_image(
+                cfg,
+                feat,
+                pca=pca,
+            )
+            all_feats.append(processed_feat)
+            all_inds.append(ind)
+
+    # Sort features by index.
+    all_feats_sorted = [
+        feat for _, feat in sorted(zip(all_inds, all_feats), key=lambda tup: tup[0])
+    ]
+
+    return all_feats_sorted
+
+
 def instance_retrieval_test(args, cfg):
-    # We require 1-gpu for feature extraction. Hence check CUDA is available.
-    assert torch.cuda.is_available(), "CUDA not available, Exit!"
+    if (
+        cfg.IMG_RETRIEVAL.USE_FEATURE_EXTRACTION_ENGINE
+        and not cfg.IMG_RETRIEVAL.FEATURE_EXTRACTION_DIR
+    ):
+        # We require 1-gpu for feature extraction. Hence check CUDA is available.
+        # If we provide FEATURE_EXTRACTION_DIR, we have already extracted the features
+        # and do not require GPU.
+        assert torch.cuda.is_available(), "CUDA not available, Exit!"
 
     train_dataset_name = cfg.IMG_RETRIEVAL.TRAIN_DATASET_NAME
     eval_dataset_name = cfg.IMG_RETRIEVAL.EVAL_DATASET_NAME
@@ -509,8 +599,10 @@ def instance_retrieval_test(args, cfg):
     eval_binary_path = cfg.IMG_RETRIEVAL.EVAL_BINARY_PATH
     root_dataset_path = cfg.IMG_RETRIEVAL.DATASET_PATH
     save_features = cfg.IMG_RETRIEVAL.SAVE_FEATURES
+    use_feature_extractor = cfg.IMG_RETRIEVAL.USE_FEATURE_EXTRACTION_ENGINE
 
     temp_dir = None
+
     if save_features:
         temp_dir = os.path.join(get_checkpoint_folder(cfg), "features")
         logging.info(f"Temp directory: {temp_dir}")
@@ -536,13 +628,15 @@ def instance_retrieval_test(args, cfg):
         S=resize_img, transforms=transforms, center_crop=cfg.IMG_RETRIEVAL.CENTER_CROP
     )
 
-    # Build the model on gpu and set in the eval mode
-    model = build_retrieval_model(cfg)
-    model = copy_model_to_gpu(model)
+    model = None
+    if not use_feature_extractor:
+        # Build the model on gpu and set in the eval mode
+        model = build_retrieval_model(cfg)
+        model = copy_model_to_gpu(model)
 
-    logging.info("Freezing the model.....")
-    model.eval()
-    model.freeze_head_and_trunk()
+        logging.info("Freezing the model.....")
+        model.eval()
+        model.freeze_head_and_trunk()
 
     ############################################################################
     # Step 2: Extract the features for the train dataset, calculate PCA or
@@ -551,21 +645,35 @@ def instance_retrieval_test(args, cfg):
         logging.info("Extracting training features...")
         # the features are already processed based on type: rmac | GeM | l2 norm
         with PerfTimer("get_train_features", PERF_STATS):
-            train_features = get_train_features(
-                cfg,
-                temp_dir,
-                train_dataset_name,
-                resize_img,
-                spatial_levels,
-                image_helper,
-                train_dataset,
-                model,
+            # TODO: encapsulate the approach "WithFeatureExtractor" from the other one.
+            if use_feature_extractor:
+                input_dir = (
+                    cfg.IMG_RETRIEVAL.FEATURE_EXTRACTION_DIR
+                    or get_checkpoint_folder(cfg)
+                )
+                input_dir = os.path.join(input_dir, "train_database")
+                train_features = load_and_process_features(cfg, input_dir, "train")
+
+            else:
+                train_features = extract_train_features(
+                    cfg,
+                    temp_dir,
+                    train_dataset_name,
+                    resize_img,
+                    spatial_levels,
+                    image_helper,
+                    train_dataset,
+                    model,
+                )
+
+            train_features = np.vstack(
+                [x.reshape(-1, x.shape[-1]) for x in train_features]
             )
+
         ########################################################################
         # Train PCA on the train features
         pca_out_fname = None
         if temp_dir:
-
             pca_out_fname = f"{temp_dir}/{train_dataset_name}_S{resize_img}_PCA.pickle"
         if pca_out_fname and g_pathmgr.exists(pca_out_fname):
             logging.info("Loading PCA...")
@@ -582,31 +690,52 @@ def instance_retrieval_test(args, cfg):
     # Step 4: Extract db_features and q_features for the eval dataset
     with PerfTimer("get_query_features", PERF_STATS):
         logging.info("Extracting Queries features...")
-        features_queries = get_queries_features(
-            cfg,
-            temp_dir,
-            eval_dataset_name,
-            resize_img,
-            spatial_levels,
-            image_helper,
-            eval_dataset,
-            model,
-            pca,
-        )
+        # TODO: encapsulate the approach "WithFeatureExtractor" from the other one.
+        if use_feature_extractor:
+            input_dir = (
+                cfg.IMG_RETRIEVAL.FEATURE_EXTRACTION_DIR or get_checkpoint_folder(cfg)
+            )
+            input_dir = os.path.join(input_dir, "query")
+            features_queries = load_and_process_features(cfg, input_dir, "test", pca)
+
+        else:
+            features_queries = get_queries_features(
+                cfg,
+                temp_dir,
+                eval_dataset_name,
+                resize_img,
+                spatial_levels,
+                image_helper,
+                eval_dataset,
+                model,
+                pca,
+            )
+
+        features_queries = np.vstack(features_queries)
 
     with PerfTimer("get_dataset_features", PERF_STATS):
         logging.info("Extracting Dataset features...")
-        features_dataset = get_dataset_features(
-            cfg,
-            temp_dir,
-            eval_dataset_name,
-            resize_img,
-            spatial_levels,
-            image_helper,
-            eval_dataset,
-            model,
-            pca,
-        )
+        # TODO: encapsulate the approach "WithFeatureExtractor" from the other one.
+        if use_feature_extractor:
+            input_dir = (
+                cfg.IMG_RETRIEVAL.FEATURE_EXTRACTION_DIR or get_checkpoint_folder(cfg)
+            )
+            input_dir = os.path.join(input_dir, "train_database")
+            features_dataset = load_and_process_features(cfg, input_dir, "test", pca)
+        else:
+            features_dataset = get_dataset_features(
+                cfg,
+                temp_dir,
+                eval_dataset_name,
+                resize_img,
+                spatial_levels,
+                image_helper,
+                eval_dataset,
+                model,
+                pca,
+            )
+
+        features_dataset = np.vstack(features_dataset)
 
     ############################################################################
     # Step 5: Compute similarity, score, and save results
@@ -679,14 +808,119 @@ def validate_and_infer_config(config: AttrDict):
     return config
 
 
-def main(args: Namespace, config: AttrDict):
+def get_extract_features_transforms(cfg):
+    return [
+        {"name": "ImgPilResizeLargerSide", "size": cfg.IMG_RETRIEVAL.RESIZE_IMG},
+        {"name": "ToTensor"},
+        {
+            "name": "Normalize",
+            "mean": [0.485, 0.456, 0.406],
+            "std": [0.229, 0.224, 0.225],
+        },
+    ]
+
+
+def adapt_train_database_extract_config(config, checkpoint_folder):
+    config.DATA.TRAIN.DATA_SOURCES = []
+    config.DATA.TRAIN.DATA_PATHS = []
+    config.DATA.TRAIN.DATA_LIMIT = -1
+
+    if config.IMG_RETRIEVAL.TRAIN_PCA_WHITENING:
+        config.DATA.TRAIN.DATA_SOURCES = ["disk_filelist"]
+        config.DATA.TRAIN.DATA_PATHS = [
+            f"{config.IMG_RETRIEVAL.DATASET_PATH}/{config.IMG_RETRIEVAL.TRAIN_DATASET_NAME}/train_images.npy"  # NOQA
+        ]
+
+    config.DATA.TEST.DATA_SOURCES = ["disk_filelist"]
+    if config.IMG_RETRIEVAL.USE_DISTRACTORS:
+        config.DATA.TEST.DATA_PATHS = [
+            f"{config.IMG_RETRIEVAL.DATASET_PATH}/{config.IMG_RETRIEVAL.EVAL_DATASET_NAME}/database_with_distractors_images.npy"  # NOQA
+        ]
+    else:
+        config.DATA.TEST.DATA_PATHS = [
+            f"{config.IMG_RETRIEVAL.DATASET_PATH}/{config.IMG_RETRIEVAL.EVAL_DATASET_NAME}/database_images.npy"  # NOQA
+        ]
+
+    output_dir = os.path.join(checkpoint_folder, "train_database")
+    g_pathmgr.mkdirs(output_dir)
+    config.EXTRACT_FEATURES.OUTPUT_DIR = output_dir
+
+    if config.IMG_RETRIEVAL.DEBUG_MODE:
+        config.DATA.TRAIN.DATA_LIMIT = 10
+        config.DATA.TEST.DATA_LIMIT = 50
+
+    # Images are all of different sizes.
+    config.DATA.TRAIN.BATCHSIZE_PER_REPLICA = 1
+    config.DATA.TEST.BATCHSIZE_PER_REPLICA = 1
+
+    config.DATA.TRAIN.TRANSFORMS = get_extract_features_transforms(config)
+    config.DATA.TEST.TRANSFORMS = get_extract_features_transforms(config)
+
+    return config
+
+
+def adapt_query_extract_config(config, checkpoint_folder):
+    config.DATA.TRAIN.DATA_SOURCES = []
+    config.DATA.TRAIN.DATA_PATHS = []
+    config.DATA.TRAIN.DATASET_NAMES = []
+    config.DATA.TRAIN.DATA_LIMIT = 0
+
+    config.DATA.TEST.DATA_SOURCES = ["disk_filelist"]
+    config.DATA.TEST.DATA_PATHS = [
+        f"{config.IMG_RETRIEVAL.DATASET_PATH}/{config.IMG_RETRIEVAL.EVAL_DATASET_NAME}/query_images.npy"  # NOQA
+    ]
+
+    output_dir = os.path.join(checkpoint_folder, "query")
+    g_pathmgr.mkdirs(output_dir)
+    config.EXTRACT_FEATURES.OUTPUT_DIR = output_dir
+
+    if config.IMG_RETRIEVAL.DEBUG_MODE:
+        config.DATA.TEST.DATA_LIMIT = 10
+
+    # Images are all of different sizes.
+    config.DATA.TEST.BATCHSIZE_PER_REPLICA = 1
+
+    config.DATA.TEST.TRANSFORMS = get_extract_features_transforms(config)
+
+    return config
+
+
+def main(args: Namespace, config: AttrDict, node_id=0):
     config = validate_and_infer_config(config)
+
     # setup the environment variables
-    set_env_vars(local_rank=0, node_id=0, cfg=config)
+    set_env_vars(local_rank=0, node_id=node_id, cfg=config)
 
     # setup the logging
     checkpoint_folder = get_checkpoint_folder(config)
-    setup_logging(__name__, output_dir=checkpoint_folder)
+    setup_logging(__name__, output_dir=checkpoint_folder, rank=os.environ["RANK"])
+
+    if (
+        config.IMG_RETRIEVAL.USE_FEATURE_EXTRACTION_ENGINE
+        and not config.IMG_RETRIEVAL.FEATURE_EXTRACTION_DIR
+    ):
+        # extract the train/database features.
+        config = adapt_train_database_extract_config(config, checkpoint_folder)
+
+        logging.info("Beginning extract features for database set.")
+        launch_distributed(
+            config,
+            args.node_id,
+            engine_name="extract_features",
+            hook_generator=default_hook_generator,
+        )
+
+        # extract the query features.
+        config = adapt_query_extract_config(config, checkpoint_folder)
+
+        logging.info("Beginning extract features for query set.")
+
+        launch_distributed(
+            config,
+            args.node_id,
+            engine_name="extract_features",
+            hook_generator=default_hook_generator,
+        )
 
     # print the config
     print_cfg(config)
@@ -706,4 +940,6 @@ def hydra_main(overrides: List[Any]):
 
 if __name__ == "__main__":
     overrides = sys.argv[1:]
+
+    setup_path_manager()
     hydra_main(overrides=overrides)

@@ -622,7 +622,9 @@ class SelfSupervisionTrainer(object):
             if len(indices) > 0:
                 output[layer_name] = {
                     "inds": np.array(indices),
-                    "features": np.array([features[layer_name][i] for i in indices]),
+                    "features": np.array(
+                        [features[layer_name][i].tolist() for i in indices]
+                    ),
                     "targets": np.array([targets[layer_name][i] for i in indices]),
                 }
 
