@@ -85,7 +85,6 @@ def launch_distributed(
     setup_logging(__name__)
     node_id = get_node_id(node_id)
     dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
-    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
 
     # If using gpus, we check that the user has specified <= gpus available on user system.
     if cfg.MACHINE.DEVICE == "gpu":
@@ -131,33 +130,20 @@ def launch_distributed(
     _copy_to_local(cfg)
 
     try:
-        if world_size > 1:
-            torch.multiprocessing.spawn(
-                _distributed_worker,
-                nprocs=cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
-                args=(
-                    cfg,
-                    node_id,
-                    dist_run_id,
-                    engine_name,
-                    checkpoint_path,
-                    checkpoint_folder,
-                    hook_generator,
-                ),
-                daemon=False,
-            )
-        else:
-            _distributed_worker(
-                local_rank=0,
-                cfg=cfg,
-                node_id=node_id,
-                dist_run_id=dist_run_id,
-                engine_name=engine_name,
-                checkpoint_path=checkpoint_path,
-                checkpoint_folder=checkpoint_folder,
-                hook_generator=hook_generator,
-            )
-
+        torch.multiprocessing.spawn(
+            _distributed_worker,
+            nprocs=cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
+            args=(
+                cfg,
+                node_id,
+                dist_run_id,
+                engine_name,
+                checkpoint_path,
+                checkpoint_folder,
+                hook_generator,
+            ),
+            daemon=False,
+        )
     except (KeyboardInterrupt, RuntimeError) as e:
         logging.error("Wrapping up, caught exception: ", e)
         if isinstance(e, RuntimeError):
