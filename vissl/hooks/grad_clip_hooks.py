@@ -8,6 +8,8 @@ from typing import Union
 import torch.nn.utils as utils
 from classy_vision import tasks
 from classy_vision.hooks.classy_hook import ClassyHook
+from classy_vision.tasks.classification_task import AmpType
+from fairscale.nn import FullyShardedDataParallel
 
 
 class GradClipHook(ClassyHook):
@@ -35,6 +37,14 @@ class GradClipHook(ClassyHook):
         self.max_norm = max_norm
 
     def on_backward(self, task: tasks.ClassyTask) -> None:
-        utils.clip_grad_norm_(
-            task.model.parameters(), max_norm=self.max_norm, norm_type=self.norm_type
-        )
+        if task.amp_type == AmpType.PYTORCH:
+            task.amp_grad_scaler.unscale_(task.optimizer)
+
+        if isinstance(task.model, FullyShardedDataParallel):
+            task.model.clip_grad_norm_(max_norm=self.max_norm, norm_type=self.norm_type)
+        else:
+            utils.clip_grad_norm_(
+                task.model.parameters(),
+                max_norm=self.max_norm,
+                norm_type=self.norm_type,
+            )
