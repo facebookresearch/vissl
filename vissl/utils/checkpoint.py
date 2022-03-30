@@ -893,37 +893,30 @@ def append_module_prefix(state_dict: Dict[str, Any], prefix: str):
     return state_dict
 
 
-def check_model_compatibilty(config: AttrDict, state_dict: Dict[str, Any]):
+def check_model_compatibility(state_dict: Dict[str, Any]):
     """
-    Given a VISSL model and state_dict, check if the state_dict can be loaded
-    to VISSL model (trunk + head) based on the trunk and head prefix that is expected.
-    If not compatible, we raise exception.
+    Given a state_dict, perform basic check to verify if anything in the state_dict
+    can be loaded to a VISSL model ('trunk' or 'head'):
 
-    Prefix checked for head: `heads.`
-    Prefix checked for trunk: `trunk._feature_blocks.` or `trunk.base_model._feature_blocks.`
-                              depending on the workflow type (training | evaluation).
+    The goal of this function is not to exclude a checkpoint if we find something
+    that is not compatible (it is okay not to load everything in a state_dict) but
+    instead to catch gross mistakes where the state_dict does not contain any useful
+    information for a VISSL model. In such cases, we raise exception.
 
     Args:
-        config (AttrDict): root config
         state_dict (Dict[str, Any]): state dict that should be checked for compatibility
     """
-    from vissl.models import is_feature_extractor_model
+    useful_prefixes = {"trunk.", "heads."}
+    for layer_name in state_dict.keys():
+        if any(layer_name.startswith(prefix) for prefix in useful_prefixes):
+            return
 
-    trunk_append_prefix, heads_append_prefix = "trunk._feature_blocks.", "heads."
-    if is_feature_extractor_model(config.MODEL):
-        trunk_append_prefix = "trunk.base_model._feature_blocks."
-
-    for layername in state_dict.keys():
-        if not (
-            layername.startswith(trunk_append_prefix)
-            or layername.startswith(heads_append_prefix)
-        ):
-            raise Exception(
-                "Model provided in config.MODEL.WEIGHTS_INIT.PARAMS_FILE is not compatible "
-                "with VISSL. Please set config.MODEL.WEIGHTS_INIT.APPEND_PREFIX and "
-                "config.MODEL.WEIGHTS_INIT.REMOVE_PREFIX for making model compatible. "
-                f"Expected trunk prefix: {trunk_append_prefix} and got {layername}"
-            )
+    raise Exception(
+        "Model provided in config.MODEL.WEIGHTS_INIT.PARAMS_FILE is not compatible "
+        "with VISSL. Please set config.MODEL.WEIGHTS_INIT.APPEND_PREFIX and "
+        "config.MODEL.WEIGHTS_INIT.REMOVE_PREFIX for making model compatible. "
+        f"Expected prefixes: {useful_prefixes}."
+    )
 
 
 def is_feature_extractor_state_dict(state_dict: Dict[str, Any]):
@@ -933,6 +926,21 @@ def is_feature_extractor_state_dict(state_dict: Dict[str, Any]):
     """
     contains_prefix = [key.startswith("base_model.") for (key, _) in state_dict.items()]
     return np.all(contains_prefix)
+
+
+def adapt_to_feature_extractor_config(
+    config: AttrDict, state_dict: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Adapt a state dictionary to be compatible with a feature extractor configuration
+    by replacing the "trunk." by "trunk.base_model."
+    """
+    from vissl.models import is_feature_extractor_model
+
+    if not is_feature_extractor_model(config.MODEL):
+        return state_dict
+
+    return {k.replace("trunk.", "trunk.base_model."): v for k, v in state_dict.items()}
 
 
 def get_checkpoint_model_state_dict(config: AttrDict, state_dict: Dict[str, Any]):
@@ -1040,7 +1048,8 @@ def init_model_from_consolidated_weights(
             state_dict = replace_module_prefix(state_dict, replace_prefix)
         if append_prefix:
             state_dict = append_module_prefix(state_dict, append_prefix)
-        check_model_compatibilty(config, state_dict)
+        check_model_compatibility(state_dict)
+        state_dict = adapt_to_feature_extractor_config(config, state_dict)
 
     # load the checkpoint now
     all_layers = model.state_dict()
