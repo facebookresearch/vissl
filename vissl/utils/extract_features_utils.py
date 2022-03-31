@@ -94,19 +94,26 @@ class ExtractedFeaturesLoader:
 
     @classmethod
     def load_feature_shard(
-        cls, paths: ExtractedFeaturesShardPaths
+        cls, paths: ExtractedFeaturesShardPaths, verbose=True, allow_pickle=False
     ) -> ExtractedFeatures:
         """
         Load a shard of the extracted features and returns its content:
         features, targets and indices.
         """
-        logging.info(
-            f"Loading:\n{paths.feature_file}\n{paths.targets_file}\n{paths.indices_file}"
-        )
+        if verbose:
+            logging.info(
+                f"Loading:\n{paths.feature_file}\n{paths.targets_file}\n{paths.indices_file}"
+            )
         return ExtractedFeatures(
-            features=load_file(paths.feature_file),
-            targets=load_file(paths.targets_file),
-            indices=load_file(paths.indices_file),
+            features=load_file(
+                paths.feature_file, verbose=verbose, allow_pickle=allow_pickle
+            ),
+            targets=load_file(
+                paths.targets_file, verbose=verbose, allow_pickle=allow_pickle
+            ),
+            indices=load_file(
+                paths.indices_file, verbose=verbose, allow_pickle=allow_pickle
+            ),
         )
 
     @classmethod
@@ -126,7 +133,6 @@ class ExtractedFeaturesLoader:
             output (Dict): contains features, targets, inds as the keys
         """
         logging.info(f"Merging features: {split} {layer}")
-        logging.info(f"input_dir: {input_dir}")
 
         # Reassemble each feature shard (dumped by a given rank)
         output_feats, output_targets = {}, {}
@@ -172,7 +178,6 @@ class ExtractedFeaturesLoader:
             input_dir (str): input path where the features are dumped
             split (str): whether the features are train or test data features
             layer (str): the features correspond to what layer of the model
-
         """
         logging.info(f"Merging features: {split} {layer}")
 

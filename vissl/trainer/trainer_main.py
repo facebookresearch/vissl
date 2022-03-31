@@ -607,8 +607,8 @@ class SelfSupervisionTrainer(object):
             return flat_features_list
         return features
 
-    @staticmethod
     def _save_extracted_features(
+        self,
         features,
         targets,
         dist_rank: int,
@@ -620,9 +620,19 @@ class SelfSupervisionTrainer(object):
         for layer_name in features.keys():
             indices = sorted(features[layer_name].keys())
             if len(indices) > 0:
+                feats = [features[layer_name][i] for i in indices]
+                if self._is_list_of_tensors_same_shape(features[layer_name]):
+                    feats = np.array(feats)
+                else:
+                    # If each tensor is not the same shape (e.g. images are of variable size)
+                    # we need to create a np.array(dtype=object).
+                    feats = np.array(
+                        [features[layer_name][i].tolist() for i in indices]
+                    )
+
                 output[layer_name] = {
                     "inds": np.array(indices),
-                    "features": np.array([features[layer_name][i] for i in indices]),
+                    "features": feats,
                     "targets": np.array([targets[layer_name][i] for i in indices]),
                 }
 
@@ -891,3 +901,10 @@ class SelfSupervisionTrainer(object):
                         image_id.item()
                     ] = cluster_id.item()
         return merged_cluster_assignments
+
+    def _is_list_of_tensors_same_shape(self, arr):
+        tensor_set = set()
+        for el in arr:
+            tensor_set.add(el)
+
+        return len(tensor_set) == 1

@@ -1,0 +1,98 @@
+# @package _global_
+config:
+  TRAINER:
+    TASK_NAME: self_supervision_fsdp_task
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["res4", ["Identity", []]]
+      ]
+    TRUNK:
+      NAME: regnet_fsdp
+      REGNET:
+        # Same stage checkpoints and parameters as in the configuration
+        # config/fb/pretrain/swav/models/arch_10b=anynet_10b_backup_v2
+        block_type: res_bottleneck_block
+        depth: 27
+        group_width: 1010
+        w_0: 1744
+        w_a: 620.83
+        w_m: 2.52
+        stage_checkpoints: [[2], [7], [9, 17], []]
+    HEAD:
+      PARAMS: []
+    SYNC_BN_CONFIG:
+      # No sync BN needed in eval mode
+      CONVERT_BN_TO_SYNC_BN: False
+      SYNC_BN_TYPE: pytorch
+    FSDP_CONFIG:
+      # Disabling AUTO_SETUP_FSDP so that:
+      # - flatten_parameters is not forced to True
+      # - construct_single_param_group_only is not forced to True
+      AUTO_SETUP_FSDP: False
+      AUTO_WRAP_THRESHOLD: 100000000
+      flatten_parameters: False
+      compute_dtype: float32
+      mixed_precision: False
+      fp32_reduce_scatter: False
+      FORCE_SYNC_CUDA: True
+    AMP_PARAMS:
+      USE_AMP: False
+      AMP_TYPE: pytorch
+    CUDA_CACHE:
+      CLEAR_CUDA_CACHE: True
+      CLEAR_FREQ: 5000
+    ACTIVATION_CHECKPOINTING:
+      # With feature extraction, we do not need activation checkpointing
+      # because the trunk is used in evaluation mode and does not need
+      # to accumulate any gradient
+      USE_ACTIVATION_CHECKPOINTING: False
+    WEIGHTS_INIT:
+      ############################# OSS model ####################################
+      PARAMS_FILE: <your model weights>
+      STATE_DICT_KEY_NAME: classy_state_dict
+      ############ example settings for torchvision model rn50 ###################
+      # PARAMS_FILE: https://download.pytorch.org/models/resnet50-19c8e357.pth
+      # STATE_DICT_KEY_NAME: ""
+      # APPEND_PREFIX: "trunk.base_model._feature_blocks."
+  IMG_RETRIEVAL:
+    ############################# Dataset Information ####################################
+    EVAL_DATASET_NAME: copydays
+    TRAIN_DATASET_NAME: copydays/train
+    DATASET_PATH: manifold://ssl_framework/tree/datasets
+    # Number of training samples to use. -1 uses all the samples in the dataset.
+    NUM_TRAINING_SAMPLES: -1
+    # Number of query samples to use. -1 uses all the samples in the dataset.
+    NUM_QUERY_SAMPLES: -1
+    # Number of database samples to use. -1 uses all the samples in the dataset.
+    NUM_DATABASE_SAMPLES: -1
+    # Sets data limits for the number of training, query, and database samples.
+    DEBUG_MODE: False
+    ############################# Data Processing Hypers ####################################
+    # TODO: Check if this is correct
+    RESIZE_IMG: 224
+    TRAIN_PCA_WHITENING: True
+    N_PCA: 1024
+    FEATS_PROCESSING_TYPE: rmac  # l2 norm not recommended
+    SPATIAL_LEVELS: 3
+    # RN50 - res5
+    # N_PCA: 2048
+    # valid only for GeM pooling of features
+    GEM_POOL_POWER: 4.0
+    # Experiments w/ RN-50 have shown that cropping the bbx degrades performance.
+    CROP_QUERY_ROI: False
+    # Whether or not to apply L2 norm after the features have been post-processed.
+    # Normalization is heavily recommended based on experiments run.
+    NORMALIZE_FEATURES: True
+    # Whether or not to use distractor images.
+    USE_DISTRACTORS: True
+    # Whether or not to use the features extraction engine.
+    USE_FEATURE_EXTRACTION_ENGINE: True
+    # If a non-empty string, directly loads the features extracted from the feature extraction engine.
+    FEATURE_EXTRACTION_DIR: ""
+  OPTIMIZER:
+    construct_single_param_group_only: False

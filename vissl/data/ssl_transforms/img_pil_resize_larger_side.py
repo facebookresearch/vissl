@@ -20,19 +20,16 @@ class ImgPilResizeLargerSide(ClassyTransform):
         """
         Resizes the larger side to "size". Note that the torchvision.Resize transform
         crops the smaller edge to the provided size and is unable to crop the larger
-        side.
+        side. This is common in the copy detection and instance retrieval literature.
         """
         self.size = size
 
     def __call__(self, img):
         # Resize the longest side to self.size.
-        if self.resize_long:
-            img_size_hw = np.array((img.size[1], img.size[0]))
-            ratio = float(self.size) / np.max(img_size_hw)
-            new_size = tuple(np.round(img_size_hw * ratio).astype(np.int32))
-            img_resized = img.resize((new_size[1], new_size[0]), Image.BILINEAR)
-        else:
-            img_resized = self.transforms(img)
+        img_size_hw = np.array((img.size[1], img.size[0]))
+        ratio = float(self.size) / np.max(img_size_hw)
+        new_size = tuple(np.round(img_size_hw * ratio).astype(np.int32))
+        img_resized = img.resize((new_size[1], new_size[0]), Image.BILINEAR)
 
         return img_resized
 
