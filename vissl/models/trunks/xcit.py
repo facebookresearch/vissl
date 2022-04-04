@@ -10,6 +10,7 @@ Code modified from https://github.com/facebookresearch/xcit/blob/main/xcit.py # 
 import logging
 import math
 from functools import partial
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -76,7 +77,11 @@ class ConvPatchEmbed(nn.Module):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
-        num_patches = (img_size[1] // patch_size[1]) * (img_size[0] // patch_size[0])
+        self.feat_map_size = (
+            img_size[0] // patch_size[0],
+            img_size[1] // patch_size[1],
+        )
+        num_patches = self.feat_map_size[0] * self.feat_map_size[1]
         self.img_size = img_size
         self.patch_size = patch_size
         self.num_patches = num_patches
@@ -101,11 +106,9 @@ class ConvPatchEmbed(nn.Module):
             )
 
     def forward(self, x, padding_size=None):
-        B, C, H, W = x.shape
         x = self.proj(x)
         Hp, Wp = x.shape[2], x.shape[3]
         x = x.flatten(2).transpose(1, 2)
-
         return x, (Hp, Wp)
 
 
@@ -481,17 +484,21 @@ class XCiT(nn.Module):
     def no_weight_decay(self):
         return {"pos_embed", "cls_token", "dist_token"}
 
+    def _get_pos_encoding(self, B, Hp, Wp, x):
+        return self.pos_embeder(B, Hp, Wp).reshape(B, -1, x.shape[1]).permute(0, 2, 1)
+
+    def _add_class_token(self, x):
+        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
+        return torch.cat((cls_tokens, x), dim=1)
+
     def forward_features(self, x):
-        B, C, H, W = x.shape
+        B = x.shape[0]
 
+        # Patch embedding
         x, (Hp, Wp) = self.patch_embed(x)
-
         if self.use_pos:
-            pos_encoding = (
-                self.pos_embeder(B, Hp, Wp).reshape(B, -1, x.shape[1]).permute(0, 2, 1)
-            )
+            pos_encoding = self._get_pos_encoding(B, Hp, Wp, x)
             x = x + pos_encoding
-
         x = self.pos_drop(x)
 
         # Go through the XCA blocks
@@ -499,8 +506,7 @@ class XCiT(nn.Module):
             x = blk(x, Hp, Wp)
 
         # Add the class token and go through the class attention blocks
-        cls_tokens = self.cls_token.expand(B, -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)
+        x = self._add_class_token(x)
         for blk in self.cls_attn_blocks:
             x = blk(x, Hp, Wp)
 
@@ -508,6 +514,51 @@ class XCiT(nn.Module):
         x = self.norm(x)[:, 0]
         return x
 
-    def forward(self, x, out_feat_keys=None):
-        x = self.forward_features(x)
-        return [x]
+    def get_intermediate_features(
+        self, x: torch.Tensor, names: List[str]
+    ) -> List[torch.Tensor]:
+        """
+        Given a list of feature names, return a list of the same length
+        where each output correspond to the desired feature.
+
+        The available features are:
+        - lastCLS => CLS token of last block
+        - lastMAP => feature map of the last block
+        """
+        B = x.shape[0]
+
+        # Patch embedding
+        x, (Hp, Wp) = self.patch_embed(x)
+        if self.use_pos:
+            pos_encoding = self._get_pos_encoding(B, Hp, Wp, x)
+            x = x + pos_encoding
+        x = self.pos_drop(x)
+
+        # Go through the XCA blocks
+        for blk in self.blocks:
+            x = blk(x, Hp, Wp)
+
+        # Add the class token and go through the class attention blocks
+        x = self._add_class_token(x)
+        for blk in self.cls_attn_blocks:
+            x = blk(x, Hp, Wp)
+
+        # Select the features we are interested in and returns them
+        output = []
+        for name in names:
+            if name == "lastCLS":
+                output.append(self.norm(x)[:, 0])
+            elif name == "lastMAP":
+                feat_map_size = self.patch_embed.feat_map_size
+                feat_map = self.norm(x)[:, 1:]
+                B, L, C = feat_map.shape
+                feat_map = feat_map.reshape((B, *feat_map_size, C))
+                output.append(feat_map)
+        return output
+
+    def forward(self, x, out_feat_keys: Optional[List[str]] = None):
+        if out_feat_keys is None or len(out_feat_keys) == 0:
+            x = self.forward_features(x)
+            return [x]
+        else:
+            return self.get_intermediate_features(x, out_feat_keys)
