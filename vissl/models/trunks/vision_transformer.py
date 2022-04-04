@@ -28,7 +28,7 @@ Leavitt (ito@fb.com, matthew.l.leavitt@gmail.com) and Vedanuj Goswami
 import logging
 import math
 from functools import partial
-from typing import List
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
@@ -87,6 +87,16 @@ class Attention(nn.Module):
 
     def forward(self, x):
         B, N, C = x.shape
+        attn, v = self.forward_attention(x)
+        attn = self.attn_drop(attn)
+
+        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
+        x = self.proj(x)
+        x = self.proj_drop(x)
+        return x
+
+    def forward_attention(self, x) -> Tuple[torch.Tensor, torch.Tensor]:
+        B, N, C = x.shape
         qkv = (
             self.qkv(x)
             .reshape(B, N, 3, self.num_heads, C // self.num_heads)
@@ -100,12 +110,7 @@ class Attention(nn.Module):
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
-        attn = self.attn_drop(attn)
-
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
-        x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
+        return attn, v
 
 
 class Block(nn.Module):
@@ -150,6 +155,10 @@ class Block(nn.Module):
         x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
 
+    def get_attention_map(self, x: torch.Tensor) -> torch.Tensor:
+        attn, v = self.attn.forward_attention(self.norm1(x))
+        return attn
+
 
 class PatchEmbed(nn.Module):
     """Image to Patch Embedding"""
@@ -158,10 +167,13 @@ class PatchEmbed(nn.Module):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
-        num_patches = (img_size[1] // patch_size[1]) * (img_size[0] // patch_size[0])
+        self.feat_map_size = (
+            img_size[0] // patch_size[0],
+            img_size[1] // patch_size[1],
+        )
         self.img_size = img_size
         self.patch_size = patch_size
-        self.num_patches = num_patches
+        self.num_patches = self.feat_map_size[0] * self.feat_map_size[1]
 
         self.proj = nn.Conv2d(
             in_chans, embed_dim, kernel_size=patch_size, stride=patch_size
@@ -296,29 +308,37 @@ class VisionTransformer(nn.Module):
         return x
 
     def forward_features(self, x):
+        """
+        Return the class token representation at the last layer
+        """
         x = self.prepare_tokens(x)
-
         for blk in self.blocks:
             x = blk(x)
-
         x = self.norm(x)
         return x[:, 0]
 
-    def get_intermediate_features(self, x, names):
+    def get_intermediate_features(
+        self, x: torch.Tensor, names: List[str]
+    ) -> List[torch.Tensor]:
+        """
+        Given a list of feature names, return a list of the same length
+        where each output correspond to the desired feature.
+
+        The available features are:
+        - blkCLS[integer] => CLS token of blk[integer]
+        - concatCLS[integer] => concat of CLS token from last #"integer" blocks
+        - lastCLS => CLS token of last block
+        - lastMAP => feature map of the last block
+        """
+
+        # Get feature from every intermediate block and apply norm
         interms = []
-
         x = self.prepare_tokens(x)
-
-        # get feature from every intermediate block and apply norm
         for blk in self.blocks:
             x = blk(x)
             interms.append(self.norm(x))
 
-        # feature names are as follows
-        # blkCLS[integer] => CLS token of blk[integer]
-        # concatCLS[integer] => concat of CLS token from last #"integer" blocks
-        # lastCLS => CLS token of last block
-
+        # Then collect the desired features
         output = []
         for name in names:
             if name.startswith("blkCLS"):
@@ -330,7 +350,26 @@ class VisionTransformer(nn.Module):
                 output.append(feat)
             elif name == "lastCLS":
                 output.append(interms[-1][:, 0])
+            elif name == "lastMAP":
+                feat_map_size = self.patch_embed.feat_map_size
+                feat_map = interms[-1][:, 1:]
+                B, L, C = feat_map.shape
+                feat_map = feat_map.reshape((B, *feat_map_size, C))
+                output.append(feat_map)
         return output
+
+    def get_last_self_attention(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Get the attention map from the last layer, with dimensions:
+        (batch_size, num_heads, seq_len + 1, seq_len + 1)
+        """
+        x = self.prepare_tokens(x)
+        for i, blk in enumerate(self.blocks):
+            if i < len(self.blocks) - 1:
+                x = blk(x)
+            else:
+                # return attention of the last block
+                return blk.get_attention_map(x)
 
     def forward(
         self, x: torch.Tensor, out_feat_keys: List[str] = None
