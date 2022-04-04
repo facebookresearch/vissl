@@ -16,7 +16,11 @@ from vissl.utils.test_utils import (
 class TestDINO_DEIT(unittest.TestCase):
     @staticmethod
     def _create_dino_pretraining_config(
-        with_mixed_precision: bool, gpu_count: int = 2, num_epochs: int = 4
+        with_mixed_precision: bool,
+        with_mlp_checkpoints: bool = False,
+        with_block_checkpoints: bool = False,
+        gpu_count: int = 2,
+        num_epochs: int = 4,
     ):
         cfg = compose_hydra_configuration(
             [
@@ -31,6 +35,9 @@ class TestDINO_DEIT(unittest.TestCase):
                 "config.REPRODUCIBILITY.CUDDN_DETERMINISTIC=True",
                 f"config.OPTIMIZER.num_epochs={num_epochs}",
                 f"config.DISTRIBUTED.NUM_PROC_PER_NODE={gpu_count}",
+                # Activation checkpointing (memory optimisation)
+                f"config.MODEL.TRUNK.VISION_TRANSFORMERS.CHECKPOINT_MLP={with_mlp_checkpoints}",
+                f"config.MODEL.TRUNK.VISION_TRANSFORMERS.CHECKPOINT_BLOCK={with_block_checkpoints}",
                 # Options to override to get FSDP
                 "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
                 f"config.MODEL.AMP_PARAMS.USE_AMP={with_mixed_precision}",
@@ -71,10 +78,13 @@ class TestDINO_DEIT(unittest.TestCase):
         args, config = convert_to_attrdict(cfg)
         return config
 
-    def run_config(self, config):
+    def run_config(self, config, with_memory: bool = False):
         with in_temporary_directory():
             result = run_integration_test(config)
-            return result.get_losses()
+            losses = result.get_losses()
+            if with_memory:
+                return losses, result.get_peak_memory()
+            return losses
 
     @gpu_test(gpu_count=2)
     def test_pretraining_and_evaluation(self):
@@ -93,6 +103,38 @@ class TestDINO_DEIT(unittest.TestCase):
             eval_losses = self.run_config(eval_config)
             print(ddp_losses)
             print(eval_losses)
+
+    @gpu_test(gpu_count=2)
+    def test_checkpointing(self):
+        """
+        Checks that enabling activation checkpointing does not
+        change the training results
+        """
+        config = self._create_dino_pretraining_config(
+            with_mixed_precision=True, num_epochs=1
+        )
+        losses_1, memory_1 = self.run_config(config, with_memory=True)
+        self.assertGreater(len(losses_1), 0)
+
+        config = self._create_dino_pretraining_config(
+            with_mixed_precision=True, with_mlp_checkpoints=True, num_epochs=1
+        )
+        losses_2, memory_2 = self.run_config(config, with_memory=True)
+        self.assertGreater(len(losses_2), 0)
+
+        config = self._create_dino_pretraining_config(
+            with_mixed_precision=True, with_block_checkpoints=True, num_epochs=1
+        )
+        losses_3, memory_3 = self.run_config(config, with_memory=True)
+        self.assertGreater(len(losses_3), 0)
+
+        print(losses_1, memory_1)
+        print(losses_2, memory_2)
+        print(losses_3, memory_3)
+        self.assertAlmostEqual(losses_1[-1], losses_2[-1], places=5)
+        self.assertAlmostEqual(losses_1[-1], losses_3[-1], places=5)
+        self.assertLess(memory_2[-1], memory_1[-1])
+        self.assertLess(memory_3[-1], memory_2[-1])
 
     @gpu_test(gpu_count=2)
     def test_prehemption_during_training(self):

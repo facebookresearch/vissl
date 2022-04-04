@@ -695,6 +695,11 @@ config:
         DROP_PATH_RATE: 0
         QKV_BIAS: False # Bias for QKV in attention layers.
         QK_SCALE: False # Scale
+        # Optimisation tricks:
+        # * CHECKPOINT_MLP allows to checkpoint each MLP in blocks
+        # * CHECKPOINT_BLOCKS will checkpoint the entire block instead
+        CHECKPOINT_MLP: False
+        CHECKPOINT_BLOCK: False
 
       # ------------------------------------------------------------- #
       # XCiT (https://arxiv.org/abs/2106.09681)

@@ -32,6 +32,7 @@ from typing import List, Tuple
 
 import torch
 import torch.nn as nn
+from fairscale.nn import checkpoint_wrapper
 from vissl.config import AttrDict
 from vissl.models.model_helpers import DropPath, to_2tuple, trunc_normal_
 from vissl.models.trunks import register_model_trunk
@@ -269,7 +270,7 @@ class VisionTransformer(nn.Module):
         return nn.ModuleList(blocks)
 
     def _build_block(self, dpr: float, norm_layer) -> nn.Module:
-        return Block(
+        block = Block(
             dim=self.embed_dim,
             num_heads=self.num_heads,
             mlp_ratio=self.mlp_ratio,
@@ -280,6 +281,11 @@ class VisionTransformer(nn.Module):
             drop_path=dpr,
             norm_layer=norm_layer,
         )
+        if self.trunk_config.CHECKPOINT_MLP:
+            block.mlp = checkpoint_wrapper(block.mlp)
+        if self.trunk_config.CHECKPOINT_BLOCK:
+            block = checkpoint_wrapper(block)
+        return block
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):

@@ -167,6 +167,20 @@ def parse_losses_from_log_file(file_name: str):
     return iterations, losses
 
 
+def parse_peak_memory_from_log_file(file_name: str) -> List[float]:
+    peak_memory = []
+    regex = re.compile(r"peak_mem\(M\): (.*?);")
+    with open(file_name, "r") as file:
+        for line in file:
+            if not line.startswith("INFO"):
+                continue
+            match = regex.search(line)
+            if match is not None:
+                value = float(match.group(1))
+                peak_memory.append(value)
+    return peak_memory
+
+
 def parse_accuracies_from_log_file(file_name: str) -> List[str]:
     """
     Read a log file produced by VISSL and extract the list of accuracies
@@ -204,6 +218,10 @@ class IntegrationTestLogs:
     def get_losses(self) -> List[float]:
         log_path = os.path.join(self.run_dir, "log.txt")
         return parse_losses_from_log_file(log_path)[1]
+
+    def get_peak_memory(self) -> List[float]:
+        log_path = os.path.join(self.run_dir, "log.txt")
+        return parse_peak_memory_from_log_file(log_path)
 
     def get_losses_with_iterations(self) -> Tuple[List[int], List[float]]:
         log_path = os.path.join(self.run_dir, "log.txt")
