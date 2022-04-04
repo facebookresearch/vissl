@@ -808,10 +808,12 @@ class SelfSupervisionTask(ClassificationTask):
                 checkpoint_path=self.checkpoint_path,
                 device=torch.device("cpu"),
             )
-
-            self.iteration = self.checkpoint["iteration"]
-            self.local_iteration_num = self.checkpoint["iteration_num"]
-            vissl_state_dict = self.checkpoint.get("classy_state_dict")
+            if self.checkpoint is not None:
+                self.iteration = self.checkpoint["iteration"]
+                self.local_iteration_num = self.checkpoint["iteration_num"]
+                vissl_state_dict = self.checkpoint.get("classy_state_dict")
+            else:
+                raise ValueError(f"Could not load checkpoint: {self.checkpoint_path}")
 
         current_train_phase_idx = (
             vissl_state_dict["train_phase_idx"] + 1 if vissl_state_dict else 0

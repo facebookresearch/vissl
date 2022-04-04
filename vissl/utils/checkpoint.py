@@ -215,12 +215,15 @@ class CheckpointLoader:
     @classmethod
     def load_and_broadcast_checkpoint(
         cls, checkpoint_folder: str, checkpoint_path: str, device
-    ):
+    ) -> Optional[Dict]:
         """
         Load the checkpoint at the provided path, dealing with the
         potential indirection due to the notion of sharded checkpoint
         """
         checkpoint = load_and_broadcast_checkpoint(checkpoint_path, device)
+        if checkpoint is None:
+            return checkpoint
+
         cls._update_version(checkpoint)
         if cls._is_shard_aggregator_checkpoint(checkpoint):
             _, global_rank = get_machine_local_and_dist_rank()
