@@ -49,7 +49,9 @@ setup(
     python_requires=">=3.6.2",
     extras_require={
         "dev": [
-            "black==19.3b0",
+            # "click==8.0.4",
+            "black==22.3.0",
+            # "black==19.3b0",
             "sphinx",
             "isort==5.7.0",
             "flake8==3.8.1",
