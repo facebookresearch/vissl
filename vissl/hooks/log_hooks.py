@@ -188,6 +188,7 @@ class LogLossLrEtaHook(ClassyHook):
             self.json_stdout_logger = g_pathmgr.open(
                 f"{checkpoint_folder}/stdout.json",
                 mode="a",
+                buffering=1,  # line buffer - flush each line
             )
             atexit.register(self.json_stdout_logger.close)
 
