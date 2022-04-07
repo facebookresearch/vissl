@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 import torch.nn as nn
 from fvcore.common.param_scheduler import ParamScheduler
@@ -28,7 +28,7 @@ if is_apex_available():
     _NORM_TYPES += (apex.parallel.SyncBatchNorm,)
 
 
-def _get_bn_optimizer_params(
+def _get_norm_optimizer_params(
     module: nn.Module,
     regularized_params: List[nn.Parameter],
     unregularized_params: List[nn.Parameter],
@@ -108,6 +108,54 @@ def _assign_regularized_params(
     return parameters_to_unregularize, regularized_param_list, unregularized_param_list
 
 
+def get_dino_optimizer_param_groups(
+    model: nn.Module,
+    model_config: AttrDict,
+    optimizer_config: AttrDict,
+    optimizer_schedulers: Dict[str, ParamScheduler],
+):
+    """
+    DINO specific way of creation parameter groups
+    Adapted from: https://github.com/facebookresearch/dino/blob/main/utils.py
+    """
+    if "weight_decay" in optimizer_schedulers:
+        weight_decay_main_config = optimizer_schedulers["weight_decay"]
+    else:
+        weight_decay_main_config = optimizer_config.weight_decay
+
+    regularized_names = []
+    not_regularized_names = []
+    regularized = []
+    not_regularized = []
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            continue
+        # we do not regularize biases nor Norm parameters
+        if name.endswith(".bias") or len(param.shape) == 1:
+            not_regularized_names.append(name)
+            not_regularized.append(param)
+        else:
+            regularized_names.append(name)
+            regularized.append(param)
+    logging.info(f"Regularized parameters: {len(regularized_names)}")
+    logging.info(f"Unregularized parameters: {len(not_regularized_names)}")
+
+    param_groups = [
+        {
+            "params": regularized,
+            "lr": optimizer_schedulers["lr"],
+            "weight_decay": weight_decay_main_config,
+        },
+        {
+            "params": not_regularized,
+            "lr": optimizer_schedulers["lr"],
+            "weight_decay": 0.0,
+        },
+    ]
+    param_groups = [pg for pg in param_groups if len(pg["params"])]
+    return param_groups
+
+
 def get_optimizer_param_groups(
     model: nn.Module,
     model_config: AttrDict,
@@ -142,6 +190,11 @@ def get_optimizer_param_groups(
             }
         ]
     """
+    if optimizer_config.param_group_constructor == "dino":
+        return get_dino_optimizer_param_groups(
+            model, model_config, optimizer_config, optimizer_schedulers
+        )
+
     if "weight_decay" in optimizer_schedulers:
         weight_decay_main_config = optimizer_schedulers["weight_decay"]
     else:
@@ -203,7 +256,7 @@ def get_optimizer_param_groups(
             (
                 head_regularized_params,
                 head_unregularized_params,
-            ) = _get_bn_optimizer_params(
+            ) = _get_norm_optimizer_params(
                 module,
                 head_regularized_params,
                 head_unregularized_params,
@@ -228,7 +281,7 @@ def get_optimizer_param_groups(
             (
                 trunk_regularized_params,
                 trunk_unregularized_params,
-            ) = _get_bn_optimizer_params(
+            ) = _get_norm_optimizer_params(
                 module,
                 trunk_regularized_params,
                 trunk_unregularized_params,

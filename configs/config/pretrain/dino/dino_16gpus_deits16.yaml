@@ -64,7 +64,11 @@ config:
         DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
     HEAD:
       PARAMS: [
-              ["swav_head", {"use_weight_norm_prototypes": True, "dims": [384, 2048, 2048, 256], "use_bn": False, "return_embeddings": False, "activation_name": "GELU", "num_clusters": [65536]}],
+        ["dino_head", {
+          "in_dim": 384,
+          "num_clusters": [65536],
+          "normalize_last_layer": false,
+        }],
       ]
     TEMP_FROZEN_PARAMS_ITER_MAP: [
       ['module.heads.0.prototypes0.weight_v', 1251],
@@ -81,27 +85,15 @@ config:
       teacher_temp_min: 0.04
       teacher_temp_max: 0.07
       ema_center: 0.9
-      normalize_last_layer: false
   OPTIMIZER:
       name: adamw
       momentum: 0.9
       nesterov: False
       num_epochs: 300
+      param_group_constructor: dino
       regularize_bn: False
       regularize_bias: False
       param_schedulers:
-        lr_head:
-          name: composite
-          schedulers:
-            - name: linear
-              start_value: 0.00001
-              end_value: 0.002
-            - name: cosine
-              start_value: 0.002
-              end_value: 0.00001
-          update_interval: epoch
-          interval_scaling: [rescaled, fixed]
-          lengths: [0.0333, 0.9667]
         lr:
           name: composite
           schedulers:
@@ -115,11 +107,6 @@ config:
           interval_scaling: [rescaled, fixed]
           lengths: [0.0333, 0.9667]
         weight_decay:
-          name: cosine
-          start_value: 0.04
-          end_value: 0.4
-          update_interval: epoch
-        weight_decay_head:
           name: cosine
           start_value: 0.04
           end_value: 0.4

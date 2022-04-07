@@ -69,6 +69,7 @@ from vissl.models.heads.siamese_concat_view import (  # isort:skip  # noqa
 from vissl.models.heads.swav_prototypes_head import (  # isort:skip  # noqa
     SwAVPrototypesHead,
 )
+from vissl.models.heads.dino_head import DINOHead  # isort:skip  # noqa
 
 __all__ = [
     "get_model_head",
@@ -76,4 +77,5 @@ __all__ = [
     "MLP",
     "SiameseConcatView",
     "SwAVPrototypesHead",
+    "DINOHead",
 ]

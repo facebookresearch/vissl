@@ -41,7 +41,7 @@ class TestDINO_DEIT(unittest.TestCase):
                 # Options to override to get FSDP
                 "config.MODEL.AMP_PARAMS.AMP_TYPE=pytorch",
                 f"config.MODEL.AMP_PARAMS.USE_AMP={with_mixed_precision}",
-                "config.OPTIMIZER.construct_single_param_group_only=True",
+                "config.OPTIMIZER.construct_single_param_group_only=False",
                 "config.MODEL.FSDP_CONFIG.AUTO_WRAP_THRESHOLD=0",
             ]
         )

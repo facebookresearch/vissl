@@ -91,8 +91,10 @@ class DINOLoss(ClassyLoss):
         batch_center = batch_center / (len(self.teacher_output) * get_world_size())
 
         # ema update
-        m = self.loss_config.ema_center
-        self.center = self.center * m + batch_center * (1 - m)
+        center_momentum = self.loss_config.ema_center
+        self.center = self.center * center_momentum + batch_center * (
+            1 - center_momentum
+        )
 
     def forward(self, output: List[torch.Tensor], *args, **kwargs):
         student_out = output[-1] / self.loss_config["student_temp"]

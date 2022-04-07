@@ -30,9 +30,9 @@ class DINOHook(ClassyHook):
         This hook corresponds to the DINO: the framework proposed in the xxx paper.
 
         Called before each forward to get teacher outputs and after every iteration to update
-        the momentum teacher, optionally normalize the last layer and updating the teacher
-        temperature. At the beginning of training i.e. after
-        1st forward call, the encoder is contructed and updated.
+        the momentum teacher, optionally  updating the teacher temperature.
+
+        At the beginning of training i.e. after 1st forward call, the encoder is constructed.
         """
         super().__init__()
         self.teacher_temp_schedule = None
@@ -80,6 +80,7 @@ class DINOHook(ClassyHook):
         Each teacher parameter becomes a weighted average of its old self and the
         newest student.
         """
+        # Cosine schedule for the teacher momentum
         m = 1 - 0.5 * (1 - task.loss.loss_config.momentum) * (
             math.cos(math.pi * task.iteration / task.max_iteration) + 1
         )
@@ -95,7 +96,7 @@ class DINOHook(ClassyHook):
             param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
 
     @torch.no_grad()
-    def get_teacher_temperature(self, task: tasks.ClassyTask) -> None:
+    def update_teacher_temperature(self, task: tasks.ClassyTask) -> None:
         """
         Update the teacher temperature
         """
@@ -136,62 +137,8 @@ class DINOHook(ClassyHook):
             for i in task.loss.loss_config["crops_for_teacher"]
         ]
         task.loss.teacher_output = task.loss.momentum_teacher(im_k)[0][-1]
-        self.get_teacher_temperature(task)
+        self.update_teacher_temperature(task)
 
     @torch.no_grad()
     def on_update(self, task: "tasks.ClassyTask") -> None:
         self._update_momentum_network(task)
-        self.normalize_last_layer(task)
-
-    @torch.no_grad()
-    def on_start(self, task: "tasks.ClassyTask") -> None:
-        """
-        Optionally normalize prototypes
-        """
-        self.normalize_last_layer(task)
-
-    @torch.no_grad()
-    def normalize_last_layer(self, task: "tasks.ClassyTask") -> None:
-        """
-        Optionally normalize prototypes
-        """
-        if not task.config.LOSS["dino_loss"].normalize_last_layer:
-            return
-        try:
-            for j in range(task.model.heads[0].nmb_heads):
-                w = getattr(
-                    task.model.heads[0], "prototypes" + str(j)
-                ).weight.data.clone()
-                w = nn.functional.normalize(w, dim=1, p=2)
-                getattr(task.model.heads[0], "prototypes" + str(j)).weight.copy_(w)
-        except AttributeError:
-            # TODO (mathildecaron): don't use getattr
-            for j in range(task.model.module.heads[0].nmb_heads):
-                w = getattr(
-                    task.model.module.heads[0], "prototypes" + str(j)
-                ).weight.data.clone()
-                w = nn.functional.normalize(w, dim=1, p=2)
-                getattr(task.model.module.heads[0], "prototypes" + str(j)).weight.copy_(
-                    w
-                )
-        if task.loss.momentum_teacher is not None:
-            try:
-                for j in range(task.loss.momentum_teacher.heads[0].nmb_heads):
-                    w = getattr(
-                        task.loss.momentum_teacher.heads[0], "prototypes" + str(j)
-                    ).weight.data.clone()
-                    w = nn.functional.normalize(w, dim=1, p=2)
-                    getattr(
-                        task.loss.momentum_teacher.heads[0], "prototypes" + str(j)
-                    ).weight.copy_(w)
-            except AttributeError:
-                for j in range(task.loss.momentum_teacher.module.heads[0].nmb_heads):
-                    w = getattr(
-                        task.loss.momentum_teacher.module.heads[0],
-                        "prototypes" + str(j),
-                    ).weight.data.clone()
-                    w = nn.functional.normalize(w, dim=1, p=2)
-                    getattr(
-                        task.loss.momentum_teacher.module.heads[0],
-                        "prototypes" + str(j),
-                    ).weight.copy_(w)

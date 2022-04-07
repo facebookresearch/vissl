@@ -16,24 +16,24 @@ config:
     TRAIN:
       DATA_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      BATCHSIZE_PER_REPLICA: 16
+      BATCHSIZE_PER_REPLICA: 32
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
         - name: ImgPilToMultiCrop
-          total_num_crops: 8
+          total_num_crops: 10
           size_crops: [224, 96]
-          num_crops: [2, 6]
-          crop_scales: [[0.25, 1], [0.05, 0.25]]
+          num_crops: [2, 8]
+          crop_scales: [[0.3, 1], [0.05, 0.3]]
         - name: RandomHorizontalFlip
           p: 0.5
         - name: ImgPilColorDistortion
           strength: 0.5
         - name: ImgPilMultiCropRandomApply
           transforms: [{"name": "ImgPilGaussianBlur", "p": 1., "radius_min": 0.1, "radius_max": 2.0}]
-          prob: [1., 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+          prob: [1., 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
         - name: ImgPilMultiCropRandomApply
           transforms: [{"name": "ImgPilRandomSolarize", "p": 1.}]
-          prob: [0., 0.2, 0., 0., 0, 0, 0, 0]
+          prob: [0., 0.2, 0., 0., 0, 0, 0, 0, 0, 0]
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
@@ -49,23 +49,24 @@ config:
     name: ""
   MODEL:
     TRUNK:
-      NAME: vision_transformer
-      VISION_TRANSFORMERS:
+      NAME: xcit
+      XCIT:
         IMAGE_SIZE: 224
-        PATCH_SIZE: 8
-        NUM_LAYERS: 12
-        NUM_HEADS: 6
-        HIDDEN_DIM: 384
-        MLP_DIM: 1532
-        CLASSIFIER: token
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 512
+        NUM_LAYERS: 24
+        NUM_HEADS: 8
+        MLP_RATIO: 4.0
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.15
+        ETA: 1e-5
+        TOKENS_NORM: True
         QKV_BIAS: True
-        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
     HEAD:
       PARAMS: [
         ["dino_head", {
-          "in_dim": 384,
+          "in_dim": 512,
           "num_clusters": [65536],
           "normalize_last_layer": false,
         }],
@@ -76,7 +77,11 @@ config:
       ]
     AMP_PARAMS:
       AMP_TYPE: pytorch
-      USE_AMP: False
+      USE_AMP: True
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 0
   LOSS:
     name: dino_loss
     dino_loss:
@@ -85,35 +90,36 @@ config:
       teacher_temp_min: 0.04
       teacher_temp_max: 0.07
       ema_center: 0.9
+      normalize_last_layer: false
   OPTIMIZER:
-      name: adamw
-      momentum: 0.9
-      nesterov: False
-      num_epochs: 300
-      param_group_constructor: dino
-      regularize_bn: False
-      regularize_bias: False
-      param_schedulers:
-        lr:
-          name: composite
-          schedulers:
-            - name: linear
-              start_value: 0.00001
-              end_value: 0.002
-            - name: cosine
-              start_value: 0.002
-              end_value: 0.00001
-          update_interval: epoch
-          interval_scaling: [rescaled, fixed]
-          lengths: [0.0333, 0.9667]
-        weight_decay:
-          name: cosine
-          start_value: 0.04
-          end_value: 0.4
-          update_interval: epoch
+    name: adamw
+    momentum: 0.9
+    nesterov: False
+    num_epochs: 300
+    param_group_constructor: dino
+    regularize_bn: False
+    regularize_bias: False
+    param_schedulers:
+      lr:
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.00001
+            end_value: 0.001
+          - name: cosine
+            start_value: 0.001
+            end_value: 0.00001
+        update_interval: step
+        interval_scaling: [rescaled, rescaled]
+        lengths: [0.0333, 0.9667]
+      weight_decay:
+        name: cosine
+        start_value: 0.04
+        end_value: 0.4
+        update_interval: step
   DISTRIBUTED:
     BACKEND: nccl
-    NUM_NODES: 8
+    NUM_NODES: 4
     NUM_PROC_PER_NODE: 8
     INIT_METHOD: tcp
     RUN_ID: auto
@@ -124,5 +130,3 @@ config:
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 5
     OVERWRITE_EXISTING: true
-  SLURM:
-    CONSTRAINT: volta32gb
