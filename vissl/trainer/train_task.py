@@ -7,6 +7,7 @@ import gc
 import logging
 
 import torch
+from classy_vision.generic.distributed_util import is_distributed_training_run
 from classy_vision.generic.util import copy_model_to_gpu
 from classy_vision.hooks import ClassyHook
 from classy_vision.losses import build_loss
@@ -14,6 +15,7 @@ from classy_vision.meters import build_meter
 from classy_vision.optim import build_optimizer, build_optimizer_schedulers
 from classy_vision.tasks import ClassificationTask, register_task
 from classy_vision.tasks.classification_task import AmpType, BroadcastBuffersMode
+from fairscale.nn import FullyShardedDataParallel
 from iopath.common.file_io import g_pathmgr
 from torch.cuda.amp import GradScaler as TorchGradScaler
 from vissl.config import AttrDict
@@ -24,6 +26,7 @@ from vissl.utils.activation_checkpointing import manual_gradient_reduction
 from vissl.utils.checkpoint import CheckpointLoader
 from vissl.utils.ema_model import ModelEmaV2
 from vissl.utils.misc import is_apex_available, is_fairscale_sharded_available
+
 
 if is_apex_available():
     import apex
@@ -524,6 +527,23 @@ class SelfSupervisionTask(ClassificationTask):
             model = self._restore_model_weights(model, strict=strict_load)
 
         return model
+
+    def init_distributed_data_parallel_model(self):
+        """
+        This method overloads the ClassificationTask class's method from ClassyVision.
+        """
+        if not is_distributed_training_run():
+            return
+
+        for module in self.base_model.modules():
+            if isinstance(module, FullyShardedDataParallel):
+                raise ValueError(
+                    "DistributedDataParallel should not be used"
+                    "with a FullyShardedDataParallel model.\n"
+                    "Please set config.TRAINER.TASK_NAME='self_supervision_fsdp_task'"
+                )
+
+        super().init_distributed_data_parallel_model()
 
     def set_epoch(
         self, phase_type: str, epoch: int, start_iter: int, train_phase_idx: int
