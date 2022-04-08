@@ -66,7 +66,7 @@ def conv3x3(in_planes, out_planes, stride=1):
         nn.Conv2d(
             in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False
         ),
-        nn.SyncBatchNorm(out_planes),
+        nn.BatchNorm2d(out_planes),
     )
 
 
@@ -142,7 +142,7 @@ class LPI(nn.Module):
             groups=out_features,
         )
         self.act = act_layer()
-        self.bn = nn.SyncBatchNorm(in_features)
+        self.bn = nn.BatchNorm2d(in_features)
         self.conv2 = torch.nn.Conv2d(
             in_features,
             out_features,

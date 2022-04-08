@@ -75,6 +75,10 @@ config:
       ['module.heads.0.prototypes0.weight_v', 1251],
       ['module.heads.0.prototypes0.weight_g', 1251],
       ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 0
     AMP_PARAMS:
       AMP_TYPE: pytorch
       USE_AMP: True
