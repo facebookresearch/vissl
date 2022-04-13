@@ -1,0 +1,21 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK:
+      NAME: swin_transformer
+      SWIN_TRANSFORMER:
+        IMAGE_SIZE: 224
+        EMBED_DIM: 96
+        DEPTHS: [2, 2, 18, 2]
+    HEAD:
+      PARAMS: []
+    AMP_PARAMS:
+      USE_AMP: False

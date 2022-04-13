@@ -1,0 +1,24 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK:
+      NAME: swin_transformer
+      SWIN_TRANSFORMER:
+        IMAGE_SIZE: 224
+        EMBED_DIM: 96
+        DEPTHS: [2, 2, 18, 2]
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 1000]}],
+      ]
+  OPTIMIZER:
+    regularize_bn: True

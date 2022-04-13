@@ -1,0 +1,116 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 2
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      PERF_STAT_FREQUENCY: 40
+      ROLLING_BTIME_FREQ: 5
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet1k_filelist]
+      BATCHSIZE_PER_REPLICA: 16
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 10
+          size_crops: [224, 96]
+          num_crops: [2, 8]
+          crop_scales: [[0.4, 1], [0.05, 0.4]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 0.5
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilGaussianBlur", "p": 1., "radius_min": 0.1, "radius_max": 2.0}]
+          prob: [1., 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilRandomSolarize", "p": 1.}]
+          prob: [0., 0.2, 0., 0., 0, 0, 0, 0, 0, 0]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
+      # TODO - make it work for FSDP scaling?
+      # COLLATE_FUNCTION_PARAMS:
+      #   create_multidimensional_tensor: True
+      COPY_TO_LOCAL_DISK: False
+      DATA_LIMIT: 250
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: swin_transformer
+      SWIN_TRANSFORMER:
+        IMAGE_SIZE: 224
+        EMBED_DIM: 96
+        DEPTHS: [2, 2, 6, 2]
+    HEAD:
+      PARAMS: [
+        ["dino_head", {
+          "in_dim": 768,
+          "num_clusters": [65536],
+          "normalize_last_layer": True,
+        }],
+      ]
+    TEMP_FROZEN_PARAMS_ITER_MAP: [
+      ['module.heads.0.prototypes0.weight_v', 2],
+      ['module.heads.0.prototypes0.weight_g', 2],
+    ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+  LOSS:
+    name: dino_loss
+    dino_loss:
+      momentum: 0.996
+      ema_center: 0.9
+      teacher_temp_warmup_iters: 7
+  OPTIMIZER:
+    name: adamw
+    momentum: 0.9
+    nesterov: False
+    num_epochs: 10
+    param_group_constructor: dino
+    regularize_bn: False
+    regularize_bias: False
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.3
+          base_lr_batch_size: 256
+        name: cosine
+        start_value: 0.15   # LR for batch size 256
+        end_value: 0.0000
+        update_interval: step
+      weight_decay:
+        name: cosine
+        start_value: 0.04
+        end_value: 0.4
+        update_interval: step
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 2
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu
+  CHECKPOINT:
+    DIR: "."
+    AUTO_RESUME: True
+    CHECKPOINT_FREQUENCY: 1
+    OVERWRITE_EXISTING: true
+    USE_SYMLINK_CHECKPOINT_FOR_RESUME: True

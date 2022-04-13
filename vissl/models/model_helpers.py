@@ -323,6 +323,24 @@ def parse_out_keys_arg(
     return out_feat_keys, max_out_feat
 
 
+def rearrange(x: torch.Tensor, pattern: str) -> torch.Tensor:
+    """
+    Rearranges a tensor by permuting its inputs based on a pattern
+    provided as input
+
+    Example:
+
+        rearrange(torch.randn(size=(2, 3, 4, 5, 6)), 'n d h w c -> n c d h w').shape
+        > torch.Size([2, 6, 3, 4, 5])
+    """
+    before, after = pattern.split("->")
+    before = before.strip().split(" ")
+    after = after.strip().split(" ")
+    after = [before.index(a) for a in after]
+    assert len(after) == len(before)
+    return x.permute(after)
+
+
 def get_trunk_forward_outputs_module_list(
     feat: torch.Tensor,
     out_feat_keys: List[str],

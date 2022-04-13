@@ -722,6 +722,28 @@ config:
         QK_SCALE: False # Scale
 
       # ------------------------------------------------------------- #
+      # Swin-Transformer parameters
+      # https://arxiv.org/abs/2103.14030
+      # These default parameters correspond to the SwinT-Tiny variant
+      # ------------------------------------------------------------- #
+      SWIN_TRANSFORMER:
+        name:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 4
+        EMBED_DIM: 96
+        DEPTHS: [2, 2, 6, 2]
+        NUM_HEADS: [3, 6, 12, 24]
+        WINDOW_SIZE: 7
+        MLP_RATIO: 4.0
+        # MLP and projection layer dropout rate
+        DROPOUT_RATE: 0
+        # Attention dropout rate
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.1
+        QKV_BIAS: True
+        QK_SCALE: False # Scale
+
+      # ------------------------------------------------------------- #
       # BEiT.
       # https://github.com/microsoft/unilm/blob/master/beit/modeling_finetune.py
       # https://arxiv.org/pdf/2106.08254.pdf

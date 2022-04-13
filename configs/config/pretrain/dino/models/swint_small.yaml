@@ -1,0 +1,24 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 10
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+  MODEL:
+    TRUNK:
+      NAME: swin_transformer
+      SWIN_TRANSFORMER:
+        IMAGE_SIZE: 224
+        EMBED_DIM: 96
+        DEPTHS: [2, 2, 18, 2]
+    HEAD:
+      PARAMS: [
+        ["dino_head", {
+          "in_dim": 768,
+          "num_clusters": [65536],
+          "normalize_last_layer": True,
+        }],
+      ]
+  DISTRIBUTED:
+    NUM_NODES: 4
+    NUM_PROC_PER_NODE: 8
