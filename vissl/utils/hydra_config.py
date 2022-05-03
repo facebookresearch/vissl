@@ -456,7 +456,11 @@ def infer_losses_config(cfg):
     # some inference for DINO loss.
     if cfg.LOSS.name == "dino_loss":
         assert len(cfg.MODEL.HEAD.PARAMS) == 1
-        assert cfg.MODEL.HEAD.PARAMS[0][0] in {"swav_head", "dino_head"}
+        assert cfg.MODEL.HEAD.PARAMS[0][0] in {
+            "swav_head",
+            "dino_head",
+            "dino_head_fsdp",
+        }
         cfg.LOSS.dino_loss.output_dim = cfg.MODEL.HEAD.PARAMS[0][1]["num_clusters"][0]
         cfg.LOSS.dino_loss.num_crops = total_num_crops or cfg.LOSS.dino_loss.num_crops
         cfg.DATA.TRAIN.COLLATE_FUNCTION = "multicrop_collator"

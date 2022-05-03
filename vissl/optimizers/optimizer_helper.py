@@ -131,7 +131,7 @@ def get_dino_optimizer_param_groups(
         if not param.requires_grad:
             continue
         # we do not regularize biases nor Norm parameters
-        if name.endswith(".bias") or len(param.shape) == 1:
+        if name.endswith(".bias") or "norm" in name:
             not_regularized_names.append(name)
             not_regularized.append(param)
         else:

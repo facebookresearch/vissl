@@ -2,12 +2,48 @@
 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-from typing import List
+from typing import List, Optional
 
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn.utils.weight_norm import WeightNorm
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.models.model_helpers import trunc_normal_
+from vissl.utils.fsdp_utils import fsdp_wrapper
+
+
+class NormalizedLinearLayer(nn.Module):
+    """
+    Linear layer where the weights are normalized, equivalent to the output
+    of "nn.utils.weight_norm" but compatible with FSDP
+    """
+
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        init_weight_v: Optional[torch.Tensor] = None,
+    ):
+        super().__init__()
+        self.weight_v = nn.Parameter(torch.Tensor(out_features, in_features))
+        self.register_buffer("weight_g", torch.Tensor(out_features, 1))
+        if init_weight_v is not None:
+            self.weight_v.data.copy_(init_weight_v)
+        self.weight_g.data.fill_(1)
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        # The following code is equivalent to, but keeps more
+        # precision than:
+        #
+        #   norm = self.weight_v.norm(dim=-1, keepdim=True)
+        #   weight = self.weight_v / norm * self.weight_g
+        #
+        # And wo we keep it that way:
+        weight_norm = WeightNorm(name="weight", dim=0)
+        weight = weight_norm.compute_weight(self)
+        return F.linear(input, weight)
 
 
 @register_model_head("dino_head")
@@ -72,3 +108,49 @@ class DINOHead(nn.Module):
         x = nn.functional.normalize(x, dim=-1, p=2)
         x = self.prototypes0(x)
         return [x]
+
+
+@register_model_head("dino_head_fsdp")
+def DINOHeadFSDP(
+    model_config: AttrDict,
+    in_dim: int,
+    num_clusters: List[int],
+    use_bn: bool = False,
+    normalize_last_layer: bool = True,
+    num_layers: int = 3,
+    hidden_dim: int = 2048,
+    bottleneck_dim: int = 256,
+):
+    head = DINOHead(
+        model_config=model_config,
+        in_dim=in_dim,
+        num_clusters=num_clusters,
+        use_bn=use_bn,
+        normalize_last_layer=normalize_last_layer,
+        num_layers=num_layers,
+        hidden_dim=hidden_dim,
+        bottleneck_dim=bottleneck_dim,
+    )
+
+    # TODO - FSDP does not work around "nn.utils.weight_norm" when
+    #  required_grad is set to False on "weight_g", as it seems that
+    #  FSDP requires all the parameters to be requiring grad or none
+    #  of them, so we workaround it by making "weight_g" a buffer
+    #  instead of a nn.Parameter
+    if normalize_last_layer:
+        head.prototypes0 = NormalizedLinearLayer(
+            bottleneck_dim,
+            num_clusters[0],
+            init_weight_v=head.prototypes0.weight_v.data,
+        )
+
+    # Wrap prototypes in FP32
+    prototypes_fp32_fsdp_config = model_config.FSDP_CONFIG.copy()
+    prototypes_fp32_fsdp_config["flatten_parameters"] = False
+    prototypes_fp32_fsdp_config["mixed_precision"] = False
+    prototypes_fp32_fsdp_config["fp32_reduce_scatter"] = False
+    prototypes_fp32_fsdp_config["compute_dtype"] = torch.float32
+    head.prototypes0 = fsdp_wrapper(head.prototypes0, **prototypes_fp32_fsdp_config)
+
+    # Wrap the rest of the head
+    return fsdp_wrapper(head, **model_config.FSDP_CONFIG)

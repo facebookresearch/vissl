@@ -502,7 +502,8 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         if isinstance(self.trunk, FSDP) or any(
             isinstance(head, FSDP) for head in self.heads
         ):
-            return  # TODO (Quentin) - log the weights of the loaded shard
+            # TODO (Quentin) - log the weights of the loaded shard
+            return
 
         if self.local_rank == 0:
             trunk_state_dict, heads_state_dict = (

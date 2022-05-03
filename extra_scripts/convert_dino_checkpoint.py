@@ -9,10 +9,11 @@ evaluable checkpoint (to easily benchmark DINO momentum encoder)
 """
 
 import argparse
-from typing import List
 
 import torch
-from vissl.utils.checkpoint import CheckpointItemType
+from iopath.common.file_io import g_pathmgr
+from vissl.utils.checkpoint import CheckpointItemType, DINOCheckpointUtils
+from vissl.utils.env import setup_path_manager
 
 
 def parse_arguments():
@@ -22,41 +23,22 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def remove_prefix(key: str, prefixes: List[str]):
-    """
-    Remove one of the prefixes provided as parameter
-    """
-    for prefix in prefixes:
-        if key.startswith(prefix):
-            return key.replace(prefix, "")
-    raise ValueError(f"Expected one prefix to be removed among {prefixes}")
-
-
 def extract_momentum_encoder(input_path: str, output_path: str):
-    input_cp = torch.load(input_path, map_location="cpu")
-    loss_cp = input_cp["classy_state_dict"]["loss"]
+    # Load the checkpoint
+    setup_path_manager()
+    with g_pathmgr.open(input_path, "rb") as f:
+        input_cp = torch.load(f, map_location="cpu")
 
-    trunk_weights = {}
-    heads_weights = {}
-    for k, v in loss_cp.items():
-        if "trunk" in k:
-            k = remove_prefix(
-                k, ["momentum_teacher.module.trunk.", "momentum_teacher.trunk."]
-            )
-            trunk_weights[k] = v
-        elif "heads" in k:
-            k = remove_prefix(
-                k, ["momentum_teacher.module.heads.", "momentum_teacher.heads"]
-            )
-            heads_weights[k] = v
-
-    output_cp = {
-        "type": CheckpointItemType.consolidated.name,
-        "classy_state_dict": {
-            "base_model": {"model": {"trunk": trunk_weights, "heads": heads_weights}}
-        },
-    }
-    torch.save(output_cp, output_path)
+    # Dispatch the extraction depending on checkpoint type
+    checkpoint_type = input_cp.get("type", CheckpointItemType.consolidated.name)
+    if checkpoint_type == CheckpointItemType.consolidated.name:
+        DINOCheckpointUtils.extract_teacher_from_consolidated_checkpoint(
+            input_cp, output_path
+        )
+    elif checkpoint_type == CheckpointItemType.shard_list.name:
+        DINOCheckpointUtils.extract_teacher_from_sharded_checkpoint(
+            input_path, output_path
+        )
 
 
 if __name__ == "__main__":

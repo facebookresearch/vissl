@@ -821,6 +821,9 @@ class SelfSupervisionTask(ClassificationTask):
             self._create_ema_model()
 
         # Restore an hypothetical checkpoint
+        # - For DDP model, the load will load the full model on all ranks
+        # - For FSDP model, the load will automatically dispatch to the shard
+        #   to be loaded by the current rank
         vissl_state_dict = None
         if self.checkpoint_path is not None:
             self.checkpoint = CheckpointLoader.load_and_broadcast_checkpoint(

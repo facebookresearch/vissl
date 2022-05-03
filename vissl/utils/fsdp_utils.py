@@ -80,7 +80,8 @@ def fsdp_wrapper(module, **kwargs):
 
     # Add global process group to the list of keys
     fsdp_config = dict(**kwargs)
-    fsdp_config["process_group"] = get_global_group()
+    if "process_group" not in fsdp_config:
+        fsdp_config["process_group"] = get_global_group()
     if fsdp_config.get("_TRACK_COMMUNICATIONS", False):
         fsdp_config["process_group"] = ProcessGroupTracker(fsdp_config["process_group"])
 

@@ -6,6 +6,7 @@ import contextlib
 import hashlib
 import logging
 import os
+import re
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional
 
@@ -1159,3 +1160,160 @@ def interpolate_position_embeddings(model, layer, param):
             except BaseException:
                 raise RuntimeError("Unable to interpolate position embeddings")
     return param
+
+
+class DINOCheckpointUtils:
+    """
+    Checkpoint utilities to extract the teacher of DINO
+    into a standard VISSL checkpoint
+    """
+
+    @staticmethod
+    def remove_prefix(key: str, prefixes: List[str]):
+        """
+        Remove one of the prefixes provided as parameter
+        """
+        for prefix in prefixes:
+            if key.startswith(prefix):
+                return key.replace(prefix, "")
+        raise ValueError(f"Expected one prefix to be removed among {prefixes}")
+
+    @classmethod
+    def extract_teacher_from_consolidated_checkpoint(
+        cls, input_cp: dict, output_path: str
+    ):
+        output_folder = os.path.split(output_path)[0]
+        makedir(output_folder)
+
+        loss_cp = input_cp["classy_state_dict"]["loss"]
+        trunk_weights, heads_weights = {}, {}
+        for k, v in loss_cp.items():
+            if "trunk" in k:
+                k = cls.remove_prefix(
+                    k, ["momentum_teacher.module.trunk.", "momentum_teacher.trunk."]
+                )
+                trunk_weights[k] = v
+            elif "heads" in k:
+                k = cls.remove_prefix(
+                    k, ["momentum_teacher.module.heads.", "momentum_teacher.heads."]
+                )
+                heads_weights[k] = v
+        output_cp = {
+            "type": CheckpointItemType.consolidated.name,
+            "classy_state_dict": {
+                "base_model": {
+                    "model": {"trunk": trunk_weights, "heads": heads_weights}
+                }
+            },
+        }
+        with g_pathmgr.open(output_path, "wb") as f:
+            torch.save(output_cp, f)
+
+    @classmethod
+    def extract_teacher_from_sharded_checkpoint(
+        cls, input_checkpoint_path: str, output_checkpoint_path: str
+    ):
+        """
+        For sharded checkpoint, we extract the teacher shards from each shard and save a new
+        sharded checkpoint where the shards weights contain the teacher shard weights
+        """
+        with g_pathmgr.open(input_checkpoint_path, "rb") as f:
+            checkpoint = torch.load(f, map_location="cpu")
+            assert checkpoint["type"] == CheckpointItemType.shard_list.name
+
+        input_folder = os.path.split(input_checkpoint_path)[0]
+        output_folder = os.path.split(output_checkpoint_path)[0]
+        makedir(output_folder)
+
+        output_shard_list = []
+        extract_shard_id = re.compile(r".*_shard([0-9]*)$")
+        for input_shard_path in checkpoint["shards"]:
+            input_shard_name = os.path.splitext(input_shard_path)[0]
+            print(input_shard_name)
+            match = extract_shard_id.match(input_shard_name)
+            shard_id = match.group(1)
+
+            if not os.path.isabs(input_shard_path):
+                input_shard_path = os.path.join(input_folder, input_shard_path)
+
+            with g_pathmgr.open(input_shard_path, "rb") as f:
+                shard_content = torch.load(f, map_location="cpu")
+
+            trunk_weights, heads_weights = {}, {}
+            for name, value in shard_content["classy_state_dict"]["loss"][
+                "teacher"
+            ].items():
+                if name.startswith("trunk."):
+                    trunk_weights[name.replace("trunk.", "")] = value
+                elif name.startswith("trunk"):
+                    trunk_weights[name.replace("trunk", "")] = value
+                elif name.startswith("heads."):
+                    trunk_weights[name.replace("heads.", "")] = value
+                else:
+                    raise ValueError(name)
+
+            shard_meta = shard_content["classy_state_dict"]["loss"]["teacher_meta"]
+            shard_param_meta = shard_meta["param_metadata"]
+            shard_buffer_names = shard_meta["buffer_names"]
+
+            trunk_meta = {
+                "param_metadata": [
+                    cls._remove_fsdp_path_prefix(m, "trunk")
+                    for m in shard_param_meta
+                    if m["fsdp_path"].startswith("trunk")
+                ],
+                "buffer_names": [
+                    n.replace("trunk.", "").replace("trunk", "")
+                    for n in shard_buffer_names
+                    if n.startswith("trunk")
+                ],
+            }
+
+            # TODO - fix heads_meta - it should be a list
+            # heads_meta = {
+            #     "param_metadata": [
+            #         cls._remove_fsdp_path_prefix(m, "heads.")
+            #         for m in shard_param_meta
+            #         if m["fsdp_path"].startswith("heads.")
+            #     ],
+            #     "buffer_names": [
+            #         n.replace("heads.", "")
+            #         for n in shard_buffer_names
+            #         if n.startswith("heads.")
+            #     ],
+            # }
+
+            output_cp = {
+                "type": CheckpointItemType.shard_list.name,
+                "classy_state_dict": {
+                    "base_model": {
+                        "model": {"trunk": trunk_weights, "heads": heads_weights},
+                        # TODO - fix heads_meta - it should be a list
+                        "meta": {"trunk": trunk_meta, "heads": []},
+                    }
+                },
+            }
+
+            # Save the shard and record its name
+            output_shard_name = os.path.splitext(output_checkpoint_path)[0]
+            output_shard_name = output_shard_name + f"_shard{shard_id}.torch"
+            output_shard_path = os.path.join(output_folder, output_shard_name)
+            output_shard_list.append(output_shard_path)
+            with g_pathmgr.open(output_shard_path, "wb") as f:
+                torch.save(output_cp, f)
+
+        # Save the shard list checkpoint
+        with g_pathmgr.open(output_checkpoint_path, "wb") as f:
+            output_shard_list_cp = {
+                "type": CheckpointItemType.shard_list.name,
+                "shards": output_shard_list,
+            }
+            torch.save(output_shard_list_cp, f)
+
+    @staticmethod
+    def _remove_fsdp_path_prefix(fsdp_meta_data, prefix: str):
+        fsdp_path = fsdp_meta_data["fsdp_path"].replace(prefix, "")
+        if fsdp_path.startswith("."):
+            fsdp_path = fsdp_path[1:]
+        fsdp_meta_data["fsdp_path"] = fsdp_path
+        return fsdp_meta_data

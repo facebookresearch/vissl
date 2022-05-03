@@ -720,6 +720,8 @@ config:
         TOKENS_NORM: True
         QKV_BIAS: True # Bias for QKV in attention layers.
         QK_SCALE: False # Scale
+        CHECKPOINT_XCA_BLOCK: False
+        CHECKPOINT_ATTN_BLOCK: False
 
       # ------------------------------------------------------------- #
       # Swin-Transformer parameters

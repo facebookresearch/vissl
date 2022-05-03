@@ -13,6 +13,7 @@ from torch import nn
 from torch.nn.parallel import DistributedDataParallel
 from vissl.models import build_model
 from vissl.models.model_helpers import get_no_ddp_model
+from vissl.utils.fsdp_utils import fsdp_recursive_reset_lazy_init, fsdp_wrapper
 
 
 class DINOHook(ClassyHook):
@@ -43,6 +44,7 @@ class DINOHook(ClassyHook):
         Create the teacher: it is an exponential moving average of the student.
         """
         logging.info("Building momentum encoder")
+        is_fsdp_model = "fsdp" in task.config.MODEL.TRUNK.NAME
 
         # Same architecture but do not apply stochastic depth
         # TODO: make drop_path_rate configurable for teacher
@@ -52,22 +54,42 @@ class DINOHook(ClassyHook):
         )
         task.loss.momentum_teacher.to(task.device)
 
-        # Restore an hypothetical checkpoint
-        if task.loss.checkpoint is not None:
-            task.loss.load_state_dict(task.loss.checkpoint)
-        # Initialize from the model
-        else:
-            task_model = get_no_ddp_model(task.model)
-            teacher_model = get_no_ddp_model(task.loss.momentum_teacher)
-            teacher_model.load_state_dict(task_model.state_dict())
+        if not is_fsdp_model:
+            # Restore an hypothetical checkpoint
+            if task.loss.checkpoint is not None:
+                task.loss.load_state_dict(task.loss.checkpoint)
+            # Else initialize from the student model
+            else:
+                task_model = get_no_ddp_model(task.model)
+                teacher_model = get_no_ddp_model(task.loss.momentum_teacher)
+                teacher_model.load_state_dict(task_model.state_dict())
 
         # Setup SyncBN (useful for the XCiT)
         task.loss.momentum_teacher = nn.SyncBatchNorm.convert_sync_batchnorm(
             task.loss.momentum_teacher
         )
-        task.loss.momentum_teacher = DistributedDataParallel(
-            task.loss.momentum_teacher, device_ids=[task.device]
-        )
+
+        # Wrap with DDP (needed for SyncBN) or FSDP
+        if is_fsdp_model:
+            fsdp_config = task.config["MODEL"]["FSDP_CONFIG"]
+            task.loss.momentum_teacher = fsdp_wrapper(
+                task.loss.momentum_teacher, **fsdp_config
+            )
+        else:
+            task.loss.momentum_teacher = DistributedDataParallel(
+                task.loss.momentum_teacher, device_ids=[task.device]
+            )
+
+        if is_fsdp_model:
+            # Restore an hypothetical checkpoint
+            if task.loss.checkpoint is not None:
+                task.loss.load_state_dict(task.loss.checkpoint)
+            else:
+                # Else initialize from the student model
+                task_model = task.base_model
+                teacher_model = task.loss.momentum_teacher
+                teacher_model.load_local_state_dict(task_model.local_state_dict())
+            fsdp_recursive_reset_lazy_init(task.loss.momentum_teacher)
 
         # no gradients for teacher model
         for p in task.loss.momentum_teacher.parameters():

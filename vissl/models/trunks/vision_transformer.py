@@ -32,10 +32,13 @@ from typing import List, Tuple
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from fairscale.nn import checkpoint_wrapper
 from vissl.config import AttrDict
 from vissl.models.model_helpers import DropPath, to_2tuple, trunc_normal_
 from vissl.models.trunks import register_model_trunk
+from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.misc import set_torch_seed
 
 
 class Mlp(nn.Module):
@@ -117,8 +120,8 @@ class Attention(nn.Module):
 class Block(nn.Module):
     def __init__(
         self,
-        dim,
-        num_heads,
+        dim: int,
+        num_heads: int,
         mlp_ratio=4.0,
         qkv_bias=False,
         qk_scale=None,
@@ -185,7 +188,21 @@ class PatchEmbed(nn.Module):
         return x
 
 
-@register_model_trunk("vision_transformer")
+class Fp32LayerNorm(nn.LayerNorm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def forward(self, input: torch.Tensor):
+        output = F.layer_norm(
+            input.float(),
+            self.normalized_shape,
+            self.weight.float() if self.weight is not None else None,
+            self.bias.float() if self.bias is not None else None,
+            self.eps,
+        )
+        return output.type_as(input)
+
+
 class VisionTransformer(nn.Module):
     """
     Vision transformer. Adding stochastic depth makes it a DeiT.
@@ -217,7 +234,7 @@ class VisionTransformer(nn.Module):
         if "HYBRID" in self.trunk_config.keys():
             hybrid_backbone_string = self.trunk_config.HYBRID
 
-        norm_layer = partial(nn.LayerNorm, eps=1e-6)
+        norm_layer = self.create_norm_layer()
 
         # num_features for consistency with other models
         self.num_features = self.embed_dim
@@ -257,7 +274,15 @@ class VisionTransformer(nn.Module):
 
         trunc_normal_(self.pos_embed, std=0.02)
         trunc_normal_(self.cls_token, std=0.02)
-        self.apply(self._init_weights)
+
+        # Initializes the weights of the children, except for the blocks
+        # who have already been initialized in the "build_blocks".
+        for name, children in self.named_children():
+            if "blocks" not in name:
+                self._init_weights(children)
+
+    def create_norm_layer(self):
+        return partial(nn.LayerNorm, eps=1e-6)
 
     def _build_blocks(self, norm_layer) -> nn.ModuleList:
         dpr = [
@@ -265,7 +290,8 @@ class VisionTransformer(nn.Module):
         ]  # stochastic depth decay rule
         blocks = []
         for i in range(self.depth):
-            block = self._build_block(dpr[i], norm_layer)
+            with set_torch_seed(self.model_config._MODEL_INIT_SEED + i + 1):
+                block = self._build_block(dpr[i], norm_layer)
             blocks.append(block)
         return nn.ModuleList(blocks)
 
@@ -281,6 +307,7 @@ class VisionTransformer(nn.Module):
             drop_path=dpr,
             norm_layer=norm_layer,
         )
+        block.apply(self._init_weights)
         if self.trunk_config.CHECKPOINT_MLP:
             block.mlp = checkpoint_wrapper(block.mlp)
         if self.trunk_config.CHECKPOINT_BLOCK:
@@ -406,3 +433,30 @@ class VisionTransformer(nn.Module):
         )
         pos_embed = pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
         return torch.cat((class_emb.unsqueeze(0), pos_embed), dim=1)
+
+
+class VisionTransformerFSDPImpl(VisionTransformer):
+    def create_norm_layer(self):
+        return partial(Fp32LayerNorm, eps=1e-6)
+
+    def _build_block(self, dpr: float, norm_layer) -> nn.Module:
+        block = super()._build_block(dpr, norm_layer)
+        block = fsdp_wrapper(block, **self.model_config["FSDP_CONFIG"])
+        return block
+
+
+@register_model_trunk("vision_transformer")
+def VisionTransformerDDP(model_config: AttrDict, model_name: str):
+    with set_torch_seed(model_config._MODEL_INIT_SEED):
+        return VisionTransformer(model_config, model_name)
+
+
+@register_model_trunk("vision_transformer_fsdp")
+def VisionTransformerFSDP(model_config: AttrDict, model_name: str):
+    """
+    Wrap the entire trunk since we need to load checkpoint before
+    train_fsdp_task.py wrapping happens.
+    """
+    with set_torch_seed(model_config._MODEL_INIT_SEED):
+        vit = VisionTransformerFSDPImpl(model_config, model_name).cuda()
+    return fsdp_wrapper(vit, **model_config.FSDP_CONFIG)

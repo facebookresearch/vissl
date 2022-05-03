@@ -515,15 +515,27 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                         meter.get_classy_state() for meter in task.ema_meters
                     ]
 
+                # Content of the loss to be saved
+                # - for DDP model, it contains the whole loss
+                # - for FSDP model, loss can override state_dict() to
+                #   save only the part related to the shard
+                loss_state_dict = task.loss.state_dict()
+
+                # Content of the checkpoint to be saved:
+                # - for DDP model, it contains the whole model
+                # - for FSDP model, it contains a shard of the model
                 checkpoint_content = {
                     "phase_idx": restart_phase,
                     "iteration": restart_iteration,
-                    "loss": task.loss.state_dict(),
+                    "loss": loss_state_dict,
                     "iteration_num": task.local_iteration_num,
                     "train_phase_idx": train_phase_idx,
                     "classy_state_dict": model_state_dict,
                 }
 
+                # Saving the checkpoint:
+                # - for DDP model, the primary save the whole model
+                # - for FSDP model, each rank saves its own shard
                 checkpoint_writer = CheckpointWriter(
                     checkpoint_folder=checkpoint_folder,
                     is_final_train_phase=is_final_train_phase,
@@ -531,7 +543,6 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     mode_num=mode_num,
                     backend=task.config["CHECKPOINT"]["BACKEND"],
                 )
-
                 if isinstance(task.base_model, FSDP):
                     _, rank = get_machine_local_and_dist_rank()
                     checkpoint_writer.save_sharded_checkpoint(

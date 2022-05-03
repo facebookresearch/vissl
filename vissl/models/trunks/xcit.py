@@ -14,10 +14,13 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
+from fairscale.nn import checkpoint_wrapper
 from vissl.config import AttrDict
 from vissl.models.model_helpers import DropPath, to_2tuple, trunc_normal_
 from vissl.models.trunks import register_model_trunk
 from vissl.models.trunks.vision_transformer import Mlp
+from vissl.utils.fsdp_utils import fsdp_wrapper
+from vissl.utils.misc import set_torch_seed
 
 
 class PositionalEncodingFourier(nn.Module):
@@ -377,7 +380,6 @@ class XCABlock(nn.Module):
         return x
 
 
-@register_model_trunk("xcit")
 class XCiT(nn.Module):
     """
     Based on timm and DeiT code bases
@@ -393,6 +395,7 @@ class XCiT(nn.Module):
 
         logging.info("Building model: XCiT from yaml config")
         self.model_config = model_config
+        self.trunk_config = trunk_config
         self.img_size = trunk_config.IMAGE_SIZE
         self.patch_size = trunk_config.PATCH_SIZE
         self.embed_dim = trunk_config.HIDDEN_DIM
@@ -430,46 +433,56 @@ class XCiT(nn.Module):
 
         # Initialize weights
         trunc_normal_(self.cls_token, std=0.02)
-        self.apply(self._init_weights)
+        self.patch_embed.apply(self._init_weights)
+        self.pos_embeder.apply(self._init_weights)
+        self.norm.apply(self._init_weights)
 
     def _create_xca_blocks(self, norm_layer):
         return nn.ModuleList(
-            [
-                XCABlock(
-                    dim=self.embed_dim,
-                    num_heads=self.num_heads,
-                    mlp_ratio=self.mlp_ratio,
-                    qkv_bias=self.qkv_bias,
-                    qk_scale=self.qk_scale,
-                    drop=self.drop_rate,
-                    attn_drop=self.attn_drop_rate,
-                    drop_path=self.drop_path_rate,
-                    norm_layer=norm_layer,
-                    num_tokens=self.num_patches,
-                    eta=self.eta,
-                )
-                for _ in range(self.depth)
-            ]
+            [self._create_xca_block(norm_layer, depth=i) for i in range(self.depth)]
         )
+
+    def _create_xca_block(self, norm_layer, depth: int):
+        with set_torch_seed(self.model_config._MODEL_INIT_SEED + depth + 1):
+            block = XCABlock(
+                dim=self.embed_dim,
+                num_heads=self.num_heads,
+                mlp_ratio=self.mlp_ratio,
+                qkv_bias=self.qkv_bias,
+                qk_scale=self.qk_scale,
+                drop=self.drop_rate,
+                attn_drop=self.attn_drop_rate,
+                drop_path=self.drop_path_rate,
+                norm_layer=norm_layer,
+                num_tokens=self.num_patches,
+                eta=self.eta,
+            )
+            block.apply(self._init_weights)
+            return block
 
     def _create_cls_attn_blocks(self, norm_layer, depth: int = 2):
         return nn.ModuleList(
-            [
-                ClassAttentionBlock(
-                    dim=self.embed_dim,
-                    num_heads=self.num_heads,
-                    mlp_ratio=self.mlp_ratio,
-                    qkv_bias=self.qkv_bias,
-                    qk_scale=self.qk_scale,
-                    drop=self.drop_rate,
-                    attn_drop=self.attn_drop_rate,
-                    norm_layer=norm_layer,
-                    eta=self.eta,
-                    tokens_norm=self.tokens_norm,
-                )
-                for _ in range(depth)
-            ]
+            [self._create_cls_attn_block(norm_layer, depth=i) for i in range(depth)]
         )
+
+    def _create_cls_attn_block(self, norm_layer, depth: int):
+        with set_torch_seed(
+            self.model_config._MODEL_INIT_SEED + self.depth + depth + 1
+        ):
+            block = ClassAttentionBlock(
+                dim=self.embed_dim,
+                num_heads=self.num_heads,
+                mlp_ratio=self.mlp_ratio,
+                qkv_bias=self.qkv_bias,
+                qk_scale=self.qk_scale,
+                drop=self.drop_rate,
+                attn_drop=self.attn_drop_rate,
+                norm_layer=norm_layer,
+                eta=self.eta,
+                tokens_norm=self.tokens_norm,
+            )
+            block.apply(self._init_weights)
+            return block
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -562,3 +575,42 @@ class XCiT(nn.Module):
             return [x]
         else:
             return self.get_intermediate_features(x, out_feat_keys)
+
+
+class XCiT_FSDP(XCiT):
+    """
+    XCiT where blocks are wrapped by FSDP
+    """
+
+    def _create_xca_blocks(self, norm_layer):
+        blocks = []
+        for i in range(self.depth):
+            block = self._create_xca_block(norm_layer, depth=i)
+            if self.trunk_config.CHECKPOINT_XCA_BLOCK:
+                block = checkpoint_wrapper(block)
+            block = fsdp_wrapper(block, **self.model_config.FSDP_CONFIG)
+            blocks.append(block)
+        return nn.ModuleList(blocks)
+
+    def _create_cls_attn_blocks(self, norm_layer, depth: int = 2):
+        blocks = []
+        for i in range(self.depth):
+            block = self._create_cls_attn_block(norm_layer, depth=i)
+            if self.trunk_config.CHECKPOINT_ATTN_BLOCK:
+                block = checkpoint_wrapper(block)
+            block = fsdp_wrapper(block, **self.model_config.FSDP_CONFIG)
+            blocks.append(block)
+        return nn.ModuleList(blocks)
+
+
+@register_model_trunk("xcit")
+def create_XCiT_DDP(model_config: AttrDict, model_name: str):
+    with set_torch_seed(model_config._MODEL_INIT_SEED):
+        return XCiT(model_config, model_name)
+
+
+@register_model_trunk("xcit_fsdp")
+def create_XCiT_FSDP(model_config: AttrDict, model_name: str):
+    with set_torch_seed(model_config._MODEL_INIT_SEED):
+        xcit = XCiT_FSDP(model_config, model_name)
+        return fsdp_wrapper(xcit, **model_config.FSDP_CONFIG)
