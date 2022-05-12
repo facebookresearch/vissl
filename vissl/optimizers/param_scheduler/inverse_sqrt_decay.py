@@ -38,7 +38,7 @@ class InverseSqrtScheduler(ClassyParamScheduler):
 
         self.decay_factor = self._start_value
         if self.warmup_interval_length > 0.0:
-            self.decay_factor = self._start_value * self.warmup_interval_length ** 0.5
+            self.decay_factor = self._start_value * self.warmup_interval_length**0.5
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "InverseSqrtScheduler":
@@ -65,6 +65,6 @@ class InverseSqrtScheduler(ClassyParamScheduler):
 
     def __call__(self, where: float):
         if where > 0.0:
-            return self.decay_factor * (where ** -0.5)
+            return self.decay_factor * (where**-0.5)
         else:
             return self.decay_factor

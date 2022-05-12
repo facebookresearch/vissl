@@ -48,7 +48,7 @@ class ImgPilToPatchesAndImage(ClassyTransform):
         assert isinstance(num_patches, int)
         splits_per_side = np.sqrt(num_patches)
         assert (
-            splits_per_side ** 2 == num_patches
+            splits_per_side**2 == num_patches
         ), "Num patches must be a perfect square integer."
         self.num_patches = num_patches
         assert len(crop_scale_image) == 2

@@ -506,8 +506,8 @@ def compute_l2_distance_matrix(features_queries, features_dataset):
     """
     Computes the l2 distance of every query to every database image.
     """
-    sx = np.sum(features_queries ** 2, axis=1, keepdims=True)
-    sy = np.sum(features_dataset ** 2, axis=1, keepdims=True)
+    sx = np.sum(features_queries**2, axis=1, keepdims=True)
+    sy = np.sum(features_dataset**2, axis=1, keepdims=True)
 
     return np.sqrt(-2 * features_queries.dot(features_dataset.T) + sx + sy.T)
 

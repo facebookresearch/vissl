@@ -217,11 +217,11 @@ class LARC_FSDP:
         for group in param_groups:
             for p in group["params"]:
                 if p.grad is not None:
-                    param_squares.append((p.data ** 2).sum())
-                    grad_squares.append((p.grad.data ** 2).sum())
+                    param_squares.append((p.data**2).sum())
+                    grad_squares.append((p.grad.data**2).sum())
         all_squared = torch.stack(param_squares + grad_squares)
         dist.all_reduce(all_squared, group=get_global_group())
-        all_squared = all_squared ** 0.5
+        all_squared = all_squared**0.5
         param_norms = all_squared[: len(param_squares)]
         grad_norms = all_squared[len(param_squares) :]
         return param_norms, grad_norms

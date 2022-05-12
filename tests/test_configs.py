@@ -106,7 +106,7 @@ class TestScalingTypeConfig(unittest.TestCase):
         )
         _, config = convert_to_attrdict(cfg.default_cfg)
         param_schedulers = config.OPTIMIZER.param_schedulers.lr
-        self.assertEqual(0.3 * (0.125 ** 0.5), param_schedulers.end_value)
+        self.assertEqual(0.3 * (0.125**0.5), param_schedulers.end_value)
 
     def test_linear_lr_scaling(self):
         # compose the configs and check that the LR is changed

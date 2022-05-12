@@ -125,7 +125,7 @@ class WindowAttention(nn.Module):
         self.window_size = window_size  # Wh, Ww
         self.num_heads = num_heads
         head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
 
         # define a parameter table of relative position bias
         self.relative_position_bias_table = nn.Parameter(
@@ -729,10 +729,10 @@ class SwinTransformer(nn.Module):
         self.layers = nn.ModuleList()
         for i_layer in range(self.num_layers):
             layer = BasicLayer(
-                dim=int(embed_dim * 2 ** i_layer),
+                dim=int(embed_dim * 2**i_layer),
                 input_resolution=(
-                    patches_resolution[0] // (2 ** i_layer),
-                    patches_resolution[1] // (2 ** i_layer),
+                    patches_resolution[0] // (2**i_layer),
+                    patches_resolution[1] // (2**i_layer),
                 ),
                 depth=depths[i_layer],
                 num_heads=num_heads[i_layer],
@@ -800,7 +800,7 @@ class SwinTransformer(nn.Module):
             self.num_features
             * self.patches_resolution[0]
             * self.patches_resolution[1]
-            // (2 ** self.num_layers)
+            // (2**self.num_layers)
         )
         flops += self.num_features * self.num_classes
         return flops

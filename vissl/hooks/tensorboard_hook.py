@@ -28,7 +28,7 @@ except ImportError:
     SummaryWriter = TypeVar("SummaryWriter")
     tb_available = False
 
-BYTE_TO_MiB = 2 ** 20
+BYTE_TO_MiB = 2**20
 
 
 class ActivationStatisticsTensorboardWatcher(ActivationStatisticsObserver):

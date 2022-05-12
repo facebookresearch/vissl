@@ -97,7 +97,7 @@ class GPSA(nn.Module):
         self.num_heads = num_heads
         self.dim = embed_dim
         head_dim = embed_dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
 
         self.qk = nn.Linear(embed_dim, embed_dim * 2, bias=qkv_bias)
         self.v = nn.Linear(embed_dim, embed_dim, bias=qkv_bias)
@@ -200,7 +200,7 @@ class GPSA(nn.Module):
         self.v.weight.data.copy_(torch.eye(self.dim))
         locality_distance = 1
 
-        kernel_size = int(self.num_heads ** 0.5)
+        kernel_size = int(self.num_heads**0.5)
         if kernel_size % 2 == 0:
             center = (kernel_size - 1) / 2
         else:
@@ -219,12 +219,12 @@ class GPSA(nn.Module):
 
     def set_rel_indices(self, num_patches):
         # Set relative position embeddings
-        img_size = int(num_patches ** 0.5)
+        img_size = int(num_patches**0.5)
         rel_indices = torch.zeros(1, num_patches, num_patches, 3 * self.locality_dim)
         ind = torch.arange(img_size).view(1, -1) - torch.arange(img_size).view(-1, 1)
         indx = ind.repeat(img_size, img_size)
         indy = ind.repeat_interleave(img_size, dim=0).repeat_interleave(img_size, dim=1)
-        indd = indx ** 2 + indy ** 2
+        indd = indx**2 + indy**2
         rel_indices[:, :, :, : 3 * self.locality_dim] = indd.unsqueeze(-1)
         rel_indices[:, :, :, : 2 * self.locality_dim] = indy.unsqueeze(-1)
         rel_indices[:, :, :, : 1 * self.locality_dim] = indx.unsqueeze(-1)
@@ -252,7 +252,7 @@ class SelfAttention(nn.Module):
         super().__init__()
         self.num_heads = num_heads
         head_dim = embed_dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
 
         self.qkv = nn.Linear(embed_dim, embed_dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attention_dropout_rate)
@@ -280,12 +280,12 @@ class SelfAttention(nn.Module):
         attn_map = (q @ k.transpose(-2, -1)) * self.scale
         attn_map = attn_map.softmax(dim=-1).mean(0)
 
-        img_size = int(N ** 0.5)
+        img_size = int(N**0.5)
         ind = torch.arange(img_size).view(1, -1) - torch.arange(img_size).view(-1, 1)
         indx = ind.repeat(img_size, img_size)
         indy = ind.repeat_interleave(img_size, dim=0).repeat_interleave(img_size, dim=1)
-        indd = indx ** 2 + indy ** 2
-        distances = indd ** 0.5
+        indd = indx**2 + indy**2
+        distances = indd**0.5
         distances = distances.to("cuda")
 
         dist = torch.einsum("nm,hnm->h", (distances, attn_map)).mean()

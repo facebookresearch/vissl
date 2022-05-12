@@ -34,7 +34,7 @@ class SelfSupervisionSDPTask(SelfSupervisionTask):
         # Replace the original DDP wrap by the shard-aware ShardedDDP
         # we use the fairscale reduce_buffer_size by default however, if user sets it to
         # some different value, we use the different value.
-        reduce_buffer_size = 2 ** 23
+        reduce_buffer_size = 2**23
         if self.config.MODEL.SHARDED_DDP_SETUP.reduce_buffer_size >= 0:
             reduce_buffer_size = self.config.MODEL.SHARDED_DDP_SETUP.reduce_buffer_size
         logging.info(f"Setting reduce_buffer_size: {reduce_buffer_size}")

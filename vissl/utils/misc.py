@@ -189,7 +189,7 @@ def set_dataloader_seeds(_worker_id: int):
     Also see https://pytorch.org/docs/stable/data.html#randomness-in-multi-process-data-loading
     """
     # numpy and random seed must be between 0 and 2 ** 32 - 1.
-    torch_seed = torch.utils.data.get_worker_info().seed % (2 ** 32)
+    torch_seed = torch.utils.data.get_worker_info().seed % (2**32)
     random.seed(torch_seed)
     np.random.seed(torch_seed)
 

@@ -19,7 +19,7 @@ def normalize_L2(a, dim):
     Returns:
         a (torch.Tensor): L2 normalized tensor
     """
-    norms = torch.sqrt(torch.sum(a ** 2, dim=dim, keepdim=True))
+    norms = torch.sqrt(torch.sum(a**2, dim=dim, keepdim=True))
     return a / norms
 
 
@@ -37,7 +37,7 @@ def get_rmac_region_coordinates(H, W, L):
     b = (np.maximum(H, W) - w) / (steps - 1)
     # steps(idx) regions for long dimension. The +1 comes from Matlab
     # 1-indexing...
-    idx = np.argmin(np.abs(((w ** 2 - w * b) / w ** 2) - ovr)) + 1
+    idx = np.argmin(np.abs(((w**2 - w * b) / w**2) - ovr)) + 1
 
     # Region overplus per dimension
     Wd = 0
