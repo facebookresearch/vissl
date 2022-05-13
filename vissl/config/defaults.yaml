@@ -700,6 +700,14 @@ config:
         # * CHECKPOINT_BLOCKS will checkpoint the entire block instead
         CHECKPOINT_MLP: False
         CHECKPOINT_BLOCK: False
+        # Masked Image Modelling objective
+        MASKED_IMAGE_MODELING:
+          # Available types of Masked Image Modeling include:
+          # - '': Disable Masked Image modeling
+          # - 'ibot': Based on IBOT: https://arxiv.org/pdf/2111.07832.pdf
+          NAME: ''
+          # Parameters provided to the Masked Generator
+          PARAMS: {}
 
       # ------------------------------------------------------------- #
       # XCiT (https://arxiv.org/abs/2106.09681)
@@ -1073,6 +1081,28 @@ config:
       crops_for_teacher: [0, 1]
       ema_center: 0.9
       output_dim: 65536  # automatically inferred from model HEAD settings
+
+    # ----------------------------------------------------------------------------------- #
+    #  iBOT Loss (https://arxiv.org/pdf/2111.07832.pdf)
+    # ----------------------------------------------------------------------------------- #
+    ibot_loss:
+      teacher_momentum: 0.996
+      warmup_teacher_temp: 0.04
+      teacher_temp: 0.04
+      warmup_teacher_patch_temp: 0.04
+      teacher_patch_temp: 0.07
+      warmup_teacher_temp_epochs: 30
+      student_temp: 0.1
+      center_momentum: 0.9
+      center_momentum2: 0.9
+      lambda1: 1.0
+      lambda2: 1.0
+      mim_start_epoch: 0
+      num_global_crops: 2  # Auto-completed
+      num_local_crops: 8  # Auto-completed
+      out_dim: 8192  # Auto-completed
+      patch_out_dim: 8192  # Auto-completed
+      num_epochs: 10  # Auto-completed
 
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)

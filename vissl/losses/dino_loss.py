@@ -25,11 +25,22 @@ from vissl.models.model_helpers import get_no_ddp_model
 class DINOLoss(ClassyLoss):
     def __init__(self, loss_config: AttrDict):
         super().__init__()
+
+        # Store loss configuration for DINOHook to access
+        self.teacher_momentum = loss_config["momentum"]
+        self.teacher_temp_min = loss_config["teacher_temp_min"]
+        self.teacher_temp_max = loss_config["teacher_temp_max"]
+        self.teacher_temp_warmup_iters = loss_config["teacher_temp_warmup_iters"]
+        self.crops_for_teacher = loss_config["crops_for_teacher"]
         self.loss_config = loss_config
+
+        # Momentum teacher related attributes
         self.momentum_teacher = None
         self.checkpoint = None
         self.teacher_output = None
         self.teacher_temp = None
+
+        # Loss center related attributes
         self.is_distributed = is_distributed_training_run()
         self.use_gpu = get_cuda_device_index() > -1
         self.register_buffer("center", torch.zeros(1, loss_config["output_dim"]))

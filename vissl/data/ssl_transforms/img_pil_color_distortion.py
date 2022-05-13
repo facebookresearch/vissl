@@ -21,18 +21,28 @@ class ImgPilColorDistortion(ClassyTransform):
     randomly convert the image to grayscale.
     """
 
-    def __init__(self, strength):
+    def __init__(
+        self,
+        strength: float = 1.0,
+        brightness: float = 0.8,
+        contrast: float = 0.8,
+        saturation: float = 0.8,
+        hue: float = 0.2,
+    ):
         """
         Args:
-            strength (float): A number used to quantify the strength of the
-                              color distortion.
+            strength (float): quantify the strength of the color distortion
+            brightness (float): default brightness then multiplied by strength
+            contrast (float): default contrast then multiplied by strength
+            saturation (float): default saturation then multiplied by strength
+            hue (float): default hue then multiplied by strength
         """
         self.strength = strength
         self.color_jitter = pth_transforms.ColorJitter(
-            0.8 * self.strength,
-            0.8 * self.strength,
-            0.8 * self.strength,
-            0.2 * self.strength,
+            brightness=brightness * self.strength,
+            contrast=contrast * self.strength,
+            saturation=saturation * self.strength,
+            hue=hue * self.strength,
         )
         self.rnd_color_jitter = pth_transforms.RandomApply([self.color_jitter], p=0.8)
         self.rnd_gray = pth_transforms.RandomGrayscale(p=0.2)

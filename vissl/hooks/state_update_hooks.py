@@ -16,6 +16,7 @@ from classy_vision.generic.profiler import (
 from classy_vision.hooks.classy_hook import ClassyHook
 from fvcore.common.file_io import PathManager
 from vissl.data import AirstoreDataset, GenericSSLDataset
+from vissl.models.model_helpers import model_output_has_nan
 from vissl.utils.env import get_machine_local_and_dist_rank
 
 
@@ -142,14 +143,8 @@ class CheckNanModelOutputHook(ClassyHook):
         the model input sample, model output.
         """
         # check the model output is not NaN.
-        has_nan = False
         model_output = task.last_batch.model_output
-        if isinstance(model_output, list):
-            has_nan = not torch.tensor(
-                [torch.isfinite(x).all() for x in model_output]
-            ).all()
-        else:
-            has_nan = not torch.isfinite(model_output).all()
+        has_nan = model_output_has_nan(model_output)
 
         if has_nan:
             _, dist_rank = get_machine_local_and_dist_rank()

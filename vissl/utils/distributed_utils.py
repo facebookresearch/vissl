@@ -82,3 +82,17 @@ def all_gather_heterogeneous(sizes: List[int], x: torch.Tensor) -> List[torch.Te
     ]
     torch.distributed.all_gather(all_x, x)
     return all_x
+
+
+def concat_all_gather(tensor: torch.Tensor) -> torch.Tensor:
+    """
+    Performs all_gather operation on the provided tensors.
+    *** Warning ***: torch.distributed.all_gather has no gradient.
+    """
+    tensors_gather = [
+        torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())
+    ]
+    torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
+
+    output = torch.cat(tensors_gather, dim=0)
+    return output

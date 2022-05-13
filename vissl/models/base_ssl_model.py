@@ -5,7 +5,7 @@
 
 import copy
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Iterable, List, Union
 
 import torch
 import torch.nn as nn
@@ -19,6 +19,7 @@ from vissl.models.model_helpers import (
     get_trunk_output_feature_names,
     is_feature_extractor_model,
 )
+from vissl.models.multiple_input_mapping import MultipleInputMapping
 from vissl.models.trunks import get_model_trunk
 from vissl.models.trunks.feature_extractor import FeatureExtractorModel
 from vissl.utils.checkpoint import (
@@ -88,7 +89,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         self.head_names = []
         self._output_feature_names = get_trunk_output_feature_names(self.model_config)
         self._get_heads()
-        self._setup_multi_input_head_mapping()
+        self.multi_input_mapping = MultipleInputMapping.from_config(self.model_config)
 
     def multi_input_with_head_mapping_forward(self, batch):
         """
@@ -96,16 +97,22 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         output on all inputs as a list.
         """
         all_outputs = []
-        for input_idx in range(len(self.model_config.MULTI_INPUT_HEAD_MAPPING)):
-            input_key = self.model_config.MULTI_INPUT_HEAD_MAPPING[input_idx][0]
-            # heads that are used for this input
-            heads = self._input_to_head_map[input_key]
-            feature_names = self._input_to_eval_features_map[input_key]
-            outputs = self.single_input_forward(batch[input_key], feature_names, heads)
-            if len(outputs) == 1:
-                # single head. do not make nested list
-                outputs = outputs[0]
-            all_outputs.append(outputs)
+        for input_key in self.multi_input_mapping.input_keys:
+            if input_key in batch:
+                head = self.heads[self.multi_input_mapping.head_index[input_key]]
+                feat_names = self.multi_input_mapping.feat_names[input_key]
+                additional_data = {
+                    key: batch[key]
+                    for key in self.multi_input_mapping.additional_keys[input_key]
+                    if key in batch
+                }
+                outputs = self.single_input_forward(
+                    batch[input_key], feat_names, [head], **additional_data
+                )
+                if len(outputs) == 1:
+                    # single head. do not make nested list
+                    outputs = outputs[0]
+                all_outputs.append(outputs)
         return all_outputs
 
     def multi_res_input_forward(self, batch, feature_names):
@@ -132,6 +139,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         if self.model_config.SINGLE_PASS_EVERY_CROP:
             idx_crops = torch.Tensor(list(range(1, 1 + len(batch)))).int()
         for end_idx in idx_crops:
+            # TODO - factorize with "single_input_forward"
             feat = self.trunk(torch.cat(batch[start_idx:end_idx]), feature_names)
             start_idx = end_idx
             assert len(feat) == 1
@@ -139,7 +147,13 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         feats = [torch.cat(feats)]
         return self.heads_forward(feats, self.heads)
 
-    def single_input_forward(self, batch, feature_names, heads):
+    def single_input_forward(
+        self,
+        batch: Union[torch.Tensor, MultiDimensionalTensor],
+        feature_names: List[str],
+        heads: Union[nn.ModuleList, Iterable[nn.Module]],
+        **kwargs,
+    ):
         """
         Simply run the trunk and heads forward on the input tensor. We run the trunk
         first and then the heads on the trunk output.
@@ -147,7 +161,7 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         of the trunk.
         """
         assert isinstance(batch, (torch.Tensor, MultiDimensionalTensor)), type(batch)
-        feats = self.trunk(batch, feature_names)
+        feats = self.trunk(batch, feature_names, **kwargs)
         # if we are interested in evaluating the trunk only, we return the output of the trunk
         # and don't forward through the heads
         if (
@@ -191,9 +205,11 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         Main forward of the model. Depending on the model type the calls are patched
         to the suitable function.
         """
-        if len(self.model_config.MULTI_INPUT_HEAD_MAPPING) > 0:
-            # this model accepts multiple types of inputs and a separate
-            # head is applied to each model output of a given input.
+
+        # Used for PIRL / iBOT:
+        # this model accepts multiple types of inputs and a separate
+        # trunk config or head is applied to each model output of a given input
+        if self.multi_input_mapping is not None:
             return self.multi_input_with_head_mapping_forward(batch)
 
         if isinstance(batch, list):
@@ -361,58 +377,6 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
                     head = self._build_head_module(head_param)
             self.heads.append(head)
             self.head_names.append(head_name)
-
-    def _setup_multi_input_head_mapping(self):
-        """
-        Used for PIRL style training where the model operates
-        on image and the patches.
-
-        Assumptions:
-        - This assumes that the same trunk is used to extract features
-          for the different types of inputs.
-        - One head only operates on one kind of input, Every individual
-          head can contain several layers. See _get_heads() function for examples.
-
-        * Specify Input -> Trunk Features mapping
-           Like in the single input case, the heads can operate on features
-           from different layers. In this case, we specify MODEL.MULTI_INPUT_HEAD_MAPPING
-           to be a list like:
-           [
-               ["input_key", [list of features heads is applied on]]
-           ]
-           For example: for a model that applies two heads on images
-                        and one head on patches
-                        [
-                            ["images", ["res5", "res4"]],
-                            ["patches", ["res3"]],
-                        ]
-        """
-        if len(self.model_config.MULTI_INPUT_HEAD_MAPPING) == 0:
-            return
-
-        assert len(self.model_config.MULTI_INPUT_HEAD_MAPPING) == len(
-            self.heads
-        ), "MULTI_INPUT_HEAD_MAPPING must be a list of length == #heads"
-
-        # create many-to-one mapping from input_key to head
-        self._input_to_head_map = {}
-        for idx in range(len(self.model_config.MULTI_INPUT_HEAD_MAPPING)):
-            key = self.model_config.MULTI_INPUT_HEAD_MAPPING[idx][0]
-            if key not in self._input_to_head_map:
-                self._input_to_head_map[key] = []
-            self._input_to_head_map[key].append(self.heads[idx])
-
-        # create many-to-one mapping from input key to eval features
-        self._input_to_eval_features_map = {}
-        for input_idx in range(len(self.model_config.MULTI_INPUT_HEAD_MAPPING)):
-            key = self.model_config.MULTI_INPUT_HEAD_MAPPING[input_idx][0]
-            eval_layer_names = self.model_config.MULTI_INPUT_HEAD_MAPPING[input_idx][1]
-            if key in self._input_to_eval_features_map:
-                raise ValueError(
-                    f"duplicate key {key} \
-                    specified for MODEL.MULTI_INPUT_HEAD_MAPPING."
-                )
-            self._input_to_eval_features_map[key] = eval_layer_names
 
     def get_classy_state(self, deep_copy=False):
         """

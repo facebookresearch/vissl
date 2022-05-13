@@ -51,6 +51,19 @@ def transform_model_input_data_type(model_input, input_type: str):
     return model_output
 
 
+def model_output_has_nan(model_output) -> bool:
+    """
+    Model output can be:
+    - a tensor
+    - list of tensors
+    - list of list of tensors
+    """
+    if isinstance(model_output, list):
+        return any(model_output_has_nan(x) for x in model_output)
+    else:
+        return not torch.isfinite(model_output).all()
+
+
 def is_feature_extractor_model(model_config):
     """
     If the model is a feature extractor model:

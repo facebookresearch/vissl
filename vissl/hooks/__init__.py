@@ -12,6 +12,7 @@ from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  #
 from vissl.hooks.dino_hooks import DINOHook
 from vissl.hooks.ema_hooks import EmaHook
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
+from vissl.hooks.ibot_hooks import IBOTHook
 from vissl.hooks.log_hooks import (  # noqa
     DumpMemoryOnException,
     LogGpuMemoryHook,
@@ -74,6 +75,8 @@ def add_loss_hooks(hooks, loss_cfg, cfg):
         )
     if cfg.LOSS.name == "dino_loss":
         hooks.append(DINOHook())
+    if cfg.LOSS.name in {"ibot_loss"}:
+        hooks.append(IBOTHook())
     if cfg.LOSS.name == "deepclusterv2_loss":
         hooks.extend([InitMemoryHook(), ClusterMemoryHook()])
     if cfg.LOSS.name == "moco_loss":

@@ -8,7 +8,7 @@ import logging
 import os
 import re
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -1009,7 +1009,7 @@ def init_model_from_consolidated_weights(
     config: AttrDict,
     model,
     state_dict: Dict[str, Any],
-    state_dict_key_name: str,
+    state_dict_key_name: Union[str, List[str]],
     skip_layers: List[str],
     replace_prefix=None,
     append_prefix=None,
@@ -1024,7 +1024,7 @@ def init_model_from_consolidated_weights(
         config (AttrDict): config file
         model (object): instance of base_ssl_model
         state_dict (Dict): torch.load() of user provided params file path.
-        state_dict_key_name (string): key name containing the model state dict
+        state_dict_key_name (string | list): key name containing the model state dict
         skip_layers (List(string)): layer names with this key are not copied
         replace_prefix (string): remove these prefixes from the layer names (executed first)
         append_prefix (string): append the prefix to the layer names
@@ -1036,10 +1036,13 @@ def init_model_from_consolidated_weights(
     """
     # whether it's a model from somewhere else or a model from this codebase, load the
     # state_dict
-    if state_dict_key_name and len(state_dict_key_name) > 0:
-        assert (
-            state_dict_key_name in state_dict.keys()
-        ), f"Unknown state dict key: {state_dict_key_name}"
+    invalid_key_message = f"Unknown state dict key: {state_dict_key_name}"
+    if isinstance(state_dict_key_name, list):
+        for key in state_dict_key_name:
+            assert key in state_dict.keys(), invalid_key_message
+            state_dict = state_dict[key]
+    elif state_dict_key_name and len(state_dict_key_name) > 0:
+        assert state_dict_key_name in state_dict.keys(), invalid_key_message
         state_dict = state_dict[state_dict_key_name]
 
     if state_dict_key_name == "classy_state_dict":

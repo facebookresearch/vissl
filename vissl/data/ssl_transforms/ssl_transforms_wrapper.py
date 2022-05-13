@@ -12,6 +12,7 @@ from classy_vision.dataset.transforms import (
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 from vissl.utils.misc import is_augly_available
 
+
 if is_augly_available():
     import augly.image as imaugs  # NOQA
 
@@ -213,9 +214,19 @@ class SSLTransformsWrapper(ClassyTransform):
         else:
             for idx in indices:
                 output = self.transform(sample["data"][idx])
-                if self._is_transform_with_labels():
+                # Generalized transformation: we can add additional
+                # keys inside the sample (for instance a label, a mask, etc)
+                if isinstance(output, dict):
+                    sample["data"][idx] = output["data"]
+                    for k, v in output.items():
+                        if k != "data":
+                            sample.setdefault(k, []).append(v)
+                # Deprecated generalized transformation (only working
+                # for "labels"). Return a map instead
+                elif self._is_transform_with_labels():
                     sample["data"][idx] = output[0]
                     sample["label"][-1] = output[1]
+                # Transformation on the data only
                 else:
                     sample["data"][idx] = output
 

@@ -20,6 +20,7 @@ TEST_LIST=(
     "test_extract_cluster.py"
     "test_extract_features.py"
     "test_finetuning.py"
+    "test_ibot.py"
     "test_larc_fsdp.py"
     "test_layer_memory_tracking.py"
     "test_losses_gpu.py"

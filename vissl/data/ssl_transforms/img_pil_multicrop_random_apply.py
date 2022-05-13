@@ -24,7 +24,7 @@ class ImgPilMultiCropRandomApply(ClassyTransform):
     multi-crop input.
     """
 
-    def __init__(self, transforms: List[Dict[str, Any]], prob: float):
+    def __init__(self, transforms: List[Dict[str, Any]], prob: List[float]):
         """
         Args:
             transforms ( List(tranforms) ): List of transforms that should be applied

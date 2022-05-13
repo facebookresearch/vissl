@@ -82,7 +82,7 @@ class Attention(nn.Module):
         head_dim = dim // num_heads
         # NOTE scale factor was wrong in my original version,
         # can set manually to be compat with prev weights
-        self.scale = qk_scale or head_dim**-0.5
+        self.scale = qk_scale or math.pow(head_dim, -0.5)
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
@@ -203,6 +203,43 @@ class Fp32LayerNorm(nn.LayerNorm):
         return output.type_as(input)
 
 
+class NoPatchMasking(nn.Module):
+    """No patch masking"""
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(
+        self, x: torch.Tensor, pos_embed: torch.Tensor, **kwargs
+    ) -> torch.Tensor:
+        return x + pos_embed
+
+
+class IBOTMaskedModeling(nn.Module):
+    """Block masking module inspired by iBOT (https://arxiv.org/pdf/2111.07832.pdf)
+    - contains a learn-able mask embedding
+    - replace the masked tokens by the learn-able embedding
+
+    Args:
+        embed_dim (int): size of the ViT embedding
+    """
+
+    def __init__(self, embed_dim: int):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.masked_embed = nn.Parameter(torch.zeros(1, embed_dim))
+
+    def forward(
+        self, x: torch.Tensor, pos_embed: torch.Tensor, **kwargs
+    ) -> torch.Tensor:
+        mask = kwargs.get("mask", None)
+        if mask is not None:
+            feat_map = x[:, 1:]
+            mask = mask.view(mask.shape[0], -1)
+            feat_map[mask, :] = self.masked_embed.to(x.dtype)
+        return x + pos_embed
+
+
 class VisionTransformer(nn.Module):
     """
     Vision transformer. Adding stochastic depth makes it a DeiT.
@@ -281,6 +318,11 @@ class VisionTransformer(nn.Module):
             if "blocks" not in name:
                 self._init_weights(children)
 
+        if self.trunk_config.MASKED_IMAGE_MODELING.NAME == "ibot":
+            self.patch_masking = IBOTMaskedModeling(embed_dim=self.embed_dim)
+        else:
+            self.patch_masking = NoPatchMasking()
+
     def create_norm_layer(self):
         return partial(nn.LayerNorm, eps=1e-6)
 
@@ -327,28 +369,40 @@ class VisionTransformer(nn.Module):
     def no_weight_decay(self):
         return {"pos_embedding", "class_token"}
 
-    def prepare_tokens(self, x):
-        B = x.shape[0]
+    def prepare_tokens(self, x, **kwargs):
+        B, C, H, W = x.shape
         x = self.patch_embed(x)
+        feat_map_size = self.patch_embed.feat_map_size
 
         class_tokens = self.cls_token.expand(
             B, -1, -1
         )  # stole class_tokens impl from Phil Wang, thanks
         x = torch.cat((class_tokens, x), dim=1)
-        pos_embed = self.interpolate_pos_encoding(x, self.pos_embed)
-        x = x + pos_embed
-        x = self.pos_drop(x)
-        return x
 
-    def forward_features(self, x):
+        # Compute positional embedding
+        pos_embed = self.interpolate_pos_encoding(x, self.pos_embed, feat_map_size)
+
+        # Use the mask generator to create a mask, apply it, and
+        # combine the result with the positional embeddings
+        x = self.patch_masking(x, pos_embed, **kwargs)
+
+        # Return sequence of shape (B, 1 + H * W, C)
+        return self.pos_drop(x)
+
+    def forward_features(
+        self, x: torch.Tensor, only_class_token: bool = True, **kwargs
+    ):
         """
         Return the class token representation at the last layer
         """
-        x = self.prepare_tokens(x)
+        x = self.prepare_tokens(x, **kwargs)
         for blk in self.blocks:
             x = blk(x)
         x = self.norm(x)
-        return x[:, 0]
+        if only_class_token:
+            return x[:, 0]
+        else:
+            return x
 
     def get_intermediate_features(
         self, x: torch.Tensor, names: List[str]
@@ -362,6 +416,7 @@ class VisionTransformer(nn.Module):
         - concatCLS[integer] => concat of CLS token from last #"integer" blocks
         - lastCLS => CLS token of last block
         - lastMAP => feature map of the last block
+        - lastBLK => CLS token + feature map of the last block
         """
 
         # Get feature from every intermediate block and apply norm
@@ -389,6 +444,8 @@ class VisionTransformer(nn.Module):
                 B, L, C = feat_map.shape
                 feat_map = feat_map.reshape((B, *feat_map_size, C))
                 output.append(feat_map)
+            elif name == "lastBLK":
+                output.append(interms[-1])
         return output
 
     def get_last_self_attention(self, x: torch.Tensor) -> torch.Tensor:
@@ -405,10 +462,16 @@ class VisionTransformer(nn.Module):
                 return blk.get_attention_map(x)
 
     def forward(
-        self, x: torch.Tensor, out_feat_keys: List[str] = None
+        self, x: torch.Tensor, out_feat_keys: List[str] = None, **kwargs
     ) -> List[torch.Tensor]:
         if out_feat_keys is None or len(out_feat_keys) == 0:
-            x = self.forward_features(x)
+            x = self.forward_features(x, **kwargs)
+            x = x.unsqueeze(0)
+        elif len(out_feat_keys) == 1 and out_feat_keys[0] == "lastBLK":
+            # Small optimization for cases where we want the full output
+            # but not interested in intermediate features
+            # TODO - extend to len(out_feat_keys) == 1
+            x = self.forward_features(x, only_class_token=False, **kwargs)
             x = x.unsqueeze(0)
         else:
             # we specified a feature layer name. Follow DINO
@@ -416,22 +479,31 @@ class VisionTransformer(nn.Module):
             x = self.get_intermediate_features(x, out_feat_keys)
         return x
 
-    def interpolate_pos_encoding(self, x, pos_embed):
+    def interpolate_pos_encoding(
+        self, x: torch.Tensor, pos_embed: torch.Tensor, feat_map_size: Tuple[int, int]
+    ) -> torch.Tensor:
         npatch = x.shape[1] - 1
-        N = pos_embed.shape[1] - 1
-        if npatch == N:
+        nembed = pos_embed.shape[1] - 1
+        if npatch == nembed:
             return pos_embed
+
+        # Remove the class embedding and compute the interpolation scale factor
         class_emb = pos_embed[:, 0]
         pos_embed = pos_embed[:, 1:]
         dim = x.shape[-1]
+        height, width = feat_map_size
+        scale_factor = math.sqrt(npatch / nembed)
+
+        # Interpolate the position embeddings
+        pos_embed = pos_embed.reshape(1, height, width, dim).permute(0, 3, 1, 2)
         pos_embed = nn.functional.interpolate(
-            pos_embed.reshape(1, int(math.sqrt(N)), int(math.sqrt(N)), dim).permute(
-                0, 3, 1, 2
-            ),
-            scale_factor=math.sqrt(npatch / N),
+            pos_embed,
+            scale_factor=scale_factor,
             mode="bicubic",
         )
         pos_embed = pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
+
+        # Add the class embedding back and return this
         return torch.cat((class_emb.unsqueeze(0), pos_embed), dim=1)
 
 

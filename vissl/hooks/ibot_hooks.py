@@ -9,7 +9,13 @@ from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.hooks.hook_utils import MomentumTeacherInLossHook
 
 
-class DINOHook(ClassyHook):
+class IBOTHook(ClassyHook):
+    """Hook used for the implementation of iBOT (https://arxiv.org/pdf/2111.07832.pdf)
+    - Handles the creation of the EMA teacher
+    - Handles the forward of the EMA teacher
+    - Handles the configuration of the DINO Loss
+    """
+
     on_start = ClassyHook._noop
     on_phase_start = ClassyHook._noop
     on_loss_and_meter = ClassyHook._noop
@@ -20,14 +26,6 @@ class DINOHook(ClassyHook):
     on_update = ClassyHook._noop
 
     def __init__(self):
-        """
-        This hook corresponds to the DINO: the framework proposed in the xxx paper.
-
-        Called before each forward to get teacher outputs and after every iteration to update
-        the momentum teacher, optionally  updating the teacher temperature.
-
-        At the beginning of training i.e. after 1st forward call, the encoder is constructed.
-        """
         super().__init__()
         self.teacher_temp_schedule = None
         self.momentum_schedule = None
@@ -37,31 +35,6 @@ class DINOHook(ClassyHook):
         # Same architecture as student but do not apply stochastic depth
         task.config["MODEL"]["TRUNK"]["VISION_TRANSFORMERS"]["DROP_PATH_RATE"] = 0.0
         MomentumTeacherInLossHook.build_momentum_network(task, config=task.config)
-
-    @torch.no_grad()
-    def update_teacher_temperature(self, task: tasks.ClassyTask) -> None:
-        """
-        Update the teacher temperature
-        """
-        if self.teacher_temp_schedule is None:
-            teacher_temp_min = task.loss.loss_config["teacher_temp_min"]
-            teacher_temp_max = task.loss.loss_config["teacher_temp_max"]
-            teacher_temp_warmup_iters = task.loss.loss_config[
-                "teacher_temp_warmup_iters"
-            ]
-            self.teacher_temp_schedule = torch.cat(
-                (
-                    torch.linspace(
-                        teacher_temp_min, teacher_temp_max, teacher_temp_warmup_iters
-                    ),
-                    torch.ones(max(0, task.max_iteration - teacher_temp_warmup_iters))
-                    * teacher_temp_max,
-                )
-            )
-
-        teacher_temp = self.teacher_temp_schedule[task.iteration].item()
-        task.loss.teacher_temp = teacher_temp
-        task.additional_log_data["dino_teacher_temp"] = teacher_temp
 
     @torch.no_grad()
     def on_forward(self, task: tasks.ClassyTask) -> None:
@@ -74,13 +47,16 @@ class DINOHook(ClassyHook):
         if task.loss.momentum_teacher is None:
             self._build_momentum_network(task)
 
+        # From the student inputs, only keep the global views
+        # - ignore the local views
+        # - ignore the mask for the global views
+        last_student_input = task.last_batch.sample["input"]
+        teacher_input = {"global_views": last_student_input["global_views"]}
+
         # Compute momentum teacher features
-        im_k = [
-            task.last_batch.sample["input"][i]
-            for i in task.loss.loss_config["crops_for_teacher"]
-        ]
-        task.loss.teacher_output = task.loss.momentum_teacher(im_k)[0][-1]
-        self.update_teacher_temperature(task)
+        teacher_output = task.loss.momentum_teacher(teacher_input)
+        task.loss.teacher_output = teacher_output[0]
+        task.loss.set_current_epoch(task.train_phase_idx)
 
     @torch.no_grad()
     def on_update(self, task: "tasks.ClassyTask") -> None:
