@@ -8,8 +8,8 @@ from pathlib import Path
 import torchvision.transforms as pth_transforms
 from classy_vision.generic.registry_utils import import_all_modules
 from vissl.data.ssl_transforms.ssl_transforms_wrapper import (
-    SSLTransformsWrapper,
     DEFAULT_TRANSFORM_TYPES,
+    SSLTransformsWrapper,
 )
 
 

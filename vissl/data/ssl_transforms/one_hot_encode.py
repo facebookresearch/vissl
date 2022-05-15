@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Union, List, Dict
+from typing import Dict, List, Union
 
 import torch
 from classy_vision.dataset.transforms import register_transform

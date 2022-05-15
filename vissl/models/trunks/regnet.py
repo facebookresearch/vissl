@@ -8,7 +8,7 @@ from typing import List, Tuple
 
 import torch
 import torch.nn as nn
-from classy_vision.models import RegNet as ClassyRegNet, build_model
+from classy_vision.models import build_model, RegNet as ClassyRegNet
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (

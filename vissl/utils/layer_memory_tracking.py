@@ -5,7 +5,7 @@
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import auto, Enum
 from functools import lru_cache
 from typing import Dict, List, NamedTuple, Tuple, Union
 

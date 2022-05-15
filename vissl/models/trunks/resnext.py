@@ -14,8 +14,8 @@ from torchvision.models.resnet import Bottleneck
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models.model_helpers import (
-    Flatten,
     _get_norm,
+    Flatten,
     get_trunk_forward_outputs,
     get_tunk_forward_interpolated_outputs,
     transform_model_input_data_type,

@@ -11,7 +11,7 @@ import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel
 from vissl.models import build_model
 from vissl.models.heads.dino_head import DINOHead, DINOHeadFSDP
-from vissl.utils.checkpoint import DINOCheckpointUtils, CheckpointFormatConverter
+from vissl.utils.checkpoint import CheckpointFormatConverter, DINOCheckpointUtils
 from vissl.utils.fsdp_utils import fsdp_wrapper
 from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.misc import set_torch_seed

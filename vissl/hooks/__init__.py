@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from enum import Enum, auto
+from enum import auto, Enum
 from typing import List
 
 from classy_vision.hooks.classy_hook import ClassyHook
@@ -31,8 +31,10 @@ from vissl.hooks.state_update_hooks import (  # noqa
     SetDataSamplerEpochHook,
     SSLModelComplexityHook,
 )
-from vissl.hooks.swav_hooks import NormalizePrototypesHook  # noqa
-from vissl.hooks.swav_hooks import SwAVUpdateQueueScoresHook  # noqa
+from vissl.hooks.swav_hooks import (  # noqa  # noqa
+    NormalizePrototypesHook,
+    SwAVUpdateQueueScoresHook,
+)
 from vissl.hooks.swav_momentum_hooks import (
     SwAVMomentumHook,
     SwAVMomentumNormalizePrototypesHook,

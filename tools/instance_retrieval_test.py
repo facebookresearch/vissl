@@ -32,19 +32,19 @@ from vissl.utils.hydra_config import (
 from vissl.utils.instance_retrieval_utils.data_util import (
     CopyDaysDataset,
     GenericInstanceRetrievalDataset,
+    get_average_gem,
     InstanceRetrievalDataset,
     InstanceRetrievalImageLoader,
     InstreDataset,
-    MultigrainResize,
-    RevisitedInstanceRetrievalDataset,
-    WhiteningTrainingImageDataset,
-    get_average_gem,
     is_copdays_dataset,
     is_instre_dataset,
     is_oxford_paris_dataset,
     is_revisited_dataset,
     is_whiten_dataset,
     l2n,
+    MultigrainResize,
+    RevisitedInstanceRetrievalDataset,
+    WhiteningTrainingImageDataset,
 )
 from vissl.utils.instance_retrieval_utils.rmac import get_rmac_descriptors
 from vissl.utils.io import load_file, makedir, save_file

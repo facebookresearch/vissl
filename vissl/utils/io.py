@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from iopath.common.download import download
-from iopath.common.file_io import g_pathmgr, file_lock
+from iopath.common.file_io import file_lock, g_pathmgr
 from vissl.utils.slurm import get_slurm_dir
 
 

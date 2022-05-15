@@ -8,7 +8,7 @@ from typing import List, Union
 
 import torch
 from classy_vision.generic.util import is_pos_int
-from classy_vision.meters import PrecisionAtKMeter, ClassyMeter, register_meter
+from classy_vision.meters import ClassyMeter, PrecisionAtKMeter, register_meter
 from vissl.config import AttrDict
 
 

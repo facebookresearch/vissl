@@ -7,7 +7,7 @@ import hashlib
 import logging
 import os
 import re
-from enum import Enum, auto
+from enum import auto, Enum
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np

@@ -9,7 +9,7 @@ import shutil
 
 import numpy as np
 from vissl.utils.download import download_and_extract_archive, download_url
-from vissl.utils.io import save_file, load_file, cleanup_dir
+from vissl.utils.io import cleanup_dir, load_file, save_file
 
 # Dataset has corrupted files. See https://www.robots.ox.ac.uk/~vgg/data/parisbuildings/
 CORRUPTED_FILES = [

@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 import torch
 import torch.distributed as dist
-from classy_vision.optim import SGD, register_optimizer
+from classy_vision.optim import register_optimizer, SGD
 from vissl.utils.fsdp_utils import get_global_group
 
 

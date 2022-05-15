@@ -7,8 +7,8 @@ from typing import Any, Dict
 
 from classy_vision.optim.param_scheduler import (
     ClassyParamScheduler,
-    UpdateInterval,
     register_param_scheduler,
+    UpdateInterval,
 )
 
 

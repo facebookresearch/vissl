@@ -7,8 +7,8 @@ import torch.distributed as dist
 import torch.nn as nn
 from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
 from fairscale.nn.data_parallel import (
-    FullyShardedDataParallel as FSDP,
     auto_wrap_bn as fairscale_auto_wrap_bn,
+    FullyShardedDataParallel as FSDP,
 )
 from vissl.config.attr_dict import AttrDict
 

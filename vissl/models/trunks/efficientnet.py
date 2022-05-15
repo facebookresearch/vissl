@@ -9,11 +9,11 @@ from typing import List
 import torch
 import torch.nn as nn
 from classy_vision.models.efficientnet import (
-    MODEL_PARAMS,
     EfficientNet as ClassyEfficientNet,
+    MODEL_PARAMS,
 )
 from vissl.config import AttrDict
-from vissl.models.model_helpers import Flatten, Wrap, parse_out_keys_arg
+from vissl.models.model_helpers import Flatten, parse_out_keys_arg, Wrap
 from vissl.models.trunks import register_model_trunk
 
 

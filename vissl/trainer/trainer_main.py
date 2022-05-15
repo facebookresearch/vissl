@@ -22,7 +22,7 @@ from classy_vision.generic.distributed_util import (
     set_cuda_device_index,
 )
 from classy_vision.hooks.classy_hook import ClassyHook
-from classy_vision.tasks import TASK_REGISTRY, ClassyTask
+from classy_vision.tasks import ClassyTask, TASK_REGISTRY
 from vissl.config import AttrDict
 from vissl.hooks import SSLClassyHookFunctions
 from vissl.models.model_helpers import get_trunk_output_feature_names

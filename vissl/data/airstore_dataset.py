@@ -12,7 +12,7 @@ from classy_vision.generic.distributed_util import get_rank, get_world_size
 from iopath.common.file_io import PathManager
 from PIL import Image, ImageFile
 from vissl.config import AttrDict
-from vissl.data.data_helper import QueueDataset, get_mean_image
+from vissl.data.data_helper import get_mean_image, QueueDataset
 
 
 def create_path_manager() -> PathManager:

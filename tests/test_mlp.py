@@ -7,7 +7,7 @@ import unittest
 
 import torch
 from vissl.config import AttrDict
-from vissl.models.heads import MLP, LinearEvalMLP
+from vissl.models.heads import LinearEvalMLP, MLP
 
 
 class TestMLP(unittest.TestCase):

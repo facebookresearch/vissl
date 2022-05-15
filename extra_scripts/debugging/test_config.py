@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 import pprint
 import sys
-from typing import List, Any
+from typing import Any, List
 
 from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 

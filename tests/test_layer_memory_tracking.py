@@ -12,9 +12,9 @@ import torch.nn as nn
 import torchvision.models as models
 from fairscale.nn import FullyShardedDataParallel
 from vissl.utils.layer_memory_tracking import (
+    find_best_reset_points,
     LayerwiseMemoryTracker,
     ProcessGroupTracker,
-    find_best_reset_points,
 )
 from vissl.utils.test_utils import (
     gpu_test,

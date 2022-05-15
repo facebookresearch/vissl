@@ -11,8 +11,8 @@ from typing import Any, Dict
 import numpy as np
 from classy_vision.optim.param_scheduler import (
     ClassyParamScheduler,
-    UpdateInterval,
     register_param_scheduler,
+    UpdateInterval,
 )
 
 

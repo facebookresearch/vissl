@@ -14,7 +14,7 @@ from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from vissl.config import AttrDict
 from vissl.data.collators.collator_helper import MultiDimensionalTensor
 from vissl.models import register_model
-from vissl.models.heads import SwAVPrototypesHead, get_model_head
+from vissl.models.heads import get_model_head, SwAVPrototypesHead
 from vissl.models.model_helpers import (
     get_trunk_output_feature_names,
     is_feature_extractor_model,

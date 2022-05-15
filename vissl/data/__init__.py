@@ -18,9 +18,9 @@ from vissl.data.data_helper import (
 )
 from vissl.data.dataloader_sync_gpu_wrapper import DataloaderSyncGPUWrapper
 from vissl.data.dataset_catalog import (
-    VisslDatasetCatalog,
     get_data_files,
     register_datasets,
+    VisslDatasetCatalog,
 )
 from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset

@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as F
 from classy_vision.generic.util import is_on_gpu
 from classy_vision.losses import ClassyLoss, register_loss
-from torch import Tensor, nn
+from torch import nn, Tensor
 from vissl.config import AttrDict
 
 
