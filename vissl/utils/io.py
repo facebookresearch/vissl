@@ -192,7 +192,8 @@ def cleanup_dir(dir):
     """
     if g_pathmgr.exists(dir):
         logging.info(f"Deleting directory: {dir}")
-        os.system(f"rm -rf {dir}")
+        # TODO (qduval): T121550659 temporary resolution to high-pri task
+        # os.system(f"rm -rf {dir}")
     logging.info(f"Deleted contents of directory: {dir}")
 
 
