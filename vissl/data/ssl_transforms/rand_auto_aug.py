@@ -96,7 +96,7 @@ class RandAugment(ClassyTransform):
         num_layers=2,
         increasing_severity=False,
         weight_choice=None,
-        **kwargs
+        **kwargs,
     ):
         hparams = kwargs
         hparams.update(_HPARAMS_DEFAULT)

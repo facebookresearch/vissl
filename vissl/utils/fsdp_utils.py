@@ -128,6 +128,6 @@ def auto_wrap_big_layers(module: nn.Module, fsdp_config: AttrDict):
     with enable_wrap(
         auto_wrap_policy=_BigConvAutoWrapPolicy(fsdp_config.AUTO_WRAP_THRESHOLD),
         wrapper_cls=_FSDP_WRAPPER,
-        **fsdp_config
+        **fsdp_config,
     ):
         return auto_wrap(module)
