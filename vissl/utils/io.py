@@ -8,6 +8,7 @@ import logging
 import os
 import pickle
 import re
+import shutil
 import time
 from urllib.parse import urlparse
 
@@ -190,10 +191,9 @@ def cleanup_dir(dir):
     Utility for deleting a directory. Useful for cleaning the storage space
     that contains various training artifacts like checkpoints, data etc.
     """
-    if g_pathmgr.exists(dir):
+    if os.path.exists(dir):
         logging.info(f"Deleting directory: {dir}")
-        # TODO (qduval): T121550659 temporary resolution to high-pri task
-        # os.system(f"rm -rf {dir}")
+        shutil.rmtree(dir)
     logging.info(f"Deleted contents of directory: {dir}")
 
 
