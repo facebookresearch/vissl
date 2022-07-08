@@ -1,0 +1,11 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 34
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [512, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
+      ]
