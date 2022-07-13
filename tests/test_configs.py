@@ -7,14 +7,14 @@ import logging
 import unittest
 
 from hydra.errors import ConfigCompositionException, HydraException
-from parameterized import parameterized
 from utils import (
     BENCHMARK_CONFIGS,
     INTEGRATION_TEST_CONFIGS,
     PRETRAIN_CONFIGS,
     SSLHydraConfig,
 )
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import convert_to_attrdict, hydra_compose
+from vissl.utils.test_utils import parameterized_parallel
 
 
 logger = logging.getLogger("__name__")
@@ -141,30 +141,21 @@ class TestConfigsKeyAddition(unittest.TestCase):
 
 
 class TestBenchmarkConfigs(unittest.TestCase):
-    @parameterized.expand(BENCHMARK_CONFIGS)
-    def test_benchmark_config(self, filepath):
-        logger.warning(f"Loading {filepath}")
-        self.assertTrue(
-            SSLHydraConfig.from_configs([filepath]),
-            "config must be loaded successfully",
-        )
+    @parameterized_parallel(BENCHMARK_CONFIGS)
+    def test_benchmark_config(self, override):
+        logger.warning(f"Loading {override}")
+        return hydra_compose(overrides=[override])
 
 
 class TestPretrainConfigs(unittest.TestCase):
-    @parameterized.expand(PRETRAIN_CONFIGS)
-    def test_pretrain_config(self, filepath):
-        logger.warning(f"Loading {filepath}")
-        self.assertTrue(
-            SSLHydraConfig.from_configs([filepath]),
-            "config must be loaded successfully",
-        )
+    @parameterized_parallel(PRETRAIN_CONFIGS)
+    def test_pretrain_config(self, override):
+        logger.warning(f"Loading {override}")
+        return hydra_compose(overrides=[override])
 
 
 class TestIntegrationTestConfigs(unittest.TestCase):
-    @parameterized.expand(INTEGRATION_TEST_CONFIGS)
-    def test_integration_test_config(self, filepath):
-        logger.warning(f"Loading {filepath}")
-        self.assertTrue(
-            SSLHydraConfig.from_configs([filepath]),
-            "config must be loaded successfully",
-        )
+    @parameterized_parallel(INTEGRATION_TEST_CONFIGS)
+    def test_integration_test_config(self, override):
+        logger.warning(f"Loading {override}")
+        return hydra_compose(overrides=[override])

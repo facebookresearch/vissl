@@ -2,7 +2,7 @@
 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
+import contextlib
 import logging
 import math
 import pprint
@@ -104,6 +104,29 @@ def assert_hydra_dependency():
     assert is_hydra_available(), f"Make sure to install Hydra: {install_command}"
     upgrade_message = f"Please upgrade Hydra: {install_command}"
     assert get_hydra_version() >= min_hydra_version, upgrade_message
+
+
+@contextlib.contextmanager
+def initialize_hydra_config_module():
+    # Backward compatibility with previous hydra versions:
+    # In Hydra 1.1 and above, the compose API is not experimental anymore
+    if get_hydra_version() >= (1, 1, 0):
+        from hydra import initialize_config_module
+    else:
+        from hydra.experimental import initialize_config_module
+
+    with initialize_config_module(config_module="vissl.config"):
+        yield
+
+
+def hydra_compose(overrides: List[str]):
+    # Backward compatibility with previous hydra versions:
+    # In Hydra 1.1 and above, the compose API is not experimental anymore
+    if get_hydra_version() >= (1, 1, 0):
+        from hydra import compose
+    else:
+        from hydra.experimental import compose
+    return compose("defaults", overrides=overrides)
 
 
 def compose_hydra_configuration(overrides: List[str]):

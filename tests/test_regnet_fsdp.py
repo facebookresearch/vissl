@@ -196,4 +196,4 @@ class TestRegnetFSDP(unittest.TestCase):
 
             for i, ddp_result in enumerate(results[0]):
                 fsdp_result = results[1][i]
-                self.assertAlmostEqual(ddp_result, fsdp_result, places=5)
+                self.assertAlmostEqual(ddp_result, fsdp_result, places=4)

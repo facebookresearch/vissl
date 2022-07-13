@@ -77,7 +77,16 @@ def create_valid_input(input_list: List[str]) -> List[str]:
 
 # we skip object detection configs since they are for detectron2 codebase
 BENCHMARK_CONFIGS = create_valid_input(
-    list_config_files("config/benchmark", exclude_folders(["object_detection"]))
+    list_config_files(
+        "config/benchmark",
+        exclude_folders(
+            [
+                "object_detection",
+                "datasets",
+                "models",  # will be tested via BENCHMARK_MODEL_CONFIGS
+            ]
+        ),
+    )
 )
 
 BENCHMARK_MODEL_CONFIGS = create_valid_input(
@@ -94,31 +103,20 @@ INTEGRATION_TEST_CONFIGS = create_valid_input(
     list_config_files("config/test/integration_test")
 )
 
-ROOT_CONFIGS = create_valid_input(
-    list_config_files(
-        "config", exclude_folders(["models", "optimization", "object_detection"])
-    )
-)
-
-ROOT_OSS_CONFIGS = create_valid_input(
-    list_config_files(
-        "config", exclude_folders(["models", "optimization", "object_detection", "fb"])
-    )
-)
-
 # configs that require loss optimization and hence trainable
 ROOT_LOSS_CONFIGS = create_valid_input(
     list_config_files(
         "config",
         exclude_folders(
             [
+                "datasets",
+                "fb",
+                "feature_extraction",
                 "models",
+                "nearest_neighbor",
                 "optimization",
                 "object_detection",
-                "nearest_neighbor",
-                "feature_extraction",
-                "fb",
-                "test/transforms",
+                "transforms",
             ]
         ),
     )

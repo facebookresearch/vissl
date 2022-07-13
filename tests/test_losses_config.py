@@ -8,10 +8,10 @@ import unittest
 from collections import namedtuple
 
 from classy_vision.generic.distributed_util import set_cpu_device
-from parameterized import parameterized
 from utils import ROOT_LOSS_CONFIGS, SSLHydraConfig
 from vissl.trainer.train_task import SelfSupervisionTask
-from vissl.utils.hydra_config import convert_to_attrdict
+from vissl.utils.hydra_config import convert_to_attrdict, hydra_compose
+from vissl.utils.test_utils import parameterized_parallel
 
 
 logger = logging.getLogger("__name__")
@@ -28,20 +28,21 @@ BUFFER_PARAMS = BUFFER_PARAMS_STRUCT(BATCH_SIZE, 1, EMBEDDING_DIM)
 
 
 class TestRootConfigsLossesBuild(unittest.TestCase):
-    @parameterized.expand(ROOT_LOSS_CONFIGS)
+    @parameterized_parallel(ROOT_LOSS_CONFIGS)
     def test_loss_build(self, filepath):
-        logger.info(f"Loading {filepath}")
-        cfg = SSLHydraConfig.from_configs(
+        logger.warning(f"Loading {filepath}")
+        cfg = hydra_compose(
             [
                 filepath,
                 "config.DATA.TRAIN.DATA_SOURCES=[synthetic]",
                 "config.DATA.TEST.DATA_SOURCES=[synthetic]",
             ]
         )
-        _, config = convert_to_attrdict(cfg.default_cfg)
+        _, config = convert_to_attrdict(cfg)
         task = SelfSupervisionTask.from_config(config)
         task.datasets, _ = task.build_datasets()
         self.assertTrue(task._build_loss(), "failed to build loss")
+        return True
 
     def test_pytorch_loss(self):
         cfg = SSLHydraConfig.from_configs(

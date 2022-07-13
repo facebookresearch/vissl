@@ -14,7 +14,7 @@ config:
     NUM_DATALOADER_WORKERS: 0
     TRAIN:
       DATA_SOURCES: [synthetic]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 8
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -29,7 +29,7 @@ config:
       DATA_LIMIT: 32
     TEST:
       DATA_SOURCES: [synthetic]
-      BATCHSIZE_PER_REPLICA: 32
+      BATCHSIZE_PER_REPLICA: 8
       TRANSFORMS:
         - name: Resize
           size: 256

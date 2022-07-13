@@ -4,9 +4,12 @@
 # LICENSE file in the root directory of this source tree.
 
 import functools
+import logging
 import os
+import random
 import re
 import tempfile
+from concurrent.futures.thread import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Callable, List, Tuple, Union
@@ -17,6 +20,7 @@ import torch.multiprocessing as mp
 from vissl.config.attr_dict import AttrDict
 from vissl.hooks import default_hook_generator
 from vissl.utils.distributed_launcher import launch_distributed
+from vissl.utils.hydra_config import initialize_hydra_config_module
 from vissl.utils.misc import is_augly_available
 
 
@@ -53,6 +57,47 @@ def with_temp_files(count: int):
         yield [t[1] for t in temp_files]
         for t in temp_files:
             os.close(t[0])
+
+
+def parameterized_parallel(configs, max_workers: int = 20):
+    """
+    Helper functions for parameterized tests that need
+    to run in parallel for faster processing
+    """
+
+    def decorator(test_fn):
+        @functools.wraps(test_fn)
+        def wrapper(self):
+            with initialize_hydra_config_module():
+                with ThreadPoolExecutor(max_workers) as executor:
+                    successes = executor.map(lambda c: test_fn(self, c), configs)
+                    for config, success in zip(configs, successes):
+                        self.assertTrue(success, f"Failed test for: {config}")
+
+        return wrapper
+
+    return decorator
+
+
+def parameterized_random(configs, ratio: int = 0.5, keep=lambda _config: False):
+    """
+    Helper function for parameterized tests that have very
+    low probability of failing (and can be skipped randomly)
+    """
+
+    def decorator(test_fn):
+        @functools.wraps(test_fn)
+        def wrapper(self):
+            with initialize_hydra_config_module():
+                for config in configs:
+                    if keep(config) or random.random() < ratio:
+                        test_fn(self, config)
+                    else:
+                        logging.warning(f"Randomly skipped test: {config}")
+
+        return wrapper
+
+    return decorator
 
 
 @dataclass

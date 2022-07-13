@@ -12,26 +12,26 @@ version: 2
 # -------------------------------------------------------------------------------------
 # Environments to run the jobs in
 # -------------------------------------------------------------------------------------
+
 cpu: &cpu
-  environment:
-    TERM: xterm
-    TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
-  machine:
-    image: ubuntu-1604:201903-01
+  docker:
+    - image: circleci/python:3.8
   resource_class: medium
+  parallelism: 10  # Number of parallel executors
 
 gpu: &gpu
   environment:
-    CUDA_VER: "10.2"
-    TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
+    CUDA_VERSION: "11.1"
+    CUDA_HOME: /usr/local/cuda-11.1
     TERM: xterm
   machine:
-    image: ubuntu-1604:201903-01
+    image: ubuntu-1604-cuda-11.1:202012-01
   resource_class: gpu.nvidia.medium.multi  # Tesla T4
 
 # -------------------------------------------------------------------------------------
 # Re-usable commands
 # -------------------------------------------------------------------------------------
+
 install_python: &install_python
   - run:
       name: Install Python
@@ -41,19 +41,6 @@ install_python: &install_python
         pyenv install -f 3.7.0
         pyenv global 3.7.0
 
-update_gcc7: &update_gcc7
-  - run:
-      name: Update GCC7
-      working_directory: ~/
-      command: |
-        sudo apt-get update
-        sudo add-apt-repository ppa:jonathonf/gcc
-        sudo apt-get update
-        sudo apt-get install gcc-7 g++-7
-        sudo update-alternatives  --install /usr/bin/gcc gcc /usr/bin/gcc-7 60  --slave /usr/bin/g++ g++ /usr/bin/g++-7  --slave /usr/bin/gcov gcov /usr/bin/gcov-7  --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-7  --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-7  --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-7  --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-7
-        gcc --version
-        g++ --version
-
 install_fairscale: &install_fairscale
   - run:
       name: Install Fairscale
@@ -62,7 +49,6 @@ install_fairscale: &install_fairscale
         pip uninstall -y fairscale
         pip install fairscale==0.4.6
 
-
 install_classy_vision: &install_classy_vision
   - run:
       name: Install ClassyVision
@@ -70,19 +56,6 @@ install_classy_vision: &install_classy_vision
       command: |
         pip uninstall -y classy_vision
         pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
-
-setupcuda: &setupcuda
-  run:
-    name: Setup CUDA and NVIDIA driver
-    working_directory: ~/
-    command: |
-      # download and install nvidia drivers, cuda, etc
-      wget --no-verbose --no-clobber -P ~/nvidia-downloads 'https://s3.amazonaws.com/ossci-linux/nvidia_driver/NVIDIA-Linux-x86_64-430.40.run'
-      wget --no-verbose --no-clobber -P ~/nvidia-downloads http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux.run
-      sudo /bin/bash ~/nvidia-downloads/NVIDIA-Linux-x86_64-430.40.run --no-drm -q --ui=none
-      sudo sh ~/nvidia-downloads/cuda_10.2.89_440.33.01_linux.run --silent
-      echo "Done installing CUDA."
-      nvidia-smi
 
 setup_venv: &setup_venv
   - run:
@@ -109,11 +82,11 @@ pip_list: &pip_list
 
 install_vissl_dep: &install_vissl_dep
   - run:
-      name: Install Dependencies
+      name: Install VISSL Dependencies
       working_directory: ~/vissl
       command: |
-        pip install --progress-bar off torch==1.8.1+cu102 torchvision==0.9.1+cu102 -f https://download.pytorch.org/whl/torch_stable.html
-        pip install --progress-bar off opencv-python==3.4.2.17
+        pip install --progress-bar off torch==1.8.1+cu111 torchvision==0.9.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+        pip install --progress-bar off opencv-python==4.5.1.48
         pip install --progress-bar off -r requirements.txt
         # Update this since classy_vision seems to need it.
         pip install --progress-bar off --upgrade iopath
@@ -129,22 +102,26 @@ install_augly: &install_augly
         sudo apt-get update
         sudo apt-get install python3-magic
 
+install_apex_cpu: &install_apex_cpu
+  - run:
+      name: Install Apex for CPU
+      working_directory: ~/vissl
+      environment:
+        # Variable used by pip install of apex
+        TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
+      command: |
+        pip install -v --disable-pip-version-check --no-cache-dir apex@https://github.com/NVIDIA/apex/tarball/9ce0a10fb6c2537ef6a59f27b7875e32a9e9b8b8
+
 install_apex_gpu: &install_apex_gpu
   - run:
       name: Install Apex
       working_directory: ~/vissl
       environment:
-        CUDA_VER: "10.2"
+        # Both variables are used by install_apex.sh
+        CUDA_VER: "11.1"
         TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
       command: |
         bash ./docker/common/install_apex.sh
-
-install_apex_cpu: &install_apex_cpu
-  - run:
-      name: Install Apex for CPU
-      working_directory: ~/vissl
-      command: |
-        pip install -v --disable-pip-version-check --no-cache-dir apex@https://github.com/NVIDIA/apex/tarball/9ce0a10fb6c2537ef6a59f27b7875e32a9e9b8b8
 
 install_vissl: &install_vissl
   - run:
@@ -169,13 +146,12 @@ jobs:
 
     steps:
       - checkout
-      - <<: *install_python
       - <<: *setup_venv
 
       # Cache the vissl_venv directory that contains dependencies
       - restore_cache:
           keys:
-            - v6-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+            - v8-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl_dep
       - <<: *install_augly
@@ -187,7 +163,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v6-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+          key: v8-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl
 
@@ -213,19 +189,17 @@ jobs:
 
     steps:
       - checkout
-      - <<: *setupcuda
       - <<: *install_python
       - <<: *setup_venv
 
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v6-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+            - v8-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
       - <<: *install_fairscale
-      - <<: *update_gcc7
       - <<: *install_apex_gpu
       - <<: *pip_list
 
@@ -236,7 +210,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v6-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+          key: v8-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl
 
