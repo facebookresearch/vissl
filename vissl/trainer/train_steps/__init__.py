@@ -19,7 +19,7 @@ TRAIN_STEP_REGISTRY = {}
 TRAIN_STEP_NAMES = set()
 
 
-def register_train_step(name):
+def register_train_step(name: str):
     """
     Registers Self-Supervision Train step.
 
@@ -36,30 +36,30 @@ def register_train_step(name):
     To get a train step from a configuration file, see :func:`get_train_step`.
     """
 
-    def register_train_step_fn(func):
+    def register_train_step_cls(cls):
         if name in TRAIN_STEP_REGISTRY:
             raise ValueError("Cannot register duplicate train step ({})".format(name))
 
-        if func.__name__ in TRAIN_STEP_NAMES:
+        if cls.__name__ in TRAIN_STEP_NAMES:
             raise ValueError(
                 "Cannot register task with duplicate train step name ({})".format(
-                    func.__name__
+                    cls.__name__
                 )
             )
-        TRAIN_STEP_REGISTRY[name] = func
-        TRAIN_STEP_NAMES.add(func.__name__)
-        return func
+        TRAIN_STEP_REGISTRY[name] = cls
+        TRAIN_STEP_NAMES.add(cls.__name__)
+        return cls
 
-    return register_train_step_fn
+    return register_train_step_cls
 
 
-def get_train_step(train_step_name: str):
+def get_train_step(train_step_name: str, **train_step_kwargs):
     """
     Lookup the train_step_name in the train step registry and return.
     If the train step is not implemented, asserts will be thrown and workflow will exit.
     """
     assert train_step_name in TRAIN_STEP_REGISTRY, "Unknown train step"
-    return TRAIN_STEP_REGISTRY[train_step_name]
+    return TRAIN_STEP_REGISTRY[train_step_name](**train_step_kwargs)
 
 
 # automatically import any Python files in the train_steps/ directory
