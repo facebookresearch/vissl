@@ -96,7 +96,7 @@ class SVMTrainer(object):
 
     def get_best_cost_value(self):
         """
-        During the SVM training, we write the cross vaildation
+        During the SVM training, we write the cross validation
         AP value for training at each class and cost value
         combination. We load the AP values and for each
         class, determine the cost value that gives the maximum

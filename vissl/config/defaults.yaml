@@ -1553,6 +1553,23 @@ config:
       PATH: ""
 
   # ----------------------------------------------------------------------------------- #
+  # LOGISTIC REGRESSION (benchmark)
+  # ----------------------------------------------------------------------------------- #
+  LOW_SHOT_BENCHMARK:
+    # Which evaluation method to pick to choose among:
+    # - logistic_regression
+    # - svm
+    METHOD: 'logistic_regression'
+    # Configuration if we use logistic regression for evaluation
+    LOGISTIC_REGRESSION:
+      # Regularisation term for L2 penalty
+      LAMBDA: 0.025
+    # Where to find the extracted features and whether or not we should extract them
+    FEATURES:
+      # If empty, will run the extract features, if not, use the path to find the features
+      PATH: ""
+
+  # ----------------------------------------------------------------------------------- #
   # Geo Localization (benchmark)
   # ----------------------------------------------------------------------------------- #
   GEO_LOCALIZATION:
