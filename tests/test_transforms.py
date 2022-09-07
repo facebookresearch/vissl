@@ -15,6 +15,7 @@ from vissl.data.ssl_transforms.mnist_img_pil_to_rgb_mode import MNISTImgPil2RGB
 from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
 from vissl.utils.test_utils import (
     augly_test,
+    gpu_test,
     in_temporary_directory,
     run_integration_test,
 )
@@ -85,10 +86,11 @@ class TestTransform(unittest.TestCase):
             self.assertEqual((96, 96), crop.size)
 
     @augly_test()
+    @gpu_test(gpu_count=2)
     def test_augly_transforms(self):
         cfg = compose_hydra_configuration(
             [
-                "config=test/cpu_test/test_cpu_resnet_simclr.yaml",
+                "config=test/integration_test/quick_simclr",
                 "+config/test/transforms=augly_transforms_example",
             ],
         )
