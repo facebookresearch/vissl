@@ -1,0 +1,33 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["concatCLS4", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+        ["concatCLS4", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK: # B-16
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_DIM: 3072
+        DROPOUT_RATE: 0.0
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 3072, "dims": [3072, 8]}],
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 8]}],
+        ["mlp", {"dims": [3072, 8]}],
+        ["mlp", {"dims": [768, 8]}],
+      ]
+  OPTIMIZER:
+    regularize_bn: True

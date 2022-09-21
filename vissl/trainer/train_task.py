@@ -543,6 +543,10 @@ class SelfSupervisionTask(ClassificationTask):
                     "Please set config.TRAINER.TASK_NAME='self_supervision_fsdp_task'"
                 )
 
+        # Make sure that DistributedDataParallel will be happy
+        if not any((p.requires_grad for p in module.parameters())):
+            self.add_dummy_layer()
+
         super().init_distributed_data_parallel_model()
 
     def set_epoch(

@@ -1,0 +1,32 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["concatPOOL4", ["Identity", []] ],
+        ["lastPOOL", ["Identity", []] ],
+        ["concatPOOL4", ["Identity", []] ],
+        ["lastPOOL", ["Identity", []] ],
+      ]
+    TRUNK: # L-16
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 24
+        NUM_HEADS: 16
+        HIDDEN_DIM: 1024
+        MLP_DIM: 4096
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        USE_CLASS_TOKEN: False
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 4096, "dims": [4096, 6]}],
+        ["eval_mlp", {"in_channels": 1024, "dims": [1024, 6]}],
+        ["mlp", {"dims": [4096, 6]}],
+        ["mlp", {"dims": [1024, 6]}],
+      ]

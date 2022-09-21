@@ -1,0 +1,19 @@
+# @package _global_
+config:
+  TEST_ONLY: True
+  DATA:
+    TEST:
+      DATA_SOURCES: [disk_filelist]
+      LABEL_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet_a_filelist]
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  METERS:
+    model_output_mask: True

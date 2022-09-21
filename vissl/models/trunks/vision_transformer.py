@@ -240,6 +240,17 @@ class IBOTMaskedModeling(nn.Module):
         return x + pos_embed
 
 
+class FeatAvgPool(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.avg_pool = nn.AdaptiveAvgPool1d(1)
+
+    def forward(self, x):
+        # bs, seq_len, dims = x.shape
+        x = x.permute((0, 2, 1))
+        return self.avg_pool(x).squeeze()
+
+
 class VisionTransformer(nn.Module):
     """
     Vision transformer. Adding stochastic depth makes it a DeiT.
@@ -265,6 +276,7 @@ class VisionTransformer(nn.Module):
         self.drop_rate = self.trunk_config.DROPOUT_RATE
         self.attn_drop_rate = self.trunk_config.ATTENTION_DROPOUT_RATE
         self.drop_path_rate = self.trunk_config.DROP_PATH_RATE
+        self.use_class_token = self.trunk_config.get("USE_CLASS_TOKEN", True)
 
         # TODO Implement hybrid backbones
         hybrid_backbone_string = None
@@ -298,7 +310,12 @@ class VisionTransformer(nn.Module):
         num_patches = self.patch_embed.num_patches
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, self.embed_dim))
+        if self.use_class_token:
+            self.pos_embed = nn.Parameter(
+                torch.zeros(1, num_patches + 1, self.embed_dim)
+            )
+        else:
+            self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, self.embed_dim))
         self.pos_drop = nn.Dropout(p=self.drop_rate)
 
         self.blocks = self._build_blocks(norm_layer)
@@ -322,6 +339,8 @@ class VisionTransformer(nn.Module):
             self.patch_masking = IBOTMaskedModeling(embed_dim=self.embed_dim)
         else:
             self.patch_masking = NoPatchMasking()
+
+        self.avg_pool = FeatAvgPool()
 
     def create_norm_layer(self):
         return partial(nn.LayerNorm, eps=1e-6)
@@ -374,10 +393,10 @@ class VisionTransformer(nn.Module):
         x = self.patch_embed(x)
         feat_map_size = self.patch_embed.feat_map_size
 
-        class_tokens = self.cls_token.expand(
-            B, -1, -1
-        )  # stole class_tokens impl from Phil Wang, thanks
-        x = torch.cat((class_tokens, x), dim=1)
+        # Add the class token
+        if self.use_class_token:
+            class_tokens = self.cls_token.expand(B, -1, -1)
+            x = torch.cat((class_tokens, x), dim=1)
 
         # Compute positional embedding
         pos_embed = self.interpolate_pos_encoding(x, self.pos_embed, feat_map_size)
@@ -400,7 +419,10 @@ class VisionTransformer(nn.Module):
             x = blk(x)
         x = self.norm(x)
         if only_class_token:
-            return x[:, 0]
+            if self.use_class_token:
+                return x[:, 0]
+            else:
+                return self.avg_pool(x)
         else:
             return x
 
@@ -430,15 +452,19 @@ class VisionTransformer(nn.Module):
         output = []
         for name in names:
             if name.startswith("blkCLS"):
+                assert self.use_class_token, "Need class token to extract blkCLS"
                 v = int(name.replace("blkCLS", ""))
                 output.append(interms[v][:, 0])
             elif name.startswith("concatCLS"):
+                assert self.use_class_token, "Need class token to extract concatCLS"
                 v = int(name.replace("concatCLS", ""))
                 feat = torch.cat([x[:, 0] for x in interms[-v:]], dim=-1)
                 output.append(feat)
             elif name == "lastCLS":
+                assert self.use_class_token, "Need class token to extract lastCLS"
                 output.append(interms[-1][:, 0])
             elif name == "lastMAP":
+                assert self.use_class_token, "Need class token to extract lastMAP"
                 feat_map_size = self.patch_embed.feat_map_size
                 feat_map = interms[-1][:, 1:]
                 B, L, C = feat_map.shape
@@ -446,6 +472,15 @@ class VisionTransformer(nn.Module):
                 output.append(feat_map)
             elif name == "lastBLK":
                 output.append(interms[-1])
+            elif name == "lastPOOL":
+                assert not self.use_class_token
+                output.append(self.avg_pool(interms[-1]))
+            elif name.startswith("concatPOOL"):
+                assert not self.use_class_token
+                v = int(name.replace("concatPOOL", ""))
+                feat = torch.cat([self.avg_pool(x) for x in interms[-v:]], dim=-1)
+                output.append(feat)
+
         return output
 
     def get_last_self_attention(self, x: torch.Tensor) -> torch.Tensor:
@@ -482,6 +517,10 @@ class VisionTransformer(nn.Module):
     def interpolate_pos_encoding(
         self, x: torch.Tensor, pos_embed: torch.Tensor, feat_map_size: Tuple[int, int]
     ) -> torch.Tensor:
+        if not self.use_class_token:
+            assert x.shape[1] == pos_embed.shape[1], "Must match dimensions"
+            return pos_embed
+
         npatch = x.shape[1] - 1
         nembed = pos_embed.shape[1] - 1
         if npatch == nembed:

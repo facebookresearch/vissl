@@ -1,0 +1,9 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 34
+    HEAD:
+      PARAMS: [['mlp', {'dims': [512, 8142]}]]

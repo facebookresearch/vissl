@@ -13,6 +13,13 @@ config:
           auto_lr_scaling:
             auto_scale: false
           name: cosine
-          start_value: 0.5 # bs=512 but we will sweep
-          end_value: 5e-7
+          start_value: 0.1
+          end_value: 1e-7
+          update_interval: step
+        lr_head:
+          auto_lr_scaling:
+            auto_scale: false
+          name: cosine
+          start_value: 0.1
+          end_value: 1e-7
           update_interval: step

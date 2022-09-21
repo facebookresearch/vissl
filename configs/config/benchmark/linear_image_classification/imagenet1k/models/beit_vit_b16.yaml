@@ -54,9 +54,5 @@ config:
         ["eval_mlp", {"in_channels": 3072, "dims": [3072, 1000]}],
         ["eval_mlp", {"in_channels": 768, "dims": [768, 1000]}],
       ]
-    WEIGHTS_INIT:
-      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/oss_beit_base_patch16_224_pt22k.pth"
-      APPEND_PREFIX: trunk.base_model.
-      STATE_DICT_KEY_NAME: 'model'
   OPTIMIZER:
       regularize_bn: True

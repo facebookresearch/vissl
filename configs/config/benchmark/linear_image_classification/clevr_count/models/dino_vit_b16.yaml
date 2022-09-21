@@ -1,29 +1,5 @@
 # @package _global_
 config:
-  DATA:
-    TRAIN:
-      BATCHSIZE_PER_REPLICA: 32
-      TRANSFORMS:
-        - name: RandomResizedCrop
-          size: 224
-          interpolation: 3
-        - name: RandomHorizontalFlip
-        - name: ToTensor
-        - name: Normalize
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
-    TEST:
-      BATCHSIZE_PER_REPLICA: 32
-      TRANSFORMS:
-        - name: Resize
-          size: 256
-          interpolation: 3
-        - name: CenterCrop
-          size: 224
-        - name: ToTensor
-        - name: Normalize
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
   MODEL:
     FEATURE_EVAL_SETTINGS:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
@@ -50,8 +26,6 @@ config:
         ["eval_mlp", {"in_channels": 768, "dims": [768, 8]}],
       ]
     WEIGHTS_INIT:
-      PARAMS_FILE: "manifold://ssl_framework/tree/gfsai-bistro2-east/ai-group/users/prigoyal/vissl/dino_vitbase16_pretrain.pth"
-      APPEND_PREFIX: trunk.base_model.
-      STATE_DICT_KEY_NAME: ''
-  OPTIMIZER:
-      regularize_bn: True
+      # Use the teacher to perform the evaluation
+      STATE_DICT_KEY_NAME: "loss"
+      REMOVE_PREFIX: "momentum_teacher.module."

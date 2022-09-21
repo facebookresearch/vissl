@@ -16,7 +16,7 @@ config:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [inaturalist2018_filelist]
-      BATCHSIZE_PER_REPLICA: 8
+      BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop
           size: 224
@@ -32,7 +32,7 @@ config:
       DATA_SOURCES: [disk_filelist]
       LABEL_SOURCES: [disk_filelist]
       DATASET_NAMES: [inaturalist2018_filelist]
-      BATCHSIZE_PER_REPLICA: 8
+      BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
           size: 256
@@ -53,9 +53,6 @@ config:
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
-    FEATURE_EVAL_SETTINGS:
-      EVAL_MODE_ON: True
-      EVAL_TRUNK_AND_HEAD: False
     TRUNK:
       NAME: resnet
       RESNETS:

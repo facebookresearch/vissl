@@ -64,9 +64,11 @@ config:
         NUM_HEADS: 16
         HIDDEN_DIM: 1024
         MLP_DIM: 4096
-        DROPOUT_RATE: 0.1
+        DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
         CLASSIFIER: token
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [1024, 1000]}],

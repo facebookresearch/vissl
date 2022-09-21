@@ -7,9 +7,6 @@ config:
   TEST_MODEL: True
   SEED_VALUE: 1
   MULTI_PROCESSING_METHOD: forkserver
-  HOOKS:
-    PERF_STATS:
-      MONITOR_PERF_STATS: True
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
@@ -91,14 +88,5 @@ config:
           name: multistep
           update_interval: epoch
   DISTRIBUTED:
-    BACKEND: nccl
     NUM_NODES: 1
     NUM_PROC_PER_NODE: 8
-    INIT_METHOD: tcp
-    RUN_ID: auto
-  MACHINE:
-    DEVICE: gpu
-  CHECKPOINT:
-    DIR: "."
-    AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 1

@@ -1,0 +1,30 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK:
+      NAME: xcit
+      XCIT:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 768
+        NUM_LAYERS: 24
+        NUM_HEADS: 16
+        MLP_RATIO: 4.0
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.3
+        ETA: 1e-5
+        TOKENS_NORM: True
+        QKV_BIAS: True
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 8142]}],
+        ["mlp", {"dims": [768, 8142]}],
+      ]
+  OPTIMIZER:
+    regularize_bn: True
