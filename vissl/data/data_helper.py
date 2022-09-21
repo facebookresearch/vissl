@@ -6,6 +6,7 @@
 import contextlib
 import logging
 import queue
+from typing import Dict, List
 
 import numpy as np
 import torch
@@ -277,3 +278,294 @@ class QueueDataset(Dataset):
             if sample is not None:
                 is_success = True
         return sample, is_success
+
+
+class StratifiedClassSampler(torch.utils.data.Sampler):
+    def __init__(
+        self,
+        dataset,
+        num_classes: int,
+        labels: np.array,
+        class_index: Dict[int, List[int]],
+        world_size: int,
+        rank: int,
+        batch_size=1,
+        classes_per_batch=10,
+        epochs=1,
+        seed=0,
+        unique_classes=False,
+    ):
+        """
+        ClassStratifiedSampler
+        Batch-sampler that samples 'batch-size' images from subset of randomly
+        chosen classes e.g., if classes a,b,c are randomly sampled,
+        the sampler returns
+            torch.cat([a,b,c], [a,b,c], ..., [a,b,c], dim=0)
+        where a,b,c, are images from classes a,b,c respectively.
+        Sampler, samples images WITH REPLACEMENT (i.e., not epoch-based)
+
+        :param world_size: total number of workers in network
+        :param rank: local rank in network
+        :param batch_size: num. images to load from each class
+        :param classes_per_batch: num. classes to randomly sample for batch
+        :param epochs: num consecutive epochs thru data_source before gen.reset
+        :param seed: common seed across workers for subsampling classes
+        :param unique_classes: true ==> each worker samples a distinct set of classes; false ==> all workers sample the same classes
+        """
+        super().__init__(dataset)
+
+        self.rank = rank
+        self.world_size = world_size
+        self.cpb = classes_per_batch
+        self.unique_cpb = unique_classes
+        self.batch_size = batch_size
+        self.num_classes = num_classes
+        self.labels = labels  # Used for debugging only
+        self.class_index = class_index
+        self.epochs = epochs
+        self.epoch = 0
+
+        if not self.unique_cpb:
+            assert self.num_classes % self.cpb == 0
+
+        self.base_seed = seed  # instance seed
+        self.seed = seed  # subsample sampler seed
+
+    def print_sampler_config(self):
+        sampler_cfg = {
+            "rank": self.rank,
+            "world_size": self.world_size,
+            "classes_per_batch": self.cpb,
+            "unique_classes": self.unique_cpb,
+            "batch_size": self.batch_size,
+            "num_classes": self.num_classes,
+            "epochs": self.epochs,
+            "epoch": self.epoch,
+            "num_samples": self.num_samples,
+            "ipe": self.ipe,
+        }
+        logging.info("Distributed Sampler config:\n{}".format(sampler_cfg))
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
+
+    def set_inner_epochs(self, epochs):
+        self.epochs = epochs
+
+    def _next_perm(self):
+        self.seed += 1
+        g = torch.Generator()
+        g.manual_seed(self.seed)
+        self._perm = torch.randperm(self.num_classes, generator=g)
+
+    def _get_perm_ssi(self):
+        start = self._ssi
+        end = self._ssi + self.cpb
+        subsample = self._perm[start:end]
+        return subsample
+
+    def _next_ssi(self):
+        if not self.unique_cpb:
+            self._ssi = (self._ssi + self.cpb) % self.num_classes
+            if self._ssi == 0:
+                self._next_perm()
+        else:
+            self._ssi += self.cpb * self.world_size
+            max_end = self._ssi + self.cpb * (self.world_size - self.rank)
+            if max_end > self.num_classes:
+                self._ssi = self.rank * self.cpb
+                self._next_perm()
+
+    def _get_local_samplers(self, epoch):
+        """Generate samplers for local data set in given epoch"""
+        seed = int(
+            self.base_seed
+            + epoch
+            + self.epochs * self.rank
+            + self.epoch * self.epochs * self.world_size
+        )
+        g = torch.Generator()
+        g.manual_seed(seed)
+        samplers = []
+        for t in range(self.num_classes):
+            t_indices = np.array(self.class_index[t])
+            if not self.unique_cpb:
+                i_size = len(t_indices) // self.world_size
+                if i_size > 0:
+                    t_indices = t_indices[self.rank * i_size : (self.rank + 1) * i_size]
+            if len(t_indices) > 1:
+                t_indices = t_indices[torch.randperm(len(t_indices), generator=g)]
+            samplers.append(iter(t_indices))
+        return samplers
+
+    def _subsample_samplers(self, samplers):
+        """Subsample a small set of samplers from all class-samplers"""
+        subsample = self._get_perm_ssi()
+        subsampled_samplers = []
+        for i in subsample:
+            subsampled_samplers.append(samplers[i])
+        self._next_ssi()
+        return zip(*subsampled_samplers)
+
+    def __iter__(self):
+        self._ssi = self.rank * self.cpb if self.unique_cpb else 0
+        self._next_perm()
+
+        # -- iterations per epoch (extract batch-size samples from each class)
+        ipe = self.ipe * self.batch_size
+
+        for epoch in range(self.epochs):
+
+            # -- shuffle class order
+            samplers = self._get_local_samplers(epoch)
+            subsampled_samplers = self._subsample_samplers(samplers)
+
+            counter, batch = 0, []
+            for i in range(ipe):
+                batch += list(next(subsampled_samplers))
+                counter += 1
+                if counter == self.batch_size:
+                    # for idx in batch:
+                    #     yield idx
+                    yield batch
+                    counter, batch = 0, []
+                    if i + 1 < ipe:
+                        subsampled_samplers = self._subsample_samplers(samplers)
+
+    @property
+    def ipe(self):
+        return (
+            self.num_classes // self.cpb
+            if not self.unique_cpb
+            else self.num_classes // (self.cpb * self.world_size)
+        )
+
+    @property
+    def num_samples(self):
+        if self.batch_size == 0:
+            return 0
+
+        return self.epochs * self.ipe
+
+    def __len__(self):
+        return self.num_samples
+
+
+class ClassPowerlawSampler(torch.utils.data.Sampler):
+    """
+    ClassPowerlawSampler
+
+    Batch-sampler that samples 'batch-size' images using a power law distribution
+    Intended to be used on balanced dataset such as Imagenet
+
+    :param world_size: total number of workers in network
+    :param rank: local rank in network
+    :param batch_size: number of images to load from each class
+    :param powerlaw: strength of the power law (coefficient)
+    :param seed: common seed across workers for subsampling classes
+    """
+
+    def __init__(
+        self,
+        dataset,
+        num_classes: int,
+        class_index: Dict[int, List[int]],
+        labels: List[int],
+        world_size: int,
+        rank: int,
+        batch_size=1,
+        powerlaw=1.0,
+        seed=0,
+    ):
+        super(ClassPowerlawSampler, self).__init__(dataset)
+
+        self.dataset = dataset
+        self.num_classes = num_classes
+        self.class_index = class_index
+        self.world_size = world_size
+        self.rank = rank
+        self.batch_size = batch_size
+        self.class_indices = []
+        self.set_epoch(0)
+
+        g = torch.Generator()
+        g.manual_seed(seed)
+        if powerlaw < 0.0:
+            # HACK to plug inverse square root re-sampling - replace by proper sampler
+            probs_map = self.inverse_square_root_resampling(labels)
+            probs = np.array([probs_map[c] for c in range(self.num_classes)])
+            self.probs = probs
+        else:
+            probs = np.array(
+                [1.0 / (1.0 + i) ** powerlaw for i in range(self.num_classes)]
+            )
+            probs /= sum(probs)
+            self.probs = probs[torch.randperm(len(probs), generator=g)]
+
+    @staticmethod
+    def inverse_square_root_resampling(labels):
+        import math
+        from collections import Counter
+
+        class_index = {}
+        for i, c in enumerate(labels):
+            class_index.setdefault(c, []).append(i)
+
+        total_len = len(labels)
+        class_prob = {c: len(v) / total_len for c, v in class_index.items()}
+        inv_sqrt_prob = {c: 1 / math.sqrt(p) for c, p in class_prob.items()}
+
+        total_prob = 0.0
+        final_prob = Counter()
+        for idx in range(total_len):
+            c = labels[idx]
+            final_prob[c] += inv_sqrt_prob[c]
+            total_prob += inv_sqrt_prob[c]
+
+        final_prob = {k: v / total_prob for k, v in final_prob.items()}
+        return final_prob
+
+    def set_epoch(self, epoch: int):
+        self.epoch = int(epoch)
+
+        g = torch.Generator()
+        g.manual_seed(self.epoch)
+        samplers = []
+        for t in range(self.num_classes):
+            indices = np.array(self.class_index[t])
+            indices = indices[torch.randperm(len(indices), generator=g)]
+            size = len(indices) // self.world_size
+            if size > 0:
+                indices = indices[self.rank * size : (self.rank + 1) * size]
+            samplers.append(indices)
+        self.class_indices = samplers
+
+    def _sample_class(self):
+        return int(np.random.choice(np.arange(self.num_classes), size=1, p=self.probs))
+
+    def _sample_from_class(self, c, count=1):
+        indices = self.class_indices[c]
+        if count <= len(indices):
+            _samples = indices[torch.randperm(len(indices))[:count]]
+        else:
+            _samples = np.random.choice(indices, size=count, replace=True)
+        if type(_samples) == np.int64:
+            _samples = [_samples]
+        return list(_samples)
+
+    def __iter__(self):
+        ipe = len(self.dataset) // (self.batch_size * self.world_size)
+        for _ in range(ipe):
+
+            sampled_classes = {}
+            for _ in range(self.batch_size):
+                c = self._sample_class()
+                sampled_classes[c] = sampled_classes.get(c, 0) + 1
+
+            batch = []
+            for c in sampled_classes:
+                batch += self._sample_from_class(c, count=sampled_classes[c])
+            yield batch
+
+    def __len__(self):
+        return len(self.dataset) // (self.batch_size * self.world_size)

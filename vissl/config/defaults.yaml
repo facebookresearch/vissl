@@ -231,7 +231,17 @@ config:
     TRAIN:
       # A sampler that cuts the dataset in a deterministic way
       USE_DEBUGGING_SAMPLER: False
-
+      # A sampler that creates batches with a limited number of classes
+      STRATIFIED_SAMPLER:
+        ENABLED: False
+        CLASSES_PER_BATCH: 2
+        STEP_PER_EPOCH: 1250
+        UNIQUE_CLASSES: False
+      # A sampler that creates batches with a skewed distribution following
+      # a power law
+      POWER_LAW_SAMPLER:
+        ENABLED: False
+        POWER: 1.0
       # if we want to resume the data sampler as well from a previous iteration. By default
       # pytorch sampler resumes from every epoch.
       USE_STATEFUL_DISTRIBUTED_SAMPLER: False
@@ -388,6 +398,17 @@ config:
     TEST:
       # A sampler that cuts the dataset in a deterministic way
       USE_DEBUGGING_SAMPLER: False
+      # A sampler that creates batches with a limited number of classes
+      STRATIFIED_SAMPLER:
+        ENABLED: False
+        CLASSES_PER_BATCH: 2
+        STEP_PER_EPOCH: 1250
+        UNIQUE_CLASSES: False
+      # A sampler that creates batches with a skewed distribution following
+      # a power law
+      POWER_LAW_SAMPLER:
+        ENABLED: False
+        POWER: 1.0
       # if we want to resume the data sampler as well from a previous iteration
       USE_STATEFUL_DISTRIBUTED_SAMPLER: False
       # if users want to replace certain prefixes from the image paths and replace them with
