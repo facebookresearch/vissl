@@ -7,7 +7,7 @@ The training in VISSL is composed of following components: Trainer, train task a
 Trainer
 -----------
 
-The main entry point for any training or feature extraction workflows in VISSL if the trainer. It performs following:
+The main entry point for any training or feature extraction workflows in VISSL is the trainer. It performs following:
 
 - The trainer constructs a :code:`train_task` which prepares all the components of the training (optimizer, loss, meters, model etc) using the settings specified by user in the yaml config file. Read below for details about train task.
 
