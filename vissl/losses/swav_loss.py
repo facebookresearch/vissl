@@ -22,6 +22,7 @@ from iopath.common.file_io import g_pathmgr
 from torch import nn
 from vissl.config import AttrDict
 from vissl.losses.distibuted_sinkhornknopp import distributed_sinkhornknopp
+from vissl.losses.distibuted_sinkhornknopp_powerlaw import distributed_sinkhorn_powerlaw
 
 
 @register_loss("swav_loss")
@@ -68,6 +69,7 @@ class SwAVLoss(ClassyLoss):
             self.loss_config.embedding_dim,
             self.loss_config.temp_hard_assignment_iters,
             self.loss_config.output_dir,
+            self.loss_config.get("shk_powerlaw", 0.0),
         )
 
     @classmethod
@@ -147,6 +149,7 @@ class SwAVCriterion(nn.Module):
         embedding_dim: int,
         temp_hard_assignment_iters: int,
         output_dir: str,
+        shk_powerlaw: float = 0.0,
     ):
         super(SwAVCriterion, self).__init__()
 
@@ -172,6 +175,7 @@ class SwAVCriterion(nn.Module):
         if local_queue_length > 0:
             self.initialize_queue()
         self.output_dir = output_dir
+        self.shk_powerlaw = shk_powerlaw
 
     def forward(self, scores: torch.Tensor, head_id: int):
         assert scores.shape[0] % self.num_crops == 0
@@ -212,15 +216,27 @@ class SwAVCriterion(nn.Module):
 
                 # Apply sinkhornknopp algorithm to divide equally the
                 # assignment to each of the prototypes
-                assignments = distributed_sinkhornknopp(
-                    Q=assignments,
-                    hard_assignment=self.num_iteration
-                    < self.temp_hard_assignment_iters,
-                    world_size=self.world_size,
-                    num_iter=self.nmb_sinkhornknopp_iters,
-                    use_gpu=self.use_gpu,
-                    use_double_prec=self.use_double_prec,
-                )
+                if self.shk_powerlaw == 0.0:
+                    assignments = distributed_sinkhornknopp(
+                        Q=assignments,
+                        hard_assignment=self.num_iteration
+                        < self.temp_hard_assignment_iters,
+                        world_size=self.world_size,
+                        num_iter=self.nmb_sinkhornknopp_iters,
+                        use_gpu=self.use_gpu,
+                        use_double_prec=self.use_double_prec,
+                    )
+                else:
+                    assignments = distributed_sinkhorn_powerlaw(
+                        Q=assignments,
+                        hard_assignment=self.num_iteration
+                        < self.temp_hard_assignment_iters,
+                        world_size=self.world_size,
+                        num_iter=self.nmb_sinkhornknopp_iters,
+                        use_gpu=self.use_gpu,
+                        use_double_prec=self.use_double_prec,
+                        powerlaw=self.shk_powerlaw,
+                    )
                 assignments = assignments[:bs]
 
             # For each crop other than the one used as target assignment

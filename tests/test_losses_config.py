@@ -41,7 +41,11 @@ class TestRootConfigsLossesBuild(unittest.TestCase):
         _, config = convert_to_attrdict(cfg)
         task = SelfSupervisionTask.from_config(config)
         task.datasets, _ = task.build_datasets()
-        self.assertTrue(task._build_loss(), "failed to build loss")
+        try:
+            self.assertTrue(task._build_loss(), f"failed to build loss: {filepath}")
+        except Exception as e:
+            logger.error(f"failed to build loss: {filepath}")
+            raise e
         return True
 
     def test_pytorch_loss(self):

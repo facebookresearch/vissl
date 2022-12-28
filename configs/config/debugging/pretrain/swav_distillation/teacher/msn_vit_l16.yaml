@@ -1,0 +1,29 @@
+# @package _global_
+config:
+  DISTILLATION:
+    TEACHER_MODEL:
+      TRUNK: # L-16
+        NAME: vision_transformer
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          HIDDEN_DIM: 1024
+          NUM_LAYERS: 24
+          NUM_HEADS: 16
+          MLP_DIM: 4096
+          CLASSIFIER: token
+          DROPOUT_RATE: 0
+          ATTENTION_DROPOUT_RATE: 0
+          QKV_BIAS: True
+          DROP_PATH_RATE: 0.0  # MSN is trained without it
+          MASKED_IMAGE_MODELING:
+            NAME: 'none'
+      HEAD:
+        PARAMS: [
+          ["msn_head", {
+            "in_dim": 1024,
+            "num_prototypes": 1024,
+            "temperature": 0.025,
+            "use_bn": true,
+          }],
+        ]

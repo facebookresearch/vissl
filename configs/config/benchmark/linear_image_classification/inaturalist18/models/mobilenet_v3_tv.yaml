@@ -1,0 +1,108 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      # BATCHSIZE_PER_REPLICA: 128
+      BATCHSIZE_PER_REPLICA: 256
+    TEST:
+      # BATCHSIZE_PER_REPLICA: 128
+      BATCHSIZE_PER_REPLICA: 256
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        # Linear heads on top of normalized or not representations
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+
+          # MobileNet head on top of normalized or not representations
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+
+          # Exploring a two layer head
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+
+          # Combining several levels of representations
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 2]]]],
+      ]
+    TRUNK:
+      NAME: mobilenetv3_tv
+      MOBILE_NET:
+        NAME: mobilenetv3_large_100
+    HEAD:
+      PARAMS: [
+        # Linear heads on top of normalized or not representations
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 8142]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 8142]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 8142]}],
+
+          # MobileNet head on top of normalized or not representations
+        ["mobilenet_v3_head", {"with_bn": True, "num_classes": 8142}],
+        ["mobilenet_v3_head", {"with_bn": True, "num_classes": 8142}],
+        ["mobilenet_v3_head", {"with_bn": True, "num_classes": 8142}],
+
+          # Exploring a two layers head
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 1280, 8142]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 1280, 8142]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 1280, 8142]}],
+
+          # Combining several levels of representations
+        ["eval_mlp", {"in_channels": 1920, "dims": [1920, 8142]}],
+        ["eval_mlp", {"in_channels": 1920, "dims": [1920, 8142]}],
+        ["eval_mlp", {"in_channels": 1920, "dims": [1920, 8142]}],
+        ["eval_mlp", {"in_channels": 3840, "dims": [3840, 8142]}],
+        ["eval_mlp", {"in_channels": 3840, "dims": [3840, 8142]}],
+        ["eval_mlp", {"in_channels": 3840, "dims": [3840, 8142]}],
+      ]
+  OPTIMIZER:
+    name: sgd
+    # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
+    weight_decay: 0.0005
+    momentum: 0.9
+    num_epochs: 84
+    nesterov: True
+    regularize_bn: False
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        name: multistep
+        values: [0.01, 0.001, 0.0001, 0.00001]
+        milestones: [24, 48, 72]
+        update_interval: epoch
+    param_group_constructor: linear_eval_heads
+    linear_eval_heads:
+      # Linear heads on top of normalized or not representations
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      # MobileNet head on top of normalized or not representations
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      # Exploring a two layers head
+      - {"lr": 1.0, "weight_decay": 0.0005}
+      - {"lr": 1.0, "weight_decay": 0.0001}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      # Combining several levels of representations
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}

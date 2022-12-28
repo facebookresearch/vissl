@@ -1,0 +1,16 @@
+# @package _global_
+config:
+  DISTILLATION:
+    TEACHER_MODEL:
+      TRUNK:
+        NAME: regnet
+        REGNET:
+          depth: 27
+          w_0: 456
+          w_a: 160.83
+          w_m: 2.52
+          group_width: 264
+      HEAD:
+        PARAMS: [
+          ["swav_head", {"dims": [7392, 7392, 128], "use_bn": True, "num_clusters": [3000]}],
+        ]

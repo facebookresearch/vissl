@@ -1,0 +1,15 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 18
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [512, 2048, 128], "use_bn": True}],
+      ]
+  LOSS:
+    swav_distillation_loss:
+      use_student_prototypes: false
+      use_teacher_prototypes: true

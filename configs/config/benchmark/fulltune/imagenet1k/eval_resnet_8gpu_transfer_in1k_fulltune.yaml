@@ -50,9 +50,6 @@ config:
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step
   MODEL:
-    FEATURE_EVAL_SETTINGS:
-      EVAL_MODE_ON: True
-      EVAL_TRUNK_AND_HEAD: False
     TRUNK:
       NAME: resnet
       RESNETS:

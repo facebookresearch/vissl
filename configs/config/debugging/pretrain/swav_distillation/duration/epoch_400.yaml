@@ -1,0 +1,7 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    num_epochs: 400
+    param_schedulers:
+      lr:
+        lengths: [0.025, 0.975]

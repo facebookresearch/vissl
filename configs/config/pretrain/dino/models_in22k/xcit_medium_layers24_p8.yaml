@@ -14,8 +14,8 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [everstore]
-      DATASET_NAMES: [imagenet22k-everstore-correct]
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet22k_filelist]
       BATCHSIZE_PER_REPLICA: 10
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:
@@ -39,9 +39,9 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       COLLATE_FUNCTION: multicrop_collator
-      MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: True
-      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet22k/
       DROP_LAST: True
   TRAINER:
     TRAIN_STEP_NAME: standard_train_step

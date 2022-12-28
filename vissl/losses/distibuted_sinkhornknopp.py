@@ -15,10 +15,13 @@ def distributed_sinkhornknopp(
     world_size: int,
     use_double_prec: bool,
     use_gpu: bool,
-):
+) -> torch.Tensor:
     """
     Apply the distributed sinknorn optimization on the scores matrix to
-    find the assignments
+    find the assignments.
+
+        Input shape: (num_prototypes, batch_size)
+        Output shape: (batch_size, num_prototypes)
     """
     eps_num_stab = 1e-12
     with torch.no_grad():

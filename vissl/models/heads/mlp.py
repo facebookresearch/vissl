@@ -59,6 +59,30 @@ class MLP(nn.Module):
                 added if use_bn=True, ReLU will be added if use_relu=True
         """
         super().__init__()
+        layers = self.create_layers(
+            model_config,
+            dims,
+            use_bn,
+            use_relu,
+            use_dropout,
+            use_bias,
+            skip_last_layer_relu_bn,
+        )
+        self.clf = nn.Sequential(*layers)
+        # we use the default normal or uniform initialization for the layers
+        # and allow users to scale the initialization.
+        self.scale_weights(model_config)
+
+    @staticmethod
+    def create_layers(
+        model_config: AttrDict,
+        dims: List[int],
+        use_bn: bool = False,
+        use_relu: bool = False,
+        use_dropout: bool = False,
+        use_bias: bool = True,
+        skip_last_layer_relu_bn: bool = True,
+    ):
         layers = []
         last_dim = dims[0]
         for i, dim in enumerate(dims[1:]):
@@ -78,10 +102,7 @@ class MLP(nn.Module):
             if use_dropout:
                 layers.append(nn.Dropout())
             last_dim = dim
-        self.clf = nn.Sequential(*layers)
-        # we use the default normal or uniform initialization for the layers
-        # and allow users to scale the initialization.
-        self.scale_weights(model_config)
+        return layers
 
     def scale_weights(self, model_config):
         params_multiplier = model_config.HEAD.PARAMS_MULTIPLIER
@@ -108,6 +129,7 @@ class MLP(nn.Module):
                 d == 1 for d in batch.shape[2:]
             ), f"MLP expected 2D input tensor or 4D tensor of shape NxCx1x1. got: {batch.shape}"
             batch = batch.reshape((batch.size(0), batch.size(1)))
+
         out = self.clf(batch)
         return out
 

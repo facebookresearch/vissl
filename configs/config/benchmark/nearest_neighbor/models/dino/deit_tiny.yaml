@@ -59,7 +59,3 @@ config:
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
-    WEIGHTS_INIT:
-      # Use the teacher to perform the evaluation
-      STATE_DICT_KEY_NAME: "loss"
-      REMOVE_PREFIX: "momentum_teacher.module."

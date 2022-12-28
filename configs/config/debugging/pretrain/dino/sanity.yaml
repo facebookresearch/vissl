@@ -56,7 +56,7 @@ config:
         NUM_LAYERS: 12
         NUM_HEADS: 6
         HIDDEN_DIM: 384
-        MLP_DIM: 1532
+        MLP_DIM: 1536
         CLASSIFIER: token
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0

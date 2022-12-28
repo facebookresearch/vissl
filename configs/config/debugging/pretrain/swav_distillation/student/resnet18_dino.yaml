@@ -1,0 +1,15 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 18
+    HEAD:
+      PARAMS: [
+        ["dino_head", {
+          "in_dim": 512,
+          "num_clusters": [65536],
+          "normalize_last_layer": false,
+        }],
+      ]

@@ -58,8 +58,12 @@ def model_output_has_nan(model_output) -> bool:
     - list of tensors
     - list of list of tensors
     """
+    from vissl.losses.cross_entropy_multiple_output_single_target import EnsembleOutput
+
     if isinstance(model_output, list):
         return any(model_output_has_nan(x) for x in model_output)
+    elif isinstance(model_output, EnsembleOutput):
+        return not torch.isfinite(model_output.outputs).all()
     else:
         return not torch.isfinite(model_output).all()
 

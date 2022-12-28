@@ -1,0 +1,17 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK: # L-16
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 12
+        HIDDEN_DIM: 768
+        MLP_DIM: 3072
+        DROPOUT_RATE: 0.0
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.0

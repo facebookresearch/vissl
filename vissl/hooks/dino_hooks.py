@@ -44,11 +44,10 @@ class DINOHook(ClassyHook):
         Update the teacher temperature
         """
         if self.teacher_temp_schedule is None:
-            teacher_temp_min = task.loss.loss_config["teacher_temp_min"]
-            teacher_temp_max = task.loss.loss_config["teacher_temp_max"]
-            teacher_temp_warmup_iters = task.loss.loss_config[
-                "teacher_temp_warmup_iters"
-            ]
+            teacher_temp_min = task.loss.teacher_temp_min
+            teacher_temp_max = task.loss.teacher_temp_max
+            teacher_temp_warmup_iters = task.loss.teacher_temp_warmup_iters
+
             self.teacher_temp_schedule = torch.cat(
                 (
                     torch.linspace(
@@ -75,10 +74,7 @@ class DINOHook(ClassyHook):
             self._build_momentum_network(task)
 
         # Compute momentum teacher features
-        im_k = [
-            task.last_batch.sample["input"][i]
-            for i in task.loss.loss_config["crops_for_teacher"]
-        ]
+        im_k = [task.last_batch.sample["input"][i] for i in task.loss.crops_for_teacher]
         task.loss.teacher_output = task.loss.momentum_teacher(im_k)[0][-1]
         self.update_teacher_temperature(task)
 

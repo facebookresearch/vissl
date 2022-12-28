@@ -1,0 +1,55 @@
+# @package _global_
+config:
+  DATA:
+    NUM_DATALOADER_WORKERS: 8
+    TRAIN:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 448
+        - name: RandomHorizontalFlip
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 512
+        - name: CenterCrop
+          size: 448
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["concatPOOL4", ["Identity", []] ],
+        ["lastPOOL", ["Identity", []] ],
+        ["concatPOOL4", ["Identity", []] ],
+        ["lastPOOL", ["Identity", []] ],
+      ]
+    TRUNK: # H-16
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 448
+        PATCH_SIZE: 16
+        NUM_LAYERS: 32
+        NUM_HEADS: 16
+        HIDDEN_DIM: 1280
+        MLP_DIM: 5120
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        CLASSIFIER: token
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.0 # stochastic depth dropout probability
+        USE_CLASS_TOKEN: False
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 5120, "dims": [5120, 205]}],
+        ["eval_mlp", {"in_channels": 1280, "dims": [1280, 205]}],
+        ["mlp", {"dims": [5120, 205]}],
+        ["mlp", {"dims": [1280, 205]}],
+      ]

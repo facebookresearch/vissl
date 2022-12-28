@@ -1,0 +1,30 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["concatPOOL4", ["Identity", []] ],
+        ["lastPOOL", ["Identity", []] ],
+        ["concatPOOL4", ["Identity", []] ],
+        ["lastPOOL", ["Identity", []] ],
+      ]
+    TRUNK: # H-14
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 14
+        NUM_LAYERS: 32
+        NUM_HEADS: 16
+        HIDDEN_DIM: 1280
+        MLP_DIM: 5120
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.3
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 5120, "dims": [5120, 6]}],
+        ["eval_mlp", {"in_channels": 1280, "dims": [1280, 6]}],
+        ["mlp", {"dims": [5120, 6]}],
+        ["mlp", {"dims": [1280, 6]}],
+      ]

@@ -1,0 +1,71 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      PERF_STAT_FREQUENCY: 40
+      ROLLING_BTIME_FREQ: 5
+  DATA:
+    NUM_DATALOADER_WORKERS: 10
+    TRAIN:
+      DATA_SOURCES: [torchvision_dataset]
+      LABEL_SOURCES: [torchvision_dataset]
+      DATASET_NAMES: [VOC2012_SEGMENTATION]
+      BATCHSIZE_PER_REPLICA: 64
+      TRANSFORMS:
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COPY_TO_LOCAL_DISK: False
+    TEST:
+      DATA_SOURCES: [torchvision_dataset]
+      LABEL_SOURCES: [torchvision_dataset]
+      DATASET_NAMES: [VOC2012_SEGMENTATION]
+      BATCHSIZE_PER_REPLICA: 64
+      TRANSFORMS:
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COPY_TO_LOCAL_DISK: False
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  METERS:
+    name: ""
+  MODEL:
+    TRUNK:
+      NAME: xcit
+      XCIT:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 512
+        NUM_LAYERS: 24
+        NUM_HEADS: 8
+        MLP_RATIO: 4.0
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        DROP_PATH_RATE: 0.15
+        ETA: 1e-5
+        TOKENS_NORM: True
+        QKV_BIAS: True
+    HEAD:
+      PARAMS: []
+  DISTRIBUTED:
+    BACKEND: nccl
+    NUM_NODES: 2
+    NUM_PROC_PER_NODE: 8
+    INIT_METHOD: tcp
+    RUN_ID: auto
+  MACHINE:
+    DEVICE: gpu

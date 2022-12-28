@@ -75,7 +75,7 @@ config:
         DROP_PATH_RATE: 0.1
         HIDDEN_DIM: 384
         IMAGE_SIZE: 224
-        MLP_DIM: 1532
+        MLP_DIM: 1536
         NUM_HEADS: 6
         NUM_LAYERS: 12
         PATCH_SIZE: 16

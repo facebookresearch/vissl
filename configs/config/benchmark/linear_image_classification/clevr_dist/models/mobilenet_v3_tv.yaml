@@ -1,0 +1,82 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        # Linear heads on top of normalized or not representations
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+
+          # MobileNet head on top of normalized or not representations
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+
+          # Exploring a two layer head
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+        ["trunk_pool", ["Identity", []] ],
+
+          # Combining several levels of representations
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 1]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 2]]]],
+        ["trunk", ["AdaptiveAvgPool2d", [[2, 2]]]],
+      ]
+    TRUNK:
+      NAME: mobilenetv3_tv
+      MOBILE_NET:
+        NAME: mobilenetv3_large_100
+    HEAD:
+      PARAMS: [
+        # Linear heads on top of normalized or not representations
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 6]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 6]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 6]}],
+
+          # MobileNet head on top of normalized or not representations
+        ["mobilenet_v3_head", {"with_bn": True, "num_classes": 6}],
+        ["mobilenet_v3_head", {"with_bn": True, "num_classes": 6}],
+        ["mobilenet_v3_head", {"with_bn": True, "num_classes": 6}],
+
+          # Exploring a two layers head
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 1280, 6]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 1280, 6]}],
+        ["eval_mlp", {"in_channels": 960, "dims": [960, 1280, 6]}],
+
+          # Combining several levels of representations
+        ["eval_mlp", {"in_channels": 1920, "dims": [1920, 6]}],
+        ["eval_mlp", {"in_channels": 1920, "dims": [1920, 6]}],
+        ["eval_mlp", {"in_channels": 1920, "dims": [1920, 6]}],
+        ["eval_mlp", {"in_channels": 3840, "dims": [3840, 6]}],
+        ["eval_mlp", {"in_channels": 3840, "dims": [3840, 6]}],
+        ["eval_mlp", {"in_channels": 3840, "dims": [3840, 6]}],
+      ]
+  OPTIMIZER:
+    param_group_constructor: linear_eval_heads
+    linear_eval_heads:
+      # Linear heads on top of normalized or not representations
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      # MobileNet head on top of normalized or not representations
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      # Exploring a two layers head
+      - {"lr": 1.0, "weight_decay": 0.0005}
+      - {"lr": 1.0, "weight_decay": 0.0001}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      # Combining several levels of representations
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}
+      - {"lr": 1.0, "weight_decay": 0.0005, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0001, "regularize_bn": True}
+      - {"lr": 1.0, "weight_decay": 0.0}

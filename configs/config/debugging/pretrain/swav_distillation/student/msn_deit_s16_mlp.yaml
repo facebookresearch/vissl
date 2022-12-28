@@ -1,0 +1,27 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        HIDDEN_DIM: 384
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.0
+        QK_SCALE: False
+        MASKED_IMAGE_MODELING:
+          NAME: 'msn'
+          PARAMS:
+            drop_ratio: 0.15  # As reported in MSN paper for the DEIT S16
+            global_view_tokens: 196
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [384, 2048, 1024], "use_bn": False}],
+      ]

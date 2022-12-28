@@ -1,0 +1,103 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 100
+  TEST_ONLY: False
+  TEST_MODEL: True
+  SEED_VALUE: 1
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 128
+      TRANSFORMS:
+        - name: RandomResizedCrop
+          size: 224
+        - name: RandomHorizontalFlip
+        - name: RandAugment
+          magnitude: 9
+          magnitude_std: 0.5
+          increasing_severity: True
+        - name: ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.4
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 128
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      meter_names: ["res5avg"]
+      num_meters: 1
+      topk_values: [1]
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 1000]}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+  LOSS:
+    name: distillation_loss
+    distillation_loss:
+      soft_target_alpha: 0.1
+      temperature: 10.0
+      loss_type: kl_divergence
+  DISTILLATION:
+    TEACHER_MODEL:
+      TRUNK:
+        NAME: resnet
+        RESNETS:
+          DEPTH: 50
+      HEAD:
+        PARAMS: [
+          ["mlp", {"dims": [2048, 1000]}],
+        ]
+  OPTIMIZER:
+    name: sgd
+    weight_decay: 0.0005
+    momentum: 0.9
+    nesterov: true
+    num_epochs: 100
+    regularize_bn: false
+    regularize_bias: true
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        name: cosine
+        start_value: 0.01
+        end_value: 0.00001
+        update_interval: epoch
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8

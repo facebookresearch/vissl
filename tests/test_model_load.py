@@ -31,7 +31,7 @@ def is_fsdp_model_config(config) -> bool:
     return "fsdp" in config.TRAINER.TASK_NAME or "fsdp" in config.MODEL.TRUNK.NAME
 
 
-def is_huge_convnet(config) -> bool:
+def is_huge_trunk(config) -> bool:
     if config.MODEL.TRUNK.NAME == "resnet_sk":
         return True
     if config.MODEL.TRUNK.NAME == "regnet":
@@ -39,11 +39,14 @@ def is_huge_convnet(config) -> bool:
             return True
         if config.MODEL.TRUNK.REGNET.get("depth", 0) >= 27:
             return True
+    if config.MODEL.TRUNK.NAME == "vision_transformer":
+        if config.MODEL.TRUNK.VISION_TRANSFORMERS.HIDDEN_DIM > 1024:
+            return True
     return False
 
 
 def is_big_model_too_big_for_ci(config) -> bool:
-    return is_fsdp_model_config(config) or is_huge_convnet(config)
+    return is_fsdp_model_config(config) or is_huge_trunk(config)
 
 
 class TestBenchmarkModel(unittest.TestCase):

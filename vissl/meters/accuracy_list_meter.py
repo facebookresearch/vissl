@@ -7,9 +7,11 @@ import pprint
 from typing import List, Union
 
 import torch
+import torch.nn.functional as F
 from classy_vision.generic.util import is_pos_int
 from classy_vision.meters import AccuracyMeter, ClassyMeter, register_meter
 from vissl.config import AttrDict
+from vissl.losses.cross_entropy_multiple_output_single_target import EnsembleOutput
 
 
 @register_meter("accuracy_list_meter")
@@ -161,9 +163,15 @@ class AccuracyListMeter(ClassyMeter):
         if isinstance(model_output, torch.Tensor):
             model_output = [model_output]
         assert isinstance(model_output, list)
-        assert len(model_output) == self._num_meters
+        assert len(model_output) == self._num_meters, f"{len(model_output)}"
         for (meter, output) in zip(self._meters, model_output):
-            meter.update(output, target)
+            if isinstance(output, EnsembleOutput):
+                # Shape ensemble_size, batch_size, pred_size -> batch_size, ensemble_size, pred_size
+                output = F.softmax(output.outputs.permute((1, 0, 2)), dim=-1)
+                output = torch.mean(output, dim=1)
+                meter.update(output, target)
+            else:
+                meter.update(output, target)
 
     def get_predictions(self, model_output: Union[torch.Tensor, List[torch.Tensor]]):
         """

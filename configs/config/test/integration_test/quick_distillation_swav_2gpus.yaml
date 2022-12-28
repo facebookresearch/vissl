@@ -1,0 +1,105 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 100
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 1
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenette_160_folder]
+      LABEL_TYPE: sample_index
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 6
+          size_crops: [224, 96]
+          num_crops: [2, 4]
+          crop_scales: [[0.14, 1], [0.05, 0.14]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 50
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [2048, 2048, 128], "use_bn": True}],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: False
+      AMP_ARGS: {"opt_level": "O1"}
+  LOSS:
+    name: swav_distillation_loss
+    swav_distillation_loss:
+      temperature: 0.1
+      use_double_precision: False
+      num_iters: 3
+      epsilon: 0.05
+      num_crops: 6
+      num_prototypes: [3000]
+      output_dir: "."
+      temp_hard_assignment_iters: 0
+      local_queue_length: 1500
+      queue_start_iter: 0
+      normalize_student_feats: false
+      use_teacher_prototypes: true
+      use_two_crops_for_teacher: false
+      swapped_assignment: false
+  DISTILLATION:
+    eager_teacher_init: False
+    TEACHER_MODEL:
+      TRUNK:
+        NAME: resnet
+        RESNETS:
+          DEPTH: 50
+      HEAD:
+        PARAMS: [
+          ["swav_head", {"dims": [2048, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
+        ]
+      WEIGHTS_INIT:
+        PARAMS_FILE: "/checkpoint/qduval/vissl/swav/rn50_model_final_checkpoint_phase799.torch"
+  OPTIMIZER:
+    name: sgd
+    weight_decay: 0.0001
+    momentum: 0.9
+    num_epochs: 10
+    nesterov: True
+    regularize_bn: False
+    regularize_bias: True
+    use_larc: False
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        name: cosine
+        start_value: 0.01
+        end_value: 0.001
+        update_interval: epoch
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 2
+  CHECKPOINT:
+    CHECKPOINT_FREQUENCY: 1

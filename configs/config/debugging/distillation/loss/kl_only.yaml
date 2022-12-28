@@ -1,0 +1,8 @@
+# @package _global_
+config:
+  LOSS:
+    name: distillation_loss
+    distillation_loss:
+      soft_target_alpha: 1.0
+      temperature: 10.0
+      loss_type: kl_divergence

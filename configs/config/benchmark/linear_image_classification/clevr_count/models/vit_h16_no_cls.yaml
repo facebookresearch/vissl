@@ -21,7 +21,7 @@ config:
         ATTENTION_DROPOUT_RATE: 0
         CLASSIFIER: token
         QKV_BIAS: True
-        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        DROP_PATH_RATE: 0.0 # stochastic depth dropout probability
         USE_CLASS_TOKEN: False
     HEAD:
       PARAMS: [

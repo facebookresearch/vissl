@@ -685,6 +685,13 @@ config:
       EFFICIENT_NETS: {}
 
       # ------------------------------------------------------------- #
+      # MobileNets params
+      # ------------------------------------------------------------- #
+      MOBILE_NET:
+        NAME: "mobilenetv3_large_100"
+        TIMM_BN: False
+
+      # ------------------------------------------------------------- #
       # RegNet params
       # ------------------------------------------------------------- #
       REGNET: {}
@@ -726,6 +733,7 @@ config:
           # Available types of Masked Image Modeling include:
           # - '': Disable Masked Image modeling
           # - 'ibot': Based on IBOT: https://arxiv.org/pdf/2111.07832.pdf
+          # - 'msn': Based on MSN: https://arxiv.org/pdf/2204.07141.pdf
           NAME: ''
           # Parameters provided to the Masked Generator
           PARAMS: {}
@@ -1125,6 +1133,14 @@ config:
       patch_out_dim: 8192  # Auto-completed
       num_epochs: 10  # Auto-completed
 
+    # ----------------------------------------------------------------------------------- #
+    #  MSN Loss (https://arxiv.org/pdf/2204.07141.pdf)
+    # ----------------------------------------------------------------------------------- #
+    msn_loss:
+      momentum: 0.996
+      temperature: 0.1
+      output_dim: 1024    # automatically inferred from model HEAD settings
+
     # -----------------------------------------------------------------------------------#
     # DeepCluster V2 LOSS (baselines in SwAV https://arxiv.org/abs/2006.09882)
     # -----------------------------------------------------------------------------------#
@@ -1157,6 +1173,59 @@ config:
       lambda_: 0.0051
       scale_loss: 0.024
       embedding_dim: 8192
+
+    # ----------------------------------------------------------------------------------- #
+    #  RoB-SwAV distillation loss
+    # ----------------------------------------------------------------------------------- #
+    swav_distillation_loss:
+      temperature: 0.1
+      use_double_precision: False
+      num_iters: 3
+      epsilon: 0.03
+      num_crops: 6
+      num_prototypes: [3000]
+      output_dir: "."
+      temp_hard_assignment_iters: 0
+      local_queue_length: 0
+      queue_start_iter: 0
+      normalize_student_feats: false
+      use_student_prototypes: true
+      use_teacher_prototypes: false
+      use_two_crops_for_teacher: true
+      swapped_assignment: false
+
+    # ----------------------------------------------------------------------------------- #
+    #  RoB-DINO distillation loss
+    # ----------------------------------------------------------------------------------- #
+    dino_distillation_loss:
+      swapped_assignment: false
+      teacher_num_crops: 2
+      teacher_temperature: 0.07
+      student_num_crops: 10
+      student_temperature: 0.1
+
+    # ----------------------------------------------------------------------------------- #
+    #  RoB-iBOT distillation loss
+    # ----------------------------------------------------------------------------------- #
+    ibot_distillation_loss:
+      swapped_assignment: false
+      use_teacher_prototypes: false
+      num_global_crops: 2
+      student_num_crops: 12
+      student_temp: 0.1
+      teacher_temp: 0.07
+      teacher_patch_temp: 0.07
+      lambda1: 1.0
+      lambda2: 1.0
+
+    # ----------------------------------------------------------------------------------- #
+    #  RoB-MSN distillation loss
+    # ----------------------------------------------------------------------------------- #
+    msn_distillation_loss:
+      swapped_assignment: False
+      student_temperature: 0.1
+      teacher_num_crops: 2
+      student_num_crops: 12
 
   # ----------------------------------------------------------------------------------- #
   # OPTIMIZER
@@ -1265,6 +1334,13 @@ config:
     # Under certain cases, we want to specify a customized way to create the parameter
     # groups. The following allows you to register a param group constructor by name
     param_group_constructor: 'default'
+    # We support using a different LR for different layers following the
+    # procedure used in BEIT (https://arxiv.org/pdf/2106.08254.pdf) for
+    # fine-tuning Vision Transformers
+    # Used by the parameter group constructors:
+    #   config.OPTIMIZER.param_group_constructor='lr_decay'
+    layer_wise_lr_decay:
+      decay: 0.9
 
   # ----------------------------------------------------------------------------------- #
   # Options specific to the "extract_feature" engine
@@ -1282,6 +1358,61 @@ config:
     # if user wants to save the extracted features as img_filename.npy
     # we simply save the features that way
     MAP_FEATURES_TO_IMG_NAME: False
+
+  # ----------------------------------------------------------------------------------- #
+  # DISTILLATION CONFIG (used in case a distllation loss is set)
+  # ----------------------------------------------------------------------------------- #
+  DISTILLATION:
+    eager_teacher_init: False
+    TEACHER_MODEL:
+      BASE_MODEL_NAME: multi_input_output_model
+      INPUT_TYPE: "rgb"
+      MULTI_INPUT_HEAD_MAPPING: []
+      SINGLE_PASS_EVERY_CROP: False
+      FEATURE_EVAL_SETTINGS:
+        # Teacher should be in evaluation mode with head and trunk frozen
+        # Overriding these options would be unwise
+        EVAL_MODE_ON: True
+        FREEZE_TRUNK_ONLY: False
+        FREEZE_TRUNK_AND_HEAD: True
+        EXTRACT_TRUNK_FEATURES_ONLY: False
+        ASSERT_HEAD_LAYER_SHAPE_INIT: True
+        EVAL_TRUNK_AND_HEAD: True
+        SHOULD_FLATTEN_FEATS: True
+        LINEAR_EVAL_FEAT_POOL_OPS_MAP: []
+      TRUNK:
+        # Supports the same options as the config.MODEL.TRUNK
+        # Please refer to config.MODEL.TRUNK to see the list of trunks
+        # that are supported by VISSL
+        NAME: "resnet"
+      HEAD:
+        PARAMS: [["mlp", {"dims": [2048, 1000]}]]
+        BATCHNORM_EPS: 1e-5
+        BATCHNORM_MOMENTUM: 0.1
+        PARAMS_MULTIPLIER: 1.0
+      WEIGHTS_INIT:
+        # Teacher weights should be initialized for distillation to make sense
+        # Please override these options to specify the path of the teacher weights
+        # as well as customize the supported format
+        # Please refer to "config.MODEL.WEIGHTS_INIT" for details on these options
+        PARAMS_FILE: "please specify teacher model weights"
+        STATE_DICT_KEY_NAME: "classy_state_dict"
+        SKIP_LAYERS: ["num_batches_tracked"]
+        REMOVE_PREFIX: ""
+        APPEND_PREFIX: ""
+      FSDP_CONFIG:
+        AUTO_SETUP_FSDP: False
+        AUTO_WRAP_THRESHOLD: 0
+        flatten_parameters: True
+        mixed_precision: True
+        fp32_reduce_scatter: False
+        compute_dtype: float32
+        bucket_cap_mb: 0
+        clear_autocast_cache: True
+        verbose: True
+      ACTIVATION_CHECKPOINTING:
+        USE_ACTIVATION_CHECKPOINTING: False
+        NUM_ACTIVATION_CHECKPOINTING_SPLITS: 2
 
   # ----------------------------------------------------------------------------------- #
   # CLUSTERFIT APPROACH (https://arxiv.org/abs/1912.03330)
@@ -1560,7 +1691,8 @@ config:
   NEAREST_NEIGHBOR:
     # temperature value to use for the k-nn
     SIGMA: 0.1
-    # number of neighbors to consider.
+    # Number of neighbors to consider.
+    # If provided a list, kNN will be run once for each element of the list
     TOPK: 200
     # if the features should be l2 normalized, set this to True
     L2_NORM_FEATS: False
@@ -1585,6 +1717,8 @@ config:
     LOGISTIC_REGRESSION:
       # Regularisation term for L2 penalty
       LAMBDA: 0.025
+      # Number of splits of the train set and their seeds
+      SEEDS: [0]
     # Where to find the extracted features and whether or not we should extract them
     FEATURES:
       # If empty, will run the extract features, if not, use the path to find the features

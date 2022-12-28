@@ -1,0 +1,15 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: mobilenetv3_tv
+      MOBILE_NET:
+        NAME: mobilenetv3_large_100
+    HEAD:
+      PARAMS: [
+        ["swav_head", {"dims": [960, 2048, 128], "use_bn": True, "num_clusters": [3000]}],
+      ]
+  LOSS:
+    swav_distillation_loss:
+      use_student_prototypes: true
+      use_teacher_prototypes: false

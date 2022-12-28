@@ -10,6 +10,7 @@ from classy_vision.hooks.classy_hook import ClassyHook
 from vissl.config import AttrDict
 from vissl.hooks.deepclusterv2_hooks import ClusterMemoryHook, InitMemoryHook  # noqa
 from vissl.hooks.dino_hooks import DINOHook
+from vissl.hooks.distillation_hooks import DistillationHook
 from vissl.hooks.ema_hooks import EmaHook
 from vissl.hooks.grad_clip_hooks import GradClipHook  # noqa
 from vissl.hooks.ibot_hooks import IBOTHook
@@ -75,7 +76,7 @@ def add_loss_hooks(hooks, loss_cfg, cfg):
                 SwAVMomentumNormalizePrototypesHook(),
             ]
         )
-    if cfg.LOSS.name == "dino_loss":
+    if cfg.LOSS.name in {"dino_loss", "msn_loss"}:
         hooks.append(DINOHook())
     if cfg.LOSS.name in {"ibot_loss"}:
         hooks.append(IBOTHook())
@@ -120,6 +121,14 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         hooks.append(LogPerfTimeMetricsHook(perf_stat_freq))
 
     # add the loss hooks based on the loss being used
+    if cfg.LOSS.name in {
+        "distillation_loss",
+        "swav_distillation_loss",
+        "dino_distillation_loss",
+        "msn_distillation_loss",
+        "ibot_distillation_loss",
+    }:
+        hooks.append(DistillationHook(cfg.DISTILLATION))
     hooks = add_loss_hooks(hooks, cfg.LOSS, cfg)
 
     if cfg.HOOKS.MODEL_COMPLEXITY.COMPUTE_COMPLEXITY:

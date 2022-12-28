@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from dataclasses import dataclass
 from typing import List, Optional, Union
 
 import torch
@@ -11,6 +12,14 @@ from classy_vision.generic.util import is_on_gpu
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn, Tensor
 from vissl.config import AttrDict
+
+
+@dataclass
+class EnsembleOutput:
+    outputs: torch.Tensor  # Shape ensemble_size, batch_size, pred_size
+
+    def cpu(self):
+        return EnsembleOutput(self.outputs.cpu())
 
 
 class SmoothCrossEntropy(torch.nn.modules.CrossEntropyLoss):
@@ -78,21 +87,33 @@ class CrossEntropyMultipleOutputSingleTargetCriterion(nn.Module):
             if i >= len(self._losses):
                 self._losses.append(self._create_loss_function())
 
+            if isinstance(pred, EnsembleOutput):
+                # Shape batch_size, ensemble_size, pred_size -> batch_size * ensemble_size, pred_size
+                ensemble_size, batch_size, pred_size = pred.outputs.shape
+                pred = torch.reshape(
+                    pred.outputs, (ensemble_size * batch_size, pred_size)
+                )
+                local_target = (
+                    target.unsqueeze(0).expand((ensemble_size, batch_size)).flatten()
+                )
+            else:
+                local_target = target
+
             assert (
-                target.max().item() < pred.shape[1]
+                local_target.max().item() < pred.shape[1]
             ), f"pred.shape[1]={pred.shape[1]} and target.max().item()={target.max().item()}"
 
             if self._normalize_output:
                 pred = nn.functional.normalize(pred, dim=1, p=2)
 
             if self._label_smoothing > 0.0:
-                target = self.apply_label_smoothing(
-                    target,
+                local_target = self.apply_label_smoothing(
+                    local_target,
                     num_labels=pred.shape[1],
                     label_smoothing=self._label_smoothing,
                 )
 
-            loss += self._losses[i](pred / self._temperature, target)
+            loss += self._losses[i](pred / self._temperature, local_target)
         return loss
 
     def _create_loss_function(self):

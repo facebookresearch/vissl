@@ -55,7 +55,8 @@ install_classy_vision: &install_classy_vision
       working_directory: ~/
       command: |
         pip uninstall -y classy_vision
-        pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/main
+        pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d
+
 
 setup_venv: &setup_venv
   - run:
@@ -151,7 +152,7 @@ jobs:
       # Cache the vissl_venv directory that contains dependencies
       - restore_cache:
           keys:
-            - v8-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+            - v9-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl_dep
       - <<: *install_augly
@@ -163,7 +164,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v8-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
+          key: v9-cpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}
 
       - <<: *install_vissl
 
@@ -195,7 +196,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v8-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+            - v9-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl_dep
       - <<: *install_classy_vision
@@ -210,7 +211,7 @@ jobs:
       - save_cache:
           paths:
             - ~/vissl_venv
-          key: v8-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
+          key: v9-gpu-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "setup.py" }}-{{ checksum "docker/common/install_apex.sh" }}
 
       - <<: *install_vissl
 

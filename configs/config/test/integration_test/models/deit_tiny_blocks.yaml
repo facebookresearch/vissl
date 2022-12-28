@@ -1,0 +1,61 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastBLK", ["Identity", []] ],
+        ["concatBLK4", ["Identity", []] ],
+        ["stridePOOL_4", ["Identity", []] ]
+      ]
+    TRUNK: # Tiny
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 3
+        HIDDEN_DIM: 192
+        MLP_DIM: 768
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.0 # stochastic depth dropout probability
+        USE_CLASS_TOKEN: False
+    HEAD:
+      PARAMS: [
+        ["eval_mlp_pooled", {"in_channels": 192, "dims": [192, 1000]}],
+        ["eval_mlp_pooled", {"in_channels": 768, "dims": [768, 1000]}],
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 1000]}],
+      ]
+  OPTIMIZER:
+    name: lars
+    momentum: 0.9
+    weight_decay: 0.0
+    num_epochs: 50
+    exclude_bias_and_norm: true
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.1
+          base_lr_batch_size: 256
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 1e-6
+            end_value: 0.1
+          - name: cosine
+            start_value: 0.1
+            end_value: 1e-6
+        interval_scaling: [rescaled, rescaled]
+        update_interval: step
+        lengths: [0.2, 0.8] # 10 warmup epochs
+    param_group_constructor: linear_eval_heads
+    linear_eval_heads:
+      - {"lr": 1.0, "weight_decay": 0.0005}
+      - {"lr": 1.0, "weight_decay": 0.0005}
+      - {"lr": 1.0, "weight_decay": 0.0005}
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 8

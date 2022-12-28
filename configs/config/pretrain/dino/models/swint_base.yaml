@@ -19,6 +19,10 @@ config:
           "normalize_last_layer": True,
         }],
       ]
+    GRAD_CLIP:
+      USE_GRAD_CLIP: True
+      NORM_TYPE: 2
+      MAX_NORM: 3
   DISTRIBUTED:
     NUM_NODES: 8
     NUM_PROC_PER_NODE: 8

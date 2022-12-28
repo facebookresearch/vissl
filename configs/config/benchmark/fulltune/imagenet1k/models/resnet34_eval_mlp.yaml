@@ -1,0 +1,9 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 34
+    HEAD:
+      PARAMS: [['eval_mlp', {'in_channels': 512, 'dims': [512, 1000]}]]

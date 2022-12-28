@@ -1,0 +1,12 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: mobilenetv3_tv
+      MOBILE_NET:
+        NAME: mobilenetv3_large_100
+        TIMM_BN: False
+    HEAD:
+      PARAMS: [
+        ["mobilenet_v3_head", {"num_classes": 1000}],
+      ]

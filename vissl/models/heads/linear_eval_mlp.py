@@ -10,6 +10,7 @@ import torch.nn as nn
 from vissl.config import AttrDict
 from vissl.models.heads import register_model_head
 from vissl.models.heads.mlp import MLP
+from vissl.models.heads.mlp_res import MLPResidual
 from vissl.utils.fsdp_utils import fsdp_auto_wrap_bn, fsdp_wrapper
 
 
@@ -33,6 +34,7 @@ class LinearEvalMLP(nn.Module):
         dims: List[int],
         use_bn: bool = False,
         use_relu: bool = False,
+        use_residual: bool = False,
     ):
         """
         Args:
@@ -49,7 +51,10 @@ class LinearEvalMLP(nn.Module):
             eps=model_config.HEAD.BATCHNORM_EPS,
             momentum=model_config.HEAD.BATCHNORM_MOMENTUM,
         )
-        self.clf = MLP(model_config, dims, use_bn=use_bn, use_relu=use_relu)
+        if use_residual:
+            self.clf = MLPResidual(model_config, dims, use_bn=use_bn, use_relu=use_relu)
+        else:
+            self.clf = MLP(model_config, dims, use_bn=use_bn, use_relu=use_relu)
 
     def forward(self, batch: torch.Tensor):
         """
@@ -65,7 +70,9 @@ class LinearEvalMLP(nn.Module):
         # eval mlp normally.
         if len(batch.shape) == 2:
             batch = batch.unsqueeze(2).unsqueeze(3)
-        assert len(batch.shape) == 4, "Eval MLP head expects 4D tensor input"
+        assert (
+            len(batch.shape) == 4
+        ), f"Eval MLP head expects 4D tensor input: {batch.shape}"
         out = self.channel_bn(batch)
         out = torch.flatten(out, start_dim=1)
         out = self.clf(out)

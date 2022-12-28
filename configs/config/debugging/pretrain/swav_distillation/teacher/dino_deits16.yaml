@@ -1,0 +1,40 @@
+# @package _global_
+config:
+  LOSS:
+    name: swav_distillation_loss
+    swav_distillation_loss:
+      num_iters: 0
+      epsilon: 0.03
+      num_crops: 6
+      num_prototypes: [65536]
+      normalize_student_feats: false
+      use_teacher_prototypes: false
+      use_two_crops_for_teacher: true
+      swapped_assignment: false
+  DISTILLATION:
+    TEACHER_MODEL:
+      TRUNK:
+        NAME: vision_transformer
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 6
+          HIDDEN_DIM: 384
+          MLP_DIM: 1536
+          CLASSIFIER: token
+          DROPOUT_RATE: 0
+          ATTENTION_DROPOUT_RATE: 0
+          QKV_BIAS: True
+          DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+          QK_SCALE: False
+          CHECKPOINT_MLP: false
+          CHECKPOINT_BLOCK: false
+      HEAD:
+        PARAMS: [
+          ["dino_head", {
+            "in_dim": 384,
+            "num_clusters": [65536],
+            "normalize_last_layer": false,
+          }],
+        ]

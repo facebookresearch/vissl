@@ -1,0 +1,133 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 100
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 1
+  DATA:
+    NUM_DATALOADER_WORKERS: 5
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenette_160_folder]
+      LABEL_TYPE: sample_index
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 10
+          size_crops: [224, 96]
+          num_crops: [2, 8]
+          crop_scales: [[0.4, 1], [0.05, 0.4]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 0.5
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilGaussianBlur", "p": 1., "radius_min": 0.1, "radius_max": 2.0}]
+          prob: [1., 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilRandomSolarize", "p": 1.}]
+          prob: [0., 0.2, 0., 0., 0, 0, 0, 0, 0, 0]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
+      COPY_TO_LOCAL_DISK: False
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        HIDDEN_DIM: 384
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        QK_SCALE: False
+        CHECKPOINT_MLP: False
+        CHECKPOINT_BLOCK: False
+    HEAD:
+      PARAMS: [
+        ["dino_head", {
+          "in_dim": 384,
+          "num_clusters": [65536],
+          "normalize_last_layer": false,
+        }],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+      GROUP_SIZE: 8
+    AMP_PARAMS:
+      USE_AMP: False
+      AMP_ARGS: {"opt_level": "O1"}
+  LOSS:
+    name: dino_distillation_loss
+    dino_distillation_loss:
+      swapped_assignment: false
+      teacher_num_crops: 2
+      teacher_temperature: 0.07
+      student_num_crops: 10
+      student_temperature: 0.1
+  DISTILLATION:
+    eager_teacher_init: False
+    TEACHER_MODEL:
+      TRUNK:
+        NAME: vision_transformer
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 6
+          HIDDEN_DIM: 384
+          MLP_DIM: 1536
+          CLASSIFIER: token
+          DROPOUT_RATE: 0
+          ATTENTION_DROPOUT_RATE: 0
+          QKV_BIAS: True
+          DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+          QK_SCALE: False
+          CHECKPOINT_MLP: False
+          CHECKPOINT_BLOCK: False
+      HEAD:
+        PARAMS: [
+          ["dino_head", {
+            "in_dim": 384,
+            "num_clusters": [65536],
+            "normalize_last_layer": false,
+          }],
+        ]
+      WEIGHTS_INIT:
+        PARAMS_FILE: "/checkpoint/qduval/vissl/swav/rn50_model_final_checkpoint_phase799.torch"
+  OPTIMIZER:
+    name: sgd
+    weight_decay: 0.0001
+    momentum: 0.9
+    num_epochs: 10
+    nesterov: True
+    regularize_bn: False
+    regularize_bias: True
+    use_larc: False
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        name: cosine
+        start_value: 0.01
+        end_value: 0.001
+        update_interval: epoch
+  DISTRIBUTED:
+    NUM_NODES: 1
+    NUM_PROC_PER_NODE: 2
+  CHECKPOINT:
+    CHECKPOINT_FREQUENCY: 1

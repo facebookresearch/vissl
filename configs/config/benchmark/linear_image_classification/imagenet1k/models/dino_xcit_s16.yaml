@@ -28,6 +28,7 @@ config:
     FEATURE_EVAL_SETTINGS:
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
         ["lastCLS", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
       ]
     TRUNK: # S-16
       NAME: xcit
@@ -47,6 +48,7 @@ config:
     HEAD:
       PARAMS: [
         ["eval_mlp", {"in_channels": 384, "dims": [384, 1000]}],
+        ["mlp", {"dims": [384, 1000]}],
       ]
   OPTIMIZER:
     regularize_bn: True

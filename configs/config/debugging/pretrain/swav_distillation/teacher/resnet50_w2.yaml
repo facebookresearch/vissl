@@ -1,0 +1,13 @@
+# @package _global_
+config:
+  DISTILLATION:
+    TEACHER_MODEL:
+      TRUNK:
+        NAME: resnet
+        RESNETS:
+          DEPTH: 50
+          WIDTH_MULTIPLIER: 2
+      HEAD:
+        PARAMS: [
+          ["swav_head", {"dims": [4096, 8192, 128], "use_bn": True, "num_clusters": [3000]}],
+        ]

@@ -36,6 +36,7 @@ from fvcore.common.file_io import PathManager
 from vissl.utils.env import setup_path_manager
 from vissl.utils.io import save_file
 
+
 GENDER_MAPPING = {
     0: "male",
     1: "female",

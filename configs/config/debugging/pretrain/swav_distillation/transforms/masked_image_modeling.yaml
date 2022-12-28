@@ -1,0 +1,34 @@
+# @package _global_
+config:
+  DATA:
+    TRAIN:
+      INPUT_KEY_NAMES: ["global_views", "local_views", "mask"]
+      TARGET_KEY_NAMES: ["mask"]
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 12
+          size_crops: [224, 96]
+          num_crops: [2, 10]
+          crop_scales: [[0.25, 1], [0.05, 0.25]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.2
+          hue: 0.1
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilGaussianBlur", "p": 1., "radius_min": 0.1, "radius_max": 2.0}]
+          prob: [1., 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilRandomSolarize", "p": 1.}]
+          prob: [0., 0.2, 0., 0., 0., 0., 0, 0, 0, 0, 0, 0]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+        - name: MaskedImageModeling
+          pred_ratio_mean: [0.0, 0.3]
+          pred_ratio_var: [0.0, 0.2]
+          patch_size: 16
+      COLLATE_FUNCTION: ibot_multicrop_masking_collator

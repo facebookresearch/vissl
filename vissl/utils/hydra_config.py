@@ -1,17 +1,21 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 
+import contextlib
+
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-import contextlib
+import copy
 import logging
 import math
+import os
 import pprint
 import re
 import sys
-from typing import Any, List, Tuple
+from typing import Any, List, NamedTuple, Tuple
 
 import torch
-from omegaconf import DictConfig, OmegaConf
+from hydra.core.override_parser.overrides_parser import OverridesParser
+from omegaconf import DictConfig, OmegaConf, open_dict
 from vissl.config import AttrDict, check_cfg_version
 from vissl.utils.io import save_file
 from vissl.utils.misc import is_augly_available
@@ -22,6 +26,53 @@ def save_attrdict_to_disk(cfg: AttrDict):
 
     yaml_output_file = f"{get_checkpoint_folder(cfg)}/train_config.yaml"
     save_file(cfg.to_dict(), yaml_output_file)
+
+
+class SweepHydraOverrides(NamedTuple):
+    overrides: List[Any]
+    sweeps: List[List[Any]]
+
+    @classmethod
+    def from_overrides(cls, cli_overrides: List[Any]) -> "SweepHydraOverrides":
+        """
+        Takes an override list and separate the overrides describing
+        parameter sweeps from the rest of the overrides.
+
+        Then use those sweeping overrides to generate all possible
+        parameter sweep thought grid search.
+
+        Outputs 2 lists:
+        - the non sweep overrides
+        - all possible sweep combinations
+        """
+
+        # Separate the normal overrides from the sweep ones
+        overrides = []
+        sweep_overrides = []
+        parser = OverridesParser.create()
+        parsed_overrides = parser.parse_overrides(overrides=cli_overrides)
+        for parsed_override in parsed_overrides:
+            if parsed_override.is_sweep_override():
+                sweep_overrides.append(parsed_override)
+            else:
+                overrides.append(parsed_override.input_line)
+
+        # If not parameter sweep specified, return early
+        if not sweep_overrides:
+            return SweepHydraOverrides(overrides=overrides, sweeps=[])
+
+        # Generate all combinations of sweeps
+        sweeps = [[]]
+        for parsed_override in sweep_overrides:
+            key = parsed_override.key_or_group
+            prev_sweeps = sweeps
+            sweeps = []
+            for combination in prev_sweeps:
+                for value in parsed_override.value().list:
+                    sweeps.append(combination + [f"{key}={value}"])
+
+        # Return parameters to schedule the hyper-parameter sweep
+        return SweepHydraOverrides(overrides=overrides, sweeps=sweeps)
 
 
 def convert_to_attrdict(
@@ -46,6 +97,15 @@ def convert_to_attrdict(
 
         # merge the command line args with config
         cfg = OmegaConf.merge(cfg, cli_conf)
+
+    # Completion of the "defaults.yaml" for the teacher model used for distillation
+    # This avoids repeating the same default options in both:
+    # - config.MODEL
+    # - cfg.config.DISTILLATION.TEACHER_MODEL
+    base_model = copy.deepcopy(cfg.config.MODEL)
+    with open_dict(base_model):
+        base_model.merge_with(cfg.config.DISTILLATION.TEACHER_MODEL)
+        cfg.config.DISTILLATION.TEACHER_MODEL = base_model
 
     # convert the config to AttrDict
     cfg = OmegaConf.to_container(cfg)
@@ -177,6 +237,7 @@ def resolve_linear_schedule(cfg, param_schedulers):
     """
     # compute what should be the linear warmup start LR value.
     # this depends on batchsize per node.
+    # TODO - why does it not depend on the global batch size?
     num_nodes = cfg.DISTRIBUTED.NUM_NODES
     num_gpus_per_node = cfg.DISTRIBUTED.NUM_PROC_PER_NODE
     bs_per_gpu = cfg.DATA.TRAIN.BATCHSIZE_PER_REPLICA
@@ -616,6 +677,7 @@ def infer_and_assert_hydra_config(cfg, engine_name: str):
     # TODO (Min): once FSDP supports sync'ing weights from rank 0, we don't need
     #             this anymore.
     cfg["MODEL"]["_MODEL_INIT_SEED"] = cfg.SEED_VALUE
+    cfg["DISTILLATION"]["TEACHER_MODEL"]["_MODEL_INIT_SEED"] = cfg.SEED_VALUE
 
     # in case of linear evaluation, we often evaluate several layers at a time. For each
     # layer, there's a separate accuracy meter. In such case, we want to output the layer
@@ -671,16 +733,12 @@ def infer_and_assert_hydra_config(cfg, engine_name: str):
     # if the user has specified the model initialization from a params_file, we check if
     # the params_file is a url. If it is, we download the file to a local cache directory
     # and use that instead
-    from vissl.utils.checkpoint import get_checkpoint_folder
-    from vissl.utils.io import cache_url, is_url
-
-    if is_url(cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE):
-        checkpoint_dir = get_checkpoint_folder(cfg)
-        cache_dir = f"{checkpoint_dir}/params_file_cache/"
-        cached_url_path = cache_url(
-            url=cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE, cache_dir=cache_dir
-        )
-        cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE = cached_url_path
+    cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE = _download_to_cache_if_url(
+        cfg, cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE
+    )
+    cfg.DISTILLATION.TEACHER_MODEL.WEIGHTS_INIT.PARAMS_FILE = _download_to_cache_if_url(
+        cfg, cfg.DISTILLATION.TEACHER_MODEL.WEIGHTS_INIT.PARAMS_FILE
+    )
 
     # ZeRO2: Infer the settings for ShardedDDP which shards the optimizer state
     # and the model weights. For ShardedDDP, we must use the OSS optimizer,
@@ -728,3 +786,14 @@ def infer_and_assert_hydra_config(cfg, engine_name: str):
         assert cfg.METERS.get("name", "") or cfg.METERS.get(
             "names", []
         ), "Please specify METER.name or METER.names if you are enabling the EMA_MODEL hook."
+
+
+def _download_to_cache_if_url(cfg, file_path: str) -> str:
+    from vissl.utils.checkpoint import get_checkpoint_folder
+    from vissl.utils.io import cache_url, is_url
+
+    if is_url(file_path):
+        checkpoint_dir = get_checkpoint_folder(cfg)
+        cache_dir = os.path.join(checkpoint_dir, "params_file_cache")
+        return cache_url(url=file_path, cache_dir=cache_dir)
+    return file_path

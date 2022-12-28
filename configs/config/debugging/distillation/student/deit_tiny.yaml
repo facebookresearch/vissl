@@ -1,0 +1,21 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK: # Tiny
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 3
+        HIDDEN_DIM: 192
+        MLP_DIM: 768
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [192, 1000]}],
+      ]

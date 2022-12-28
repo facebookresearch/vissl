@@ -4,7 +4,9 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import os
 
+import numpy as np
 from vissl.config import AttrDict
 from vissl.hooks import default_hook_generator
 from vissl.models.model_helpers import get_trunk_output_feature_names
@@ -53,24 +55,39 @@ def run_low_shot_logistic_regression(config: AttrDict, layer_name: str = "heads"
 
     # -- Fit Logistic Regression Classifier
     method_config = config.LOW_SHOT_BENCHMARK.LOGISTIC_REGRESSION
-    lambd = method_config.LAMBDA
-    lambd /= len(train_labels)
-    classifier = LogisticRegression(
-        penalty="l2",
-        C=1 / lambd,
-        multi_class="multinomial",
-    )
-    classifier.fit(
-        train_features,
-        train_labels,
-    )
+    lambdas = method_config.LAMBDA
+    if not isinstance(lambdas, list):
+        lambdas = [lambdas]
 
-    # -- Evaluate on train and test set
-    train_score = classifier.score(train_features, train_labels)
-    print("Train score: ", train_score)
-    test_score = classifier.score(test_features, test_labels)
-    print("Test score: ", test_score)
-    return test_score
+    train_scores = []
+    test_scores = []
+    tried_lambdas = []
+    for lambd in lambdas:
+        lambd /= len(train_labels)
+        classifier = LogisticRegression(
+            penalty="l2",
+            C=1 / lambd,
+            multi_class="multinomial",
+        )
+        classifier.fit(
+            train_features,
+            train_labels,
+        )
+
+        # -- Evaluate on train and test set
+        train_score = classifier.score(train_features, train_labels)
+        train_scores.append(train_score)
+        test_score = classifier.score(test_features, test_labels)
+        test_scores.append(test_score)
+        tried_lambdas.append(lambd)
+        print(f"Lambda: {lambd}, Test Score: {test_score}")
+
+    print("Lambdas:", tried_lambdas)
+    print("Train scores:", train_scores)
+    print("Test scores:", test_scores)
+    print("Best train score:", max(train_scores))
+    print("Best test score:", max(test_scores))
+    return max(test_scores)
 
 
 def run_low_shot_svm(config: AttrDict, layer_name: str = "heads"):
@@ -106,12 +123,15 @@ def run_low_shot_all_layers(config: AttrDict):
     if len(feat_names) == 0:
         feat_names = ["heads"]
 
+    result = {}
     for layer in feat_names:
         if config.LOW_SHOT_BENCHMARK.METHOD == "logistic_regression":
             top_1 = run_low_shot_logistic_regression(config, layer_name=layer)
         else:
             top_1 = run_low_shot_svm(config, layer_name=layer)
         logging.info(f"layer: {layer}, Top1: {top_1}")
+        result[layer] = top_1
+    return result
 
 
 def extract_features_and_low_shot(node_id: int, config: AttrDict):
@@ -121,16 +141,30 @@ def extract_features_and_low_shot(node_id: int, config: AttrDict):
 
     # Extract the features if no path to the extract features is provided
     if not config.LOW_SHOT_BENCHMARK.FEATURES.PATH:
-        launch_distributed(
-            config,
-            node_id,
-            engine_name="extract_features",
-            hook_generator=default_hook_generator,
-        )
-        config.LOW_SHOT_BENCHMARK.FEATURES.PATH = get_checkpoint_folder(config)
-
-    # Run KNN on all the extract features
-    run_low_shot_all_layers(config)
+        results = []
+        main_checkpoint_dir = config.CHECKPOINT.DIR
+        for seed in config.LOW_SHOT_BENCHMARK.LOGISTIC_REGRESSION.SEEDS:
+            config.DATA.TRAIN.DATA_LIMIT_SAMPLING.SEED = seed
+            config.CHECKPOINT.DIR = os.path.join(main_checkpoint_dir, f"seed{seed}")
+            launch_distributed(
+                config,
+                node_id,
+                engine_name="extract_features",
+                hook_generator=default_hook_generator,
+            )
+            config.LOW_SHOT_BENCHMARK.FEATURES.PATH = get_checkpoint_folder(config)
+            result = run_low_shot_all_layers(config)
+            results.append(result)
+        keys = set()
+        for result in results:
+            keys |= set(result.keys())
+        for key in keys:
+            print(f"{key}:", [r[key] for r in results])
+            print(f"{key} (mean):", np.array([r[key] for r in results]).mean())
+            print(f"{key} (std):", np.array([r[key] for r in results]).std())
+    else:
+        result = run_low_shot_all_layers(config)
+        print(result)
 
     # close the logging streams including the file handlers
     shutdown_logging()

@@ -39,7 +39,7 @@ config:
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
       COLLATE_FUNCTION: multicrop_collator
-      MMAP_MODE: True
+      MMAP_MODE: False
       COPY_TO_LOCAL_DISK: False
       COPY_DESTINATION_DIR: /tmp/imagenet1k/
       DATA_LIMIT: 250
@@ -61,7 +61,7 @@ config:
         NUM_LAYERS: 12
         NUM_HEADS: 6
         HIDDEN_DIM: 384
-        MLP_DIM: 1532
+        MLP_DIM: 1536
         CLASSIFIER: token
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0

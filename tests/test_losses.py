@@ -9,14 +9,16 @@ from collections import namedtuple
 
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from classy_vision.generic.distributed_util import set_cpu_device
 from parameterized import param, parameterized
-from vissl.config import AttrDict
+from vissl.config.attr_dict import AttrDict
 from vissl.losses.barlow_twins_loss import BarlowTwinsCriterion
 from vissl.losses.cross_entropy_multiple_output_single_target import (
     CrossEntropyMultipleOutputSingleTargetCriterion,
     CrossEntropyMultipleOutputSingleTargetLoss,
 )
+from vissl.losses.distillation_loss import DistillationCriterion, DistillationLoss
 from vissl.losses.multicrop_simclr_info_nce_loss import MultiCropSimclrInfoNCECriterion
 from vissl.losses.simclr_info_nce_loss import SimclrInfoNCECriterion
 from vissl.losses.swav_loss import SwAVCriterion
@@ -263,3 +265,77 @@ class TestCrossEntropyMultipleOutputSingleTargetLoss(unittest.TestCase):
         )
         criterion = CrossEntropyMultipleOutputSingleTargetLoss(config)
         self.assertEqual(criterion(logits, target), criterion_ref(logits, target))
+
+
+class TestDistillationCriterion(unittest.TestCase):
+    @parameterized.expand([param(temperature=1.0), param(temperature=2.0)])
+    def test_hard_criteria_alone(self, temperature: float):
+        criterion = DistillationCriterion(
+            soft_target_alpha=0.0, temperature=temperature
+        )
+        logits = torch.tensor([[1.0, 0.0, 0.0], [1.0, 2.0, 0.0]])
+        teacher_logits = torch.randn(size=(2, 3))
+        target = torch.tensor([0, 1], dtype=torch.int64)
+        loss = criterion(logits, teacher_logits, target)
+        ref_loss = nn.CrossEntropyLoss()(logits, target)
+        self.assertAlmostEqual(loss.item(), ref_loss.item(), delta=1e-4)
+
+    @parameterized.expand(
+        [
+            param(soft_alpha=0.1, temperature=1.0, loss_type="mse"),
+            param(soft_alpha=0.5, temperature=5.0, loss_type="kl_divergence"),
+            param(soft_alpha=0.9, temperature=9.0, loss_type="cross_entropy"),
+        ]
+    )
+    def test_configuration(self, soft_alpha: float, temperature: float, loss_type: str):
+        criterion = DistillationLoss.from_config(
+            AttrDict(
+                {
+                    "soft_target_alpha": soft_alpha,
+                    "temperature": temperature,
+                    "loss_type": loss_type,
+                }
+            )
+        )
+        self.assertEqual(criterion.criterion.hard_target_alpha, 1 - soft_alpha)
+        self.assertEqual(criterion.criterion.soft_target_alpha, soft_alpha)
+        self.assertEqual(criterion.criterion.temperature, temperature)
+        self.assertEqual(criterion.criterion.loss_type.name, loss_type.upper())
+
+    @parameterized.expand(
+        [
+            param(loss_type="kl_divergence", temperature=10.0),
+            param(loss_type="kl_divergence", temperature=1.0),
+            param(loss_type="cross_entropy", temperature=10.0),
+            param(loss_type="cross_entropy", temperature=1.0),
+            param(loss_type="mse", temperature=10.0),
+            param(loss_type="mse", temperature=1.0),
+        ]
+    )
+    def test_convergence_with_soft_alpha_only(self, loss_type: str, temperature: float):
+        criterion = DistillationLoss.from_config(
+            AttrDict(
+                {
+                    "soft_target_alpha": 1.0,
+                    "temperature": temperature,
+                    "loss_type": loss_type,
+                }
+            )
+        )
+
+        # An input and its soft target
+        x = nn.Parameter(torch.tensor([[1.0, 2.0, 3.0]]))
+        y = torch.tensor([[3.0, 2.0, 1.0]])
+        criterion.teacher_logits = y
+        t = torch.tensor([0], dtype=torch.int64)
+
+        # Optimizing the input to imitate soft target
+        optimizer = optim.SGD([x], lr=1.0)
+        for _ in range(100):
+            loss = criterion(x, t)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        # Assert convergence
+        self.assertTrue(torch.allclose(x.data, y.data))

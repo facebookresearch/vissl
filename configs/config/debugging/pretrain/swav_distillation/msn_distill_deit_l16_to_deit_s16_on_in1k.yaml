@@ -1,0 +1,139 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      PERF_STAT_FREQUENCY: 40
+      ROLLING_BTIME_FREQ: 5
+  DATA:
+    NUM_DATALOADER_WORKERS: 10
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 64
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 12
+          size_crops: [224, 96]
+          num_crops: [2, 10]
+          crop_scales: [[0.3, 1], [0.05, 0.3]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 1.0
+        - name: ImgPilGaussianBlur
+          p: 0.5
+          radius_min: 0.1
+          radius_max: 2.0
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        HIDDEN_DIM: 384
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0.0
+        ATTENTION_DROPOUT_RATE: 0.0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.0  # MSN is trained without it
+        QK_SCALE: False
+        MASKED_IMAGE_MODELING:
+          NAME: 'msn'
+          PARAMS:
+            drop_ratio: 0.15  # MSN value for S16
+            global_view_tokens: 196
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims": [384, 2048, 1024], "use_bn": False}],
+      ]
+    AMP_PARAMS:
+      AMP_TYPE: pytorch
+      USE_AMP: True
+    GRAD_CLIP:
+      USE_GRAD_CLIP: True
+      MAX_NORM: 1
+  LOSS:
+    name: msn_distillation_loss
+    msn_distillation_loss:
+      swapped_assignment: False
+      student_temperature: 0.1
+      teacher_num_crops: 2
+      student_num_crops: 12
+  DISTILLATION:
+    TEACHER_MODEL:
+      TRUNK: # L-16
+        NAME: vision_transformer
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          HIDDEN_DIM: 1024
+          NUM_LAYERS: 24
+          NUM_HEADS: 16
+          MLP_DIM: 4096
+          CLASSIFIER: token
+          DROPOUT_RATE: 0
+          ATTENTION_DROPOUT_RATE: 0
+          QKV_BIAS: True
+          DROP_PATH_RATE: 0.0 # MSN was trained without it
+      HEAD:
+        PARAMS: [
+          ["msn_head", {
+            "in_dim": 1024,
+            "num_prototypes": 1024,
+            "temperature": 0.025,
+            "use_bn": true,
+          }],
+        ]
+      WEIGHTS_INIT:
+        PARAMS_FILE: "please override path to teacher weights"
+  OPTIMIZER:
+    name: adamw
+    momentum: 0.9
+    nesterov: False
+    num_epochs: 150  # 15 epochs of warm-up in MSN
+    param_group_constructor: dino
+    regularize_bn: False
+    regularize_bias: False
+    param_schedulers:
+      lr:
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.0002
+            end_value: 0.001
+          - name: cosine
+            start_value: 0.001
+            end_value: 0.00001
+        update_interval: epoch
+        interval_scaling: [rescaled, fixed]
+        lengths: [0.1, 0.9]  # 15 epochs of warm-up in MSN
+      weight_decay:
+        name: cosine
+        start_value: 0.04
+        end_value: 0.4
+        update_interval: epoch
+  DISTRIBUTED:
+    NUM_NODES: 2
+    NUM_PROC_PER_NODE: 8

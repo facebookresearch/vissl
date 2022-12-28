@@ -6,7 +6,11 @@
 import unittest
 from typing import List
 
-from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
+from vissl.utils.hydra_config import (
+    compose_hydra_configuration,
+    convert_to_attrdict,
+    SweepHydraOverrides,
+)
 
 
 class TestUtilsHydraConfig(unittest.TestCase):
@@ -98,3 +102,37 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.HEAD.PARAMS[0][0], "eval_mlp_fsdp")
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet_fsdp")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_fsdp_task")
+
+    def test_hyper_parameter_sweeps(self):
+        config = "config=debugging/benchmark/linear_image_classification/eval_resnet_8gpu_transfer_imagenette_160"
+        over_1 = "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_eval_mlp"
+        sweep_1 = "config.OPTIMIZER.weight_decay=0.001,0.0001"
+        sweep_2 = "config.OPTIMIZER.num_epochs=50,100,200"
+        cli_overrides = [config, over_1, sweep_1, sweep_2]
+        overrides, sweeps = SweepHydraOverrides.from_overrides(cli_overrides)
+        self.assertEqual(overrides, [config, over_1])
+        self.assertEqual(len(sweeps), 6)
+        self.assertEqual(
+            sweeps[0],
+            ["config.OPTIMIZER.weight_decay=0.001", "config.OPTIMIZER.num_epochs=50"],
+        )
+        self.assertEqual(
+            sweeps[1],
+            ["config.OPTIMIZER.weight_decay=0.001", "config.OPTIMIZER.num_epochs=100"],
+        )
+        self.assertEqual(
+            sweeps[2],
+            ["config.OPTIMIZER.weight_decay=0.001", "config.OPTIMIZER.num_epochs=200"],
+        )
+        self.assertEqual(
+            sweeps[3],
+            ["config.OPTIMIZER.weight_decay=0.0001", "config.OPTIMIZER.num_epochs=50"],
+        )
+        self.assertEqual(
+            sweeps[4],
+            ["config.OPTIMIZER.weight_decay=0.0001", "config.OPTIMIZER.num_epochs=100"],
+        )
+        self.assertEqual(
+            sweeps[5],
+            ["config.OPTIMIZER.weight_decay=0.0001", "config.OPTIMIZER.num_epochs=200"],
+        )

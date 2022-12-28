@@ -1,0 +1,14 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    num_epochs: 300
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        name: cosine
+        start_value: 0.01
+        end_value: 0.00001
+        update_interval: epoch

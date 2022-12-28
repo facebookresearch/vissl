@@ -13,6 +13,7 @@ import torch.nn.functional as F
 from vissl.config import AttrDict
 from vissl.models.trunks import register_model_trunk
 
+
 BATCH_NORM_EPSILON = 1e-5
 BATCH_NORM_DECAY = 0.9  # == pytorch's default value as well
 

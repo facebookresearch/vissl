@@ -1,0 +1,14 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: mobilenetv3_timm
+      MOBILE_NET:
+        NAME: mobilenetv3_large_100
+        TRUNK_ONLY: True
+    HEAD:
+      PARAMS: [
+        ["mobilenet_v3_head_timm", {"num_classes": 1000}],
+      ]
+  OPTIMIZER:
+    regularize_bn: True

@@ -47,6 +47,10 @@
         "train": ["<path_to_pytorch_dataset>", "<unused>"],
         "val": ["<path_to_pytorch_dataset>", "<unused>"]
     },
+    "VOC2012_SEGMENTATION": {
+        "train": ["/datasets01/VOC/060817", "<lbl_path>"],
+        "val": ["/datasets01/VOC/060817", "<lbl_path>"]
+    },
     "inaturalist2018_filelist": {
         "train": ["<path_to_train_images.npy>", "<path_to_train_labels.npy>"],
         "val": ["<path_to_val_images.npy>", "<path_to_val_labels.npy>"]
@@ -156,8 +160,8 @@
         "val": ["<root_folder>", "<root_folder>"]
     },
     "voc2012_folder": {
-        "train": ["<root_folder>", "<root_folder>"],
-        "val": ["<root_folder>", "<root_folder>"]
+        "train": ["/datasets01/VOC/060817/VOCdevkit/VOC2012/", "<root_folder>"],
+        "val": ["/datasets01/VOC/060817/VOCdevkit/VOC2012/", "<root_folder>"]
     },
     "coco_folder": {
         "train": ["<root_folder>", "<root_folder>"],

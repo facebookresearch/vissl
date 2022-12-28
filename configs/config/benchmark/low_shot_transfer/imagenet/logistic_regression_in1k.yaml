@@ -55,8 +55,9 @@ config:
     WEIGHTS_INIT:
       PARAMS_FILE: "specify the model weights"
       STATE_DICT_KEY_NAME: classy_state_dict
-  LOGISTIC_REGRESSION:
-    LAMBDA: 0.1
+  LOW_SHOT_BENCHMARK:
+    LOGISTIC_REGRESSION:
+      LAMBDA: [1.0, 0.1, 0.01, 0.001]
     FEATURES:
       PATH: ''
   DISTRIBUTED:

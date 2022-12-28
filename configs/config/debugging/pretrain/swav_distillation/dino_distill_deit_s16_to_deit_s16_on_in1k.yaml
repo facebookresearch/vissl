@@ -1,0 +1,140 @@
+# @package _global_
+config:
+  VERBOSE: False
+  LOG_FREQUENCY: 10
+  TEST_ONLY: False
+  TEST_MODEL: False
+  SEED_VALUE: 0
+  MULTI_PROCESSING_METHOD: forkserver
+  HOOKS:
+    PERF_STATS:
+      MONITOR_PERF_STATS: True
+      PERF_STAT_FREQUENCY: 40
+      ROLLING_BTIME_FREQ: 5
+  DATA:
+    NUM_DATALOADER_WORKERS: 10
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      BATCHSIZE_PER_REPLICA: 64
+      LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
+      TRANSFORMS:
+        - name: ImgPilToMultiCrop
+          total_num_crops: 10
+          size_crops: [224, 96]
+          num_crops: [2, 8]
+          crop_scales: [[0.4, 1], [0.05, 0.4]]
+        - name: RandomHorizontalFlip
+          p: 0.5
+        - name: ImgPilColorDistortion
+          strength: 0.5
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilGaussianBlur", "p": 1., "radius_min": 0.1, "radius_max": 2.0}]
+          prob: [1., 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        - name: ImgPilMultiCropRandomApply
+          transforms: [{"name": "ImgPilRandomSolarize", "p": 1.}]
+          prob: [0., 0.2, 0., 0., 0, 0, 0, 0, 0, 0]
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+      COLLATE_FUNCTION: multicrop_collator
+      MMAP_MODE: False
+      COPY_TO_LOCAL_DISK: False
+      COPY_DESTINATION_DIR: /tmp/imagenet1k/
+      DROP_LAST: True
+  TRAINER:
+    TRAIN_STEP_NAME: standard_train_step
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        HIDDEN_DIM: 384
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # The one used to train DINO-S/8 and DINO-S/16
+        QK_SCALE: False
+    HEAD:
+      PARAMS: [
+        ["dino_head", {
+          "in_dim": 384,
+          "num_clusters": [65536],
+          "normalize_last_layer": false,
+        }],
+      ]
+    AMP_PARAMS:
+      AMP_TYPE: pytorch
+      USE_AMP: True
+  LOSS:
+    name: dino_distillation_loss
+    dino_distillation_loss:
+      swapped_assignment: false
+      teacher_num_crops: 2
+      teacher_temperature: 0.07
+      student_num_crops: 10
+      student_temperature: 0.1
+  DISTILLATION:
+    TEACHER_MODEL:
+      TRUNK:
+        NAME: vision_transformer
+        VISION_TRANSFORMERS:
+          IMAGE_SIZE: 224
+          PATCH_SIZE: 16
+          NUM_LAYERS: 12
+          NUM_HEADS: 6
+          HIDDEN_DIM: 384
+          MLP_DIM: 1536
+          CLASSIFIER: token
+          DROPOUT_RATE: 0
+          ATTENTION_DROPOUT_RATE: 0
+          QKV_BIAS: True
+          DROP_PATH_RATE: 0.1 # The one used to train DINO-S/8 or S/8
+          QK_SCALE: False
+          CHECKPOINT_MLP: false
+          CHECKPOINT_BLOCK: false
+      HEAD:
+        PARAMS: [
+          ["dino_head", {
+            "in_dim": 384,
+            "num_clusters": [65536],
+            "normalize_last_layer": false,
+          }],
+        ]
+      WEIGHTS_INIT:
+        PARAMS_FILE: "please override path to teacher weights"
+  OPTIMIZER:
+    name: adamw
+    momentum: 0.9
+    nesterov: False
+    num_epochs: 300
+    param_group_constructor: dino
+    regularize_bn: False
+    regularize_bias: False
+    param_schedulers:
+      lr:
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.00001
+            end_value: 0.002
+          - name: cosine
+            start_value: 0.002
+            end_value: 0.00001
+        update_interval: epoch
+        interval_scaling: [rescaled, fixed]
+        lengths: [0.0333, 0.9667]
+      weight_decay:
+        name: cosine
+        start_value: 0.04
+        end_value: 0.4
+        update_interval: epoch
+  DISTRIBUTED:
+    NUM_NODES: 2
+    NUM_PROC_PER_NODE: 8

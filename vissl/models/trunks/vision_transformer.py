@@ -30,6 +30,7 @@ import math
 from functools import partial
 from typing import List, Tuple
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -240,6 +241,38 @@ class IBOTMaskedModeling(nn.Module):
         return x + pos_embed
 
 
+class MSNDropMasking(nn.Module):
+    """Drop Masking used in MSN (https://arxiv.org/pdf/2204.07141.pdf)
+    - drop part of the feature map patches (never drops the class token)
+    - applies the positional embeddings before the dropping
+
+    Args:
+        drop_ratio (float): ratio of tokens to drop
+    """
+
+    def __init__(self, drop_ratio: float, global_view_tokens: int):
+        super().__init__()
+        self.patch_drop = drop_ratio
+        self.global_view_tokens = global_view_tokens
+
+    def forward(self, x: torch.Tensor, pos_embed: torch.Tensor) -> torch.Tensor:
+        # Add positional embeddings now (before the dropping)
+        x = x + pos_embed
+
+        # Skip the masking for non-focal views (small sequence length)
+        if x.size(1) < self.global_view_tokens + 1:
+            return x
+        if self.patch_drop <= 0.0:
+            return x
+
+        # Drop positions (except for the class token)
+        patch_keep = 1.0 - self.patch_drop
+        T_H = int(np.floor((x.shape[1] - 1) * patch_keep))
+        perm = 1 + torch.randperm(x.shape[1] - 1)[:T_H]
+        idx = torch.cat([torch.zeros(1, dtype=perm.dtype, device=perm.device), perm])
+        return x[:, idx, :]
+
+
 class FeatAvgPool(nn.Module):
     def __init__(self):
         super().__init__()
@@ -270,7 +303,7 @@ class VisionTransformer(nn.Module):
         self.embed_dim = self.trunk_config.HIDDEN_DIM
         self.depth = self.trunk_config.NUM_LAYERS
         self.num_heads = self.trunk_config.NUM_HEADS
-        self.mlp_ratio = 4.0
+        self.mlp_ratio = self.trunk_config.MLP_DIM / self.trunk_config.HIDDEN_DIM
         self.qkv_bias = self.trunk_config.QKV_BIAS
         self.qk_scale = self.trunk_config.QK_SCALE
         self.drop_rate = self.trunk_config.DROPOUT_RATE
@@ -311,11 +344,14 @@ class VisionTransformer(nn.Module):
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
         if self.use_class_token:
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
             self.pos_embed = nn.Parameter(
                 torch.zeros(1, num_patches + 1, self.embed_dim)
             )
         else:
+            self.register_parameter("cls_token", None)
             self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, self.embed_dim))
+
         self.pos_drop = nn.Dropout(p=self.drop_rate)
 
         self.blocks = self._build_blocks(norm_layer)
@@ -327,7 +363,8 @@ class VisionTransformer(nn.Module):
         # self.repr_act = nn.Tanh()
 
         trunc_normal_(self.pos_embed, std=0.02)
-        trunc_normal_(self.cls_token, std=0.02)
+        if self.cls_token is not None:
+            trunc_normal_(self.cls_token, std=0.02)
 
         # Initializes the weights of the children, except for the blocks
         # who have already been initialized in the "build_blocks".
@@ -337,6 +374,13 @@ class VisionTransformer(nn.Module):
 
         if self.trunk_config.MASKED_IMAGE_MODELING.NAME == "ibot":
             self.patch_masking = IBOTMaskedModeling(embed_dim=self.embed_dim)
+        elif self.trunk_config.MASKED_IMAGE_MODELING.NAME == "msn":
+            drop_masking_params = self.trunk_config.MASKED_IMAGE_MODELING.PARAMS
+            drop_ratio = drop_masking_params.get("drop_ratio", 0.0)
+            global_view_tokens = drop_masking_params.get("global_view_tokens", 196)
+            self.patch_masking = MSNDropMasking(
+                drop_ratio=drop_ratio, global_view_tokens=global_view_tokens
+            )
         else:
             self.patch_masking = NoPatchMasking()
 
@@ -472,13 +516,38 @@ class VisionTransformer(nn.Module):
                 output.append(feat_map)
             elif name == "lastBLK":
                 output.append(interms[-1])
+            elif name.startswith("concatBLK"):
+                v = int(name.replace("concatBLK", ""))
+                feat = torch.cat(interms[-v:], dim=-1)
+                output.append(feat)
             elif name == "lastPOOL":
-                assert not self.use_class_token
+                assert (
+                    not self.use_class_token
+                ), "FIXIT"  # TODO - don't pool class token
                 output.append(self.avg_pool(interms[-1]))
             elif name.startswith("concatPOOL"):
-                assert not self.use_class_token
+                assert (
+                    not self.use_class_token
+                ), "FIXIT"  # TODO - don't pool class token
                 v = int(name.replace("concatPOOL", ""))
                 feat = torch.cat([self.avg_pool(x) for x in interms[-v:]], dim=-1)
+                output.append(feat)
+            elif name.startswith("stridePOOL"):
+                # Format is "stridePOOL_{count}_{stride}" or "stridePOOL_{count}"
+                assert (
+                    not self.use_class_token
+                ), "FIXIT"  # TODO - don't pool class token
+                name = name.replace("stridePOOL_", "")
+                parts = [int(s) for s in name.split("_")]
+                if len(parts) == 2:
+                    count, stride = [int(s) for s in name.split("_")]
+                else:
+                    count = int(name)
+                    stride, r = divmod(len(interms), count)
+                    stride = stride + 1 if r else stride
+                feat = torch.cat(
+                    [self.avg_pool(x) for x in interms[::-stride][:count]], dim=-1
+                )
                 output.append(feat)
 
         return output

@@ -12,13 +12,10 @@ config:
         DROP_PATH_RATE: 0.0
     HEAD:
       PARAMS: [
-        ["swav_head", {
-          "use_weight_norm_prototypes": True,
-          "dims": [1536, 2048, 2048, 256],
-          "use_bn": False,
-          "return_embeddings": False,
-          "activation_name": "GELU",
-          "num_clusters": [65536]
+        ["dino_head", {
+          "in_dim": 1536,
+          "num_clusters": [65536],
+          "normalize_last_layer": True,
         }],
       ]
   DISTRIBUTED:

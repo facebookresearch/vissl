@@ -185,7 +185,7 @@ def run_knn_at_layer_low_memory(cfg: AttrDict, layer_name: str = "heads"):
 
         retrieval_one_hot = torch.zeros(batch_size * num_neighbors, num_classes)
         retrieval_one_hot.scatter_(1, retrieved_neighbors.view(-1, 1), 1)
-        predictions = _get_sorted_predictions(
+        predictions = get_sorted_predictions(
             batch_size, num_classes, distances, retrieval_one_hot, temperature
         )
 
@@ -271,7 +271,7 @@ def run_knn_at_layer(cfg: AttrDict, layer_name: str = "heads"):
             if cfg.NEAREST_NEIGHBOR.USE_CUDA:
                 retrieval_one_hot = retrieval_one_hot.cuda()
             retrieval_one_hot.scatter_(1, retrieved_neighbors.view(-1, 1), 1)
-            predictions = _get_sorted_predictions(
+            predictions = get_sorted_predictions(
                 batch_size, num_classes, distances, retrieval_one_hot, temperature
             )
 
@@ -290,7 +290,7 @@ def run_knn_at_layer(cfg: AttrDict, layer_name: str = "heads"):
     return accuracies.top_1, accuracies.top_5, accuracies.total
 
 
-def _get_sorted_predictions(
+def get_sorted_predictions(
     batch_size: int,
     num_classes: int,
     distances: torch.Tensor,
@@ -352,12 +352,22 @@ def run_knn_at_all_layers(config: AttrDict):
     if len(feat_names) == 0:
         feat_names = ["heads"]
 
+    top_k_list = config.NEAREST_NEIGHBOR.TOPK
+    if not isinstance(top_k_list, list):
+        top_k_list = [top_k_list]
+
     for layer in feat_names:
-        if config.NEAREST_NEIGHBOR.OPTIMIZE_MEMORY:
-            top1, top5, _ = run_knn_at_layer_low_memory(config, layer_name=layer)
-        else:
-            top1, top5, _ = run_knn_at_layer(config, layer_name=layer)
-        logging.info(f"layer: {layer} Top1: {top1}, Top5: {top5}")
+        # TODO - replace this with more optimal approach:
+        #  * use the max top_k to select the closest neighbors
+        #  * then only at the end, sub-select the different top_k
+        #    to compute the accuracy for each different top_k
+        for top_k in top_k_list:
+            config.NEAREST_NEIGHBOR.TOPK = top_k
+            if config.NEAREST_NEIGHBOR.OPTIMIZE_MEMORY:
+                top1, top5, _ = run_knn_at_layer_low_memory(config, layer_name=layer)
+            else:
+                top1, top5, _ = run_knn_at_layer(config, layer_name=layer)
+            logging.info(f"layer: {layer}, topk: {top_k}, Top1: {top1}, Top5: {top5}")
 
 
 def extract_features_and_run_knn(node_id: int, config: AttrDict):

@@ -1,0 +1,21 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: mobilenetv3_tv
+      MOBILE_NET:
+        NAME: mobilenetv3_large_100
+    HEAD:
+      PARAMS: [
+        ["dino_head", {
+          "in_dim": 960,
+          "num_clusters": [65536],
+          "normalize_last_layer": false,
+        }],
+      ]
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: apex
+      GROUP_SIZE: 8
+  OPTIMIZER:
+    regularize_bn: True

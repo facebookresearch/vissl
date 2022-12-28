@@ -1,0 +1,33 @@
+# @package _global_
+config:
+  MODEL:
+    TRUNK:
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        HIDDEN_DIM: 384
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1
+        QK_SCALE: False
+        MASKED_IMAGE_MODELING:
+          NAME: 'ibot'
+          PARAMS: {}
+    MULTI_INPUT_HEAD_MAPPING: [
+      ["global_views", {"feat_names": ["lastBLK"], "additional_keys": ["mask"]}],
+      ["local_views", {"feat_names": ["lastCLS"]}],
+    ]
+    HEAD:
+      PARAMS: [
+        ["ibot_distillation_head", {
+          "in_dim": 384,
+          "out_dim": 8192,
+          "shared_head": True,
+        }],
+      ]

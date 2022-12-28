@@ -1,0 +1,20 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["flatten", ["Identity", []] ],
+        ["flatten", ["Identity", []] ],
+      ]
+    TRUNK:
+      NAME: mobilenetv3_timm
+      MOBILE_NET:
+        NAME: mobilenetv3_large_100
+        PRETRAINED: False
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 1280, "dims": [1280, 100]}],
+        ["mlp", {"dims": [1280, 100]}],
+      ]
+  OPTIMIZER:
+    regularize_bn: True

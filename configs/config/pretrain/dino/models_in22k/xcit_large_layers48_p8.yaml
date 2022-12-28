@@ -14,8 +14,8 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 5
     TRAIN:
-      DATA_SOURCES: [everstore]
-      DATASET_NAMES: [imagenet22k-everstore-correct]
+      DATA_SOURCES: [disk_filelist]
+      DATASET_NAMES: [imagenet22k_filelist]
       BATCHSIZE_PER_REPLICA: 2
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:

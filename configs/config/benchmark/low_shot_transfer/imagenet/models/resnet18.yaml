@@ -1,0 +1,7 @@
+ # @package _global_
+ config:
+  MODEL:
+    TRUNK:
+      NAME: resnet
+      RESNETS:
+        DEPTH: 18

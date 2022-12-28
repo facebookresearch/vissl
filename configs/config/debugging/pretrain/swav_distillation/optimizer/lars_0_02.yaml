@@ -1,0 +1,22 @@
+# @package _global_
+config:
+  OPTIMIZER:
+    name: sgd
+    use_larc: True
+    larc_config:
+      clip: False
+      trust_coefficient: 0.001
+      eps: 0.00000001
+    weight_decay: 0.000001
+    momentum: 0.9
+    nesterov: False
+    param_schedulers:
+      lr:
+        name: composite
+        schedulers:
+          - name: linear
+            start_value: 0.00001
+            end_value: 0.02
+          - name: cosine
+            start_value: 0.02
+            end_value: 0.00001
