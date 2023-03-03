@@ -158,7 +158,7 @@ jobs:
       - <<: *install_augly
       - <<: *install_classy_vision
       - <<: *install_fairscale
-      - <<: *install_apex_cpu
+      # - <<: *install_apex_cpu
       - <<: *pip_list
 
       - save_cache:
