@@ -109,7 +109,7 @@ install_apex_cpu: &install_apex_cpu
       working_directory: ~/vissl
       environment:
         # Variable used by pip install of apex
-        TORCH_CUDA_ARCH_LIST: "6.0;6.1;6.2;7.0;7.5;8.0;8.6"
+        TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
       command: |
         pip install -v --disable-pip-version-check --no-cache-dir apex@https://github.com/NVIDIA/apex/tarball/95cea8e3e5b55b0260cc16279f2647412142d53e
 
