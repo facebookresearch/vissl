@@ -15,17 +15,17 @@ version: 2
 
 cpu: &cpu
   docker:
-    - image: circleci/python:3.8
+    - image: circleci/python:3.10
   resource_class: medium
   parallelism: 10  # Number of parallel executors
 
 gpu: &gpu
   environment:
-    CUDA_VERSION: "11.1"
-    CUDA_HOME: /usr/local/cuda-11.1
+    CUDA_VERSION: "11.6"
+    CUDA_HOME: /usr/local/cuda-11.6
     TERM: xterm
   machine:
-    image: ubuntu-1604-cuda-11.1:202012-01
+    image: linux-cuda-11:2023.02.1
   resource_class: gpu.nvidia.medium.multi  # Tesla T4
 
 # -------------------------------------------------------------------------------------
@@ -38,8 +38,8 @@ install_python: &install_python
       working_directory: ~/
       command: |
         pyenv versions
-        pyenv install -f 3.7.0
-        pyenv global 3.7.0
+        pyenv install -f 3.10.6
+        pyenv global 3.10.6
 
 install_fairscale: &install_fairscale
   - run:
@@ -47,7 +47,7 @@ install_fairscale: &install_fairscale
       working_directory: ~/
       command: |
         pip uninstall -y fairscale
-        pip install fairscale==0.4.6
+        pip install fairscale==0.4.13
 
 install_classy_vision: &install_classy_vision
   - run:
@@ -86,8 +86,8 @@ install_vissl_dep: &install_vissl_dep
       name: Install VISSL Dependencies
       working_directory: ~/vissl
       command: |
-        pip install --progress-bar off torch==1.8.1+cu111 torchvision==0.9.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
-        pip install --progress-bar off opencv-python==4.5.1.48
+        pip install --progress-bar off torch==1.13.1+cu116 torchvision==0.14.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html
+        pip install --progress-bar off opencv-python==4.7.0.72
         pip install --progress-bar off -r requirements.txt
         # Update this since classy_vision seems to need it.
         pip install --progress-bar off --upgrade iopath
@@ -109,9 +109,9 @@ install_apex_cpu: &install_apex_cpu
       working_directory: ~/vissl
       environment:
         # Variable used by pip install of apex
-        TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
+        TORCH_CUDA_ARCH_LIST: "7.5;8.0;8.6"
       command: |
-        pip install -v --disable-pip-version-check --no-cache-dir apex@https://github.com/NVIDIA/apex/tarball/9ce0a10fb6c2537ef6a59f27b7875e32a9e9b8b8
+        pip install -v --disable-pip-version-check --no-cache-dir apex@https://github.com/NVIDIA/apex/tree/95cea8e3e5b55b0260cc16279f2647412142d53e
 
 install_apex_gpu: &install_apex_gpu
   - run:
@@ -119,8 +119,8 @@ install_apex_gpu: &install_apex_gpu
       working_directory: ~/vissl
       environment:
         # Both variables are used by install_apex.sh
-        CUDA_VER: "11.1"
-        TORCH_CUDA_ARCH_LIST: "5.0;5.2;5.3"
+        CUDA_VER: "11.6"
+        TORCH_CUDA_ARCH_LIST: "7.5;8.0;8.6"
       command: |
         bash ./docker/common/install_apex.sh
 
