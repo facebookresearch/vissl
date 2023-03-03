@@ -25,7 +25,7 @@ popd
 export PATH=/opt/conda/bin:$PATH
 
 ## Follow the steps below to create and activate a conda environment.
-conda create --name vissl_env python=3.6
+conda create --name vissl_env python=3.10
 bash -c "source activate vissl_env"
 export PATH="/opt/conda/envs/vissl_env/bin:${PATH}"
 

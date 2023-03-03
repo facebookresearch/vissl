@@ -1,8 +1,8 @@
 ARG CUDA_VER
 ARG CUDA_SUFFIX
 
-# we always use cudnn version 7
-FROM nvidia/cuda:${CUDA_VER}-cudnn7-devel
+# we always use cudnn version 8
+FROM nvidia/cuda:${CUDA_VER}-cudnn8-devel
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -24,7 +24,7 @@ RUN ./install_conda.sh && rm install_conda.sh
 ENV PATH="/opt/conda/bin:${PATH}"
 
 # install PyTorch.
-RUN conda install pytorch==1.9.1 torchvision cudatoolkit=${CUDA_VER} -c pytorch -c conda-forge
+RUN conda install pytorch==1.13.1 torchvision cudatoolkit=${CUDA_VER} -c pytorch -c conda-forge
 
 # install apex
 RUN conda install apex -c vissl
