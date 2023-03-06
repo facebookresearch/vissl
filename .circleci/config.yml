@@ -55,7 +55,7 @@ install_classy_vision: &install_classy_vision
       working_directory: ~/
       command: |
         pip uninstall -y classy_vision
-        pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d
+        pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/74e83dd97afbc9371b336304af09548f5080fa9c
 
 
 setup_venv: &setup_venv
@@ -75,6 +75,12 @@ setup_venv: &setup_venv
         pip --version
         pip install -U setuptools
 
+select_cuda: &select_cuda
+  - run:
+      name: Select CUDA
+      command: |
+        sudo update-alternatives --set cuda /usr/local/cuda-<< parameters.cuda_version >>
+        
 pip_list: &pip_list
   - run:
       name: Pip list
