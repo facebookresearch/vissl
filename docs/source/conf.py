@@ -20,7 +20,8 @@
 import os
 import sys
 
-import mock
+import unittest.mock as mock
+
 import sphinx_rtd_theme
 from recommonmark.parser import CommonMarkParser
 
