@@ -512,7 +512,7 @@ def get_trunk_forward_outputs(
             for m in filter(lambda x: isinstance(x, _bn_cls), feature_block.modules()):
                 m.track_running_stats = m.training
 
-            feat = checkpoint(feature_block, feat)
+            feat = checkpoint(feature_block, feat, use_reentrant=True)
 
             # Freeze the running stats in any BN layer
             # the checkpointing process will have to do another FW pass
