@@ -99,7 +99,7 @@ def get_rmac_descriptors(features, rmac_levels, pca=None, normalize=True):
     nim, nc, xd, yd = features.size()
 
     rmac_regions = get_rmac_region_coordinates(xd, yd, rmac_levels)
-    rmac_regions = rmac_regions.astype(np.int)
+    rmac_regions = rmac_regions.astype(int)
     nr = len(rmac_regions)
 
     rmac_descriptors = []
