@@ -67,7 +67,7 @@ class MeanAPMeter(ClassyMeter):
             P, R, score, ap = get_precision_recall(
                 self._targets[:, cls_num].detach().numpy(),
                 self._scores[:, cls_num].detach().numpy(),
-                (unknown_matrix[:, cls_num] == 0).astype(np.float),
+                (unknown_matrix[:, cls_num] == 0).astype(float),
             )
             ap_matrix[cls_num] = ap[0]
         nonzero_indices = torch.nonzero(ap_matrix != -1)

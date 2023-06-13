@@ -40,7 +40,7 @@ def get_precision_recall(targets, scores, weights=None):
     if weights is not None:
         sortweights = weights
     else:
-        sortweights = np.ones((targets.shape[0],), dtype=np.float)
+        sortweights = np.ones((targets.shape[0],), dtype=float)
     valid_inds = np.where(sortweights == 1)
     targets = targets[valid_inds]
     scores = scores[valid_inds]
