@@ -626,7 +626,7 @@ class GenericInstanceRetrievalDataset:
         """
         Rerurn the image filepath for the query image
         """
-        logging.warn("GenericDataset does not yet have #get_query_filename support.")
+        logging.warning("GenericDataset does not yet have #get_query_filename support.")
 
         raise NotImplementedError
 
@@ -640,7 +640,7 @@ class GenericInstanceRetrievalDataset:
         """
         Number of query images in the dataset
         """
-        logging.warn("GenericDataset does not yet support query images.")
+        logging.warning("GenericDataset does not yet support query images.")
 
         raise NotImplementedError
 
@@ -648,7 +648,7 @@ class GenericInstanceRetrievalDataset:
         """
         GenericDataset does not yet have query_roi support
         """
-        logging.warn("GenericDataset does not yet have query_roi support.")
+        logging.warning("GenericDataset does not yet have query_roi support.")
 
         return None
 
@@ -657,7 +657,7 @@ class GenericInstanceRetrievalDataset:
         For the input similarity scores of the model, calculate the mean AP metric
         and mean Precision@k metrics.
         """
-        logging.warn("GenericDataset does not yet have #score support.")
+        logging.warning("GenericDataset does not yet have #score support.")
 
         raise NotImplementedError
 
