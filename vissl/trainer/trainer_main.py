@@ -240,6 +240,11 @@ class SelfSupervisionTrainer(object):
             iteration_num: iteration number
         """
 
+        if cfg.TEST_ONLY:
+            task.phases = [{"train": False}]
+            task.num_train_phases = 1
+            task.num_epochs = 1
+
         phase_idx, iteration_num = -1, -1
 
         # Ensure that train loader exists. Will NOT exist if config.TEST_ONLY is True

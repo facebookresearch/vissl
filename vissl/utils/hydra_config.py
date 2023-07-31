@@ -709,11 +709,13 @@ def infer_and_assert_hydra_config(cfg, engine_name: str):
                 all_meter_names = [item[0] for item in feat_eval_ops_map]
                 if is_feature_extractor_model(cfg.MODEL):
                     cfg.METERS[meter_name]["num_meters"] = len(feat_eval_ops_map)
-                    cfg.METERS[meter_name]["meter_names"] = all_meter_names
+                    if not cfg.METERS[meter_name]["meter_names"]:
+                        cfg.METERS[meter_name]["meter_names"] = all_meter_names
                 elif engine_name == "extract_label_predictions":
                     if len(feat_eval_ops_map) > 0:
                         cfg.METERS[meter_name]["num_meters"] = len(feat_eval_ops_map)
-                        cfg.METERS[meter_name]["meter_names"] = all_meter_names
+                        if not cfg.METERS[meter_name]["meter_names"]:
+                            cfg.METERS[meter_name]["meter_names"] = all_meter_names
                     else:
                         # if user is not extracting from multiple layers, we assume
                         # the model head is being used.
