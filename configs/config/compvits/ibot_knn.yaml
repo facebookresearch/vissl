@@ -1,0 +1,83 @@
+# @package _global_
+config:
+  DISTRIBUTED:
+    NUM_PROC_PER_NODE: 1
+  DATA:
+    NUM_DATALOADER_WORKERS: 8
+    TRAIN:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      DATA_PATHS: [/home/jan.olszewski/datasets/imagenet-1k-kaggle/ILSVRC/Data/CLS-LOC/train]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+    TEST:
+      DATA_SOURCES: [disk_folder]
+      LABEL_SOURCES: [disk_folder]
+      DATASET_NAMES: [imagenet1k_folder]
+      DATA_PATHS: [/home/jan.olszewski/datasets/imagenet-1k-kaggle/ILSVRC/Data/CLS-LOC/val]
+      BATCHSIZE_PER_REPLICA: 32
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 5
+      topk_values: [1, 5]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+    TRUNK: # S-16
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 384
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+    HEAD:
+      PARAMS: []
+    SYNC_BN_CONFIG:
+      CONVERT_BN_TO_SYNC_BN: True
+      SYNC_BN_TYPE: pytorch
+    WEIGHTS_INIT:
+      # Use the teacher to perform the evaluation
+      PARAMS_FILE: /home/jan.olszewski/git/ibot/pretrained/checkpoint_teacher.pth
+      STATE_DICT_KEY_NAME: "state_dict"
+      APPEND_PREFIX: "trunk."
+  NEAREST_NEIGHBOR:
+    L2_NORM_FEATS: True
+    TOPK: [10,20,100,200]
+    FEATURES:
+      PATH: features
+  EXTRACT_FEATURES:
+    OUTPUT_DIR: features
