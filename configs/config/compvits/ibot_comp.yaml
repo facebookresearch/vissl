@@ -1,41 +1,25 @@
 # @package _global_
 config:
+  TEST_ONLY: True
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      topk_values: [1, 5]
+      meter_names: ["1", "2", "3", "4"]
   HOOKS:
     TENSORBOARD_SETUP:
-      # whether to use tensorboard for the visualization
       USE_TENSORBOARD: True
-      # log directory for tensorboard events
-      LOG_DIR: "logs"
-      EXPERIMENT_LOG_DIR: "tensorboard"
-      # flush logs every n minutes
       FLUSH_EVERY_N_MIN: 5
-      # whether to log the model parameters to tensorboard
       LOG_PARAMS: False
-      # whether to log the model parameters gradients to tensorboard
       LOG_PARAMS_GRADIENTS: False
-      # if we want to log the model parameters every few iterations, set the iteration
-      # frequency. -1 means the params will be logged only at the end of epochs.
       LOG_PARAMS_EVERY_N_ITERS: -1
   CHECKPOINT:
-    DIR: "checkpoints/linear"
+    DIR: "logs/eval"
   DISTRIBUTED:
     NUM_PROC_PER_NODE: 1
   DATA:
     TRAIN:
-      DATA_SOURCES: [disk_folder]
-      LABEL_SOURCES: [disk_folder]
-      DATASET_NAMES: [imagenet1k_folder]
-      DATA_PATHS: [/home/jan.olszewski/datasets/tiny-imagenet-200/train]
-      BATCHSIZE_PER_REPLICA: 32
-      TRANSFORMS:
-        - name: RandomResizedCrop
-          size: 224
-          interpolation: 3
-        - name: RandomHorizontalFlip
-        - name: ToTensor
-        - name: Normalize
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
+      DATASET_NAMES: []
     TEST:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
@@ -52,10 +36,15 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
+        - name: CompositionalMasks
+          mask_areas: [0.2, 0.2]
+          masking_mode: "glued_sides"
   MODEL:
     FEATURE_EVAL_SETTINGS:
       EVAL_MODE_ON: True
-      FREEZE_TRUNK_ONLY: True
+      #FREEZE_TRUNK_ONLY: True
+      FREEZE_TRUNK_AND_HEAD: True
+      EVAL_TRUNK_AND_HEAD: True
       SHOULD_FLATTEN_FEATS: False
       LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
         ["concatCLS4", ["Identity", []] ],
@@ -66,6 +55,9 @@ config:
     TRUNK: # S-16
       NAME: vision_transformer
       VISION_TRANSFORMERS:
+        REPR_COMPOSITION:
+          NAME: 'afterK'
+          PARAMS: {"dummy": 1}
         IMAGE_SIZE: 224
         PATCH_SIZE: 16
         HIDDEN_DIM: 384
@@ -86,27 +78,6 @@ config:
       ]
     WEIGHTS_INIT:
       # Use the teacher to perform the evaluation
-      PARAMS_FILE: /home/jan.olszewski/git/ibot/pretrained/checkpoint_teacher.pth
-      STATE_DICT_KEY_NAME: "state_dict"
-      APPEND_PREFIX: "trunk."
+      PARAMS_FILE: /home/jan.olszewski/git/vissl_original/checkpoints/linear/model_final_checkpoint_phase99.torch
   LOSS:
     name: cross_entropy_multiple_output_single_target
-  OPTIMIZER:
-    name: sgd
-    # In the OSS Caffe2 benchmark, RN50 models use 1e-4 and AlexNet models 5e-4
-    weight_decay: 0.0005
-    momentum: 0.9
-    num_epochs: 100
-    nesterov: True
-    regularize_bn: True
-    regularize_bias: True
-    param_schedulers:
-      lr:
-        auto_lr_scaling:
-          auto_scale: true
-          base_value: 0.01
-          base_lr_batch_size: 256
-        name: multistep
-        values: [0.01, 0.001, 0.0001, 0.00001]
-        milestones: [28, 56, 84]
-        update_interval: epoch

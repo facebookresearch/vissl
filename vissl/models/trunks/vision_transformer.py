@@ -311,6 +311,9 @@ class VisionTransformer(nn.Module):
         self.drop_path_rate = self.trunk_config.DROP_PATH_RATE
         self.use_class_token = self.trunk_config.get("USE_CLASS_TOKEN", True)
 
+        #TODO
+        self.repr_composition_config = self.trunk_config.REPR_COMPOSITION
+        
         # TODO Implement hybrid backbones
         hybrid_backbone_string = None
         if "HYBRID" in self.trunk_config.keys():
@@ -566,7 +569,7 @@ class VisionTransformer(nn.Module):
                 return blk.get_attention_map(x)
 
     def forward(
-        self, x: torch.Tensor, out_feat_keys: List[str] = None, **kwargs
+        self, x: torch.Tensor, out_feat_keys: List[str] = None, masks: List[torch.Tensor] = None, **kwargs
     ) -> List[torch.Tensor]:
         if out_feat_keys is None or len(out_feat_keys) == 0:
             x = self.forward_features(x, **kwargs)

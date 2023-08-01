@@ -215,6 +215,9 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         if isinstance(batch, list):
             return self.multi_res_input_forward(batch, self._output_feature_names)
 
+        if isinstance(batch, tuple):
+            return self.single_input_forward(batch[0], self._output_feature_names, self.heads, **batch[1])
+        
         return self.single_input_forward(batch, self._output_feature_names, self.heads)
 
     def freeze_head(self):

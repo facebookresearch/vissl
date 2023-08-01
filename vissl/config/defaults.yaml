@@ -737,6 +737,12 @@ config:
           NAME: ''
           # Parameters provided to the Masked Generator
           PARAMS: {}
+        REPR_COMPOSITION:
+          # - '': Disable representation composition
+          # - 'afterK': compose representations after processing K blocks
+          NAME: ''
+          # Parameters provided to the Masked Generator
+          PARAMS: {}
 
       # ------------------------------------------------------------- #
       # XCiT (https://arxiv.org/abs/2106.09681)

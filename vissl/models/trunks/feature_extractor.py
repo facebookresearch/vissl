@@ -31,8 +31,8 @@ class FeatureExtractorModel(nn.Module):
         self.feature_pool_ops = self._attach_feature_pool_layers()
         self._freeze_model()
 
-    def forward(self, batch, out_feat_keys):
-        feats = self.base_model(batch, out_feat_keys)
+    def forward(self, batch, out_feat_keys, **kwargs):
+        feats = self.base_model(batch, out_feat_keys, **kwargs)
         assert len(feats) == len(
             self.feature_pool_ops
         ), "#features returned by base model ({}) != #Pooling Ops ({})".format(
