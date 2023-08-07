@@ -31,6 +31,7 @@ from vissl.utils.distributed_utils import all_gather_heterogeneous, all_gather_s
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
 
+from torch.utils.data._utils.collate import default_collate
 
 def build_task(config):
     """Builds a ClassyTask from a config.
@@ -686,8 +687,10 @@ class SelfSupervisionTrainer(object):
                 sample = next(task.data_iterator)
                 assert isinstance(sample, dict)
                 assert "data_idx" in sample, "Indices not passed"
+                if not isinstance(sample["data"][0], torch.Tensor):
+                    assert len(sample["data"]) == 1
                 input_sample = {
-                    "input": torch.cat(sample["data"]).cuda(non_blocking=True),
+                    "input": torch.cat(sample["data"]).cuda(non_blocking=True) if isinstance(sample["data"][0], torch.Tensor) else sample["data"][0],
                     "target": torch.cat(sample["label"]).cpu().numpy(),
                     "inds": torch.cat(sample["data_idx"]).cpu().numpy(),
                 }

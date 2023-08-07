@@ -311,8 +311,9 @@ class VisionTransformer(nn.Module):
         self.drop_path_rate = self.trunk_config.DROP_PATH_RATE
         self.use_class_token = self.trunk_config.get("USE_CLASS_TOKEN", True)
 
-        #TODO
-        self.repr_composition_config = self.trunk_config.REPR_COMPOSITION
+        self.comp_config = self.trunk_config.COMPVITS
+        self.comp_name = self.comp_config.NAME
+        self.comp_params = self.comp_config.PARAMS
         
         # TODO Implement hybrid backbones
         hybrid_backbone_string = None
@@ -568,9 +569,76 @@ class VisionTransformer(nn.Module):
                 # return attention of the last block
                 return blk.get_attention_map(x)
 
+    def comp_forward_afterK(self, x, out_feat_keys, masks, K, **kwargs):
+        if out_feat_keys is None:
+            out_feat_keys = []
+
+        x = self.prepare_tokens(x)
+        if self.use_class_token:
+            masks = [torch.cat([torch.ones(mask.shape[0], 1, dtype=bool, device=mask.device), mask.flatten(1)], dim=1) for mask in masks]
+        xs = [x[mask].reshape(x.shape[0], -1, x.shape[-1]) for mask in masks]
+        out_feats = [("BLK" if "BLK" in k else "CLS", int(k[len("concat___"):]) if "concat" in k else 1) for k in out_feat_keys]
+        
+        n_blk_save = max([n for name, n in out_feats if name == "BLK"] + [0])
+        n_cls_save = max([n for name, n in out_feats if name == "CLS"] + [0])
+
+        after_ith_block_save_blk = len(self.blocks) - n_blk_save
+        after_ith_block_save_cls = len(self.blocks) - n_cls_save
+        after_ith_block_save = min(after_ith_block_save_blk, after_ith_block_save_cls)
+        assert(after_ith_block_save >= K)
+
+        #run separately
+        subencoder = nn.Sequential(*self.blocks[:K])
+        xs = [subencoder(x) for x in xs]
+        
+        #mixing
+        if self.use_class_token:
+            xs_cls = torch.stack([x[:,[0], :] for x in xs])
+            xs_feats = [x[:, 1:, :] for x in xs]
+            x = torch.cat([xs_cls.mean(dim=0)] + xs_feats, dim=1)
+        else:
+            x = torch.cat(xs_feats, dim=1)
+        for blk in self.blocks[K:after_ith_block_save]:
+            x = blk(x)
+        
+        #extract
+        blk_feats = []
+        cls_feats = []
+        for i, blk in enumerate(self.blocks[after_ith_block_save:]):
+            x = blk(x)
+            if i+after_ith_block_save >= after_ith_block_save_blk:
+                blk_feats.append(self.norm(x))
+            if i+after_ith_block_save >= after_ith_block_save_cls:
+                if self.use_class_token:
+                    cls_feats.append(self.norm(x[:, 0, :]))
+                else:
+                    cls_feats.append(self.avg_pool(self.norm(x)))
+        
+        if len(out_feats) > 0:
+            output = [
+                torch.cat(cls_feats[-n:], dim=-1) if feat == "CLS" else torch.cat(blk_feats[-n:], dim=-1)
+                for feat, n in out_feats
+            ]
+            return output
+        else:
+            if self.use_class_token:
+                return x[:, 0, :]
+            else:
+                return self.avg_pool(x)
+
+
     def forward(
-        self, x: torch.Tensor, out_feat_keys: List[str] = None, masks: List[torch.Tensor] = None, **kwargs
+        self, x: torch.Tensor, out_feat_keys: List[str] = None, **kwargs
     ) -> List[torch.Tensor]:
+        if self.comp_name is not '':
+            comp_forward_kwargs = self.comp_params.copy()
+            comp_forward_kwargs.update(kwargs)
+            comp_forward = getattr(self, f"comp_forward_{self.comp_name}")
+            x = comp_forward(x, out_feat_keys, **comp_forward_kwargs)
+            if not isinstance(x, list):
+                x = x.unsqueeze(0)
+            return x
+
         if out_feat_keys is None or len(out_feat_keys) == 0:
             x = self.forward_features(x, **kwargs)
             x = x.unsqueeze(0)

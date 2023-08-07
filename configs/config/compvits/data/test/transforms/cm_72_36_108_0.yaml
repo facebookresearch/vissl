@@ -1,0 +1,18 @@
+# @package _global_
+config:
+  DATA:
+    TEST:
+      TRANSFORMS:
+        - name: Resize
+          size: 256
+          interpolation: 3
+        - name: CenterCrop
+          size: 224
+        - name: ToTensor
+        - name: Normalize
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+        - name: CompMasking
+          masks_shapes: [[[8,9], [9,8], [12,6], [6,12]], [[6,6], [4,9], [9,4], [12, 3], [3, 12]]]
+          padding: [0, 0]
+          masking_mode: "primary_secondary"

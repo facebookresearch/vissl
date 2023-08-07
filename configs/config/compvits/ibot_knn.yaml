@@ -2,6 +2,8 @@
 config:
   DISTRIBUTED:
     NUM_PROC_PER_NODE: 1
+  CHECKPOINT:
+    DIR: None
   DATA:
     NUM_DATALOADER_WORKERS: 8
     TRAIN:
@@ -39,7 +41,7 @@ config:
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
-      num_meters: 5
+      num_meters: 4
       topk_values: [1, 5]
   MODEL:
     FEATURE_EVAL_SETTINGS:
@@ -63,7 +65,7 @@ config:
         DROPOUT_RATE: 0
         ATTENTION_DROPOUT_RATE: 0
         QKV_BIAS: True
-        DROP_PATH_RATE: 0.1 # stochastic depth dropout probability
+        DROP_PATH_RATE: 0.1
     HEAD:
       PARAMS: []
     SYNC_BN_CONFIG:

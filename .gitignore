@@ -101,5 +101,6 @@ configs/config/config_local/*
 train_config.yaml
 
 #compvits ignore
-logs
 checkpoints
+logs
+*.ipynb

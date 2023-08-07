@@ -22,7 +22,8 @@ from vissl.utils.extract_features_utils import ExtractedFeaturesLoader
 from vissl.utils.hydra_config import print_cfg
 from vissl.utils.io import save_file
 from vissl.utils.logger import setup_logging, shutdown_logging
-
+import os
+import json
 
 class MaxSimilarityPriorityQueue:
     def __init__(self, max_size: int):
@@ -205,6 +206,7 @@ def run_knn_at_layer_low_memory(cfg: AttrDict, layer_name: str = "heads"):
 
 
 def run_knn_at_layer(cfg: AttrDict, layer_name: str = "heads"):
+    assert False
     """
     Run the Nearest Neighbour benchmark at the layer "layer_name"
     """
@@ -356,6 +358,7 @@ def run_knn_at_all_layers(config: AttrDict):
     if not isinstance(top_k_list, list):
         top_k_list = [top_k_list]
 
+    meters = []
     for layer in feat_names:
         # TODO - replace this with more optimal approach:
         #  * use the max top_k to select the closest neighbors
@@ -367,11 +370,18 @@ def run_knn_at_all_layers(config: AttrDict):
                 top1, top5, _ = run_knn_at_layer_low_memory(config, layer_name=layer)
             else:
                 top1, top5, _ = run_knn_at_layer(config, layer_name=layer)
-            logging.info(f"layer: {layer}, topk: {top_k}, Top1: {top1}, Top5: {top5}")
-
+            meters.append({"layer": layer, "topk": top_k, "Top1": top1, "Top5": top5})
+            logging.info(str(meters[-1]))
+    
+    if len(meters) > 0:
+        with open(os.path.join(config.CHECKPOINT.DIR, "metrics.json"), "w") as f:
+            f.write("[\n")
+            for meter in meters[:-1]:
+                f.write(json.dumps(meter)+",\n")
+            f.write(json.dumps(meters[-1])+"\n]")
 
 def extract_features_and_run_knn(node_id: int, config: AttrDict):
-    setup_logging(__name__)
+    setup_logging(__name__, config.CHECKPOINT.DIR)
     print_cfg(config)
     set_env_vars(local_rank=0, node_id=0, cfg=config)
 

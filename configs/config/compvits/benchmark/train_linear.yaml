@@ -1,0 +1,45 @@
+# @package _global_
+config:
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      topk_values: [1, 5]
+      meter_names: ["cls4_evalmlp", "cls1_evalmlp", "cls4_mlp", "cls1_mlp"]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["concatCLS4", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+        ["concatCLS4", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+      ]
+    HEAD:
+      PARAMS: [
+        ["eval_mlp", {"in_channels": 1536, "dims": [1536, 200]}],
+        ["eval_mlp", {"in_channels": 384, "dims": [384, 200]}],
+        ["mlp", {"dims": [1536, 200]}],
+        ["mlp", {"dims": [384, 200]}],
+      ]
+  LOSS:
+    name: cross_entropy_multiple_output_single_target
+  OPTIMIZER:
+    name: sgd
+    weight_decay: 0.0005
+    momentum: 0.9
+    num_epochs: 100
+    nesterov: True
+    regularize_bn: True
+    regularize_bias: True
+    param_schedulers:
+      lr:
+        auto_lr_scaling:
+          auto_scale: true
+          base_value: 0.01
+          base_lr_batch_size: 256
+        name: multistep
+        values: [0.01, 0.001, 0.0001, 0.00001]
+        milestones: [28, 56, 84]
+        update_interval: epoch

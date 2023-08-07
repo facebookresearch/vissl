@@ -1,21 +1,5 @@
 # @package _global_
 config:
-  HOOKS:
-    TENSORBOARD_SETUP:
-      # whether to use tensorboard for the visualization
-      USE_TENSORBOARD: True
-      # log directory for tensorboard events
-      LOG_DIR: "logs"
-      EXPERIMENT_LOG_DIR: "tensorboard"
-      # flush logs every n minutes
-      FLUSH_EVERY_N_MIN: 5
-      # whether to log the model parameters to tensorboard
-      LOG_PARAMS: False
-      # whether to log the model parameters gradients to tensorboard
-      LOG_PARAMS_GRADIENTS: False
-      # if we want to log the model parameters every few iterations, set the iteration
-      # frequency. -1 means the params will be logged only at the end of epochs.
-      LOG_PARAMS_EVERY_N_ITERS: -1
   CHECKPOINT:
     DIR: "checkpoints/linear"
   DISTRIBUTED:

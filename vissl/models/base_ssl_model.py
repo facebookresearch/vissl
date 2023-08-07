@@ -212,12 +212,11 @@ class BaseSSLMultiInputOutputModel(ClassyModel):
         if self.multi_input_mapping is not None:
             return self.multi_input_with_head_mapping_forward(batch)
 
+        if len(batch) == 2 and isinstance(batch[0], torch.Tensor) and isinstance(batch[1], dict):
+            return self.single_input_forward(batch[0], self._output_feature_names, self.heads, **batch[1])
         if isinstance(batch, list):
             return self.multi_res_input_forward(batch, self._output_feature_names)
 
-        if isinstance(batch, tuple):
-            return self.single_input_forward(batch[0], self._output_feature_names, self.heads, **batch[1])
-        
         return self.single_input_forward(batch, self._output_feature_names, self.heads)
 
     def freeze_head(self):

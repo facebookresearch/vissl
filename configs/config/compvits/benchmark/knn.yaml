@@ -1,0 +1,22 @@
+# @package _global_
+config:
+  METERS:
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 4
+      topk_values: [1, 5]
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+  SYNC_BN_CONFIG:
+    CONVERT_BN_TO_SYNC_BN: True
+    SYNC_BN_TYPE: pytorch
+  NEAREST_NEIGHBOR:
+    L2_NORM_FEATS: True
+    TOPK: [10,20,100,200]

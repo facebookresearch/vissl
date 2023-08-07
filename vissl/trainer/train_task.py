@@ -348,7 +348,6 @@ class SelfSupervisionTask(ClassificationTask):
         """
         # Gives sampler same seed for entire distributed group as per pytorch documentation.
         sampler_seed = self.config["SEED_VALUE"]
-
         loaders = {
             split.lower(): build_dataloader(
                 dataset=self.datasets[split.lower()],
