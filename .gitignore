@@ -102,5 +102,5 @@ train_config.yaml
 
 #compvits ignore
 checkpoints
+plots/data
 logs
-*.ipynb

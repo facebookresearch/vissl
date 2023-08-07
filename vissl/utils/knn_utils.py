@@ -206,7 +206,6 @@ def run_knn_at_layer_low_memory(cfg: AttrDict, layer_name: str = "heads"):
 
 
 def run_knn_at_layer(cfg: AttrDict, layer_name: str = "heads"):
-    assert False
     """
     Run the Nearest Neighbour benchmark at the layer "layer_name"
     """

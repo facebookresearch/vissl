@@ -578,7 +578,6 @@ class VisionTransformer(nn.Module):
             masks = [torch.cat([torch.ones(mask.shape[0], 1, dtype=bool, device=mask.device), mask.flatten(1)], dim=1) for mask in masks]
         xs = [x[mask].reshape(x.shape[0], -1, x.shape[-1]) for mask in masks]
         out_feats = [("BLK" if "BLK" in k else "CLS", int(k[len("concat___"):]) if "concat" in k else 1) for k in out_feat_keys]
-        
         n_blk_save = max([n for name, n in out_feats if name == "BLK"] + [0])
         n_cls_save = max([n for name, n in out_feats if name == "CLS"] + [0])
 
@@ -613,7 +612,7 @@ class VisionTransformer(nn.Module):
                     cls_feats.append(self.norm(x[:, 0, :]))
                 else:
                     cls_feats.append(self.avg_pool(self.norm(x)))
-        
+
         if len(out_feats) > 0:
             output = [
                 torch.cat(cls_feats[-n:], dim=-1) if feat == "CLS" else torch.cat(blk_feats[-n:], dim=-1)

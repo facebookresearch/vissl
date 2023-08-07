@@ -17,7 +17,7 @@ class CompMasking(ClassyTransform):
 
     def __init__(self,
                 masks_shapes:List[List[Tuple[int, int]]]=[[(6,6)], [(6,6), (12,3), (3,12)]],
-                padding:Tuple[int, int]=(2, 2),
+                padding:Tuple[int, int]=(0, 0),
                 out_shape:Tuple[int, int]=(14, 14),
                 masking_mode="primary_secondary"):
         """

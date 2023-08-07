@@ -3,12 +3,11 @@
 cm=$1
 model=$2
 K=$3
-
 echo nearest_neighbor: $cm $model $K
 
 dir="logs/nearest_neighbor/${cm}/${model}/K$K"
-#feats="logs/nearest_neighbor/features/${model}"
-feats="logs/extract_features/${cm}/${model}/K$K"
+feats_all="logs/nearest_neighbor/features/${model}"
+feats_K="logs/extract_features/${cm}/${model}/K$K"
 
 #echo extract_features: $cm $model $K
 #dir=$feats
@@ -25,9 +24,9 @@ feats="logs/extract_features/${cm}/${model}/K$K"
 #    engine_name=extract_features
 
 mkdir --parents $dir
-cp ${feats}/*.npy ${dir}
-cp logs/nearest_neighbor/features/${model}/*.npy ${dr}
-
+mv ${feats_all}/*.npy ${dir}
+cp ${feats_K}/*.npy ${dir}
+ls $dir
 python tools/nearest_neighbor_test.py \
     config=compvits/vits_trunk \
     +config/compvits/data/test=in1k_tiny \
@@ -41,3 +40,5 @@ python tools/nearest_neighbor_test.py \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.NAME=afterK \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.PARAMS.K=$K \
     config.NEAREST_NEIGHBOR.FEATURES.PATH=$dir
+
+mv ${dir}/rank0_chunk0_train*.npy ${feats_all}

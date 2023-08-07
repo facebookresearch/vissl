@@ -8,6 +8,7 @@ config:
       meter_names: ["cls4_evalmlp", "cls1_evalmlp", "cls4_mlp", "cls1_mlp"]
   MODEL:
     FEATURE_EVAL_SETTINGS:
+      EXTRACT_TRUNK_FEATURES_ONLY: False
       EVAL_MODE_ON: True
       FREEZE_TRUNK_AND_HEAD: True
       EVAL_TRUNK_AND_HEAD: True
