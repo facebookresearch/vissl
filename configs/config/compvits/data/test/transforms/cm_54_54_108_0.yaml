@@ -12,7 +12,7 @@ config:
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-        - name: CompMasking
+        - name: RandomCompMasking
           masks_shapes: [[[9,6], [6,9]], [[9,6], [6,9]]]
           padding: [0, 0]
           masking_mode: "primary_secondary"

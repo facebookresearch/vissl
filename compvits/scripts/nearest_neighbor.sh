@@ -9,8 +9,10 @@ dir="logs/nearest_neighbor/${cm}/${model}/K$K"
 feats_all="logs/nearest_neighbor/features/${model}"
 feats_K="logs/extract_features/${cm}/${model}/K$K"
 
+
+# train features extraction
 #echo extract_features: $cm $model $K
-#dir=$feats
+#dir=$feats_all
 #python tools/run_distributed_engines.py \
 #    config=compvits/vits_trunk \
 #    +config/compvits/data/train=in1k_tiny \

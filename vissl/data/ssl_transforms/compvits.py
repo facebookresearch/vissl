@@ -3,14 +3,10 @@ import torch
 from classy_vision.dataset.transforms import register_transform
 from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 from typing import Tuple, List, Dict, Any
-from math import sqrt
-from collections import namedtuple
 from random import randint
 
-InputKwargs = namedtuple("InputKwargs", ["input", "kwargs"])
-
-@register_transform("CompMasking")
-class CompMasking(ClassyTransform):
+@register_transform("RandomCompMasking")
+class RandomCompMasking(ClassyTransform):
     """
         Create masks for input sample.
     """
@@ -102,12 +98,11 @@ class CompMasking(ClassyTransform):
                 mask1[mask1_y_corner + i, mask1_x_corner + j] = 1
         return mask0, mask1
 
-
     def __call__(self, image: torch.Tensor):
-        return InputKwargs(image, {"masks": getattr(self, self.masking_mode)()})
+        return image, {"masks": getattr(self, self.masking_mode)()}
         
     @classmethod
-    def from_config(cls, config: Dict[str, Any]) -> "CompMasking":
+    def from_config(cls, config: Dict[str, Any]) -> "RandomCompMasking":
         """
         Instantiates CompositionalMasks transform from configuration.
 

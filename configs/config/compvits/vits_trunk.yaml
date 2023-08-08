@@ -15,7 +15,10 @@ config:
       NAME: vision_transformer
       VISION_TRANSFORMERS:
         COMPVITS:
-          NAME: ''
+          # - '': Disable representation composition
+          # - 'afterK': compose representations after processing K blocks
+          NAME: "afterK"
+          # Parameters provided to the Masked Generator
           PARAMS: {"K": 0}
         IMAGE_SIZE: 224
         PATCH_SIZE: 16

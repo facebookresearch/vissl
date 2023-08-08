@@ -7,6 +7,8 @@ K=$3
 
 echo extract_features: $cm $model $K
 dir="logs/extract_features/${cm}/${model}/K$K"
+
+dir="debug"
 python tools/run_distributed_engines.py \
     config=compvits/vits_trunk \
     +config/compvits/data/test=in1k_tiny \
@@ -20,4 +22,5 @@ python tools/run_distributed_engines.py \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.NAME=afterK \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.PARAMS.K=$K \
     config.EXTRACT_FEATURES.OUTPUT_DIR=${dir} \
+    config.DISTRIBUTED.NUM_PROC_PER_NODE=1 \
     engine_name=extract_features

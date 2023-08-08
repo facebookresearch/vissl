@@ -629,7 +629,7 @@ class VisionTransformer(nn.Module):
     def forward(
         self, x: torch.Tensor, out_feat_keys: List[str] = None, **kwargs
     ) -> List[torch.Tensor]:
-        if self.comp_name is not '':
+        if self.comp_name != '':
             comp_forward_kwargs = self.comp_params.copy()
             comp_forward_kwargs.update(kwargs)
             comp_forward = getattr(self, f"comp_forward_{self.comp_name}")

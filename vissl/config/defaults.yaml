@@ -737,12 +737,6 @@ config:
           NAME: ''
           # Parameters provided to the Masked Generator
           PARAMS: {}
-        COMPVITS:
-          # - '': Disable representation composition
-          # - 'afterK': compose representations after processing K blocks
-          NAME: ''
-          # Parameters provided to the Masked Generator
-          PARAMS: {}
 
       # ------------------------------------------------------------- #
       # XCiT (https://arxiv.org/abs/2106.09681)
@@ -1547,7 +1541,7 @@ config:
     NUM_NODES: 1
     # set this to the number of gpus per machine. This ensures that each gpu of the
     # node has a process attached to it.
-    NUM_PROC_PER_NODE: 1
+    NUM_PROC_PER_NODE: 8
     # this could be: tcp | env | file or any other pytorch supported methods
     INIT_METHOD: "tcp"
     # every training run should have a unique id. Following are the options:

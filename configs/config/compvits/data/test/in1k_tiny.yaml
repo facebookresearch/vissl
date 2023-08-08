@@ -6,7 +6,7 @@ config:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      DATA_PATHS: [/home/jan.olszewski/datasets/tiny-imagenet-200/val]
+      DATA_PATHS: [datasets/tiny-imagenet-200/val]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: Resize
