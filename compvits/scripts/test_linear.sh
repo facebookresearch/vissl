@@ -1,23 +1,31 @@
 #!/bin/bash
 
-#cm=cm_98_98_196_0
-#model=ibot
-#K=0
-
-cm=$1
+M=$1
 model=$2
 K=$3
+echo test_linear: M$M $model K$K
 
-echo test_linear: $cm $model $K
+dir="logs/test_linear/M${M}/${model}/K$K"
 
-dir="logs/test_linear/${cm}/${model}/K$K"
+if [[ $model == "deitb" ]]; then
+    head_cfg=mlp_768_1000
+    trunk_cfg=deitb
+else
+    head_cfg=mlp_emlp_768_1000
+    trunk_cfg=vitb
+fi
+
 python tools/run_distributed_engines.py \
-    config=compvits/vits_trunk \
-    +config/compvits/data/test=in1k_tiny \
-    +config/compvits/data/test/transforms=$cm \
-    +config/compvits/benchmark=test_linear \
-    config.TEST_ONLY=True \
+    config=compvits/base \
+    +config/compvits/model/trunk=$trunk_cfg \
+    +config/compvits/model/head=$head_cfg \
+    +config/compvits/data/test=in1k \
+    +config/compvits/task=test_linear \
     config.CHECKPOINT.DIR=$dir \
-    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/ibot/vits_teacher_linear.pth \
-    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.NAME=afterK \
-    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.PARAMS.K=$K \
+    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/${model}.pth \
+    config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.NAME=afterK \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.PARAMS.K=$K \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.SPLIT.NAME=precomputed_masks \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.SPLIT.PARAMS.M=$M \
+    

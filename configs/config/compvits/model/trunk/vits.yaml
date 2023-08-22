@@ -1,0 +1,39 @@
+# @package _global_
+config:
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EVAL_MODE_ON: True
+      FREEZE_TRUNK_ONLY: True
+      EXTRACT_TRUNK_FEATURES_ONLY: True
+      SHOULD_FLATTEN_FEATS: True
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+      ]
+    HEAD:
+      PARAMS: []
+    TRUNK: # S-16
+      NAME: vision_transformer
+      VISION_TRANSFORMERS:
+        COMPVITS:
+          # - '': Disable representation composition
+          # - 'afterK': compose representations after processing K blocks
+          COMP:
+            NAME: ""
+            # Parameters provided to the Masked Generator
+            PARAMS: {"K": None}
+          SPLIT:
+            # - "precomputed_masks": split input into M regions based on precomputed masks
+            # - "transform_masks" split input into regions based on vissl/data/ssl_transforms/compvits.py
+            NAME: ""
+            PARAMS: {"M": None}
+        IMAGE_SIZE: 224
+        PATCH_SIZE: 16
+        HIDDEN_DIM: 384
+        NUM_LAYERS: 12
+        NUM_HEADS: 6
+        MLP_DIM: 1536
+        CLASSIFIER: token
+        DROPOUT_RATE: 0
+        ATTENTION_DROPOUT_RATE: 0
+        QKV_BIAS: True
+        DROP_PATH_RATE: 0.1

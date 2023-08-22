@@ -1,7 +1,6 @@
 # @package _global_
 config:
-  DISTRIBUTED:
-    NUM_PROC_PER_NODE: 1
+  TEST_ONLY: True
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
@@ -13,9 +12,6 @@ config:
       FREEZE_TRUNK_ONLY: True
       EXTRACT_TRUNK_FEATURES_ONLY: True
       SHOULD_FLATTEN_FEATS: False
-      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
-        ["lastCLS", ["Identity", []] ],
-      ]
   SYNC_BN_CONFIG:
     CONVERT_BN_TO_SYNC_BN: True
     SYNC_BN_TYPE: pytorch

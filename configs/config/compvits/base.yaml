@@ -1,0 +1,46 @@
+# @package _global_
+config:
+  DISTRIBUTED:
+    # number of machines to use in training. Each machine can have many gpus. NODES count
+    # number of unique hosts.
+    NUM_NODES: 1
+    # set this to the number of gpus per machine. This ensures that each gpu of the
+    # node has a process attached to it.
+    NUM_PROC_PER_NODE: 1
+  # ----------------------------------------------------------------------------------- #
+  # DISTRIBUTED TRAINING ON SLURM: Additional options for SLURM node allocation
+  # (options like number of nodes and number of GPUs by node are taken from DISTRIBUTED)
+  # ----------------------------------------------------------------------------------- #
+  SLURM:
+    # Whether or not to run the job on SLURM
+    USE_SLURM: false
+    # Name of the job on SLURM
+    NAME: "vissl"
+    # Comment of the job on SLURM
+    COMMENT: "vissl job"
+    # Partition of SLURM on which to run the job. This is a required field if using SLURM.
+    PARTITION: ""
+    # Where the logs produced by the SLURM jobs will be output
+    LOG_FOLDER: "."
+    # Maximum number of hours / minutes needed by the job to complete. Above this limit, the job might be pre-empted.
+    TIME_HOURS: 72
+    TIME_MINUTES: 0
+    # Additional constraints on the hardware of the nodes to allocate (example 'volta' to select a volta GPU)
+    CONSTRAINT: ""
+    # GB of RAM memory to allocate for each node
+    MEM_GB: 250
+    # TCP port on which the workers will synchronize themselves with torch distributed
+    PORT_ID: 40050
+    # Number of CPUs per GPUs to request on the cluster.
+    NUM_CPU_PER_PROC: 8
+    # Any other parameters for slurm (e.g. account, hint, distribution, etc.,) as dictated by submitit.
+    # Please see https://github.com/facebookincubator/submitit/issues/23#issuecomment-695217824.
+    ADDITIONAL_PARAMETERS: {}
+  DATA:
+    # Common data options
+    NUM_DATALOADER_WORKERS: 4 # Set this depending on the number of CPUs you have
+    TRAIN:
+      # number of unique samples in minibatch per gpu (or per device)
+      BATCHSIZE_PER_REPLICA: 256
+    TEST:
+      BATCHSIZE_PER_REPLICA: 256

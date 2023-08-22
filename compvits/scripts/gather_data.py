@@ -1,69 +1,114 @@
 import os
 import numpy as np
-import pandas as pd
 import json
+from tqdm import tqdm
 
-def gather_data():
-    extract_features = {}
-    nearest_neighbor = {}
-    test_linear = {}
+def gather_task_data(load_fn, task_path, Ms=None, models=None, Ks=None):
+    def sub_dirs(path):
+        return [os.path.basename(f) for f in os.scandir(path) if f.is_dir()]
+    if Ms is not None and not isinstance(Ms, list):
+        Ms = [Ms]
+    if models is not None and not isinstance(models, list):
+        models = [models]
+    if Ks is not None and not isinstance(Ks, list):
+        Ks = [Ks]
+    
+    Ms = sub_dirs(task_path) if Ms is None else Ms
+    task_data = dict.fromkeys(Ms)
+    for M in tqdm(Ms):
+        M_path = os.path.join(task_path, M)
+        models = sub_dirs(M_path) if models is None else models
+        M_data = dict.fromkeys(models)
+        task_data[M] = M_data
+        for model in tqdm(models):
+            model_path = os.path.join(M_path, model)
+            Ks = sub_dirs(model_path) if Ks is None else Ks
+            model_data = dict.fromkeys(Ks)
+            M_data[model] = model_data
+            for K in tqdm(Ks):
+                K_path = os.path.join(model_path, K)
+                model_data[K] = load_fn(K_path)
+    return task_data
 
-    for root, dirs, files in os.walk("logs"):
-        if len(dirs) == 0:
-            split = []
-            head=root
-            for i in range(4):
-                head, tail = os.path.split(head)
-                split.append(tail)
-            K, model, cm, task = split
-            if task == "extract_features":
-                if cm not in extract_features:
-                    extract_features[cm] = {}
-                if model not in extract_features[cm]:
-                    extract_features[cm][model] = []
-                feats = np.load(os.path.join(root, "rank0_chunk0_test_lastCLS_features.npy"))
-                extract_features[cm][model].append(tuple([K, feats]))
-            elif task == "test_linear":
-                if cm not in test_linear:
-                    test_linear[cm] = {}
-                if model not in test_linear[cm]:
-                    test_linear[cm][model] = []
-                with open(os.path.join(root, "metrics.json")) as f:
-                    metrics = json.load(f)
-                test_linear[cm][model].append(tuple([K, metrics]))
-            elif task == "nearest_neighbor":
-                if cm not in nearest_neighbor:
-                    nearest_neighbor[cm] = {}
-                if model not in nearest_neighbor[cm]:
-                    nearest_neighbor[cm][model] = []
-                with open(os.path.join(root, "metrics.json")) as f:
-                    metrics = json.load(f)
-                nearest_neighbor[cm][model].append(tuple([K, metrics]))
+def gather_extract_features_data(logs_dir, Ms=None, models=None, Ks=None):
+    def load_fn(K_path):
+        return np.load(os.path.join(K_path, "rank0_chunk0_test_lastCLS_features.npy"))
+    task_path = os.path.join(logs_dir, "extract_features")
+    return gather_task_data(load_fn, task_path, Ms, models, Ks)
+    
+def gather_test_linear_data(logs_dir, Ms=None, models=None, Ks=None):
+    def load_fn(K_path):
+        with open(os.path.join(K_path, "metrics.json")) as f:
+            metrics = json.load(f)
+        return metrics["test_accuracy_list_meter"]
+    task_path = os.path.join(logs_dir, "test_linear")
+    return gather_task_data(load_fn, task_path, Ms, models, Ks)
 
-    for cm in extract_features:
-        for model in extract_features[cm]:
-            os.makedirs(f"compvits/plots/data/{cm}/{model}", exist_ok=True)
+def gather_nearest_neighbor_data(logs_dir, Ms=None, models=None, Ks=None):
+    def load_fn(K_path):
+        with open(os.path.join(K_path, "metrics.json")) as f:
+            metrics = json.load(f)
+        return metrics
+    task_path = os.path.join(logs_dir, "nearest_neighbor")
+    return gather_task_data(load_fn, task_path, Ms, models, Ks)
 
-    for cm in extract_features:
-        for model in extract_features[cm]:
-            k_feat = sorted(extract_features[cm][model])
-            feats = np.stack([feat for k, feat in k_feat])
-            np.save(f"compvits/plots/data/{cm}/{model}/feats.npy", feats)
+def flatten_task_data(flatten_fn, task_data):
+    flat_data = []
+    for M, M_data in sorted(task_data.items(), key=lambda x: int(x[0][1:])):
+        for model, model_data in sorted(M_data.items()):
+            for K, K_data in sorted(model_data.items(), key=lambda x: int(x[0][1:])):
+                record = {"M": M[1:], "model": model, "K": K[1:]}
+                flat_K_data = flatten_fn(K_data)
+                for flat_K_record in flat_K_data:
+                    record_cp = record.copy()
+                    record_cp.update(flat_K_record)
+                    flat_data.append(record_cp)
+    return flat_data
 
-    for cm in test_linear:
-        for model in test_linear[cm]:
-            records = sorted(test_linear[cm][model])
-            df = pd.json_normalize([r for k, r in records])
-            df.to_csv(f"compvits/plots/data/{cm}/{model}/test_linear.csv")
+def flatten_test_linear_data(task_data):
+    def flatten_fn(K_data):
+        flat_data = []
+        feat_names = set()
+        top_ks = set()
 
-    for cm in nearest_neighbor:
-        for model in nearest_neighbor[cm]:
-            records = sorted(nearest_neighbor[cm][model])
-            combined = []
-            for K, record in records:
-                combined.append({f'''top{row["topk"]}_acc1''': row["Top1"] for row in record})
-            df = pd.json_normalize(combined)
-            df.to_csv(f"compvits/plots/data/{cm}/{model}/nearest_neighbor.csv")
+        for top_k, top_k_data in K_data.items():
+            top_ks.add(top_k)
+            for feat_name, _ in top_k_data.items():
+                feat_names.add(feat_name)
+        
+        for feat_name in feat_names:
+            record = {"feat": feat_name}
+            for top_k in top_ks:
+                record[f"top{top_k[4:]}_acc"] = K_data[top_k][feat_name]
+            flat_data.append(record)
 
-if __name__ == "__main__":
-    gather_data()
+        return flat_data
+    return flatten_task_data(flatten_fn, task_data)
+
+def flatten_nearest_neighbor_data(task_data):
+    def flatten_fn(K_data):
+        feat_data = {}
+        for entry in K_data:
+            if entry["layer"] not in feat_data:
+                feat_data[entry["layer"]] = {"feat": entry["layer"]}
+            record = feat_data[entry["layer"]]
+            record.update({
+                f'''nn{entry["topk"]}_top{k[3:]}_acc''': entry[k] for k in entry if k.startswith("Top")
+            })
+        return feat_data.values()
+    return flatten_task_data(flatten_fn, task_data)
+
+def flatten_extract_features_data(task_data):
+    flat_data = (
+        np.stack([
+            np.stack([
+                np.stack([
+                    K_data
+                    for K, K_data in sorted(model_data.items(), key=lambda x: int(x[0][1:]))
+                ])
+                for model, model_data in M_data.items()
+            ])
+            for M, M_data in sorted(task_data.items(), key=lambda x: int(x[0][1:]))
+        ])
+    )
+    return flat_data

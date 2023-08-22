@@ -40,7 +40,8 @@ from vissl.models.model_helpers import DropPath, to_2tuple, trunc_normal_
 from vissl.models.trunks import register_model_trunk
 from vissl.utils.fsdp_utils import fsdp_wrapper
 from vissl.utils.misc import set_torch_seed
-
+from compvits.constants import DIVISION_MASKS_14_14
+import random
 
 class Mlp(nn.Module):
     def __init__(
@@ -163,6 +164,30 @@ class Block(nn.Module):
     def get_attention_map(self, x: torch.Tensor) -> torch.Tensor:
         attn, v = self.attn.forward_attention(self.norm1(x))
         return attn
+
+    
+class Layer_scale_init_Block(nn.Module):
+    # taken from https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
+    # with slight modifications
+    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
+                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm,Attention_block = Attention,Mlp_block=Mlp
+                 ,init_values=1e-4):
+        super().__init__()
+        self.norm1 = norm_layer(dim)
+        self.attn = Attention_block(
+            dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
+        # NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.norm2 = norm_layer(dim)
+        mlp_hidden_dim = int(dim * mlp_ratio)
+        self.mlp = Mlp_block(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
+        self.gamma_1 = nn.Parameter(init_values * torch.ones((dim)),requires_grad=True)
+        self.gamma_2 = nn.Parameter(init_values * torch.ones((dim)),requires_grad=True)
+
+    def forward(self, x):
+        x = x + self.drop_path(self.gamma_1 * self.attn(self.norm1(x)))
+        x = x + self.drop_path(self.gamma_2 * self.mlp(self.norm2(x)))
+        return x
 
 
 class PatchEmbed(nn.Module):
@@ -310,11 +335,22 @@ class VisionTransformer(nn.Module):
         self.attn_drop_rate = self.trunk_config.ATTENTION_DROPOUT_RATE
         self.drop_path_rate = self.trunk_config.DROP_PATH_RATE
         self.use_class_token = self.trunk_config.get("USE_CLASS_TOKEN", True)
+        self.pos_embed_class_token = self.trunk_config.get("POS_EMBED_CLASS_TOKEN", True)
+        self.block_name = self.trunk_config.get("BLOCK_NAME", "Block")
 
-        self.comp_config = self.trunk_config.COMPVITS
+        self.compvits_config = self.trunk_config.COMPVITS
+        self.comp_config = self.compvits_config.COMP
         self.comp_name = self.comp_config.NAME
         self.comp_params = self.comp_config.PARAMS
         
+        self.split_config = self.compvits_config.SPLIT
+        self.split_name = self.split_config.NAME
+        self.split_params = self.split_config.PARAMS
+        if self.split_name == "precomputed_masks":
+            self.precomputed_masks = DIVISION_MASKS_14_14[self.split_params["M"]]
+        else:
+            self.precomputed_masks = None
+
         # TODO Implement hybrid backbones
         hybrid_backbone_string = None
         if "HYBRID" in self.trunk_config.keys():
@@ -346,12 +382,12 @@ class VisionTransformer(nn.Module):
             )
         num_patches = self.patch_embed.num_patches
 
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
         if self.use_class_token:
             self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
-            self.pos_embed = nn.Parameter(
-                torch.zeros(1, num_patches + 1, self.embed_dim)
-            )
+            if self.pos_embed_class_token:
+                self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, self.embed_dim))
+            else:
+                self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, self.embed_dim))
         else:
             self.register_parameter("cls_token", None)
             self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, self.embed_dim))
@@ -405,17 +441,23 @@ class VisionTransformer(nn.Module):
         return nn.ModuleList(blocks)
 
     def _build_block(self, dpr: float, norm_layer) -> nn.Module:
-        block = Block(
-            dim=self.embed_dim,
-            num_heads=self.num_heads,
-            mlp_ratio=self.mlp_ratio,
-            qkv_bias=self.qkv_bias,
-            qk_scale=self.qk_scale,
-            drop=self.drop_rate,
-            attn_drop=self.attn_drop_rate,
-            drop_path=dpr,
-            norm_layer=norm_layer,
-        )
+        if self.block_name == "Block":
+            block_constructor = Block
+        elif self.block_name == "Layer_scale_init_Block":
+            block_constructor = Layer_scale_init_Block
+        else:
+            assert False
+        block = block_constructor(
+                dim=self.embed_dim,
+                num_heads=self.num_heads,
+                mlp_ratio=self.mlp_ratio,
+                qkv_bias=self.qkv_bias,
+                qk_scale=self.qk_scale,
+                drop=self.drop_rate,
+                attn_drop=self.attn_drop_rate,
+                drop_path=dpr,
+                norm_layer=norm_layer,
+            )
         block.apply(self._init_weights)
         if self.trunk_config.CHECKPOINT_MLP:
             block.mlp = checkpoint_wrapper(block.mlp)
@@ -568,23 +610,53 @@ class VisionTransformer(nn.Module):
             else:
                 # return attention of the last block
                 return blk.get_attention_map(x)
+    
+    def split_input(self, x, **kwargs):
+        if self.split_name == "transform_masks":
+            assert "masks" in kwargs
+        elif self.split_name == "precomputed_masks":
+            assert "masks" not in kwargs #TODO, just to debug. We can probably allow masks to be in the input, later
+            assert "M" in self.split_params
+        else:
+            assert False
 
-    def comp_forward_afterK(self, x, out_feat_keys, masks, K, **kwargs):
+        if self.split_name == "transform_masks":
+            masks = kwargs["masks"]
+            assert False #TODO We disable this option for now
+        elif self.split_name == "precomputed_masks":
+            mask_id = random.randint(0, len(self.precomputed_masks)-1)
+            masks = self.precomputed_masks[mask_id]
+            masks = [torch.tensor(mask).unsqueeze(0) for mask in masks]
+        else:
+            assert False
+        
+        if self.use_class_token:
+            masks = [torch.cat([torch.ones(mask.shape[0], 1, dtype=bool, device=mask.device), mask.flatten(1)], dim=1) for mask in masks]
+        else:
+            masks = [mask.flatten(1) for mask in masks]
+
+        xs = []
+        for mask in masks:
+            if mask.shape[0] == 1:
+                xs.append(x[:, mask[0,:]].reshape(x.shape[0], -1, x.shape[-1]))
+            else:
+                xs.append(x[mask].reshape(x.shape[0], -1, x.shape[-1]))
+        return xs
+        
+    def comp_forward_afterK(self, x, out_feat_keys, K, **kwargs):
         if out_feat_keys is None:
             out_feat_keys = []
 
         x = self.prepare_tokens(x)
-        if self.use_class_token:
-            masks = [torch.cat([torch.ones(mask.shape[0], 1, dtype=bool, device=mask.device), mask.flatten(1)], dim=1) for mask in masks]
-        xs = [x[mask].reshape(x.shape[0], -1, x.shape[-1]) for mask in masks]
+        xs = self.split_input(x, **kwargs)
         out_feats = [("BLK" if "BLK" in k else "CLS", int(k[len("concat___"):]) if "concat" in k else 1) for k in out_feat_keys]
         n_blk_save = max([n for name, n in out_feats if name == "BLK"] + [0])
         n_cls_save = max([n for name, n in out_feats if name == "CLS"] + [0])
 
-        after_ith_block_save_blk = len(self.blocks) - n_blk_save
-        after_ith_block_save_cls = len(self.blocks) - n_cls_save
-        after_ith_block_save = min(after_ith_block_save_blk, after_ith_block_save_cls)
-        assert(after_ith_block_save >= K)
+        after_i_blocks_save_blk = len(self.blocks) - n_blk_save + 1
+        after_i_blocks_save_cls = len(self.blocks) - n_cls_save + 1
+        after_i_blocks_save = min(after_i_blocks_save_blk, after_i_blocks_save_cls)
+        assert(after_i_blocks_save >= K)
 
         #run separately
         subencoder = nn.Sequential(*self.blocks[:K])
@@ -597,17 +669,26 @@ class VisionTransformer(nn.Module):
             x = torch.cat([xs_cls.mean(dim=0)] + xs_feats, dim=1)
         else:
             x = torch.cat(xs_feats, dim=1)
-        for blk in self.blocks[K:after_ith_block_save]:
+        for blk in self.blocks[K:after_i_blocks_save]:
             x = blk(x)
         
         #extract
         blk_feats = []
         cls_feats = []
-        for i, blk in enumerate(self.blocks[after_ith_block_save:]):
+
+        if after_i_blocks_save >= after_i_blocks_save_blk:
+            blk_feats.append(self.norm(x))
+        if after_i_blocks_save >= after_i_blocks_save_cls:
+            if self.use_class_token:
+                cls_feats.append(self.norm(x[:, 0, :]))
+            else:
+                cls_feats.append(self.avg_pool(self.norm(x)))
+
+        for i, blk in enumerate(self.blocks[after_i_blocks_save:]):
             x = blk(x)
-            if i+after_ith_block_save >= after_ith_block_save_blk:
+            if i+after_i_blocks_save >= after_i_blocks_save_blk:
                 blk_feats.append(self.norm(x))
-            if i+after_ith_block_save >= after_ith_block_save_cls:
+            if i+after_i_blocks_save >= after_i_blocks_save_cls:
                 if self.use_class_token:
                     cls_feats.append(self.norm(x[:, 0, :]))
                 else:
@@ -618,13 +699,12 @@ class VisionTransformer(nn.Module):
                 torch.cat(cls_feats[-n:], dim=-1) if feat == "CLS" else torch.cat(blk_feats[-n:], dim=-1)
                 for feat, n in out_feats
             ]
-            return output
         else:
             if self.use_class_token:
-                return x[:, 0, :]
+                output = x[:, 0, :]
             else:
-                return self.avg_pool(x)
-
+                output = self.avg_pool(x)
+        return output
 
     def forward(
         self, x: torch.Tensor, out_feat_keys: List[str] = None, **kwargs
@@ -657,13 +737,18 @@ class VisionTransformer(nn.Module):
         self, x: torch.Tensor, pos_embed: torch.Tensor, feat_map_size: Tuple[int, int]
     ) -> torch.Tensor:
         if not self.use_class_token:
-            assert x.shape[1] == pos_embed.shape[1], "Must match dimensions"
+            assert x.shape[1] == pos_embed.shape[1], f"Must match dimensions, {x.shape[1]}, {pos_embed.shape[1]}"
             return pos_embed
+
+        if not self.pos_embed_class_token:
+            assert x.shape[1]-1 == pos_embed.shape[1], f"Must match dimensions, {x.shape[1]-1}, {pos_embed.shape[1]}"
+            return torch.cat([torch.zeros(1,1,*pos_embed.shape[2:], device=pos_embed.device), pos_embed], dim=1)
 
         npatch = x.shape[1] - 1
         nembed = pos_embed.shape[1] - 1
         if npatch == nembed:
             return pos_embed
+        assert False #TODO We disable interpolation for now
 
         # Remove the class embedding and compute the interpolation scale factor
         class_emb = pos_embed[:, 0]

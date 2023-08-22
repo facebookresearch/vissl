@@ -1,0 +1,19 @@
+# @package _global_
+config:
+  METERS:
+    accuracy_list_meter:
+      meter_names: ["cls1_mlp", "cls1_emlp"]
+  
+  MODEL:
+    FEATURE_EVAL_SETTINGS:
+      EXTRACT_TRUNK_FEATURES_ONLY: False
+      SHOULD_FLATTEN_FEATS: False
+      LINEAR_EVAL_FEAT_POOL_OPS_MAP: [
+        ["lastCLS", ["Identity", []] ],
+        ["lastCLS", ["Identity", []] ],
+      ]
+    HEAD:
+      PARAMS: [
+        ["mlp", {"dims" : [768, 1000]}],
+        ["eval_mlp", {"in_channels": 768, "dims": [768, 1000]}],
+      ]

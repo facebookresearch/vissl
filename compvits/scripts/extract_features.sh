@@ -1,26 +1,29 @@
 #!/bin/bash
 
-
-cm=$1
+M=$1
 model=$2
 K=$3
 
-echo extract_features: $cm $model $K
-dir="logs/extract_features/${cm}/${model}/K$K"
+echo extract_features: M$M $model K$K
+dir="logs/extract_features/M${M}/${model}/K$K"
 
-dir="debug"
+if [[ $model == "deitb" ]]; then
+    trunk_cfg=deitb
+else
+    trunk_cfg=vitb
+fi
+
 python tools/run_distributed_engines.py \
-    config=compvits/vits_trunk \
-    +config/compvits/data/test=in1k_tiny \
-    +config/compvits/data/test/transforms=$cm \
+    config=compvits/base \
+    +config/compvits/model/trunk=$trunk_cfg \
+    +config/compvits/data/test=in1k \
+    engine_name=extract_features \
     config.TEST_ONLY=True \
     config.CHECKPOINT.DIR=$dir \
-    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/ibot/vits_teacher.pth \
-    config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=state_dict \
-    config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk. \
-    config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False \
-    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.NAME=afterK \
-    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.PARAMS.K=$K \
-    config.EXTRACT_FEATURES.OUTPUT_DIR=${dir} \
-    config.DISTRIBUTED.NUM_PROC_PER_NODE=1 \
-    engine_name=extract_features
+    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/${model}.pth \
+    config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.NAME=afterK \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.PARAMS.K=$K \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.SPLIT.NAME=precomputed_masks \
+    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.SPLIT.PARAMS.M=$M \
+    

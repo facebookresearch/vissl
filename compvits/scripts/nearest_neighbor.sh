@@ -1,46 +1,31 @@
 #!/bin/bash
 
-cm=$1
+M=$1
 model=$2
 K=$3
-echo nearest_neighbor: $cm $model $K
+echo nearest_neighbor: M$M $model K$K
 
-dir="logs/nearest_neighbor/${cm}/${model}/K$K"
-feats_all="logs/nearest_neighbor/features/${model}"
-feats_K="logs/extract_features/${cm}/${model}/K$K"
+dir="logs/nearest_neighbor/M${M}/${model}/K$K"
+feats_all="logs/nearest_neighbor/train_features/${model}"
+feats_K="logs/extract_features/M${M}/${model}/K$K"
 
-
-# train features extraction
-#echo extract_features: $cm $model $K
-#dir=$feats_all
-#python tools/run_distributed_engines.py \
-#    config=compvits/vits_trunk \
-#    +config/compvits/data/train=in1k_tiny \
-#    config.TEST_MODEL=False \
-#    config.CHECKPOINT.DIR=$dir \
-#    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/ibot/vits_teacher.pth \
-#    config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=state_dict \
-#    config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk. \
-#    config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False \
-#    config.EXTRACT_FEATURES.OUTPUT_DIR=$dir \
-#    engine_name=extract_features
+if [[ $model == "deitb" ]]; then
+    trunk_cfg=deitb
+else
+    trunk_cfg=vitb
+fi
 
 mkdir --parents $dir
-mv ${feats_all}/*.npy ${dir}
-cp ${feats_K}/*.npy ${dir}
-ls $dir
-python tools/nearest_neighbor_test.py \
-    config=compvits/vits_trunk \
-    +config/compvits/data/test=in1k_tiny \
-    +config/compvits/data/test/transforms=$cm \
-    +config/compvits/benchmark=knn \
-    config.TEST_ONLY=True \
-    config.CHECKPOINT.DIR=$dir \
-    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/${model}/vits_teacher.pth \
-    config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=state_dict \
-    config.MODEL.WEIGHTS_INIT.APPEND_PREFIX=trunk. \
-    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.NAME=afterK \
-    config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.PARAMS.K=$K \
-    config.NEAREST_NEIGHBOR.FEATURES.PATH=$dir
+mv ${feats_all}/rank0_chunk0_train*.npy ${dir}
+mv ${feats_K}/rank0_chunk0_test*.npy ${dir}
 
+python tools/nearest_neighbor_test.py \
+    config=compvits/base \
+    +config/compvits/model/trunk=$trunk_cfg\
+    +config/compvits/task=nearest_neighbor \
+    +config/compvits/data/test=in1k \
+    config.CHECKPOINT.DIR=$dir \
+    config.NEAREST_NEIGHBOR.FEATURES.PATH=$dir \
+    
 mv ${dir}/rank0_chunk0_train*.npy ${feats_all}
+mv ${dir}/rank0_chunk0_test*.npy ${feats_K}
