@@ -268,7 +268,7 @@ def set_rng_state(state):
         torch.cuda.set_rng_state(state["cuda_rng_state"])
 
 
-class set_torch_seed(object):
+class set_torch_seed:
     def __init__(self, seed):
         assert isinstance(seed, int)
         self.rng_state = get_rng_state()

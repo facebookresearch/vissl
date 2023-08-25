@@ -44,7 +44,7 @@ def build_task(config):
     return task
 
 
-class SelfSupervisionTrainer(object):
+class SelfSupervisionTrainer:
     """
     The main entry point for any training or feature extraction workflows in VISSL.
 

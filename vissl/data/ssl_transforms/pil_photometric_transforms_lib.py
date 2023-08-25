@@ -14,7 +14,7 @@ and do not alter the geometric properties of the image.
 """
 
 
-class TransformObject(object):
+class TransformObject:
     """
     Helper object to that prints information about the transformation and
     other transforms can inherit from this.

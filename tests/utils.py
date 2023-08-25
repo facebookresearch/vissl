@@ -126,7 +126,7 @@ ROOT_LOSS_CONFIGS = create_valid_input(
 UNIT_TEST_CONFIGS = create_valid_input(list_config_files("config/test/cpu_test"))
 
 
-class SSLHydraConfig(object):
+class SSLHydraConfig:
     def __init__(self, overrides: List[Any] = None):
         self.overrides = []
         if overrides is not None and len(overrides) > 0:

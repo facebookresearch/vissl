@@ -21,7 +21,7 @@ def _as_tensor(x: Tuple[int, int]) -> torch.Tensor:
     return torch.as_tensor(x)
 
 
-class MultiDimensionalTensor(object):
+class MultiDimensionalTensor:
     """
     Structure that holds a list of images (of possibly
     varying sizes) as a single tensor.

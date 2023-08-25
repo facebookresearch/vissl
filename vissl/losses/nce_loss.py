@@ -437,7 +437,7 @@ class AliasMethod(nn.Module):
 # Numpy based sampler. Useful for debugging
 # This Sampler is faster to setup than AliasMethod.
 # However, it is **much** slower to sample from it.
-class NumpySampler(object):
+class NumpySampler:
     def __init__(self, high):
         self.high = high
 

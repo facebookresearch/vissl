@@ -17,7 +17,7 @@ from vissl.utils.svm_utils.evaluate import get_precision_recall
 
 # Turning it into a class to encapsulate the training and evaluation logic
 # together unlike OSS benchmark which has 3 scripts.
-class SVMTrainer(object):
+class SVMTrainer:
     """
     SVM trainer that takes care of training (using k-fold cross validation),
     and evaluating the SVMs
