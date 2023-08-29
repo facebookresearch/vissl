@@ -5,7 +5,7 @@ All code that integrates with `vissl` framework directly is placed into director
 As for now, extra code is placed in the following files/directories:
  - `compvits`
  - `configs/config/compvits`
- - `vissl/data//ssl_transforms/compvits.py`
+ - `vissl/data/ssl_transforms/compvits.py`
 
 Direct `vissl` code modifications were applied to the following files:
  - `vissl/models/base_ssl_model.py`
