@@ -24,9 +24,9 @@ python tools/run_distributed_engines.py \
     +config/compvits/model/head=$head_cfg \
     +config/compvits/data/test=in1k \
     +config/compvits/task=test_linear \
-    config.CHECKPOINT.DIR=$dir \
-    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/${model}.pth \
-    config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
+    +config.CHECKPOINT.DIR=$dir \
+    +config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/Users/piotrwojcik/PycharmProjects/vissl/checkpoints/${model}.pth \
+    +config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.NAME=afterK \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.PARAMS.K=$K \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.SPLIT.NAME=precomputed_masks \
