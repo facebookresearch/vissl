@@ -10,6 +10,9 @@ dir="logs/test_linear/M${M}/${model}/K$K"
 if [[ $model == "deitb" ]]; then
     head_cfg=mlp_768_1000
     trunk_cfg=deitb
+elif [[ $model == "vit_supervised" ]]; then
+    head_cfg=mlp_768_1000
+    trunk_cfg=vitb
 else
     head_cfg=mlp_emlp_768_1000
     trunk_cfg=vitb
