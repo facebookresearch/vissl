@@ -24,7 +24,7 @@ python tools/run_distributed_engines.py \
     +config/compvits/model/head=$head_cfg \
     +config/compvits/data/test=in1k \
     +config/compvits/task=test_linear \
-    +config.CHECKPOINT.DIR=$dir \
+    config.CHECKPOINT.DIR=$dir \
     +config.MODEL.WEIGHTS_INIT.PARAMS_FILE=../../vissl/checkpoints/${model}.pth \
     +config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.NAME=afterK \
