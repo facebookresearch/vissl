@@ -6,7 +6,7 @@ config:
     NUM_NODES: 1
     # set this to the number of gpus per machine. This ensures that each gpu of the
     # node has a process attached to it.
-    NUM_PROC_PER_NODE: 1
+    NUM_PROC_PER_NODE: 4
   # ----------------------------------------------------------------------------------- #
   # DISTRIBUTED TRAINING ON SLURM: Additional options for SLURM node allocation
   # (options like number of nodes and number of GPUs by node are taken from DISTRIBUTED)
