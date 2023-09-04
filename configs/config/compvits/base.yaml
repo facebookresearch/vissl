@@ -32,13 +32,13 @@ config:
     # TCP port on which the workers will synchronize themselves with torch distributed
     PORT_ID: 40050
     # Number of CPUs per GPUs to request on the cluster.
-    NUM_CPU_PER_PROC: 8
+    NUM_CPU_PER_PROC: 64
     # Any other parameters for slurm (e.g. account, hint, distribution, etc.,) as dictated by submitit.
     # Please see https://github.com/facebookincubator/submitit/issues/23#issuecomment-695217824.
     ADDITIONAL_PARAMETERS: {}
   DATA:
     # Common data options
-    NUM_DATALOADER_WORKERS: 4 # Set this depending on the number of CPUs you have
+    NUM_DATALOADER_WORKERS: 32 # Set this depending on the number of CPUs you have
     TRAIN:
       # number of unique samples in minibatch per gpu (or per device)
       BATCHSIZE_PER_REPLICA: 256
