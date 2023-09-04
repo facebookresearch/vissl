@@ -19,5 +19,5 @@ python tools/run_distributed_engines.py \
     engine_name=extract_features \
     config.CHECKPOINT.DIR=$dir \
     config.TEST_MODEL=False \
-    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/${model}.pth \
+    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=checkpoints/trunk_only/${model}.pth \
     config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
