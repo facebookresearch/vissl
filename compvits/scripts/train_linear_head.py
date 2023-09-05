@@ -17,9 +17,13 @@ from compvits.utils import MetricLogger
 
 
 class PickleDataset(Dataset):
-    def __init__(self, root_dir):
-        features_pattern = r"rank\d+_chunk\d+_train_lastCLS_features.npy"
-        targets_pattern = r"rank\d+_chunk\d+_train_lastCLS_targets.npy"
+    def __init__(self, root_dir, train=True):
+        if train:
+            features_pattern = r"rank\d+_chunk\d+_train_lastCLS_features.npy"
+            targets_pattern = r"rank\d+_chunk\d+_train_lastCLS_targets.npy"
+        else:
+            features_pattern = r"rank\d+_chunk\d+_test_lastCLS_features.npy"
+            targets_pattern = r"rank\d+_chunk\d+_test_lastCLS_targets.npy"
 
         features_files = []
         target_files = []
