@@ -104,6 +104,7 @@ def validate_network(val_loader, linear_classifier):
         # move to gpu
         inp = inp.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
+        target = target.squeeze()
 
         output = linear_classifier(inp)
         loss = nn.CrossEntropyLoss()(output, target)
@@ -194,7 +195,7 @@ def eval_linear(args):
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      'epoch': epoch}
-        if epoch % args.val_freq == 0 or epoch == args.epochs - 1:
+        if epoch % args.val_freq == 0 or epoch == args.epochs - 1 and not args.disable_val:
             test_stats = validate_network(val_loader, linear_classifier)
             print(f"Accuracy at epoch {epoch} of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
             best_acc = max(best_acc, test_stats["acc1"])
@@ -228,6 +229,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained_weights', default='', type=str, help="Path to pretrained weights to evaluate.")
     parser.add_argument("--checkpoint_key", default="teacher", type=str, help='Key to use in the checkpoint (example: "teacher")')
     parser.add_argument('--epochs', default=100, type=int, help='Number of epochs of training.')
+    parser.add_argument('--disable_val', dest='disable_val', action='store_false')
     parser.add_argument('--embed_dim', default=768, type=int, help='Embedding dim')
     parser.add_argument("--lr", default=0.001, type=float, help="""Learning rate at the beginning of
         training (highest LR used during training). The learning rate is linearly scaled
