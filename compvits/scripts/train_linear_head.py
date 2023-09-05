@@ -195,9 +195,7 @@ def eval_linear(args):
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      'epoch': epoch}
-        print('!!!')
-        print(args.disable_val)
-        if epoch % args.val_freq == 0 or epoch == args.epochs - 1 and not args.disable_val:
+        if (epoch % args.val_freq == 0 or epoch == args.epochs - 1) and (not args.disable_val):
             test_stats = validate_network(val_loader, linear_classifier)
             print(f"Accuracy at epoch {epoch} of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
             best_acc = max(best_acc, test_stats["acc1"])
