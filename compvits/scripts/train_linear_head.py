@@ -229,7 +229,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained_weights', default='', type=str, help="Path to pretrained weights to evaluate.")
     parser.add_argument("--checkpoint_key", default="teacher", type=str, help='Key to use in the checkpoint (example: "teacher")')
     parser.add_argument('--epochs', default=100, type=int, help='Number of epochs of training.')
-    parser.add_argument('--disable_val', dest='disable_val', action='store_false')
+    parser.add_argument('--disable_val', dest='disable_val', action='store_true')
     parser.add_argument('--embed_dim', default=768, type=int, help='Embedding dim')
     parser.add_argument("--lr", default=0.001, type=float, help="""Learning rate at the beginning of
         training (highest LR used during training). The learning rate is linearly scaled
