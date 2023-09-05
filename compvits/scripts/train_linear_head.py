@@ -74,6 +74,10 @@ def train(linear_classifier, optimizer, loader, epoch):
 
         output = linear_classifier(inp)
 
+        print('!!!')
+        print(target)
+        print(target.shape)
+
         # compute cross entropy loss
         loss = nn.CrossEntropyLoss()(output, target)
 
