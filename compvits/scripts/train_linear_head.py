@@ -139,7 +139,7 @@ def eval_linear(args):
     linear_classifier = nn.parallel.DistributedDataParallel(linear_classifier, device_ids=[args.gpu])
 
     # ============ preparing data ... ============
-    dataset_val = datasets.ImageFolder(args.val_data_path)
+    dataset_val = PickleDataset(args.val_data_path)
     val_loader = torch.utils.data.DataLoader(
         dataset_val,
         batch_size=args.batch_size_per_gpu,
