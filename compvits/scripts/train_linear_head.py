@@ -42,7 +42,7 @@ class PickleDataset(Dataset):
         return self.features.shape[0]
 
     def __getitem__(self, idx):
-        return self.features[idx], self.targets[idx]
+        return self.features[idx].float(), self.targets[idx]
 
 
 class LinearClassifier(nn.Module):
@@ -71,9 +71,6 @@ def train(linear_classifier, optimizer, loader, epoch):
         # move to gpu
         inp = inp.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
-
-        print('!!!')
-        print(inp)
 
         output = linear_classifier(inp)
 
