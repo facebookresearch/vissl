@@ -71,12 +71,9 @@ def train(linear_classifier, optimizer, loader, epoch):
         # move to gpu
         inp = inp.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
+        target = target.squeeze()
 
         output = linear_classifier(inp)
-
-        print('!!!')
-        print(target)
-        print(target.shape)
 
         # compute cross entropy loss
         loss = nn.CrossEntropyLoss()(output, target)
