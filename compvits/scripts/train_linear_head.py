@@ -72,6 +72,9 @@ def train(linear_classifier, optimizer, loader, epoch):
         inp = inp.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
 
+        print('!!!')
+        print(inp)
+
         output = linear_classifier(inp)
 
         # compute cross entropy loss
