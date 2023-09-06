@@ -13,7 +13,6 @@ import torch.backends.cudnn as cudnn
 from torchvision import datasets
 
 from compvits import utils
-from compvits.utils import MetricLogger
 
 
 class PickleDataset(Dataset):
@@ -102,13 +101,16 @@ def train(linear_classifier, optimizer, loader, epoch):
 @torch.no_grad()
 def validate_network(val_loader, linear_classifier):
     linear_classifier.eval()
-    metric_logger = MetricLogger(delimiter="  ")
+    metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
     for inp, target in metric_logger.log_every(val_loader, 20, header):
         # move to gpu
         inp = inp.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
         target = target.squeeze()
+
+        print(target)
+        print(target.shape)
 
         output = linear_classifier(inp)
         loss = nn.CrossEntropyLoss()(output, target)
@@ -119,6 +121,9 @@ def validate_network(val_loader, linear_classifier):
             acc1, = utils.accuracy(output, target, topk=(1,))
 
         batch_size = inp.shape[0]
+        print('!!!')
+        print(loss.item())
+
         metric_logger.update(loss=loss.item())
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         if linear_classifier.module.num_labels >= 5:
