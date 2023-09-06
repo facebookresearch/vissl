@@ -109,9 +109,6 @@ def validate_network(val_loader, linear_classifier):
         target = target.cuda(non_blocking=True)
         target = target.squeeze()
 
-        print(target)
-        print(target.shape)
-
         output = linear_classifier(inp)
         loss = nn.CrossEntropyLoss()(output, target)
 
