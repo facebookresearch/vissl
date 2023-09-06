@@ -1,8 +1,8 @@
 #!/bin/bash
 
-M=$1
-model=$2
-K=$3
+M=''
+model=$1
+K=''
 
 echo extract_features: M$M $model K$K
 dir="logs/extract_features/M${M}/${model}/K$K"
