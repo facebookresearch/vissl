@@ -118,9 +118,6 @@ def validate_network(val_loader, linear_classifier):
             acc1, = utils.accuracy(output, target, topk=(1,))
 
         batch_size = inp.shape[0]
-        print('!!!')
-        print(loss.item())
-        print(acc1.item())
 
         metric_logger.update(loss=loss.item())
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
