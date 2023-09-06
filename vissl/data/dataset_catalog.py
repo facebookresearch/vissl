@@ -258,6 +258,8 @@ def get_data_files(split, dataset_config):
     """
     print('!!!')
     print(dataset_config[split].DATASET_NAMES)
+    print(len(dataset_config[split].DATASET_NAMES))
+    print(len(dataset_config[split].DATA_SOURCES))
     assert len(dataset_config[split].DATASET_NAMES) == len(
         dataset_config[split].DATA_SOURCES
     ), "len(data_sources) != len(dataset_names)"
