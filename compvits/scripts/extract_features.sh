@@ -1,8 +1,8 @@
 #!/bin/bash
 
-M=''
-model=$1
-K=''
+M=$1
+model=$2
+K=$3
 
 echo extract_features: M$M $model K$K
 dir="logs/extract_features/M${M}/${model}/K$K"
@@ -20,7 +20,7 @@ python tools/run_distributed_engines.py \
     engine_name=extract_features \
     config.TEST_ONLY=True \
     config.CHECKPOINT.DIR=$dir \
-    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=checkpoints/trunk_only/${model}.pth \
+    config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/${model}.pth \
     config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.NAME=afterK \
     config.MODEL.TRUNK.VISION_TRANSFORMERS.COMPVITS.COMP.PARAMS.K=$K \
