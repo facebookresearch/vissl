@@ -102,6 +102,7 @@ train_config.yaml
 
 #compvits ignore
 checkpoints
+
 compvits/plots/data
 logs
 debug*
