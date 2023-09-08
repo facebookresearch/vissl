@@ -17,7 +17,7 @@ python tools/run_distributed_engines.py \
     +config/compvits/model/trunk=$trunk_cfg \
     +config/compvits/data/train=in1k \
     engine_name=extract_features \
-    config.TEST_MODEL=False \
     config.CHECKPOINT.DIR=$dir \
+    config.TEST_MODEL=False \
     config.MODEL.WEIGHTS_INIT.PARAMS_FILE=/home/jan.olszewski/git/vissl/checkpoints/${model}.pth \
     config.MODEL.WEIGHTS_INIT.STATE_DICT_KEY_NAME=model \
