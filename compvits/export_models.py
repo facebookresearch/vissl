@@ -50,9 +50,6 @@ def download_and_save_dino():
         if not k.startswith("head."):
             new_k = "trunk." + k
             new_checkpoint.append([new_k, checkpoint[k]])
-        else:
-            new_k = "heads.0.clf.0." + k[len("head."):]
-            new_checkpoint.append([new_k, checkpoint[k]])
 
     new_checkpoint = OrderedDict(new_checkpoint)
 
@@ -62,10 +59,31 @@ def download_and_save_dino():
     torch.save(save, "checkpoints/trunk_only/dino.pth")
 
 
+def download_and_save_moco3():
+    checkpoint = torch.hub.load_state_dict_from_url(
+        'https://dl.fbaipublicfiles.com/moco-v3/vit-b-300ep/vit-b-300ep.pth.tar', map_location='cpu',
+        check_hash=True)
+
+    new_checkpoint = []
+
+    for k in checkpoint["state_dict"]:
+        if k.startswith("module.momentum_encoder") and not k.startswith("module.momentum_encoder.head"):
+            new_k = "trunk." + k[len('module.momentum_encoder.'):]
+            new_checkpoint.append([new_k, checkpoint["state_dict"][k]])
+
+    new_checkpoint = OrderedDict(new_checkpoint)
+
+    print(new_checkpoint.keys())
+
+    save = {"model": new_checkpoint}
+    torch.save(save, "checkpoints/trunk_only/moco3.pth")
+
+
 models_funs = {
     "deit3": download_and_save_deit3,
     "ibot": download_and_save_ibot,
-    "dino": download_and_save_dino
+    "dino": download_and_save_dino,
+    "moco3": download_and_save_moco3
 }
 
 
