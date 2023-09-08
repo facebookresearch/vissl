@@ -6,7 +6,7 @@ config:
       DATA_SOURCES: [disk_folder]
       LABEL_SOURCES: [disk_folder]
       DATASET_NAMES: [imagenet1k_folder]
-      DATA_PATHS: [/data/pwojcik/ILSVRC/Data/CLS-LOC/train]
+      DATA_PATHS: [datasets/imagenet-1k-kaggle/ILSVRC/Data/CLS-LOC/train]
       BATCHSIZE_PER_REPLICA: 32
       TRANSFORMS:
         - name: RandomResizedCrop

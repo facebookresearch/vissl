@@ -60,7 +60,7 @@ class SelfSupervisionTask(ClassificationTask):
         self.available_splits = []
         self.base_loss = None
         self.meters = None
-        self.sdatasets = None
+        self.datasets = None
         self.phases = []
         self.hooks = []
         self.base_model = None
