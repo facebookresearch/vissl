@@ -166,13 +166,9 @@ def train(model, linear_classifier, optimizer, loader, epoch, n, avgpool):
             intermediate_output = model.get_intermediate_layers(inp, n)
             output = torch.cat([x[:, 0] for x in intermediate_output], dim=-1)
             if avgpool:
-                print('!!!')
-                print('a')
                 output = torch.cat((output.unsqueeze(-1), torch.mean(intermediate_output[-1][:, 1:], dim=1).unsqueeze(-1)), dim=-1)
                 output = output.reshape(output.shape[0], -1)
             else:
-                print('!!!')
-                print('b')
                 output = model(inp)
         output = linear_classifier(output)
 
@@ -257,7 +253,7 @@ class LinearClassifier(nn.Module):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Evaluation with linear classification on ImageNet')
-    parser.add_argument('--n_last_blocks', default=4, type=int, help="""Concatenate [CLS] tokens
+    parser.add_argument('--n_last_blocks', default=1, type=int, help="""Concatenate [CLS] tokens
         for the `n` last blocks. We use `n=4` when evaluating ViT-Small and `n=1` with ViT-Base.""")
     parser.add_argument('--avgpool_patchtokens', default=False, type=utils.bool_flag,
         help="""Whether ot not to concatenate the global average pooled features to the [CLS] token.
