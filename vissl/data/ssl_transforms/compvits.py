@@ -107,7 +107,7 @@ class RandomCompMasking(ClassyTransform):
         Instantiates CompositionalMasks transform from configuration.
 
         Args:
-            config (Dict): arguments for for the transform
+            config (Dict): arguments for the transform
 
         Returns:
             CompositionalMasks transform instance.
