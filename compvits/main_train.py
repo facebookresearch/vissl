@@ -55,7 +55,7 @@ def eval_linear(args):
     model.cuda()
     model.eval()
     # load weights to evaluate
-    #utils.load_pretrained_weights(model, args.pretrained_weights, args.checkpoint_key, args.arch, args.patch_size)
+    utils.load_pretrained_weights(model, args.pretrained_weights, args.checkpoint_key, args.arch, args.patch_size)
     print(f"Model {args.arch} built.")
 
     linear_classifier = LinearClassifier(embed_dim, num_labels=args.num_labels)
@@ -166,9 +166,13 @@ def train(model, linear_classifier, optimizer, loader, epoch, n, avgpool):
             intermediate_output = model.get_intermediate_layers(inp, n)
             output = torch.cat([x[:, 0] for x in intermediate_output], dim=-1)
             if avgpool:
+                print('!!!')
+                print('a')
                 output = torch.cat((output.unsqueeze(-1), torch.mean(intermediate_output[-1][:, 1:], dim=1).unsqueeze(-1)), dim=-1)
                 output = output.reshape(output.shape[0], -1)
             else:
+                print('!!!')
+                print('b')
                 output = model(inp)
         output = linear_classifier(output)
 
