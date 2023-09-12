@@ -306,7 +306,8 @@ class VisionTransformer(nn.Module):
         K = random.randint(0, len(self.blocks))
         M = random.choice([2, 4, 8, 16, 3, 6, 9, 12])
         output = self.comp_forward_afterK(x, 'lastCLS', K, M)
-        print(output)
+
+        print(len(output))
         return output
 
     def get_last_selfattention(self, x):
