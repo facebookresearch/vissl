@@ -157,6 +157,8 @@ class VisionTransformer(nn.Module):
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
 
+        self.use_class_token = True
+
         # Classifier head
         self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
@@ -175,13 +177,12 @@ class VisionTransformer(nn.Module):
 
     def split_input(self, x, M):
         precomputed_masks = DIVISION_MASKS_14_14[M]
-        use_class_token = True
 
         mask_id = random.randint(0, len(precomputed_masks) - 1)
         masks = precomputed_masks[mask_id]
         masks = [torch.tensor(mask).unsqueeze(0) for mask in masks]
 
-        if use_class_token:
+        if self.use_class_token:
             masks = [torch.cat([torch.ones(mask.shape[0], 1, dtype=bool, device=mask.device), mask.flatten(1)], dim=1)
                      for mask in masks]
         else:
