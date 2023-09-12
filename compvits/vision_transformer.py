@@ -16,11 +16,13 @@ Mostly copy-paste from timm library.
 https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
 """
 import math
+import random
 from functools import partial
 
 import torch
 import torch.nn as nn
 
+from compvits.constants import DIVISION_MASKS_14_14
 from utils import trunc_normal_
 
 
@@ -171,6 +173,91 @@ class VisionTransformer(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
+    def split_input(self, x, M):
+        precomputed_masks = DIVISION_MASKS_14_14[M]
+
+        mask_id = random.randint(0, len(precomputed_masks) - 1)
+        masks = self.precomputed_masks[mask_id]
+        masks = [torch.tensor(mask).unsqueeze(0) for mask in masks]
+
+        if self.use_class_token:
+            masks = [torch.cat([torch.ones(mask.shape[0], 1, dtype=bool, device=mask.device), mask.flatten(1)], dim=1)
+                     for mask in masks]
+        else:
+            masks = [mask.flatten(1) for mask in masks]
+
+        xs = []
+        for mask in masks:
+            if mask.shape[0] == 1:
+                xs.append(x[:, mask[0, :]].reshape(x.shape[0], -1, x.shape[-1]))
+            else:
+                xs.append(x[mask].reshape(x.shape[0], -1, x.shape[-1]))
+        return xs
+
+    def comp_forward_afterK(self, x, out_feat_keys, K, M):
+        if out_feat_keys is None:
+            out_feat_keys = []
+
+        x = self.prepare_tokens(x)
+        xs = self.split_input(x, M)
+        out_feats = [("BLK" if "BLK" in k else "CLS", int(k[len("concat___"):]) if "concat" in k else 1) for k in
+                     out_feat_keys]
+        n_blk_save = max([n for name, n in out_feats if name == "BLK"] + [0])
+        n_cls_save = max([n for name, n in out_feats if name == "CLS"] + [0])
+
+        after_i_blocks_save_blk = len(self.blocks) - n_blk_save + 1
+        after_i_blocks_save_cls = len(self.blocks) - n_cls_save + 1
+        after_i_blocks_save = min(after_i_blocks_save_blk, after_i_blocks_save_cls)
+        assert (after_i_blocks_save >= K)
+
+        # run separately
+        subencoder = nn.Sequential(*self.blocks[:K])
+        xs = [subencoder(x) for x in xs]
+
+        # mixing
+        if self.use_class_token:
+            xs_cls = torch.stack([x[:, [0], :] for x in xs])
+            xs_feats = [x[:, 1:, :] for x in xs]
+            x = torch.cat([xs_cls.mean(dim=0)] + xs_feats, dim=1)
+        else:
+            x = torch.cat(xs_feats, dim=1)
+        for blk in self.blocks[K:after_i_blocks_save]:
+            x = blk(x)
+
+        # extract
+        blk_feats = []
+        cls_feats = []
+
+        if after_i_blocks_save >= after_i_blocks_save_blk:
+            blk_feats.append(self.norm(x))
+        if after_i_blocks_save >= after_i_blocks_save_cls:
+            if self.use_class_token:
+                cls_feats.append(self.norm(x[:, 0, :]))
+            else:
+                cls_feats.append(self.avg_pool(self.norm(x)))
+
+        for i, blk in enumerate(self.blocks[after_i_blocks_save:]):
+            x = blk(x)
+            if i + after_i_blocks_save >= after_i_blocks_save_blk:
+                blk_feats.append(self.norm(x))
+            if i + after_i_blocks_save >= after_i_blocks_save_cls:
+                if self.use_class_token:
+                    cls_feats.append(self.norm(x[:, 0, :]))
+                else:
+                    cls_feats.append(self.avg_pool(self.norm(x)))
+
+        if len(out_feats) > 0:
+            output = [
+                torch.cat(cls_feats[-n:], dim=-1) if feat == "CLS" else torch.cat(blk_feats[-n:], dim=-1)
+                for feat, n in out_feats
+            ]
+        else:
+            if self.use_class_token:
+                output = x[:, 0, :]
+            else:
+                output = self.avg_pool(x)
+        return output
+
     def interpolate_pos_encoding(self, x, w, h):
         npatch = x.shape[1] - 1
         N = self.pos_embed.shape[1] - 1
@@ -206,12 +293,17 @@ class VisionTransformer(nn.Module):
 
         return self.pos_drop(x)
 
+    #def forward(self, x):
+    #    x = self.prepare_tokens(x)
+    #    for blk in self.blocks:
+    #        x = blk(x)
+    #    x = self.norm(x)
+    #    return x[:, 0]
+
     def forward(self, x):
-        x = self.prepare_tokens(x)
-        for blk in self.blocks:
-            x = blk(x)
-        x = self.norm(x)
-        return x[:, 0]
+        K = random.randint(0, len(self.blocks))
+        M = random.choice([2, 4, 8, 16, 3, 6, 9, 12])
+        return self.comp_forward_afterK(self, x, 'lastCLS', K, M)
 
     def get_last_selfattention(self, x):
         x = self.prepare_tokens(x)
