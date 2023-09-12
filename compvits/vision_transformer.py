@@ -303,7 +303,7 @@ class VisionTransformer(nn.Module):
     def forward(self, x):
         K = random.randint(0, len(self.blocks))
         M = random.choice([2, 4, 8, 16, 3, 6, 9, 12])
-        return self.comp_forward_afterK(self, x, ['lastCLS'], K, M)
+        return self.comp_forward_afterK(x, ['lastCLS'], K, M)
 
     def get_last_selfattention(self, x):
         x = self.prepare_tokens(x)
