@@ -177,7 +177,7 @@ class VisionTransformer(nn.Module):
         precomputed_masks = DIVISION_MASKS_14_14[M]
 
         mask_id = random.randint(0, len(precomputed_masks) - 1)
-        masks = self.precomputed_masks[mask_id]
+        masks = precomputed_masks[mask_id]
         masks = [torch.tensor(mask).unsqueeze(0) for mask in masks]
 
         if self.use_class_token:
