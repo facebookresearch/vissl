@@ -369,7 +369,7 @@ class Mixup:
 
     def _params_per_elem(self, batch_size):
         lam = np.ones(batch_size, dtype=np.float32)
-        use_cutmix = np.zeros(batch_size, dtype=np.bool)
+        use_cutmix = np.zeros(batch_size, dtype=bool)
         if self.mixup_enabled:
             if self.mixup_alpha > 0.0 and self.cutmix_alpha > 0.0:
                 use_cutmix = np.random.rand(batch_size) < self.switch_prob
@@ -385,7 +385,7 @@ class Mixup:
                     self.mixup_alpha, self.mixup_alpha, size=batch_size
                 )
             elif self.cutmix_alpha > 0.0:
-                use_cutmix = np.ones(batch_size, dtype=np.bool)
+                use_cutmix = np.ones(batch_size, dtype=bool)
                 lam_mix = np.random.beta(
                     self.cutmix_alpha, self.cutmix_alpha, size=batch_size
                 )
