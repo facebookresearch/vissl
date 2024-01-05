@@ -128,7 +128,7 @@ class TestRegnetFSDP(unittest.TestCase):
             )
 
     @gpu_test(gpu_count=2)
-    def test_regnet_fsdp_convergence_on_swav(self):
+    def test_regnet_fsdp_convergence_on_swav(self) -> None:
         """
         Run SWAV architecture with DDP or with FSDP with or without
         activation checkpointing and check that the results match
@@ -162,7 +162,7 @@ class TestRegnetFSDP(unittest.TestCase):
             self.assertEqual(results[1], results[2], "Activation checkpointing")
 
     @gpu_test(gpu_count=2)
-    def test_regnet_fsdp_convergence_on_swav_with_larc(self):
+    def test_regnet_fsdp_convergence_on_swav_with_larc(self) -> None:
         """
         Run SWAV architecture with DDP or with FSDP with or without
         activation checkpointing and check that the results match

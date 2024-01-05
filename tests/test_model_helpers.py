@@ -18,7 +18,7 @@ from vissl.utils.test_utils import gpu_test, init_distributed_on_file, with_temp
 
 
 class TestModelHelpers(unittest.TestCase):
-    def test_split_in_process_groups(self):
+    def test_split_in_process_groups(self) -> None:
         # Standards use cases
         pids = split_world_in_process_groups(world_size=9, group_size=3)
         self.assertEqual(pids, [[0, 1, 2], [3, 4, 5], [6, 7, 8]])
@@ -43,7 +43,7 @@ class TestModelHelpers(unittest.TestCase):
             )
 
     @gpu_test(gpu_count=4)
-    def test_synch_bn_pytorch_large_world(self):
+    def test_synch_bn_pytorch_large_world(self) -> None:
         world_size = 4
         group_size = 2
         with with_temp_files(count=1) as sync_file:

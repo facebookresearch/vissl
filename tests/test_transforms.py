@@ -27,7 +27,7 @@ RAND_NUMPY = np.asarray(RAND_PIL)
 
 
 class TestTransform(unittest.TestCase):
-    def test_to_tensor(self):
+    def test_to_tensor(self) -> None:
         # Check that ImgToTensor and torchvision.transforms.ToTensor
         # are mostly equivalent
 
@@ -41,7 +41,7 @@ class TestTransform(unittest.TestCase):
         d = ToTensor()(RAND_NUMPY)
         self.assertTrue(torch.allclose(c, d))
 
-    def test_img_pil_to_rgb_mode(self):
+    def test_img_pil_to_rgb_mode(self) -> None:
         one_channel_input = (torch.ones((28, 28)) * 255).to(dtype=torch.uint8)
         one_channel_input = Image.fromarray(one_channel_input.numpy(), mode="L")
 
@@ -66,7 +66,7 @@ class TestTransform(unittest.TestCase):
                 output[:, 2:-2, 2:-2].sum().item() == 28 * 28 * 3
             ), "Paste should be in the middle"
 
-    def test_img_pil_to_multicrop(self):
+    def test_img_pil_to_multicrop(self) -> None:
         torch.cuda.manual_seed(0)
 
         transform = ImgPilToMultiCrop(
@@ -87,7 +87,7 @@ class TestTransform(unittest.TestCase):
 
     @augly_test()
     @gpu_test(gpu_count=2)
-    def test_augly_transforms(self):
+    def test_augly_transforms(self) -> None:
         cfg = compose_hydra_configuration(
             [
                 "config=test/integration_test/quick_simclr",

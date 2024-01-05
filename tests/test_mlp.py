@@ -26,7 +26,7 @@ class TestMLP(unittest.TestCase):
         }
     )
 
-    def test_mlp(self):
+    def test_mlp(self) -> None:
         mlp = MLP(self.MODEL_CONFIG, dims=[2048, 100])
 
         x = torch.randn(size=(4, 2048))
@@ -37,14 +37,14 @@ class TestMLP(unittest.TestCase):
         out = mlp(x)
         assert out.shape == torch.Size([1, 100])
 
-    def test_mlp_reshaping(self):
+    def test_mlp_reshaping(self) -> None:
         mlp = MLP(self.MODEL_CONFIG, dims=[2048, 100])
 
         x = torch.randn(size=(1, 2048, 1, 1))
         out = mlp(x)
         assert out.shape == torch.Size([1, 100])
 
-    def test_mlp_catch_bad_shapes(self):
+    def test_mlp_catch_bad_shapes(self) -> None:
         mlp = MLP(self.MODEL_CONFIG, dims=[2048, 100])
 
         x = torch.randn(size=(1, 2048, 2, 1))
@@ -52,7 +52,7 @@ class TestMLP(unittest.TestCase):
             mlp(x)
         assert context.exception is not None
 
-    def test_eval_mlp_shape(self):
+    def test_eval_mlp_shape(self) -> None:
         eval_mlp = LinearEvalMLP(
             self.MODEL_CONFIG, in_channels=2048, dims=[2048 * 2 * 2, 1000]
         )

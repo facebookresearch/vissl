@@ -35,7 +35,7 @@ class TestProfiler(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=1)
-    def test_profiler(self):
+    def test_profiler(self) -> None:
         with in_temporary_directory() as output_dir:
             config = self._create_config(force_legacy_profiler=False)
             run_integration_test(config)
@@ -47,7 +47,7 @@ class TestProfiler(unittest.TestCase):
             self.assertIn("profiler_chrome_trace_rank0.json", files)
 
     @gpu_test(gpu_count=1)
-    def test_legacy_profiler(self):
+    def test_legacy_profiler(self) -> None:
         with in_temporary_directory() as output_dir:
             config = self._create_config(force_legacy_profiler=True)
             run_integration_test(config)

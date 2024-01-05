@@ -14,7 +14,7 @@ logger = logging.getLogger("__name__")
 
 
 class TestMultiDimensionalTensor(unittest.TestCase):
-    def test_run(self):
+    def test_run(self) -> None:
         """
         Test the nested tensor works
         """

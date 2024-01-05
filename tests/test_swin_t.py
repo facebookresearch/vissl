@@ -52,7 +52,7 @@ class TestSwinT(unittest.TestCase):
         return model
 
     @gpu_test(gpu_count=1)
-    def test_vissl_implementation_against_official(self):
+    def test_vissl_implementation_against_official(self) -> None:
         with torch.no_grad():
             torch.manual_seed(0)
             torch.cuda.manual_seed(0)
@@ -71,7 +71,7 @@ class TestSwinT(unittest.TestCase):
             self.assertTrue(torch.allclose(ref, out, atol=1e-5))
 
     @gpu_test(gpu_count=1)
-    def test_vissl_implementation_support_multiple_resolutions(self):
+    def test_vissl_implementation_support_multiple_resolutions(self) -> None:
         with torch.no_grad():
             config = self.vissl_swin_transformer_config()
             model = build_model(config["MODEL"], config["OPTIMIZER"]).cuda()

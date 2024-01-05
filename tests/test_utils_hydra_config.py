@@ -20,7 +20,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
         args, config = convert_to_attrdict(cfg, dump_config=False)
         return config
 
-    def test_composition_order(self):
+    def test_composition_order(self) -> None:
         """
         Following Hydra 1.1 update, the composition order is modified:
         https://hydra.cc/docs/upgrades/1.0_to_1.1/default_composition_order/
@@ -43,7 +43,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual("swav_loss", config.LOSS.name)
         self.assertEqual(2, config.DISTRIBUTED.NUM_PROC_PER_NODE)
 
-    def test_inference_of_fsdp_settings_for_swav_pretraining(self):
+    def test_inference_of_fsdp_settings_for_swav_pretraining(self) -> None:
         overrides = [
             "config=pretrain/swav/swav_8node_resnet",
             "+config/pretrain/swav/models=regnet16Gf",
@@ -67,7 +67,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_fsdp_task")
         self.assertEqual(cfg.OPTIMIZER.name, "sgd_fsdp")
 
-    def test_inference_of_fsdp_settings_for_linear_evaluation(self):
+    def test_inference_of_fsdp_settings_for_linear_evaluation(self) -> None:
         overrides = [
             "config=debugging/benchmark/linear_image_classification/eval_resnet_8gpu_transfer_imagenette_160",
             "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_mlp",
@@ -85,7 +85,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet_fsdp")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_fsdp_task")
 
-    def test_inference_of_fsdp_settings_for_linear_evaluation_with_bn(self):
+    def test_inference_of_fsdp_settings_for_linear_evaluation_with_bn(self) -> None:
         overrides = [
             "config=debugging/benchmark/linear_image_classification/eval_resnet_8gpu_transfer_imagenette_160",
             "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_eval_mlp",
@@ -103,7 +103,7 @@ class TestUtilsHydraConfig(unittest.TestCase):
         self.assertEqual(cfg.MODEL.TRUNK.NAME, "regnet_fsdp")
         self.assertEqual(cfg.TRAINER.TASK_NAME, "self_supervision_fsdp_task")
 
-    def test_hyper_parameter_sweeps(self):
+    def test_hyper_parameter_sweeps(self) -> None:
         config = "config=debugging/benchmark/linear_image_classification/eval_resnet_8gpu_transfer_imagenette_160"
         over_1 = "+config/debugging/benchmark/linear_image_classification/models=regnet16Gf_eval_mlp"
         sweep_1 = "config.OPTIMIZER.weight_decay=0.001,0.0001"

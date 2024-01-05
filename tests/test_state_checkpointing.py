@@ -76,21 +76,21 @@ class TestStateCheckpointing(unittest.TestCase):
             self.assertEqual(initial_losses[-len(restart_losses) :], restart_losses)
 
     @gpu_test(gpu_count=2)
-    def test_restart_after_preemption_at_epoch(self):
+    def test_restart_after_preemption_at_epoch(self) -> None:
         with in_temporary_directory():
             config = self._create_pretraining_config(with_fsdp=False)
             config.OPTIMIZER.num_epochs = 2
             self.run_preemption_test(config)
 
     @gpu_test(gpu_count=2)
-    def test_restart_after_preemption_at_epoch_fsdp(self):
+    def test_restart_after_preemption_at_epoch_fsdp(self) -> None:
         with in_temporary_directory():
             config = self._create_pretraining_config(with_fsdp=True)
             config.OPTIMIZER.num_epochs = 2
             self.run_preemption_test(config)
 
     @gpu_test(gpu_count=2)
-    def test_restart_after_preemption_at_iteration(self):
+    def test_restart_after_preemption_at_iteration(self) -> None:
         with in_temporary_directory():
             config = self._create_pretraining_config(with_fsdp=False)
             config.CHECKPOINT.CHECKPOINT_ITER_FREQUENCY = 3
@@ -98,7 +98,7 @@ class TestStateCheckpointing(unittest.TestCase):
             self.run_preemption_test(config, compare_losses=False)
 
     @gpu_test(gpu_count=2)
-    def test_restart_after_preemption_at_iteration_fsdp(self):
+    def test_restart_after_preemption_at_iteration_fsdp(self) -> None:
         with in_temporary_directory():
             config = self._create_pretraining_config(with_fsdp=True)
             config.CHECKPOINT.CHECKPOINT_ITER_FREQUENCY = 3
@@ -175,7 +175,7 @@ class TestStateCheckpointing(unittest.TestCase):
             return results.get_losses(), results.get_accuracies(from_metrics_file=True)
 
     @gpu_test(gpu_count=2)
-    def test_benchmarking_from_a_consolidated_checkpoint(self):
+    def test_benchmarking_from_a_consolidated_checkpoint(self) -> None:
         with in_temporary_directory() as checkpoint_folder:
             # Run a pre-training in DDP mode and save a consolidated checkpoint
             config = self._create_pretraining_config(with_fsdp=False)
@@ -193,7 +193,7 @@ class TestStateCheckpointing(unittest.TestCase):
             self.assertEqual(ddp_accuracies, fsdp_accuracies)
 
     @gpu_test(gpu_count=2)
-    def test_benchmarking_from_a_consolidated_checkpoint_2(self):
+    def test_benchmarking_from_a_consolidated_checkpoint_2(self) -> None:
         with in_temporary_directory() as checkpoint_folder:
             # Run a pre-training in DDP mode and convert to a consolidated checkpoint
             config = self._create_pretraining_config(with_fsdp=True)
@@ -217,7 +217,7 @@ class TestStateCheckpointing(unittest.TestCase):
             self.assertEqual(ddp_accuracies, fsdp_accuracies)
 
     @gpu_test(gpu_count=2)
-    def test_benchmarking_from_sharded_checkpoint(self):
+    def test_benchmarking_from_sharded_checkpoint(self) -> None:
         with in_temporary_directory() as checkpoint_folder:
             # Run a pre-training in FSDP mode and save a sharded checkpoing
             config = self._create_pretraining_config(with_fsdp=True)
@@ -232,7 +232,7 @@ class TestStateCheckpointing(unittest.TestCase):
             self.assertEqual(4, len(fsdp_accuracies))
 
     @gpu_test(gpu_count=2)
-    def test_benchmarking_with_checkpoint_resharding(self):
+    def test_benchmarking_with_checkpoint_resharding(self) -> None:
         with in_temporary_directory() as checkpoint_folder:
             # Run a pre-training in FSDP mode and save a sharded checkpoint
             config = self._create_pretraining_config(with_fsdp=True)
@@ -330,7 +330,7 @@ class TestStateCheckpointing(unittest.TestCase):
             self.assertEqual(initial_losses[5:], restart_losses)
 
     @gpu_test(gpu_count=2)
-    def test_benchmarking_from_sharded_checkpoint_with_preemption(self):
+    def test_benchmarking_from_sharded_checkpoint_with_preemption(self) -> None:
         with in_temporary_directory() as checkpoint_folder:
             # Run a pre-training in FSDP mode and save a sharded checkpoing
             config = self._create_pretraining_config(with_fsdp=True)

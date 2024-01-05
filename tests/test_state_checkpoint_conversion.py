@@ -188,7 +188,7 @@ class TestCheckpointConversion(unittest.TestCase):
             ), f"{ref_out.sum()} vs {slice_out.sum()}"
 
     @gpu_test(gpu_count=2)
-    def test_checkpoint_consolidation(self):
+    def test_checkpoint_consolidation(self) -> None:
         with in_temporary_directory():
             for with_heads in [True, False]:
                 with with_temp_files(count=1) as sync_file:

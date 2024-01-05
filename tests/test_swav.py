@@ -41,7 +41,7 @@ class TestSwAV(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=2)
-    def test_pretraining_and_evaluation(self):
+    def test_pretraining_and_evaluation(self) -> None:
         with in_temporary_directory():
             config = self._create_pretraining_config(
                 with_mixed_precision=True, gpu_count=2, num_epochs=1

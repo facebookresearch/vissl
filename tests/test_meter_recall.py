@@ -11,7 +11,7 @@ from vissl.meters.recall_at_k_list_meter import RecallAtKListMeter
 
 
 class TestRecallAtKListMeter(ClassificationMeterTest):
-    def test_recall_meter_registry(self):
+    def test_recall_meter_registry(self) -> None:
         meter = build_meter(
             {
                 "name": "recall_at_k_list_meter",
@@ -22,7 +22,7 @@ class TestRecallAtKListMeter(ClassificationMeterTest):
         )
         self.assertTrue(isinstance(meter, RecallAtKListMeter))
 
-    def test_single_meter_update_and_reset(self):
+    def test_single_meter_update_and_reset(self) -> None:
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update.
@@ -47,7 +47,7 @@ class TestRecallAtKListMeter(ClassificationMeterTest):
 
         self.meter_update_and_reset_test(meter, model_output, target, expected_value)
 
-    def test_double_meter_update_and_reset(self):
+    def test_double_meter_update_and_reset(self) -> None:
         meter = RecallAtKListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
 
         # Batchsize = 3, num classes = 3, score is probability of class
@@ -70,7 +70,7 @@ class TestRecallAtKListMeter(ClassificationMeterTest):
 
         self.meter_update_and_reset_test(meter, model_outputs, targets, expected_value)
 
-    def test_meter_get_set_classy_state_test(self):
+    def test_meter_get_set_classy_state_test(self) -> None:
         # In this test we update meter0 with model_output0 & target0
         # and we update meter1 with model_output1 & target1 then
         # transfer the state from meter1 to meter0 and validate they
@@ -99,7 +99,7 @@ class TestRecallAtKListMeter(ClassificationMeterTest):
             meters, model_outputs, targets, expected_value
         )
 
-    def test_non_onehot_target(self):
+    def test_non_onehot_target(self) -> None:
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update.
@@ -125,7 +125,7 @@ class TestRecallAtKListMeter(ClassificationMeterTest):
 
         self.meter_update_and_reset_test(meter, model_outputs, targets, expected_value)
 
-    def test_non_onehot_target_one_dim_target(self):
+    def test_non_onehot_target_one_dim_target(self) -> None:
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update with one dimensional targets.

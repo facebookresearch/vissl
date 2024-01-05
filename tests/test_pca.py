@@ -17,7 +17,7 @@ class TestDataLimitSubSampling(unittest.TestCase):
     right results
     """
 
-    def test_pca_factoisation(self):
+    def test_pca_factoisation(self) -> None:
         X = np.array([[0.5, 0.5], [-0.5, -0.5]])
         pca = PCA(n_components=1)
         Y = pca.fit_transform(X)
@@ -28,7 +28,7 @@ class TestDataLimitSubSampling(unittest.TestCase):
         expected_transform = torch.tensor([[0.7071, 0.7071]], dtype=torch.float64)
         self.assertTrue(torch.allclose(expected_transform, pca.DVt))
 
-    def test_pca_on_numpy_arrays(self):
+    def test_pca_on_numpy_arrays(self) -> None:
         X = np.random.normal(loc=0.0, scale=1.0, size=(100, 16))
 
         pca = PCA(n_components=8)
@@ -40,7 +40,7 @@ class TestDataLimitSubSampling(unittest.TestCase):
         self.assertEqual((100, 8), Y.shape)
         self.assertTrue(np.array_equal(Y, Z))
 
-    def test_pca_transform_torch_tensor(self):
+    def test_pca_transform_torch_tensor(self) -> None:
         X = np.random.normal(loc=0.0, scale=1.0, size=(100, 16))
 
         pca = PCA(n_components=8)
@@ -54,7 +54,7 @@ class TestDataLimitSubSampling(unittest.TestCase):
         self.assertEqual(torch.Size([100, 8]), Z.shape)
         self.assertTrue(np.array_equal(Y, Z.numpy()))
 
-    def test_pca_fit_torch_tensor(self):
+    def test_pca_fit_torch_tensor(self) -> None:
         X = np.random.normal(loc=0.0, scale=1.0, size=(100, 16))
         X = torch.from_numpy(X)
 

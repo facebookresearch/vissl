@@ -332,7 +332,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
             return result.get_losses()
 
     @gpu_test(gpu_count=2)
-    def test_fsdp_integration(self):
+    def test_fsdp_integration(self) -> None:
         fsdp_losses_1 = self.run_pretraining(
             with_fsdp=True,
             with_activation_checkpointing=True,
@@ -362,7 +362,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         self.assertEqual(ddp_losses, fsdp_losses_3)
 
     @gpu_test(gpu_count=2)
-    def test_fsdp_integration_with_linear_eval(self):
+    def test_fsdp_integration_with_linear_eval(self) -> None:
         with in_temporary_directory() as pretrain_dir:
 
             # Start pre-training
@@ -416,7 +416,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
                 )
 
     @gpu_test(gpu_count=2)
-    def test_fsdp_integration_mixed_precision(self):
+    def test_fsdp_integration_mixed_precision(self) -> None:
         ddp_losses = self.run_pretraining(
             with_fsdp=False,
             with_activation_checkpointing=False,
@@ -441,7 +441,7 @@ class TestRegnetFSDPIntegration(unittest.TestCase):
         print(fsdp_losses)
 
     @gpu_test(gpu_count=2)
-    def test_fsdp_extract_label_predictions(self):
+    def test_fsdp_extract_label_predictions(self) -> None:
         with in_temporary_directory() as pretrain_dir:
 
             # Start pre-training and consolidate the checkpoint

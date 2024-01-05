@@ -48,7 +48,7 @@ class TestRegnet10B(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=8)
-    def test_regnet_10b_swav_pretraining(self):
+    def test_regnet_10b_swav_pretraining(self) -> None:
         with in_temporary_directory():
             config = self._create_10B_pretrain_config(
                 num_gpus=8, num_steps=2, batch_size=4
@@ -95,7 +95,7 @@ class TestRegnet10B(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=8)
-    def test_regnet_10b_evaluation(self):
+    def test_regnet_10b_evaluation(self) -> None:
         with in_temporary_directory():
             cp_path = "/checkpoint/qduval/vissl/seer/regnet10B_sliced/model_iteration124500_sliced.torch"
             config = self._create_10B_evaluation_config(

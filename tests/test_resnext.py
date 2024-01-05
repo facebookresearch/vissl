@@ -32,7 +32,7 @@ class TestResNeXt(unittest.TestCase):
     def _get_number_parameters(model):
         return sum(p.numel() for p in model.parameters())
 
-    def test_valid_depths(self):
+    def test_valid_depths(self) -> None:
         config = self._create_model_config(depth=18)
         model = build_model(config["MODEL"], config["OPTIMIZER"])
         print(self._get_number_parameters(model))

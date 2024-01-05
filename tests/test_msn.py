@@ -39,7 +39,7 @@ class TestMSN(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=1)
-    def test_msn_pos_drop(self):
+    def test_msn_pos_drop(self) -> None:
         config = self.pretraining_config()
         model = build_model(config["MODEL"], config["OPTIMIZER"])
         x = torch.randn(size=(2, 3, 224, 224))
@@ -48,7 +48,7 @@ class TestMSN(unittest.TestCase):
         self.assertEqual(y.shape[1], 1024, "Number of prototypes")
 
     @gpu_test(gpu_count=2)
-    def test_pretraining(self):
+    def test_pretraining(self) -> None:
         config = self.pretraining_config()
         with in_temporary_directory():
             result = run_integration_test(config)

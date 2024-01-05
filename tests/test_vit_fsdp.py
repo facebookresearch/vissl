@@ -31,7 +31,7 @@ class TestVitFSDP(unittest.TestCase):
     """
 
     @gpu_test(gpu_count=2)
-    def test_blocks_fsdp_vs_ddp_convergence(self):
+    def test_blocks_fsdp_vs_ddp_convergence(self) -> None:
         with_amp = True
         with with_temp_files(count=2) as file_names:
             self._run_block_training_loop(
@@ -162,7 +162,7 @@ class TestVitFSDP(unittest.TestCase):
     """
 
     @gpu_test(gpu_count=2)
-    def test_dino_head_fsdp(self):
+    def test_dino_head_fsdp(self) -> None:
         with_amp = False
         with with_temp_files(count=2) as file_names:
             self._run_dino_head_loop(
@@ -332,7 +332,7 @@ class TestVitFSDP(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=2)
-    def test_vit_fsdp_vs_ddp_convergence(self):
+    def test_vit_fsdp_vs_ddp_convergence(self) -> None:
         with_amp = False
         with with_temp_files(count=2) as file_names:
             self._run_vit_training_loop(
