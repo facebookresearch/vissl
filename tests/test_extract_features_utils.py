@@ -42,7 +42,7 @@ class TestExtractFeatureUtils(unittest.TestCase):
         # Return the data used to generate the files
         return indices, features, targets
 
-    def test_get_shard_file_names(self):
+    def test_get_shard_file_names(self) -> None:
         with in_temporary_directory() as temp_dir:
 
             # Generate a bunch of split/feature files
@@ -62,7 +62,7 @@ class TestExtractFeatureUtils(unittest.TestCase):
                 {"chunk0_train_heads_features.npy", "chunk1_train_heads_features.npy"},
             )
 
-    def test_merge_features(self):
+    def test_merge_features(self) -> None:
         with in_temporary_directory() as temp_dir:
 
             # Save the data we need to merge back
@@ -88,7 +88,7 @@ class TestExtractFeatureUtils(unittest.TestCase):
             self.assertTrue(np.array_equal(output["targets"], targets))
             self.assertTrue(np.allclose(output["features"], features))
 
-    def test_sample_features(self):
+    def test_sample_features(self) -> None:
         with in_temporary_directory() as temp_dir:
             # Save the data we need to sample from
             indices, features, targets = self.prepare_data(

@@ -26,7 +26,7 @@ from vissl.utils.test_utils import (
 
 class TestLayerMemoryTracking(unittest.TestCase):
     @gpu_test(gpu_count=1)
-    def test_memory_tracking(self):
+    def test_memory_tracking(self) -> None:
 
         # Create a model with a hierarchy of modules
         torch.manual_seed(0)
@@ -163,7 +163,7 @@ class TestLayerMemoryTracking(unittest.TestCase):
         ], f"Expected {all_gathered_traces}"
 
     @gpu_test(gpu_count=2)
-    def test_memory_tracking_fsdp(self):
+    def test_memory_tracking_fsdp(self) -> None:
         with with_temp_files(count=1) as sync_file:
             world_size = 2
             mp.spawn(
@@ -173,7 +173,7 @@ class TestLayerMemoryTracking(unittest.TestCase):
             )
 
     @gpu_test(gpu_count=1)
-    def test_memory_tracking_performance_impact(self):
+    def test_memory_tracking_performance_impact(self) -> None:
         torch.manual_seed(0)
         model = models.resnet18()
         with with_timing("no_tracking"):
@@ -183,7 +183,7 @@ class TestLayerMemoryTracking(unittest.TestCase):
             tracker.monitor(model)
             model(torch.randn(size=(1, 3, 224, 224)))
 
-    def test_find_best_reset_points(self):
+    def test_find_best_reset_points(self) -> None:
         """
         Verify that the reset points are correctly computed
         """
@@ -216,7 +216,7 @@ class TestLayerMemoryTracking(unittest.TestCase):
         self.assertEqual(max(splits_memory), memory)
 
     @gpu_test(gpu_count=1)
-    def test_find_best_reset_points_performance(self):
+    def test_find_best_reset_points_performance(self) -> None:
         """
         Test that the algorithm is O(N**2) complexity for N activations
         """

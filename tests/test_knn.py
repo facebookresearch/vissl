@@ -132,7 +132,7 @@ class TestKNNBenchmark(unittest.TestCase):
         )
 
     @gpu_test(gpu_count=2)
-    def test_knn_fsdp(self):
+    def test_knn_fsdp(self) -> None:
         with in_temporary_directory() as pretrain_dir:
 
             # Run a pre-training to have some weights to being with

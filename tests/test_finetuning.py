@@ -204,7 +204,7 @@ class TestFineTuning(unittest.TestCase):
             )
 
     @gpu_test(gpu_count=1)
-    def test_get_optimizer_param_groups(self):
+    def test_get_optimizer_param_groups(self) -> None:
         finetune_config = self._create_finetuning_config(
             checkpoint_path="",
             construct_single_param_group_only=False,
@@ -232,7 +232,7 @@ class TestFineTuning(unittest.TestCase):
         TestFineTuning._check_valid_param_groups(expected_param_groups, param_groups)
 
     @gpu_test(gpu_count=2)
-    def test_get_optimizer_param_groups_fsdp_single_group(self):
+    def test_get_optimizer_param_groups_fsdp_single_group(self) -> None:
         spawn_distributed_test(
             gpu_count=2,
             worker_fn=self._test_get_optimizer_param_groups_fsdp_single_group_worker,
@@ -254,13 +254,13 @@ class TestFineTuning(unittest.TestCase):
         TestFineTuning._check_valid_param_groups(expected_param_groups, param_groups)
 
     @gpu_test(gpu_count=2)
-    def test_get_optimizer_param_groups_fsdp(self):
+    def test_get_optimizer_param_groups_fsdp(self) -> None:
         spawn_distributed_test(
             gpu_count=2, worker_fn=self._test_get_optimizer_param_groups_fsdp_worker
         )
 
     @gpu_test(gpu_count=2)
-    def test_fine_tuning_end_to_end(self):
+    def test_fine_tuning_end_to_end(self) -> None:
         with in_temporary_directory() as pretrain_dir:
             # Run a pre-training to have some weights to being with
             pretrain_config = self._create_pretraining_config()
@@ -279,7 +279,7 @@ class TestFineTuning(unittest.TestCase):
                 self.assertEqual(4, len(accuracies))
 
     @gpu_test(gpu_count=2)
-    def test_fine_tuning_end_to_end_fsdp(self):
+    def test_fine_tuning_end_to_end_fsdp(self) -> None:
         with in_temporary_directory() as pretrain_dir:
             # Run a pre-training to have some weights to being with
             pretrain_config = self._create_pretraining_config(

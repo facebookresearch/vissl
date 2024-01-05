@@ -28,7 +28,7 @@ class TestFineTuningVit(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=1)
-    def test_vit_param_groups(self):
+    def test_vit_param_groups(self) -> None:
         config = self._create_pretraining_config("quick_dino")
         model = build_model(config["MODEL"], config["OPTIMIZER"])
         for n, _p in model.named_parameters():
@@ -55,7 +55,7 @@ class TestFineTuningVit(unittest.TestCase):
                 print(k, g[k])
 
     @gpu_test(gpu_count=1)
-    def test_resnet_param_groups(self):
+    def test_resnet_param_groups(self) -> None:
         config = self._create_pretraining_config("quick_swav")
         config.OPTIMIZER.regularize_bias = False
         model = build_model(config["MODEL"], config["OPTIMIZER"])

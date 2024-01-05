@@ -65,7 +65,7 @@ class TestDINO_XCIT(unittest.TestCase):
             return result.get_losses()
 
     @gpu_test(gpu_count=2)
-    def test_init_vit_init(self):
+    def test_init_vit_init(self) -> None:
         """
         Check that the initialisation of the ViT with FSDP leads
         to the same results than the initialisation with DDP

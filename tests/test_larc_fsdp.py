@@ -81,7 +81,7 @@ class TestLarcFSDP(unittest.TestCase):
             assert losses[False] == losses[True]
 
     @gpu_test(gpu_count=1)
-    def test_local_norm_computations(self):
+    def test_local_norm_computations(self) -> None:
         """
         Sanity check: the sharded and non-sharded norms should be trivially
         the same when the number of GPU involved in 1 (no sharding)
@@ -95,7 +95,7 @@ class TestLarcFSDP(unittest.TestCase):
             )
 
     @gpu_test(gpu_count=2)
-    def test_norm_computations(self):
+    def test_norm_computations(self) -> None:
         """
         Trying with 2 GPUs: the sharded computation should span across GPUs
         and lead to sensibly the same results as normal DDP with LARC

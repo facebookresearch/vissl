@@ -127,7 +127,7 @@ class TestDINO(unittest.TestCase):
             return result.get_losses()
 
     @gpu_test(gpu_count=2)
-    def test_init_vit_init(self):
+    def test_init_vit_init(self) -> None:
         """
         Check that the initialisation of the ViT with FSDP leads
         to the same results than the initialisation with DDP
@@ -185,7 +185,7 @@ class TestDINO(unittest.TestCase):
             assert torch.allclose(ddp_out[0][0], fsdp_out[0][0])
 
     @gpu_test(gpu_count=2)
-    def test_dino_head(self):
+    def test_dino_head(self) -> None:
         """
         Check that the FSDP SwAV head reacts identically as the DDP one
         """
@@ -243,7 +243,7 @@ class TestDINO(unittest.TestCase):
             assert torch.allclose(ddp_loss, fsdp_loss)
 
     @gpu_test(gpu_count=2)
-    def test_pretraining_dino_fp32(self):
+    def test_pretraining_dino_fp32(self) -> None:
         fsdp_config = self._create_dino_pretraining_config(
             with_fsdp=True, with_mixed_precision=False, with_multicrop=True, gpu_count=2
         )
@@ -264,7 +264,7 @@ class TestDINO(unittest.TestCase):
         self.assertAlmostEqual(ddp_losses[-1], fsdp_losses[-1], places=4)
 
     @gpu_test(gpu_count=2)
-    def test_pretraining_dino_fp16(self):
+    def test_pretraining_dino_fp16(self) -> None:
         fsdp_config = self._create_dino_pretraining_config(
             with_fsdp=True, with_mixed_precision=True, with_multicrop=True, gpu_count=2
         )
@@ -282,7 +282,7 @@ class TestDINO(unittest.TestCase):
         self.assertAlmostEqual(ddp_losses[-1], fsdp_losses[-1], places=4)
 
     @gpu_test(gpu_count=2)
-    def test_pretraining_with_activation_checkpointing(self):
+    def test_pretraining_with_activation_checkpointing(self) -> None:
         config_ref = self._create_dino_pretraining_config(
             with_fsdp=True,
             with_mixed_precision=True,
@@ -313,7 +313,7 @@ class TestDINO(unittest.TestCase):
         self.assertAlmostEqual(losses_ref[-1], losses_blk[-1], places=4)
 
     @gpu_test(gpu_count=2)
-    def test_fsdp_teacher_checkpoint(self):
+    def test_fsdp_teacher_checkpoint(self) -> None:
         with in_temporary_directory() as pretrain_dir:
             config = self._create_dino_pretraining_config(
                 with_fsdp=True,
@@ -363,7 +363,7 @@ class TestDINO(unittest.TestCase):
             print(eval_losses)
 
     @gpu_test(gpu_count=2)
-    def test_prehemption_during_training(self):
+    def test_prehemption_during_training(self) -> None:
         with in_temporary_directory() as temp_dir:
             config = self._create_dino_pretraining_config(
                 with_fsdp=True,

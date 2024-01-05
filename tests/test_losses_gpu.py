@@ -48,7 +48,7 @@ class TestSimClrCriterionOnGpu(unittest.TestCase):
         assert gathered.requires_grad
 
     @gpu_test(gpu_count=1)
-    def test_gather_embeddings_word_size_1(self):
+    def test_gather_embeddings_word_size_1(self) -> None:
         with with_temp_files(count=1) as sync_file:
             WORLD_SIZE = 1
             BATCH_SIZE = 2
@@ -59,7 +59,7 @@ class TestSimClrCriterionOnGpu(unittest.TestCase):
             )
 
     @gpu_test(gpu_count=2)
-    def test_gather_embeddings_word_size_2(self):
+    def test_gather_embeddings_word_size_2(self) -> None:
         with with_temp_files(count=1) as sync_file:
             WORLD_SIZE = 2
             BATCH_SIZE = 2
@@ -90,7 +90,7 @@ class TestBarlowTwinsCriterionOnGpu(unittest.TestCase):
         criterion(embeddings).backward()
 
     @gpu_test(gpu_count=1)
-    def test_backward_world_size_1(self):
+    def test_backward_world_size_1(self) -> None:
         with with_temp_files(count=1) as sync_file:
             WORLD_SIZE = 1
             BATCH_SIZE = 2
@@ -101,7 +101,7 @@ class TestBarlowTwinsCriterionOnGpu(unittest.TestCase):
             )
 
     @gpu_test(gpu_count=2)
-    def test_backward_world_size_2(self):
+    def test_backward_world_size_2(self) -> None:
         with with_temp_files(count=1) as sync_file:
             WORLD_SIZE = 2
             BATCH_SIZE = 2

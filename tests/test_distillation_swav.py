@@ -110,7 +110,7 @@ class TestDistillationSwAV(unittest.TestCase):
         assert round(loss.item(), 5) == round(ref_loss.item(), 5), message
 
     @gpu_test(gpu_count=2)
-    def test_swav_distillation_criterion(self):
+    def test_swav_distillation_criterion(self) -> None:
         spawn_distributed_test(
             gpu_count=2, worker_fn=self._test_swav_distillation_criterion_worker
         )
@@ -173,7 +173,7 @@ class TestDistillationSwAV(unittest.TestCase):
         assert round(loss.item(), 5) == round(ref_loss.item(), 5), message
 
     @gpu_test(gpu_count=2)
-    def test_swav_distillation_criterion_two_large_crops(self):
+    def test_swav_distillation_criterion_two_large_crops(self) -> None:
         spawn_distributed_test(
             gpu_count=2,
             worker_fn=self._test_swav_distillation_criterion_two_large_crops_worker,
@@ -233,7 +233,7 @@ class TestDistillationSwAV(unittest.TestCase):
         assert loss_1.item() != loss_2.item(), "Loss should be different"
 
     @gpu_test(gpu_count=2)
-    def test_swav_distillation_criterion_queue(self):
+    def test_swav_distillation_criterion_queue(self) -> None:
         spawn_distributed_test(
             gpu_count=2, worker_fn=self._test_swav_distillation_criterion_queue_worker
         )
@@ -268,7 +268,7 @@ class TestDistillationSwAV(unittest.TestCase):
         print(f"DISTILL LOSS (GPU ID {gpu_id}):", loss.item())
 
     @gpu_test(gpu_count=2)
-    def test_swav_distillation_criterion_no_shk(self):
+    def test_swav_distillation_criterion_no_shk(self) -> None:
         spawn_distributed_test(
             gpu_count=2, worker_fn=self._test_swav_distillation_criterion_no_shk
         )
@@ -299,14 +299,14 @@ class TestDistillationSwAV(unittest.TestCase):
         print(f"DISTILL LOSS (GPU ID {gpu_id}):", loss.item())
 
     @gpu_test(gpu_count=2)
-    def test_swav_distillation_criterion_no_teacher_prototypes(self):
+    def test_swav_distillation_criterion_no_teacher_prototypes(self) -> None:
         spawn_distributed_test(
             gpu_count=2,
             worker_fn=self._test_swav_distillation_criterion_no_teacher_prototypes,
         )
 
     @gpu_test(gpu_count=2)
-    def test_swav_soft_distillation(self):
+    def test_swav_soft_distillation(self) -> None:
         with in_temporary_directory() as pretrain_dir:
 
             # Run a pre-training to have some weights to being with

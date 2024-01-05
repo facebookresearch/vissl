@@ -69,7 +69,7 @@ class TestIBOT(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=2)
-    def test_training_with_preemption_then_evaluation(self):
+    def test_training_with_preemption_then_evaluation(self) -> None:
         config = self.create_pretraining_config()
         with in_temporary_directory() as pretrain_dir:
             result = run_integration_test(config)

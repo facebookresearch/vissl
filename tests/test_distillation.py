@@ -60,7 +60,7 @@ class TestDistillation(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=2)
-    def test_soft_distillation(self):
+    def test_soft_distillation(self) -> None:
         with in_temporary_directory() as pretrain_dir:
 
             # Run a pre-training to have some weights to being with

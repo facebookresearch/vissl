@@ -23,7 +23,7 @@ class TestEmaHook(unittest.TestCase):
     """
 
     @gpu_test(gpu_count=1)
-    def test_ema_hook(self):
+    def test_ema_hook(self) -> None:
         cfg = compose_hydra_configuration(
             [
                 "config=test/integration_test/quick_eval_in1k_linear.yaml",

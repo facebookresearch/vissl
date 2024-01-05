@@ -50,7 +50,7 @@ class TestLinEval(unittest.TestCase):
             return losses
 
     @gpu_test(gpu_count=2)
-    def test_linear_eval(self):
+    def test_linear_eval(self) -> None:
         with in_temporary_directory():
             config = self._create_config("deit_tiny_blocks")
             result = run_integration_test(config)

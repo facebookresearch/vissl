@@ -11,7 +11,7 @@ from vissl.meters.accuracy_list_meter import AccuracyListMeter
 
 
 class TestAccuracyListMeter(ClassificationMeterTest):
-    def test_accuracy_meter_registry(self):
+    def test_accuracy_meter_registry(self) -> None:
         meter = build_meter(
             {
                 "name": "accuracy_list_meter",
@@ -22,7 +22,7 @@ class TestAccuracyListMeter(ClassificationMeterTest):
         )
         self.assertTrue(isinstance(meter, AccuracyListMeter))
 
-    def test_single_meter_update_and_reset(self):
+    def test_single_meter_update_and_reset(self) -> None:
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update.
@@ -42,7 +42,7 @@ class TestAccuracyListMeter(ClassificationMeterTest):
 
         self.meter_update_and_reset_test(meter, model_output, target, expected_value)
 
-    def test_double_meter_update_and_reset(self):
+    def test_double_meter_update_and_reset(self) -> None:
         meter = AccuracyListMeter(num_meters=1, topk_values=[1, 2], meter_names=[])
 
         # Batchsize = 3, num classes = 3, score is a value in {1, 2,
@@ -62,7 +62,7 @@ class TestAccuracyListMeter(ClassificationMeterTest):
 
         self.meter_update_and_reset_test(meter, model_outputs, targets, expected_value)
 
-    def test_single_meter_update_and_reset_onehot(self):
+    def test_single_meter_update_and_reset_onehot(self) -> None:
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update with onehot target.
@@ -82,7 +82,7 @@ class TestAccuracyListMeter(ClassificationMeterTest):
 
         self.meter_update_and_reset_test(meter, model_output, target, expected_value)
 
-    def test_single_meter_update_and_reset_multilabel(self):
+    def test_single_meter_update_and_reset_multilabel(self) -> None:
         """
         This test verifies that the meter works as expected on a single
         update + reset + same single update with multilabel target.
@@ -121,7 +121,7 @@ class TestAccuracyListMeter(ClassificationMeterTest):
 
         self.meter_update_and_reset_test(meter, model_output, target, expected_value)
 
-    def test_meter_get_set_classy_state_test(self):
+    def test_meter_get_set_classy_state_test(self) -> None:
         # In this test we update meter0 with model_output0 & target0
         # and we update meter1 with model_output1 & target1 then
         # transfer the state from meter1 to meter0 and validate they

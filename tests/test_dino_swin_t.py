@@ -77,7 +77,7 @@ class TestDINO_SwinT(unittest.TestCase):
             return result.get_losses()
 
     @gpu_test(gpu_count=2)
-    def test_pretraining_and_evaluation(self):
+    def test_pretraining_and_evaluation(self) -> None:
         with in_temporary_directory() as pretrain_dir:
             config = self._create_dino_pretraining_config(
                 with_mixed_precision=True, gpu_count=2, num_epochs=1
@@ -94,7 +94,7 @@ class TestDINO_SwinT(unittest.TestCase):
             print(eval_losses)
 
     @gpu_test(gpu_count=2)
-    def test_pretraining_preemption(self):
+    def test_pretraining_preemption(self) -> None:
         with in_temporary_directory() as temp_dir:
             config = self._create_dino_pretraining_config(
                 with_mixed_precision=False, gpu_count=2

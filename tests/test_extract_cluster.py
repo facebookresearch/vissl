@@ -146,9 +146,9 @@ class TestExtractClusterWorkflow(unittest.TestCase):
             self.assertEqual(20, len(assignments.cluster_assignments["TEST"]))
 
     @gpu_test(gpu_count=2)
-    def test_extract_cluster_assignment_ddp(self):
+    def test_extract_cluster_assignment_ddp(self) -> None:
         self.run_cluster_assignment(with_fsdp=False)
 
     @gpu_test(gpu_count=2)
-    def test_extract_cluster_assignment_fsdp(self):
+    def test_extract_cluster_assignment_fsdp(self) -> None:
         self.run_cluster_assignment(with_fsdp=True)

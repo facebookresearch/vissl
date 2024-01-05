@@ -97,7 +97,7 @@ class TestExtractClusterWorkflow(unittest.TestCase):
         return config
 
     @gpu_test(gpu_count=2)
-    def test_extract_cluster_assignment_ddp(self):
+    def test_extract_cluster_assignment_ddp(self) -> None:
         with in_temporary_directory() as pretrain_dir:
 
             # Run a pre-training to have some weights to being with

@@ -15,7 +15,7 @@ class TestEngineRegistry(unittest.TestCase):
     - deal with the typical error cases (unknowns, duplicates, etc)
     """
 
-    def test_valid_engines(self):
+    def test_valid_engines(self) -> None:
         engine = get_engine("train")
         assert engine is not None
         assert isinstance(engine, Engine)
@@ -24,13 +24,13 @@ class TestEngineRegistry(unittest.TestCase):
         assert engine is not None
         assert isinstance(engine, Engine)
 
-    def test_unknown_engine_raises_error(self):
+    def test_unknown_engine_raises_error(self) -> None:
         with self.assertRaises(ValueError) as result:
             get_engine("unknown_name")
         msg = str(result.exception)
         assert msg.startswith("Unknown engine name unknown_name")
 
-    def test_duplicate_engine_registration_error(self):
+    def test_duplicate_engine_registration_error(self) -> None:
         with self.assertRaises(ValueError) as result:
 
             @register_engine("train")

@@ -48,7 +48,7 @@ class TestRootConfigsLossesBuild(unittest.TestCase):
             raise e
         return True
 
-    def test_pytorch_loss(self):
+    def test_pytorch_loss(self) -> None:
         cfg = SSLHydraConfig.from_configs(
             [
                 "config=test/integration_test/quick_simclr",

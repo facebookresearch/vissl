@@ -47,20 +47,20 @@ class TestLossesForward(unittest.TestCase):
     def _get_embedding():
         return torch.ones([BATCH_SIZE, EMBEDDING_DIM])
 
-    def test_simclr_info_nce_loss(self):
+    def test_simclr_info_nce_loss(self) -> None:
         loss_layer = SimclrInfoNCECriterion(
             buffer_params=BUFFER_PARAMS, temperature=0.1
         )
         _ = loss_layer(self._get_embedding())
 
-    def test_multicrop_simclr_info_nce_loss(self):
+    def test_multicrop_simclr_info_nce_loss(self) -> None:
         loss_layer = MultiCropSimclrInfoNCECriterion(
             buffer_params=BUFFER_PARAMS, temperature=0.1, num_crops=NUM_CROPS
         )
         embedding = torch.ones([BATCH_SIZE * NUM_CROPS, EMBEDDING_DIM])
         _ = loss_layer(embedding)
 
-    def test_swav_loss(self):
+    def test_swav_loss(self) -> None:
         loss_layer = SwAVCriterion(
             temperature=0.1,
             crops_for_assign=[0, 1],
@@ -76,7 +76,7 @@ class TestLossesForward(unittest.TestCase):
         )
         _ = loss_layer(scores=self._get_embedding(), head_id=0)
 
-    def test_barlow_twins_loss(self):
+    def test_barlow_twins_loss(self) -> None:
         loss_layer = BarlowTwinsCriterion(
             lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
         )
@@ -88,7 +88,7 @@ class TestBarlowTwinsCriterion(unittest.TestCase):
     Specific tests on Barlow Twins going further than just doing a forward pass
     """
 
-    def test_barlow_twins_backward(self):
+    def test_barlow_twins_backward(self) -> None:
         EMBEDDING_DIM = 3
         criterion = BarlowTwinsCriterion(
             lambda_=0.0051, scale_loss=0.024, embedding_dim=EMBEDDING_DIM
@@ -108,7 +108,7 @@ class TestSimClrCriterion(unittest.TestCase):
     Specific tests on SimCLR going further than just doing a forward pass
     """
 
-    def test_simclr_info_nce_masks(self):
+    def test_simclr_info_nce_masks(self) -> None:
         BATCH_SIZE = 4
         WORLD_SIZE = 2
         buffer_params = BUFFER_PARAMS_STRUCT(
@@ -140,7 +140,7 @@ class TestSimClrCriterion(unittest.TestCase):
             )
         )
 
-    def test_simclr_backward(self):
+    def test_simclr_backward(self) -> None:
         EMBEDDING_DIM = 3
         BATCH_SIZE = 4
         WORLD_SIZE = 1
@@ -195,7 +195,7 @@ class TestCrossEntropyMultipleOutputSingleTargetLoss(unittest.TestCase):
         criterion = CrossEntropyMultipleOutputSingleTargetCriterion()
         self.assertEqual(criterion(logits, target), ref_loss)
 
-    def test_multiple_targets_for_label_smoothing(self):
+    def test_multiple_targets_for_label_smoothing(self) -> None:
         targets = torch.tensor([[0.8, 0.1, 0.1], [0.1, 0.8, 0.1], [0.1, 0.1, 0.8]])
         logits = torch.tensor([[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]])
         criterion = CrossEntropyMultipleOutputSingleTargetCriterion()
@@ -204,7 +204,7 @@ class TestCrossEntropyMultipleOutputSingleTargetLoss(unittest.TestCase):
         )
         self.assertAlmostEqual(criterion(logits, targets).item(), expected)
 
-    def test_label_smoothing_target_transformation(self):
+    def test_label_smoothing_target_transformation(self) -> None:
         target = torch.tensor([0, 1, 2], dtype=torch.int64)
         smoothed = (
             CrossEntropyMultipleOutputSingleTargetCriterion.apply_label_smoothing(

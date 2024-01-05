@@ -87,7 +87,7 @@ class TestDINO_DEIT(unittest.TestCase):
             return losses
 
     @gpu_test(gpu_count=2)
-    def test_pretraining_and_evaluation(self):
+    def test_pretraining_and_evaluation(self) -> None:
         with in_temporary_directory() as pretrain_dir:
             config = self._create_dino_pretraining_config(
                 with_mixed_precision=True, gpu_count=2, num_epochs=1
@@ -105,7 +105,7 @@ class TestDINO_DEIT(unittest.TestCase):
             print(eval_losses)
 
     @gpu_test(gpu_count=2)
-    def test_checkpointing(self):
+    def test_checkpointing(self) -> None:
         """
         Checks that enabling activation checkpointing does not
         change the training results
@@ -137,7 +137,7 @@ class TestDINO_DEIT(unittest.TestCase):
         self.assertLess(memory_3[-1], memory_2[-1])
 
     @gpu_test(gpu_count=2)
-    def test_prehemption_during_training(self):
+    def test_prehemption_during_training(self) -> None:
         with in_temporary_directory() as temp_dir:
             config = self._create_dino_pretraining_config(
                 with_mixed_precision=False, gpu_count=2
