@@ -14,7 +14,7 @@ class TestDataLimitSubSampling(unittest.TestCase):
     Testing the DATA_LIMIT underlying sub sampling methods
     """
 
-    def test_unbalanced_sub_sampling(self):
+    def test_unbalanced_sub_sampling(self) -> None:
         labels = np.array([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 0])
 
         indices1 = unbalanced_sub_sampling(len(labels), num_samples=8, skip_samples=0)
@@ -30,7 +30,7 @@ class TestDataLimitSubSampling(unittest.TestCase):
             "skipping samples should slide the window",
         )
 
-    def test_balanced_sub_sampling(self):
+    def test_balanced_sub_sampling(self) -> None:
         labels = np.array([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 0])
         unique_labels = set(labels)
 

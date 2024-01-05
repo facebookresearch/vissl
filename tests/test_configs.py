@@ -21,7 +21,7 @@ logger = logging.getLogger("__name__")
 
 
 class TestConfigsFail(unittest.TestCase):
-    def test_cfg_fail_on_empty(self):
+    def test_cfg_fail_on_empty(self) -> None:
         try:
             SSLHydraConfig.from_configs()
             self.fail("We should fail if config is not specified")
@@ -31,7 +31,7 @@ class TestConfigsFail(unittest.TestCase):
 
 
 class TestConfigsPass(unittest.TestCase):
-    def test_load_cfg_success(self):
+    def test_load_cfg_success(self) -> None:
         # simply load from the config and this should pass
         self.assertTrue(
             SSLHydraConfig.from_configs(["config=test/integration_test/quick_simclr"]),
@@ -40,7 +40,7 @@ class TestConfigsPass(unittest.TestCase):
 
 
 class TestConfigsComposition(unittest.TestCase):
-    def test_cfg_composition(self):
+    def test_cfg_composition(self) -> None:
         # compose the configs and check that the model is changed
         cfg = SSLHydraConfig.from_configs(
             [
@@ -55,7 +55,7 @@ class TestConfigsComposition(unittest.TestCase):
 
 
 class TestConfigsFailComposition(unittest.TestCase):
-    def test_cfg_fail_composition(self):
+    def test_cfg_fail_composition(self) -> None:
         # compose the configs and check that the model is changed
         try:
             SSLHydraConfig.from_configs(
@@ -73,7 +73,7 @@ class TestConfigsFailComposition(unittest.TestCase):
 
 
 class TestConfigsCliComposition(unittest.TestCase):
-    def test_cfg_cli_composition(self):
+    def test_cfg_cli_composition(self) -> None:
         # compose the configs and check that the model is changed
         cfg = SSLHydraConfig.from_configs(
             [
@@ -93,7 +93,7 @@ class TestConfigsCliComposition(unittest.TestCase):
 
 
 class TestScalingTypeConfig(unittest.TestCase):
-    def test_sqrt_lr_scaling(self):
+    def test_sqrt_lr_scaling(self) -> None:
         # compose the configs and check that the LR is changed
         cfg = SSLHydraConfig.from_configs(
             [
@@ -108,7 +108,7 @@ class TestScalingTypeConfig(unittest.TestCase):
         param_schedulers = config.OPTIMIZER.param_schedulers.lr
         self.assertEqual(0.3 * (0.125**0.5), param_schedulers.end_value)
 
-    def test_linear_lr_scaling(self):
+    def test_linear_lr_scaling(self) -> None:
         # compose the configs and check that the LR is changed
         cfg = SSLHydraConfig.from_configs(
             [
@@ -125,7 +125,7 @@ class TestScalingTypeConfig(unittest.TestCase):
 
 
 class TestConfigsKeyAddition(unittest.TestCase):
-    def test_cfg_key_addition(self):
+    def test_cfg_key_addition(self) -> None:
         # compose the configs and check that the new key is inserted
         cfg = SSLHydraConfig.from_configs(
             [

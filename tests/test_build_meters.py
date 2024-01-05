@@ -11,7 +11,7 @@ from classy_vision.meters import build_meter
 
 
 class TestBuildMeters(unittest.TestCase):
-    def test_build_meters(self):
+    def test_build_meters(self) -> None:
         configs = [
             {
                 "name": "accuracy_list_meter",
@@ -35,7 +35,7 @@ class TestBuildMeters(unittest.TestCase):
         for config in configs:
             build_meter(config)
 
-    def test_multi_update(self):
+    def test_multi_update(self) -> None:
         meters = []
         configs = [
             {

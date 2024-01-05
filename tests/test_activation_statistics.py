@@ -14,7 +14,7 @@ from vissl.utils.activation_statistics import (
 
 
 class TestActivationStatisticsMonitoring(unittest.TestCase):
-    def test_activation_statistics(self):
+    def test_activation_statistics(self) -> None:
         torch.manual_seed(0)
 
         accumulator = ActivationStatisticsAccumulator()
@@ -54,7 +54,7 @@ class TestActivationStatisticsMonitoring(unittest.TestCase):
         module_types = {stat.module_type for stat in stats}
         self.assertEqual(sorted(exported_modules_types), sorted(module_types))
 
-    def test_activation_statistics_estimates(self):
+    def test_activation_statistics_estimates(self) -> None:
         torch.manual_seed(0)
 
         accumulator = ActivationStatisticsAccumulator()
