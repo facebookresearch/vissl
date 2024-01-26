@@ -81,7 +81,8 @@ def hydra_multirun_main(overrides: List[Any]):
             hydra_main(overrides + sweep_overrides + checkpoint_path_overrides)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    global overrides
     """
     Example usage:
 
@@ -89,3 +90,7 @@ if __name__ == "__main__":
     """
     overrides = sys.argv[1:]
     hydra_multirun_main(overrides=overrides)
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover

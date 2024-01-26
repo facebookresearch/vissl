@@ -225,7 +225,7 @@ def hydra_main(overrides: List[Any]):
     main(args, config)
 
 
-if __name__ == "__main__":
+def invoke_main() -> None:
     """
     Example usage:
 
@@ -243,3 +243,7 @@ if __name__ == "__main__":
     """
     overrides = sys.argv[1:]
     hydra_main(overrides=overrides)
+
+
+if __name__ == "__main__":
+    invoke_main()  # pragma: no cover

@@ -126,7 +126,7 @@ def testImgPilRandomPhotometric():
     benchmark(transform, "Photometric", requires_pil=True)
 
 
-if __name__ == "__main__":
+def main() -> None:
     # Run the transforms and print out an average processing speed
     print("\n")
     print(f"*** Using {N_QUEUES} {'queues' if N_QUEUES >1 else 'queue'} ***")
@@ -141,3 +141,7 @@ if __name__ == "__main__":
     testImgPilToMulticrop()
     testImgPilRandomPhotometric()
     print("\n")
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover

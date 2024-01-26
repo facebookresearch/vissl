@@ -92,7 +92,11 @@ def hydra_main(overrides: List[str]):
     benchmark_data(config)
 
 
-if __name__ == "__main__":
+def main() -> None:
     overrides = sys.argv[1:]
     overrides.append("hydra.verbose=true")
     hydra_main(overrides=overrides)
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover
