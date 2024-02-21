@@ -96,7 +96,6 @@ class AutoGradProfiler(Profiler):
 @functools.lru_cache(maxsize=1)
 def is_nvtx_available():
     try:
-        import nvtx  # NOQA
 
         return True
     except ImportError:
@@ -110,7 +109,6 @@ def is_pytorch_profiler_available() -> bool:
     (available starting from pytorch version 1.8.1)
     """
     try:
-        import torch.profiler  # NOQA
 
         return True
     except ImportError:

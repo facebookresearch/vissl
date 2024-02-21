@@ -139,7 +139,6 @@ def is_hydra_available():
     Check if Hydra is available. Simply python import to test.
     """
     try:
-        import hydra  # NOQA
 
         hydra_available = True
     except ImportError:

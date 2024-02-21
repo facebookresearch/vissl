@@ -23,7 +23,6 @@ def is_tensorboard_available():
     """
     try:
         import tensorboard  # noqa F401
-        from torch.utils.tensorboard import SummaryWriter  # noqa F401
 
         tb_available = True
     except ImportError:

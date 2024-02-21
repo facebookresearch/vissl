@@ -6,7 +6,6 @@
 import io
 import os
 import re
-import urllib
 import urllib.error
 import urllib.request
 from typing import Optional
