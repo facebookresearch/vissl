@@ -304,9 +304,9 @@ def get_per_attribute_predictions_freq(
                         / attribute_disparate_label_map[attr_val]["total"],
                         5,
                     )
-            output_attribute_disparate_label_map[
-                attribute
-            ] = attribute_disparate_label_map
+            output_attribute_disparate_label_map[attribute] = (
+                attribute_disparate_label_map
+            )
 
     # given the label association map, we want to predict:
     # per attribute: male, female, different race, different, different age etc
@@ -395,15 +395,15 @@ def get_per_attribute_predictions_freq(
                 )
             if "sexism" in label_association_map:
                 for sexist_label in label_association_map["sexism"]:
-                    attribute_label_assoc_map[attr_val]["sexism_freq"][
-                        sexist_label
-                    ] = round(
-                        100.0
-                        * attribute_label_assoc_map[attr_val]["sexism_freq"][
-                            sexist_label
-                        ]
-                        / attribute_label_assoc_map[attr_val]["total"],
-                        3,
+                    attribute_label_assoc_map[attr_val]["sexism_freq"][sexist_label] = (
+                        round(
+                            100.0
+                            * attribute_label_assoc_map[attr_val]["sexism_freq"][
+                                sexist_label
+                            ]
+                            / attribute_label_assoc_map[attr_val]["total"],
+                            3,
+                        )
                     )
             if len(confidence_score_values) > 0:
                 for lbl_name in unique_associated_labels:
@@ -411,22 +411,22 @@ def get_per_attribute_predictions_freq(
                         len(attributes_label_assoc_conf_scores_map[attr_val][lbl_name])
                         > 0
                     ):
-                        attributes_label_assoc_conf_scores_map[attr_val][
-                            lbl_name
-                        ] = round(
-                            np.mean(
-                                np.array(
-                                    attributes_label_assoc_conf_scores_map[attr_val][
-                                        lbl_name
-                                    ]
-                                )
-                            ),
-                            5,
+                        attributes_label_assoc_conf_scores_map[attr_val][lbl_name] = (
+                            round(
+                                np.mean(
+                                    np.array(
+                                        attributes_label_assoc_conf_scores_map[
+                                            attr_val
+                                        ][lbl_name]
+                                    )
+                                ),
+                                5,
+                            )
                         )
         output_attributes_label_assoc_map[attribute] = attribute_label_assoc_map
-        output_attributes_label_assoc_conf_scores_map[
-            attribute
-        ] = attributes_label_assoc_conf_scores_map
+        output_attributes_label_assoc_conf_scores_map[attribute] = (
+            attributes_label_assoc_conf_scores_map
+        )
 
     # now we calculate the label prediction rate and then the "absolute" difference
     # of label prediction label for one attribute value to the average label prediction rate
@@ -509,9 +509,9 @@ def get_per_attribute_predictions_freq(
                     "n/a" not in attribute_key_name
                     and "unknown" not in attribute_key_name
                 ):
-                    output_mean_attributes_confidence_score_map[
-                        attribute_key_name
-                    ] = mean_score
+                    output_mean_attributes_confidence_score_map[attribute_key_name] = (
+                        mean_score
+                    )
 
     # now we sort the dictionaries based on the frequency
     sorted_output_attributes_pred_freq_map = {}

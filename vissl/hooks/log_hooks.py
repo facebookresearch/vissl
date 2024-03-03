@@ -502,9 +502,9 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     restart_iteration = task.iteration
 
                 if task.ema_model is not None:
-                    model_state_dict[
-                        "ema_model"
-                    ] = task.ema_model.module.get_classy_state()
+                    model_state_dict["ema_model"] = (
+                        task.ema_model.module.get_classy_state()
+                    )
 
                     model_state_dict["ema_meters"] = [
                         meter.get_classy_state() for meter in task.ema_meters

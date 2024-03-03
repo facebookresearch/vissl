@@ -269,12 +269,12 @@ def get_gender_precision_fairness_indicator(
                 attribute_count_map[key] = val["freq"]
             output_attributes_precision_map[attribute] = attribute_accuracy_map
             output_attributes_count_map[attribute] = attribute_count_map
-        output_gender_precision_fairness_indicator[
-            key_str
-        ] = output_attributes_precision_map
-        output_gender_precision_attributes_count_map[
-            key_str
-        ] = output_attributes_count_map
+        output_gender_precision_fairness_indicator[key_str] = (
+            output_attributes_precision_map
+        )
+        output_gender_precision_attributes_count_map[key_str] = (
+            output_attributes_count_map
+        )
     return (
         output_gender_precision_fairness_indicator,
         output_gender_precision_attributes_count_map,

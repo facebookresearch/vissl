@@ -23,7 +23,6 @@ from vissl.utils.test_utils import gpu_test, init_distributed_on_file, with_temp
 
 
 class TestVitFSDP(unittest.TestCase):
-
     """
     ---------------------------------------------------------------------------
     Testing ViT individual blocks

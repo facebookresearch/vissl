@@ -340,9 +340,9 @@ class BenchmarkSuiteScheduler:
             benchmark["num_retries"] += 1
             benchmark["slurm_log_dir"] = config.SLURM.LOG_FOLDER
             benchmark["slurm_checkpoint_dir"] = config.CHECKPOINT.DIR
-            benchmark[
-                "weights_init_params_file"
-            ] = config.MODEL.WEIGHTS_INIT.PARAMS_FILE
+            benchmark["weights_init_params_file"] = (
+                config.MODEL.WEIGHTS_INIT.PARAMS_FILE
+            )
             benchmark["slurm_state"] = job.state
 
             current_time = datetime.now().strftime("%H:%M:%S %z")

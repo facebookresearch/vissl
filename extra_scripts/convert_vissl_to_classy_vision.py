@@ -31,7 +31,7 @@ def convert_trunk_to_classy_model(state_dict_trunk, depth):
     layers = BLOCK_CONFIG[depth]
 
     output_dict = {}
-    for (k, val) in state_dict_trunk.items():
+    for k, val in state_dict_trunk.items():
         if any(x in k for x in _SKIP_LAYERS_IN_TRUNK):
             continue
         k = k.replace("_feature_blocks.conv1.", "initial_block._module.0.")

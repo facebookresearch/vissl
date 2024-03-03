@@ -164,7 +164,7 @@ class AccuracyListMeter(ClassyMeter):
             model_output = [model_output]
         assert isinstance(model_output, list)
         assert len(model_output) == self._num_meters, f"{len(model_output)}"
-        for (meter, output) in zip(self._meters, model_output):
+        for meter, output in zip(self._meters, model_output):
             if isinstance(output, EnsembleOutput):
                 # Shape ensemble_size, batch_size, pred_size -> batch_size, ensemble_size, pred_size
                 output = F.softmax(output.outputs.permute((1, 0, 2)), dim=-1)

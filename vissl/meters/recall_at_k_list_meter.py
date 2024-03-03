@@ -162,7 +162,7 @@ class RecallAtKListMeter(ClassyMeter):
             model_output = [model_output]
         assert isinstance(model_output, list)
         assert len(model_output) == self._num_meters
-        for (meter, output) in zip(self._meters, model_output):
+        for meter, output in zip(self._meters, model_output):
             meter.update(output, target)
 
     def reset(self):

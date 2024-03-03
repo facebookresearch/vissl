@@ -27,8 +27,7 @@ class Engine(abc.ABC):
         local_rank: int = 0,
         node_id: int = 0,
         hook_generator: Callable[[Any], List[ClassyHook]] = default_hook_generator,
-    ):
-        ...
+    ): ...
 
 
 _ENGINE_REGISTRY = {}

@@ -60,9 +60,9 @@ class LayerDecayGroupConstructor:
                 "lr": LayerDecayScheduler(
                     optimizer_schedulers["lr"], lr_scale, update_interval
                 ),
-                "weight_decay": self.weight_decay_main_config
-                if with_regularisation
-                else 0.0,
+                "weight_decay": (
+                    self.weight_decay_main_config if with_regularisation else 0.0
+                ),
             }
         self.all_groups[key]["params"].append(param)
 

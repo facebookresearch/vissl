@@ -444,9 +444,11 @@ class AugmentOp:
         self.hparams = hparams.copy()
         self.kwargs = {
             "fillcolor": hparams["img_mean"] if "img_mean" in hparams else _FILL,
-            "resample": hparams["interpolation"]
-            if "interpolation" in hparams
-            else _RANDOM_INTERPOLATION,
+            "resample": (
+                hparams["interpolation"]
+                if "interpolation" in hparams
+                else _RANDOM_INTERPOLATION
+            ),
         }
 
         # If magnitude_std is > 0, we introduce some randomness

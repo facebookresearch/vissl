@@ -141,7 +141,7 @@ class NCELossWithMemory(ClassyLoss):
         output = [x[non_ignore] for x in output]
 
         loss = 0
-        for (l_idx, l_output) in enumerate(output):
+        for l_idx, l_output in enumerate(output):
             normalized_output = l_output
             if self.normalize_embedding:
                 normalized_output = nn.functional.normalize(l_output, dim=1, p=2)

@@ -65,7 +65,7 @@ def get_images_labels_info(input_file_name: str, input_dir_path: str):
     with all the raw images
     """
     data_source_path = input_dir_path + input_file_name
-    with (open(data_source_path)) as ds_path:
+    with open(data_source_path) as ds_path:
         data = json.load(ds_path)
 
     images, labels = [], []

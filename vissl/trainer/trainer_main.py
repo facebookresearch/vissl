@@ -810,9 +810,9 @@ class SelfSupervisionTrainer:
                     for idx in range(num_images):
                         image_index = input_sample["indices"][idx]
                         cluster_assignments[image_index] = prototype_index[idx].item()
-                        soft_cluster_assignments[
-                            image_index
-                        ] = prototype_score.cpu().numpy()
+                        soft_cluster_assignments[image_index] = (
+                            prototype_score.cpu().numpy()
+                        )
                         image_indices.append(image_index)
 
                 if buffer_size >= self.cfg.EXTRACT_FEATURES.CHUNK_THRESHOLD >= 0:
