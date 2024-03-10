@@ -44,6 +44,9 @@ from vissl.hooks.tensorboard_hook import SSLTensorboardHook  # noqa
 from vissl.utils.checkpoint import get_checkpoint_folder
 from vissl.utils.tensorboard import get_tensorboard_hook, is_tensorboard_available
 
+from vissl.hooks.wandb_hook import SSLWandbHook  # noqa
+from vissl.utils.wandb import get_wandb_hook, is_wandb_available
+
 
 class SSLClassyHookFunctions(Enum):
     """
@@ -148,6 +151,13 @@ def default_hook_generator(cfg: AttrDict) -> List[ClassyHook]:
         )
         tb_hook = get_tensorboard_hook(cfg)
         hooks.extend([tb_hook])
+    if cfg.HOOKS.WANDB_SETUP.USE_WANDB:
+        assert is_wandb_available(), (
+            "WandB must be installed to use it. Please install WandB using:"
+            "If pip environment: `pip install wandb` "
+        )
+        wandb_hook = get_wandb_hook(cfg)
+        hooks.extend([wandb_hook])
     if cfg.MODEL.GRAD_CLIP.USE_GRAD_CLIP:
         hooks.extend(
             [

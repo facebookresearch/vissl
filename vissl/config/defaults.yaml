@@ -168,6 +168,27 @@ config:
       # if we want to log the model parameters every few iterations, set the iteration
       # frequency. -1 means the params will be logged only at the end of epochs.
       LOG_PARAMS_EVERY_N_ITERS: 310
+    
+    # ----------------------------------------------------------------------------------- #
+    # Weights and Biases (visualization)
+    # ----------------------------------------------------------------------------------- #
+    WANDB_SETUP:
+      # whether to use wandb for the visualization
+      USE_WANDB: False
+      # log directory for wandb events
+      LOG_DIR: "."
+      EXPERIMENT_LOG_DIR: "wandb"
+      # name of project
+      PROJECT_NAME: "vissl"
+      # name of specific runs
+      EXP_NAME: "??"
+      # whether to log the model parameters to tensorboard
+      LOG_PARAMS: True
+      # whether to log the model parameters gradients to tensorboard
+      LOG_PARAMS_GRADIENTS: True
+      # if we want to log the model parameters every few iterations, set the iteration
+      # frequency. -1 means the params will be logged only at the end of epochs.
+      LOG_PARAMS_EVERY_N_ITERS: 310
 
   # ----------------------------------------------------------------------------------- #
   # MONITORING
